@@ -1,0 +1,20 @@
+# Ignore Python virtual environments
+backend/venv/
+venv/
+.venv/
+env/
+
+# Ignore Python cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache/
+
+# Ignore specific markdown files in the workspace (except README.md)
+danh-gia-y-tuong-app-map-du-lich.md
+gis-va-llm-huong-de-tai.md
+y-tuong-datn-du-lich-ai.md
+y-tuong-moi-datn-du-lich-ai.md
+*.md
+!README.md
