@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import json
 from app.db import execute_query
-from app.agent import self_correct_loop, generate_explanation
+from app.ir_agent import answer, generate_explanation
 
 app = FastAPI(title="GIS + LLM Da Nang Tourism API")
 
@@ -36,7 +36,7 @@ def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Question cannot be empty")
         
     print(f"Processing question: {question}")
-    agent_res = self_correct_loop(question)
+    agent_res = answer(question)
     
     if not agent_res["success"]:
         return {

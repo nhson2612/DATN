@@ -1,0 +1,352 @@
+[
+  {
+    "id": 1,
+    "template": "intersects+count",
+    "question": "Có bao nhiêu marketplace ở Phường Hòa Cường?",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 2,
+    "template": "intersects+count",
+    "question": "Có bao nhiêu community_centre ở Phường Sơn Trà?",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 3,
+    "template": "intersects+count",
+    "question": "Có bao nhiêu pub ở Phường Sơn Trà?",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 4,
+    "template": "intersects+count",
+    "question": "Có bao nhiêu cafe ở Phường Quảng Phú?",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 5,
+    "template": "intersects+count",
+    "question": "Có bao nhiêu restaurant ở Phường Hòa Khánh?",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 6,
+    "template": "intersects+count",
+    "question": "Có bao nhiêu cafe ở Phường Hải Vân?",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 7,
+    "template": "intersects+count",
+    "question": "Có bao nhiêu theatre ở Phường Liên Chiểu?",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 8,
+    "template": "intersects+name",
+    "question": "Liệt kê danh sách các pub nằm ở Phường Điện Bàn Bắc",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 9,
+    "template": "intersects+name",
+    "question": "Liệt kê danh sách các community_centre nằm ở Phường Hòa Khánh",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 10,
+    "template": "intersects+name",
+    "question": "Liệt kê danh sách các place_of_worship nằm ở Phường Hội An Đông",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 11,
+    "template": "intersects+name",
+    "question": "Liệt kê danh sách các community_centre nằm ở Phường Hòa Khánh",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 12,
+    "template": "intersects+name",
+    "question": "Liệt kê danh sách các pub nằm ở Phường Điện Bàn Bắc",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 13,
+    "template": "intersects+name",
+    "question": "Liệt kê danh sách các theatre nằm ở Phường Liên Chiểu",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 14,
+    "template": "intersects+name",
+    "question": "Liệt kê danh sách các restaurant nằm ở Phường Điện Bàn",
+    "target": "poi",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 15,
+    "template": "range+count",
+    "question": "Có bao nhiêu địa điểm trong vòng 500m xung quanh cầu tre?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 16,
+    "template": "range+count",
+    "question": "Có bao nhiêu địa điểm trong vòng 2000m xung quanh Hội quán Hải Nam?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 17,
+    "template": "range+count",
+    "question": "Có bao nhiêu địa điểm trong vòng 500m xung quanh Cua Dai?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 18,
+    "template": "range+count",
+    "question": "Có bao nhiêu địa điểm trong vòng 1500m xung quanh Thuỷ Sơn?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 19,
+    "template": "range+count",
+    "question": "Có bao nhiêu địa điểm trong vòng 1000m xung quanh Thanh Ha Pottery Village?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 20,
+    "template": "range+count",
+    "question": "Có bao nhiêu địa điểm trong vòng 2000m xung quanh POI 4828408623?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 21,
+    "template": "range+count",
+    "question": "Có bao nhiêu nơi lưu trú trong vòng 1500m xung quanh Làng Bích Hoạ?",
+    "target": "accommodation",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 22,
+    "template": "range+name",
+    "question": "Tìm các khách sạn nằm trong bán kính 1500m tính từ Kim Bong Carpentry Village",
+    "target": "accommodation",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 23,
+    "template": "range+name",
+    "question": "Tìm các khách sạn nằm trong bán kính 1500m tính từ cầu tre",
+    "target": "accommodation",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 24,
+    "template": "range+name",
+    "question": "Tìm các khách sạn nằm trong bán kính 500m tính từ Làng Bích Hoạ",
+    "target": "accommodation",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 25,
+    "template": "range+name",
+    "question": "Tìm các địa điểm du lịch nằm trong bán kính 1500m tính từ POI 4727717789",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 26,
+    "template": "range+name",
+    "question": "Tìm các khách sạn nằm trong bán kính 1000m tính từ Triem Tay Village",
+    "target": "accommodation",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 27,
+    "template": "range+name",
+    "question": "Tìm các địa điểm du lịch nằm trong bán kính 1000m tính từ Saturday Option",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 28,
+    "template": "range+name",
+    "question": "Tìm các khách sạn nằm trong bán kính 1000m tính từ Hội quán Hải Nam",
+    "target": "accommodation",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 29,
+    "template": "knn+name",
+    "question": "Quán theatre nào nằm gần nhất với tọa độ 108.2941 15.8767?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 30,
+    "template": "knn+name",
+    "question": "Quán restaurant nào nằm gần nhất với tọa độ 108.3399 15.8747?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 31,
+    "template": "knn+name",
+    "question": "Quán pub nào nằm gần nhất với tọa độ 108.3649 15.8884?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 32,
+    "template": "knn+name",
+    "question": "Quán bar nào nằm gần nhất với tọa độ 108.2833 15.8567?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 33,
+    "template": "knn+name",
+    "question": "Quán theatre nào nằm gần nhất với tọa độ 107.7269 15.8062?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 34,
+    "template": "knn+name",
+    "question": "Quán marketplace nào nằm gần nhất với tọa độ 108.3276 15.8614?",
+    "target": "poi",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 35,
+    "template": "knn+distance",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.2951 15.8836 cách đó bao nhiêu mét?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 36,
+    "template": "knn+distance",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.2968 15.8579 cách đó bao nhiêu mét?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 37,
+    "template": "knn+distance",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.2635 16.0128 cách đó bao nhiêu mét?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 38,
+    "template": "knn+distance",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.2596 16.0143 cách đó bao nhiêu mét?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 39,
+    "template": "knn+distance",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.3049 15.8817 cách đó bao nhiêu mét?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 40,
+    "template": "knn+distance",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.3003 15.8705 cách đó bao nhiêu mét?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 41,
+    "template": "knn:non_spat_filter+name",
+    "question": "Khách sạn 5 sao nằm gần nhất với tọa độ 108.3652 15.8224 tên là gì?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 42,
+    "template": "knn:non_spat_filter+name",
+    "question": "Khách sạn 4 sao nằm gần nhất với tọa độ 108.3239 15.8653 tên là gì?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 43,
+    "template": "knn:non_spat_filter+name",
+    "question": "Khách sạn 3 sao nằm gần nhất với tọa độ 107.7212 15.8206 tên là gì?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 44,
+    "template": "knn:non_spat_filter+name",
+    "question": "Khách sạn 4 sao nằm gần nhất với tọa độ 108.323 15.914 tên là gì?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 45,
+    "template": "knn:non_spat_filter+name",
+    "question": "Khách sạn 5 sao nằm gần nhất với tọa độ 108.3638 15.8973 tên là gì?",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 46,
+    "template": "range:non_spat_filter+name",
+    "question": "Liệt kê các homestay giá rẻ cách Triem Tay Village dưới 2000m",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 47,
+    "template": "range:non_spat_filter+name",
+    "question": "Liệt kê các homestay giá rẻ cách Saturday Option dưới 1000m",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 48,
+    "template": "range:non_spat_filter+name",
+    "question": "Liệt kê các homestay giá sang trọng cách Hội quán Hải Nam dưới 1000m",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 49,
+    "template": "range:non_spat_filter+name",
+    "question": "Liệt kê các homestay giá rẻ cách Cua Dai dưới 1000m",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 50,
+    "template": "range:non_spat_filter+name",
+    "question": "Liệt kê các homestay giá trung bình cách Cua Dai dưới 2000m",
+    "target": "accommodation",
+    "difficulty": "Hard"
+  }
+]
