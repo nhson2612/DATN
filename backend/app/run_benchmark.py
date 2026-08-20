@@ -44,6 +44,40 @@ def check_crs_violation(sql):
                 
     return False
 
+def compute_semantic_accuracy(agent_rows, gold_results, aggregate):
+    """
+    Compares the agent's SQL execution results with gold standard results.
+    Returns a score between 0.0 and 1.0 (Jaccard similarity for lists, exact match for counts).
+    """
+    if not agent_rows:
+        if aggregate == "count":
+            return 1.0 if gold_results == 0 else 0.0
+        else:
+            return 1.0 if not gold_results else 0.0
+            
+    if aggregate == "count":
+        try:
+            # Handle list of rows representing count
+            agent_count = list(agent_rows[0].values())[0]
+            return 1.0 if int(agent_count) == int(gold_results) else 0.0
+        except Exception:
+            return 0.0
+    else:
+        # For list queries, compare sets of names using Jaccard Similarity
+        agent_names = [row["name"] for row in agent_rows if "name" in row]
+        gold_names = gold_results if isinstance(gold_results, list) else []
+        
+        agent_set = set(str(n).strip().lower() for n in agent_names)
+        gold_set = set(str(n).strip().lower() for n in gold_names)
+        
+        if not agent_set and not gold_set:
+            return 1.0
+            
+        intersection = agent_set.intersection(gold_set)
+        union = agent_set.union(gold_set)
+        
+        return len(intersection) / len(union) if union else 0.0
+
 def run_benchmark():
     with open(BENCHMARK_FILE, "r", encoding="utf-8") as f:
         test_cases = json.load(f)
@@ -57,6 +91,8 @@ def run_benchmark():
     new_crs_violations = 0
     old_latencies = []
     new_latencies = []
+    old_accuracies = []
+    new_accuracies = []
 
     for case in test_cases:
         qid = case["id"]
@@ -85,22 +121,29 @@ def run_benchmark():
             if old_ok:
                 old_success_count += 1
                 
+            old_rows = old_res.get("results", []) if old_ok else []
+            old_acc = compute_semantic_accuracy(old_rows, case.get("gold_results", []), case.get("gold_ir", {}).get("aggregate")) if old_ok else 0.0
+            old_accuracies.append(old_acc)
+            
             old_info = {
                 "success": old_ok,
                 "sql": old_sql,
                 "latency": old_time,
                 "crs_violation": old_violation,
-                "results_count": len(old_res.get("results", [])) if old_ok else 0,
+                "accuracy": old_acc,
+                "results_count": len(old_rows),
                 "error": old_res.get("error", "") if not old_ok else ""
             }
         except Exception as e:
             old_time = time.time() - start_time
             old_latencies.append(old_time)
+            old_accuracies.append(0.0)
             old_info = {
                 "success": False,
                 "sql": "",
                 "latency": old_time,
                 "crs_violation": False,
+                "accuracy": 0.0,
                 "results_count": 0,
                 "error": str(e)
             }
@@ -123,22 +166,29 @@ def run_benchmark():
             if new_ok:
                 new_success_count += 1
                 
+            new_rows = new_res.get("results", []) if new_ok else []
+            new_acc = compute_semantic_accuracy(new_rows, case.get("gold_results", []), case.get("gold_ir", {}).get("aggregate")) if new_ok else 0.0
+            new_accuracies.append(new_acc)
+            
             new_info = {
                 "success": new_ok,
                 "sql": new_sql,
                 "latency": new_time,
                 "crs_violation": new_violation,
-                "results_count": len(new_res.get("results", [])) if new_ok else 0,
+                "accuracy": new_acc,
+                "results_count": len(new_rows),
                 "error": new_res.get("error", "") if not new_ok else ""
             }
         except Exception as e:
             new_time = time.time() - start_time
             new_latencies.append(new_time)
+            new_accuracies.append(0.0)
             new_info = {
                 "success": False,
                 "sql": "",
                 "latency": new_time,
                 "crs_violation": False,
+                "accuracy": 0.0,
                 "results_count": 0,
                 "error": str(e)
             }
@@ -152,8 +202,8 @@ def run_benchmark():
             "new_agent": new_info
         })
         
-        print(f"    Old: {'SUCCESS' if old_info['success'] else 'FAILED'} | CRS Violation: {old_info['crs_violation']} | Time: {old_info['latency']:.2f}s")
-        print(f"    New: {'SUCCESS' if new_info['success'] else 'FAILED'} | CRS Violation: {new_info['crs_violation']} | Time: {new_info['latency']:.2f}s")
+        print(f"    Old: {'SUCCESS' if old_info['success'] else 'FAILED'} | Accuracy: {old_info['accuracy'] * 100:.1f}% | CRS Violation: {old_info['crs_violation']} | Time: {old_info['latency']:.2f}s")
+        print(f"    New: {'SUCCESS' if new_info['success'] else 'FAILED'} | Accuracy: {new_info['accuracy'] * 100:.1f}% | CRS Violation: {new_info['crs_violation']} | Time: {new_info['latency']:.2f}s")
 
     # Calculate summaries
     total = len(test_cases)
@@ -165,12 +215,17 @@ def run_benchmark():
     
     old_avg_latency = sum(old_latencies) / len(old_latencies) if old_latencies else 0
     new_avg_latency = sum(new_latencies) / len(new_latencies) if new_latencies else 0
+    
+    old_avg_accuracy = (sum(old_accuracies) / len(old_accuracies)) * 100 if old_accuracies else 0
+    new_avg_accuracy = (sum(new_accuracies) / len(new_accuracies)) * 100 if new_accuracies else 0
 
     print("\n" + "="*50)
     print("GS-QA BENCHMARK COMPLETED")
     print("="*50)
     print(f"Old Agent Success Rate: {old_success_rate:.1f}% ({old_success_count}/{total})")
     print(f"New Agent Success Rate: {new_success_rate:.1f}% ({new_success_count}/{total})")
+    print(f"Old Agent Semantic Accuracy: {old_avg_accuracy:.1f}%")
+    print(f"New Agent Semantic Accuracy: {new_avg_accuracy:.1f}%")
     print(f"Old Agent CRS Violations: {old_crs_violation_rate:.1f}% ({old_crs_violations}/{total})")
     print(f"New Agent CRS Violations: {new_crs_violation_rate:.1f}% ({new_crs_violations}/{total})")
     print(f"Old Agent Avg Latency: {old_avg_latency:.2f}s")
@@ -178,11 +233,20 @@ def run_benchmark():
     print("="*50)
 
     # Write report as markdown
-    write_markdown_report(results, old_success_rate, new_success_rate, old_crs_violation_rate, new_crs_violation_rate, old_avg_latency, new_avg_latency, benchmark_filename)
+    write_markdown_report(results, old_success_rate, new_success_rate, old_avg_accuracy, new_avg_accuracy, old_crs_violation_rate, new_crs_violation_rate, old_avg_latency, new_avg_latency, benchmark_filename)
 
-def write_markdown_report(results, old_sr, new_sr, old_crs, new_crs, old_lat, new_lat, benchmark_name):
+def write_markdown_report(results, old_sr, new_sr, old_acc, new_acc, old_crs, new_crs, old_lat, new_lat, benchmark_name):
     report_path = "/home/nhson2612/Desktop/datn/docs/benchmark_results.md"
     os.makedirs(os.path.dirname(report_path), exist_ok=True)
+    
+    # Load cases for Gold SQL printing
+    benchmark_path = os.path.join(os.path.dirname(__file__), benchmark_name)
+    try:
+        with open(benchmark_path, "r", encoding="utf-8") as f:
+            test_cases = json.load(f)
+            cases_by_id = {c["id"]: c for c in test_cases}
+    except Exception:
+        cases_by_id = {}
     
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("# Báo cáo Thử nghiệm Đánh giá trên Benchmark GS-QA\n\n")
@@ -195,34 +259,48 @@ def write_markdown_report(results, old_sr, new_sr, old_crs, new_crs, old_lat, ne
         f.write("| Chỉ số đánh giá | Kiến trúc Cũ (Direct SQL) | Kiến trúc Mới (LLM-to-IR-to-SQL) | Nhận xét |\n")
         f.write("| :--- | :---: | :---: | :--- |\n")
         f.write(f"| **Tỉ lệ sinh SQL thành công (Execution SR)** | {old_sr:.1f}% | {new_sr:.1f}% | Kiến trúc mới loại bỏ lỗi cú pháp SQL và ép kiểu |\n")
+        f.write(f"| **Độ chính xác ngữ nghĩa (Semantic Accuracy)** | {old_acc:.1f}% | {new_acc:.1f}% | Phép so sánh Jaccard/Exact Match kết quả trả về của DB so với đáp án mẫu |\n")
         f.write(f"| **Tỉ lệ lỗi hệ tọa độ (CRS Violation)** | {old_crs:.1f}% | {new_crs:.1f}% | Compiler kiểm soát hoàn toàn hệ tọa độ phẳng |\n")
         f.write(f"| **Thời gian phản hồi trung bình (Latency)** | {old_lat:.2f}s | {new_lat:.2f}s | Kiến trúc mới ổn định hơn nhờ giảm số vòng tự sửa |\n\n")
         
         f.write("## 2. Chi tiết kết quả từng Câu hỏi thử nghiệm (GS-QA Templates)\n\n")
-        f.write("| ID | Template | Câu hỏi | Độ khó | Cũ (SQL) | Mới (IR) | Cũ CRS | Mới CRS |\n")
-        f.write("| :-: | :--- | :--- | :-: | :---: | :---: | :---: | :---: |\n")
+        f.write("| ID | Template | Câu hỏi | Độ khó | Cũ (SQL) | Mới (IR) | Cũ Acc | Mới Acc | Cũ CRS | Mới CRS |\n")
+        f.write("| :-: | :--- | :--- | :-: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
         
         for res in results:
             old_ok = "🟢 OK" if res["old_agent"]["success"] else "🔴 Fail"
             new_ok = "🟢 OK" if res["new_agent"]["success"] else "🔴 Fail"
+            old_acc_pct = f"{res['old_agent'].get('accuracy', 0.0) * 100:.0f}%"
+            new_acc_pct = f"{res['new_agent'].get('accuracy', 0.0) * 100:.0f}%"
             old_crs_txt = "⚠️ Lỗi" if res["old_agent"]["crs_violation"] else "✅ An toàn"
             new_crs_txt = "⚠️ Lỗi" if res["new_agent"]["crs_violation"] else "✅ An toàn"
             
-            f.write(f"| {res['id']} | `{res['template']}` | {res['question']} | {res['difficulty']} | {old_ok} | {new_ok} | {old_crs_txt} | {new_crs_txt} |\n")
+            f.write(f"| {res['id']} | `{res['template']}` | {res['question']} | {res['difficulty']} | {old_ok} | {new_ok} | {old_acc_pct} | {new_acc_pct} | {old_crs_txt} | {new_crs_txt} |\n")
             
         f.write("\n## 3. Phân tích chi tiết các câu lệnh SQL sinh ra\n\n")
         for res in results:
+            case = cases_by_id.get(res["id"], {})
             f.write(f"### Câu {res['id']}: {res['question']} (`{res['template']}`)\n")
+            
+            # Print Gold query
+            if "gold_sql" in case:
+                f.write(f"- **Câu truy vấn đáp án mẫu (Gold SQL):**\n")
+                f.write(f"  ```sql\n  {case['gold_sql']}\n  ```\n")
+                params_str = ", ".join(repr(p) for p in case.get('gold_params', []))
+                f.write(f"  *Tham số:* `[{params_str}]`\n")
+                f.write(f"  *Kết quả mẫu:* `{case.get('gold_results')}`\n\n")
+                
             f.write(f"- **Kiến trúc Cũ (Direct SQL):**\n")
             if res['old_agent']['sql']:
                 f.write(f"  ```sql\n  {res['old_agent']['sql']}\n  ```\n")
+                f.write(f"  *Độ chính xác ngữ nghĩa:* `{res['old_agent'].get('accuracy', 0.0)*100:.1f}%`\n")
             else:
                 f.write(f"  *Lỗi: {res['old_agent']['error']}*\n")
                 
             f.write(f"- **Kiến trúc Mới (IR -> Compiler):**\n")
             if res['new_agent']['sql']:
                 f.write(f"  ```sql\n  {res['new_agent']['sql']}\n  ```\n")
-                f.write(f"  *Kết quả thực thi:* `{res['new_agent']['results_count']} bản ghi`\n")
+                f.write(f"  *Kết quả thực thi:* `{res['new_agent']['results_count']} bản ghi` | *Độ chính xác ngữ nghĩa:* `{res['new_agent'].get('accuracy', 0.0)*100:.1f}%`\n")
             else:
                 f.write(f"  *Lỗi: {res['new_agent']['error']}*\n")
             f.write("\n---\n\n")

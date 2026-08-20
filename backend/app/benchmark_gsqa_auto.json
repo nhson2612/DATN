@@ -2,351 +2,1691 @@
   {
     "id": 1,
     "template": "intersects+count",
-    "question": "Có bao nhiêu marketplace ở Phường Hòa Cường?",
+    "question": "Có bao nhiêu ferry_terminal ở Phường Sơn Trà?",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "ferry_terminal"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Sơn Trà"
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)",
+    "gold_params": [
+      "ferry_terminal",
+      "%Phường Sơn Trà%"
+    ],
+    "gold_results": 0
   },
   {
     "id": 2,
     "template": "intersects+count",
-    "question": "Có bao nhiêu community_centre ở Phường Sơn Trà?",
+    "question": "Có bao nhiêu cafe ở Phường Liên Chiểu?",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "cafe"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Liên Chiểu"
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)",
+    "gold_params": [
+      "cafe",
+      "%Phường Liên Chiểu%"
+    ],
+    "gold_results": 40
   },
   {
     "id": 3,
     "template": "intersects+count",
-    "question": "Có bao nhiêu pub ở Phường Sơn Trà?",
+    "question": "Có bao nhiêu cafe ở Phường Điện Bàn Đông?",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "cafe"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Điện Bàn Đông"
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)",
+    "gold_params": [
+      "cafe",
+      "%Phường Điện Bàn Đông%"
+    ],
+    "gold_results": 1
   },
   {
     "id": 4,
     "template": "intersects+count",
-    "question": "Có bao nhiêu cafe ở Phường Quảng Phú?",
+    "question": "Có bao nhiêu restaurant ở Phường Điện Bàn?",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "restaurant"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Điện Bàn"
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)",
+    "gold_params": [
+      "restaurant",
+      "%Phường Điện Bàn%"
+    ],
+    "gold_results": 6
   },
   {
     "id": 5,
     "template": "intersects+count",
-    "question": "Có bao nhiêu restaurant ở Phường Hòa Khánh?",
+    "question": "Có bao nhiêu fast_food ở Phường Liên Chiểu?",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "fast_food"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Liên Chiểu"
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)",
+    "gold_params": [
+      "fast_food",
+      "%Phường Liên Chiểu%"
+    ],
+    "gold_results": 0
   },
   {
     "id": 6,
     "template": "intersects+count",
-    "question": "Có bao nhiêu cafe ở Phường Hải Vân?",
+    "question": "Có bao nhiêu pub ở Phường Điện Bàn Bắc?",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "pub"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Điện Bàn Bắc"
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)",
+    "gold_params": [
+      "pub",
+      "%Phường Điện Bàn Bắc%"
+    ],
+    "gold_results": 0
   },
   {
     "id": 7,
     "template": "intersects+count",
-    "question": "Có bao nhiêu theatre ở Phường Liên Chiểu?",
+    "question": "Có bao nhiêu community_centre ở Phường Hương Trà?",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "community_centre"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Hương Trà"
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)",
+    "gold_params": [
+      "community_centre",
+      "%Phường Hương Trà%"
+    ],
+    "gold_results": 0
   },
   {
     "id": 8,
     "template": "intersects+name",
-    "question": "Liệt kê danh sách các pub nằm ở Phường Điện Bàn Bắc",
+    "question": "Liệt kê danh sách các fast_food nằm ở Phường Quảng Phú",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "fast_food"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Quảng Phú"
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)\nLIMIT %s",
+    "gold_params": [
+      "fast_food",
+      "%Phường Quảng Phú%",
+      10
+    ],
+    "gold_results": []
   },
   {
     "id": 9,
     "template": "intersects+name",
-    "question": "Liệt kê danh sách các community_centre nằm ở Phường Hòa Khánh",
+    "question": "Liệt kê danh sách các bar nằm ở Phường Hải Vân",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "bar"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Hải Vân"
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)\nLIMIT %s",
+    "gold_params": [
+      "bar",
+      "%Phường Hải Vân%",
+      10
+    ],
+    "gold_results": []
   },
   {
     "id": 10,
     "template": "intersects+name",
-    "question": "Liệt kê danh sách các place_of_worship nằm ở Phường Hội An Đông",
+    "question": "Liệt kê danh sách các marketplace nằm ở Phường Liên Chiểu",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "marketplace"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Liên Chiểu"
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)\nLIMIT %s",
+    "gold_params": [
+      "marketplace",
+      "%Phường Liên Chiểu%",
+      10
+    ],
+    "gold_results": []
   },
   {
     "id": 11,
     "template": "intersects+name",
-    "question": "Liệt kê danh sách các community_centre nằm ở Phường Hòa Khánh",
+    "question": "Liệt kê danh sách các ferry_terminal nằm ở Phường Hòa Khánh",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "ferry_terminal"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Hòa Khánh"
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)\nLIMIT %s",
+    "gold_params": [
+      "ferry_terminal",
+      "%Phường Hòa Khánh%",
+      10
+    ],
+    "gold_results": []
   },
   {
     "id": 12,
     "template": "intersects+name",
-    "question": "Liệt kê danh sách các pub nằm ở Phường Điện Bàn Bắc",
+    "question": "Liệt kê danh sách các cafe nằm ở Phường Hải Vân",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "cafe"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Hải Vân"
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)\nLIMIT %s",
+    "gold_params": [
+      "cafe",
+      "%Phường Hải Vân%",
+      10
+    ],
+    "gold_results": [
+      "LyNa Coffee",
+      "MaiTrang Coffee",
+      "POI 7173944885",
+      "Hải Vân Viên",
+      "POI 11535887469",
+      "UyenPhuong Coffee"
+    ]
   },
   {
     "id": 13,
     "template": "intersects+name",
-    "question": "Liệt kê danh sách các theatre nằm ở Phường Liên Chiểu",
+    "question": "Liệt kê danh sách các restaurant nằm ở Phường Thanh Khê",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "restaurant"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Thanh Khê"
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)\nLIMIT %s",
+    "gold_params": [
+      "restaurant",
+      "%Phường Thanh Khê%",
+      10
+    ],
+    "gold_results": [
+      "phú mỹ thành nhà hàng",
+      "Bánh Bèo Nóng",
+      "POI 4585476694",
+      "POI 4805182821",
+      "Nhà Hàng Chay Hoa Sen - Vegetarian Restaurant",
+      "Bun cha va beo 120",
+      "Bún Bò Bà Diệu",
+      "Cơm trưa, lẫu nướng Rammus",
+      "Bánh Tráng Dì Em",
+      "Quán Chay XUÂN"
+    ]
   },
   {
     "id": 14,
     "template": "intersects+name",
-    "question": "Liệt kê danh sách các restaurant nằm ở Phường Điện Bàn",
+    "question": "Liệt kê danh sách các bar nằm ở Phường Sơn Trà",
     "target": "poi",
-    "difficulty": "Easy"
+    "difficulty": "Easy",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "bar"
+        },
+        {
+          "op": "in_admin",
+          "name": "Phường Sơn Trà"
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\n  AND ST_Contains((SELECT ST_CollectionExtract(ST_MakeValid(geom), 3) FROM boundaries WHERE unaccent(lower(name)) LIKE unaccent(lower(%s)) ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)\nLIMIT %s",
+    "gold_params": [
+      "bar",
+      "%Phường Sơn Trà%",
+      10
+    ],
+    "gold_results": [
+      "POI 4658435989"
+    ]
   },
   {
     "id": 15,
     "template": "range+count",
-    "question": "Có bao nhiêu địa điểm trong vòng 500m xung quanh cầu tre?",
+    "question": "Có bao nhiêu địa điểm trong vòng 500m xung quanh Cua Dai?",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 500,
+          "ref": {
+            "table": "poi",
+            "name": "Cua Dai"
+          }
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)",
+    "gold_params": [
+      "%Cua Dai%",
+      500.0
+    ],
+    "gold_results": 25
   },
   {
     "id": 16,
     "template": "range+count",
-    "question": "Có bao nhiêu địa điểm trong vòng 2000m xung quanh Hội quán Hải Nam?",
-    "target": "poi",
-    "difficulty": "Medium"
+    "question": "Có bao nhiêu nơi lưu trú trong vòng 2000m xung quanh POI 4727717789?",
+    "target": "accommodation",
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "accommodation",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 2000,
+          "ref": {
+            "table": "poi",
+            "name": "POI 4727717789"
+          }
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM accommodation t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)",
+    "gold_params": [
+      "%POI 4727717789%",
+      2000.0
+    ],
+    "gold_results": 19
   },
   {
     "id": 17,
     "template": "range+count",
-    "question": "Có bao nhiêu địa điểm trong vòng 500m xung quanh Cua Dai?",
+    "question": "Có bao nhiêu địa điểm trong vòng 1000m xung quanh Thuỷ Sơn?",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 1000,
+          "ref": {
+            "table": "poi",
+            "name": "Thuỷ Sơn"
+          }
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)",
+    "gold_params": [
+      "%Thuỷ Sơn%",
+      1000.0
+    ],
+    "gold_results": 25
   },
   {
     "id": 18,
     "template": "range+count",
-    "question": "Có bao nhiêu địa điểm trong vòng 1500m xung quanh Thuỷ Sơn?",
+    "question": "Có bao nhiêu địa điểm trong vòng 1500m xung quanh Non Nuoc Beach?",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 1500,
+          "ref": {
+            "table": "poi",
+            "name": "Non Nuoc Beach"
+          }
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)",
+    "gold_params": [
+      "%Non Nuoc Beach%",
+      1500.0
+    ],
+    "gold_results": 6
   },
   {
     "id": 19,
     "template": "range+count",
-    "question": "Có bao nhiêu địa điểm trong vòng 1000m xung quanh Thanh Ha Pottery Village?",
-    "target": "poi",
-    "difficulty": "Medium"
+    "question": "Có bao nhiêu nơi lưu trú trong vòng 1500m xung quanh Thanh Ha Pottery Village?",
+    "target": "accommodation",
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "accommodation",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 1500,
+          "ref": {
+            "table": "poi",
+            "name": "Thanh Ha Pottery Village"
+          }
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM accommodation t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)",
+    "gold_params": [
+      "%Thanh Ha Pottery Village%",
+      1500.0
+    ],
+    "gold_results": 3
   },
   {
     "id": 20,
     "template": "range+count",
-    "question": "Có bao nhiêu địa điểm trong vòng 2000m xung quanh POI 4828408623?",
-    "target": "poi",
-    "difficulty": "Medium"
+    "question": "Có bao nhiêu nơi lưu trú trong vòng 1500m xung quanh Hội quán Hải Nam?",
+    "target": "accommodation",
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "accommodation",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 1500,
+          "ref": {
+            "table": "poi",
+            "name": "Hội quán Hải Nam"
+          }
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM accommodation t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)",
+    "gold_params": [
+      "%Hội quán Hải Nam%",
+      1500.0
+    ],
+    "gold_results": 218
   },
   {
     "id": 21,
     "template": "range+count",
-    "question": "Có bao nhiêu nơi lưu trú trong vòng 1500m xung quanh Làng Bích Hoạ?",
-    "target": "accommodation",
-    "difficulty": "Medium"
+    "question": "Có bao nhiêu địa điểm trong vòng 500m xung quanh Non Nuoc Beach?",
+    "target": "poi",
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "aggregate": "count",
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 500,
+          "ref": {
+            "table": "poi",
+            "name": "Non Nuoc Beach"
+          }
+        }
+      ]
+    },
+    "gold_sql": "SELECT count(*) AS total\nFROM poi t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)",
+    "gold_params": [
+      "%Non Nuoc Beach%",
+      500.0
+    ],
+    "gold_results": 2
   },
   {
     "id": 22,
     "template": "range+name",
-    "question": "Tìm các khách sạn nằm trong bán kính 1500m tính từ Kim Bong Carpentry Village",
+    "question": "Tìm các khách sạn nằm trong bán kính 500m tính từ Kim Bong Carpentry Village",
     "target": "accommodation",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 500,
+          "ref": {
+            "table": "poi",
+            "name": "Kim Bong Carpentry Village"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "%Kim Bong Carpentry Village%",
+      500.0,
+      10
+    ],
+    "gold_results": [
+      "Nguyen Duy Homestay"
+    ]
   },
   {
     "id": 23,
     "template": "range+name",
-    "question": "Tìm các khách sạn nằm trong bán kính 1500m tính từ cầu tre",
+    "question": "Tìm các khách sạn nằm trong bán kính 1500m tính từ Saturday Option",
     "target": "accommodation",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 1500,
+          "ref": {
+            "table": "poi",
+            "name": "Saturday Option"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "%Saturday Option%",
+      1500.0,
+      10
+    ],
+    "gold_results": [
+      "Son Tra Resort & Spa"
+    ]
   },
   {
     "id": 24,
     "template": "range+name",
-    "question": "Tìm các khách sạn nằm trong bán kính 500m tính từ Làng Bích Hoạ",
-    "target": "accommodation",
-    "difficulty": "Medium"
+    "question": "Tìm các địa điểm du lịch nằm trong bán kính 1000m tính từ POI 4727717789",
+    "target": "poi",
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 1000,
+          "ref": {
+            "table": "poi",
+            "name": "POI 4727717789"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "%POI 4727717789%",
+      1000.0,
+      10
+    ],
+    "gold_results": [
+      "POI 4727717789"
+    ]
   },
   {
     "id": 25,
     "template": "range+name",
-    "question": "Tìm các địa điểm du lịch nằm trong bán kính 1500m tính từ POI 4727717789",
-    "target": "poi",
-    "difficulty": "Medium"
+    "question": "Tìm các khách sạn nằm trong bán kính 2000m tính từ Kim Bong Carpentry Village",
+    "target": "accommodation",
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 2000,
+          "ref": {
+            "table": "poi",
+            "name": "Kim Bong Carpentry Village"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "%Kim Bong Carpentry Village%",
+      2000.0,
+      10
+    ],
+    "gold_results": [
+      "Accommodation 1576490972",
+      "Nhi Nhi Hotel",
+      "Emerald Hoi An Riverside Resort",
+      "Khach San Phu Thinh",
+      "Vinh Hung",
+      "An Hoi",
+      "Long Life Riverside",
+      "Pho Hoi",
+      "Little Hoi An Boutique Hotel & Spa",
+      "Anantara Resort"
+    ]
   },
   {
     "id": 26,
     "template": "range+name",
-    "question": "Tìm các khách sạn nằm trong bán kính 1000m tính từ Triem Tay Village",
-    "target": "accommodation",
-    "difficulty": "Medium"
+    "question": "Tìm các địa điểm du lịch nằm trong bán kính 1500m tính từ Thanh Ha Pottery Village",
+    "target": "poi",
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 1500,
+          "ref": {
+            "table": "poi",
+            "name": "Thanh Ha Pottery Village"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "%Thanh Ha Pottery Village%",
+      1500.0,
+      10
+    ],
+    "gold_results": [
+      "Thanh Ha Pottery Village",
+      "Thuy Ta Song Que",
+      "Triem Tay Village",
+      "bamboo",
+      "Minh",
+      "Terracotta Park",
+      "POI 5825158353",
+      "Chill spot with hammocks",
+      "Cay Thi Coffee",
+      "POI 7144664585"
+    ]
   },
   {
     "id": 27,
     "template": "range+name",
-    "question": "Tìm các địa điểm du lịch nằm trong bán kính 1000m tính từ Saturday Option",
+    "question": "Tìm các địa điểm du lịch nằm trong bán kính 2000m tính từ Kim Bong Carpentry Village",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 2000,
+          "ref": {
+            "table": "poi",
+            "name": "Kim Bong Carpentry Village"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "%Kim Bong Carpentry Village%",
+      2000.0,
+      10
+    ],
+    "gold_results": [
+      "Cargo Club Cafe & Restaurant",
+      "Che Bar",
+      "Day & Night Café",
+      "Banana Leaf",
+      "Blue Dragon",
+      "Can",
+      "Cordon Bleu",
+      "Dac San Hoi An",
+      "Du Port",
+      "Faifoo"
+    ]
   },
   {
     "id": 28,
     "template": "range+name",
-    "question": "Tìm các khách sạn nằm trong bán kính 1000m tính từ Hội quán Hải Nam",
-    "target": "accommodation",
-    "difficulty": "Medium"
+    "question": "Tìm các địa điểm du lịch nằm trong bán kính 500m tính từ Thanh Ha Pottery Village",
+    "target": "poi",
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "within_distance",
+          "meters": 500,
+          "ref": {
+            "table": "poi",
+            "name": "Thanh Ha Pottery Village"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "%Thanh Ha Pottery Village%",
+      500.0,
+      10
+    ],
+    "gold_results": [
+      "Thanh Ha Pottery Village",
+      "Terracotta Park",
+      "POI 7144664585",
+      "POI 9840393561",
+      "Làng mộc Thanh Hà"
+    ]
   },
   {
     "id": 29,
     "template": "knn+name",
-    "question": "Quán theatre nào nằm gần nhất với tọa độ 108.2941 15.8767?",
+    "question": "Quán bar nào nằm gần nhất với tọa độ 108.3298 15.8784?",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "bar"
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.3298,
+        "lat": 15.8784
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      "bar",
+      108.3298,
+      15.8784,
+      1
+    ],
+    "gold_results": [
+      "Mezcal Cocteleria"
+    ]
   },
   {
     "id": 30,
     "template": "knn+name",
-    "question": "Quán restaurant nào nằm gần nhất với tọa độ 108.3399 15.8747?",
+    "question": "Quán community_centre nào nằm gần nhất với tọa độ 108.3613 15.8964?",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "community_centre"
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.3613,
+        "lat": 15.8964
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      "community_centre",
+      108.3613,
+      15.8964,
+      1
+    ],
+    "gold_results": [
+      "Hội quán Hải Nam"
+    ]
   },
   {
     "id": 31,
     "template": "knn+name",
-    "question": "Quán pub nào nằm gần nhất với tọa độ 108.3649 15.8884?",
+    "question": "Quán marketplace nào nằm gần nhất với tọa độ 108.3689 15.8938?",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "marketplace"
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.3689,
+        "lat": 15.8938
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      "marketplace",
+      108.3689,
+      15.8938,
+      1
+    ],
+    "gold_results": [
+      "Chợ Đêm"
+    ]
   },
   {
     "id": 32,
     "template": "knn+name",
-    "question": "Quán bar nào nằm gần nhất với tọa độ 108.2833 15.8567?",
+    "question": "Quán pub nào nằm gần nhất với tọa độ 108.363 15.8643?",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "pub"
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.363,
+        "lat": 15.8643
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      "pub",
+      108.363,
+      15.8643,
+      1
+    ],
+    "gold_results": [
+      "Route 66 Cafe & Beer Club"
+    ]
   },
   {
     "id": 33,
     "template": "knn+name",
-    "question": "Quán theatre nào nằm gần nhất với tọa độ 107.7269 15.8062?",
+    "question": "Quán fast_food nào nằm gần nhất với tọa độ 108.3659 15.8944?",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "fast_food"
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.3659,
+        "lat": 15.8944
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      "fast_food",
+      108.3659,
+      15.8944,
+      1
+    ],
+    "gold_results": [
+      "POI 4810074526"
+    ]
   },
   {
     "id": 34,
     "template": "knn+name",
-    "question": "Quán marketplace nào nằm gần nhất với tọa độ 108.3276 15.8614?",
+    "question": "Quán bar nào nằm gần nhất với tọa độ 108.3045 15.8716?",
     "target": "poi",
-    "difficulty": "Medium"
+    "difficulty": "Medium",
+    "gold_ir": {
+      "target": "poi",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "amenity",
+          "value": "bar"
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.3045,
+        "lat": 15.8716
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM poi t\nWHERE t.amenity = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      "bar",
+      108.3045,
+      15.8716,
+      1
+    ],
+    "gold_results": [
+      "brown eyes"
+    ]
   },
   {
     "id": 35,
     "template": "knn+distance",
-    "question": "Nơi lưu trú gần nhất với vị trí 108.2951 15.8836 cách đó bao nhiêu mét?",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.3278 15.8657 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "nearest_to": {
+        "lon": 108.3278,
+        "lat": 15.8657
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      108.3278,
+      15.8657,
+      1
+    ],
+    "gold_results": [
+      "Nguyen Duy Homestay"
+    ]
   },
   {
     "id": 36,
     "template": "knn+distance",
-    "question": "Nơi lưu trú gần nhất với vị trí 108.2968 15.8579 cách đó bao nhiêu mét?",
+    "question": "Nơi lưu trú gần nhất với vị trí 107.725 15.8102 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "nearest_to": {
+        "lon": 107.725,
+        "lat": 15.8102
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      107.725,
+      15.8102,
+      1
+    ],
+    "gold_results": [
+      "Accommodation 13006550737"
+    ]
   },
   {
     "id": 37,
     "template": "knn+distance",
-    "question": "Nơi lưu trú gần nhất với vị trí 108.2635 16.0128 cách đó bao nhiêu mét?",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.2914 15.8537 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "nearest_to": {
+        "lon": 108.2914,
+        "lat": 15.8537
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      108.2914,
+      15.8537,
+      1
+    ],
+    "gold_results": [
+      "Accommodation 4542951496"
+    ]
   },
   {
     "id": 38,
     "template": "knn+distance",
-    "question": "Nơi lưu trú gần nhất với vị trí 108.2596 16.0143 cách đó bao nhiêu mét?",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.3647 15.8965 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "nearest_to": {
+        "lon": 108.3647,
+        "lat": 15.8965
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      108.3647,
+      15.8965,
+      1
+    ],
+    "gold_results": [
+      "Accommodation 5730645424"
+    ]
   },
   {
     "id": 39,
     "template": "knn+distance",
-    "question": "Nơi lưu trú gần nhất với vị trí 108.3049 15.8817 cách đó bao nhiêu mét?",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.4966 15.6664 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "nearest_to": {
+        "lon": 108.4966,
+        "lat": 15.6664
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      108.4966,
+      15.6664,
+      1
+    ],
+    "gold_results": [
+      "Blue Ocean homestay"
+    ]
   },
   {
     "id": 40,
     "template": "knn+distance",
-    "question": "Nơi lưu trú gần nhất với vị trí 108.3003 15.8705 cách đó bao nhiêu mét?",
+    "question": "Nơi lưu trú gần nhất với vị trí 108.3066 15.8686 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "nearest_to": {
+        "lon": 108.3066,
+        "lat": 15.8686
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      108.3066,
+      15.8686,
+      1
+    ],
+    "gold_results": [
+      "Terracotta Homestay"
+    ]
   },
   {
     "id": 41,
     "template": "knn:non_spat_filter+name",
-    "question": "Khách sạn 5 sao nằm gần nhất với tọa độ 108.3652 15.8224 tên là gì?",
+    "question": "Khách sạn 3 sao nằm gần nhất với tọa độ 108.3225 15.8668 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "stars",
+          "value": 3
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.3225,
+        "lat": 15.8668
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.stars = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      3,
+      108.3225,
+      15.8668,
+      1
+    ],
+    "gold_results": [
+      "Homestay The Corner"
+    ]
   },
   {
     "id": 42,
     "template": "knn:non_spat_filter+name",
-    "question": "Khách sạn 4 sao nằm gần nhất với tọa độ 108.3239 15.8653 tên là gì?",
+    "question": "Khách sạn 4 sao nằm gần nhất với tọa độ 108.3288 15.8635 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "stars",
+          "value": 4
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.3288,
+        "lat": 15.8635
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.stars = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      4,
+      108.3288,
+      15.8635,
+      1
+    ],
+    "gold_results": [
+      "Lantana Riverside Hotel Hoi An"
+    ]
   },
   {
     "id": 43,
     "template": "knn:non_spat_filter+name",
-    "question": "Khách sạn 3 sao nằm gần nhất với tọa độ 107.7212 15.8206 tên là gì?",
+    "question": "Khách sạn 5 sao nằm gần nhất với tọa độ 108.2912 15.8446 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "stars",
+          "value": 5
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.2912,
+        "lat": 15.8446
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.stars = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      5,
+      108.2912,
+      15.8446,
+      1
+    ],
+    "gold_results": []
   },
   {
     "id": 44,
     "template": "knn:non_spat_filter+name",
-    "question": "Khách sạn 4 sao nằm gần nhất với tọa độ 108.323 15.914 tên là gì?",
+    "question": "Khách sạn 5 sao nằm gần nhất với tọa độ 108.4901 15.6693 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "stars",
+          "value": 5
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.4901,
+        "lat": 15.6693
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.stars = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      5,
+      108.4901,
+      15.6693,
+      1
+    ],
+    "gold_results": []
   },
   {
     "id": 45,
     "template": "knn:non_spat_filter+name",
-    "question": "Khách sạn 5 sao nằm gần nhất với tọa độ 108.3638 15.8973 tên là gì?",
+    "question": "Khách sạn 3 sao nằm gần nhất với tọa độ 108.3095 15.8763 tên là gì?",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "stars",
+          "value": 3
+        }
+      ],
+      "nearest_to": {
+        "lon": 108.3095,
+        "lat": 15.8763
+      },
+      "limit": 1
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.stars = %s\nORDER BY t.geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)\nLIMIT %s",
+    "gold_params": [
+      3,
+      108.3095,
+      15.8763,
+      1
+    ],
+    "gold_results": [
+      "Homestay The Corner"
+    ]
   },
   {
     "id": 46,
     "template": "range:non_spat_filter+name",
-    "question": "Liệt kê các homestay giá rẻ cách Triem Tay Village dưới 2000m",
+    "question": "Liệt kê các homestay giá Trung bình cách Triem Tay Village dưới 2000m",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "price_level",
+          "value": "Trung bình"
+        },
+        {
+          "op": "in",
+          "col": "tourism",
+          "value": [
+            "guest_house",
+            "hostel"
+          ]
+        },
+        {
+          "op": "within_distance",
+          "meters": 2000,
+          "ref": {
+            "table": "poi",
+            "name": "Triem Tay Village"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.price_level = %s\n  AND t.tourism = ANY(%s)\n  AND ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "Trung bình",
+      [
+        "guest_house",
+        "hostel"
+      ],
+      "%Triem Tay Village%",
+      2000.0,
+      10
+    ],
+    "gold_results": []
   },
   {
     "id": 47,
     "template": "range:non_spat_filter+name",
-    "question": "Liệt kê các homestay giá rẻ cách Saturday Option dưới 1000m",
+    "question": "Liệt kê các homestay giá Sang trọng cách Thuỷ Sơn dưới 1000m",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "price_level",
+          "value": "Sang trọng"
+        },
+        {
+          "op": "in",
+          "col": "tourism",
+          "value": [
+            "guest_house",
+            "hostel"
+          ]
+        },
+        {
+          "op": "within_distance",
+          "meters": 1000,
+          "ref": {
+            "table": "poi",
+            "name": "Thuỷ Sơn"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.price_level = %s\n  AND t.tourism = ANY(%s)\n  AND ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "Sang trọng",
+      [
+        "guest_house",
+        "hostel"
+      ],
+      "%Thuỷ Sơn%",
+      1000.0,
+      10
+    ],
+    "gold_results": []
   },
   {
     "id": 48,
     "template": "range:non_spat_filter+name",
-    "question": "Liệt kê các homestay giá sang trọng cách Hội quán Hải Nam dưới 1000m",
+    "question": "Liệt kê các homestay giá Trung bình cách Làng Bích Hoạ dưới 2000m",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "price_level",
+          "value": "Trung bình"
+        },
+        {
+          "op": "in",
+          "col": "tourism",
+          "value": [
+            "guest_house",
+            "hostel"
+          ]
+        },
+        {
+          "op": "within_distance",
+          "meters": 2000,
+          "ref": {
+            "table": "poi",
+            "name": "Làng Bích Hoạ"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.price_level = %s\n  AND t.tourism = ANY(%s)\n  AND ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "Trung bình",
+      [
+        "guest_house",
+        "hostel"
+      ],
+      "%Làng Bích Hoạ%",
+      2000.0,
+      10
+    ],
+    "gold_results": []
   },
   {
     "id": 49,
     "template": "range:non_spat_filter+name",
-    "question": "Liệt kê các homestay giá rẻ cách Cua Dai dưới 1000m",
+    "question": "Liệt kê các homestay giá Sang trọng cách POI 4727717789 dưới 1000m",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "price_level",
+          "value": "Sang trọng"
+        },
+        {
+          "op": "in",
+          "col": "tourism",
+          "value": [
+            "guest_house",
+            "hostel"
+          ]
+        },
+        {
+          "op": "within_distance",
+          "meters": 1000,
+          "ref": {
+            "table": "poi",
+            "name": "POI 4727717789"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.price_level = %s\n  AND t.tourism = ANY(%s)\n  AND ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "Sang trọng",
+      [
+        "guest_house",
+        "hostel"
+      ],
+      "%POI 4727717789%",
+      1000.0,
+      10
+    ],
+    "gold_results": []
   },
   {
     "id": 50,
     "template": "range:non_spat_filter+name",
-    "question": "Liệt kê các homestay giá trung bình cách Cua Dai dưới 2000m",
+    "question": "Liệt kê các homestay giá Rẻ cách Hội quán Hải Nam dưới 2000m",
     "target": "accommodation",
-    "difficulty": "Hard"
+    "difficulty": "Hard",
+    "gold_ir": {
+      "target": "accommodation",
+      "select": [
+        "name"
+      ],
+      "where": [
+        {
+          "op": "eq",
+          "col": "price_level",
+          "value": "Rẻ"
+        },
+        {
+          "op": "in",
+          "col": "tourism",
+          "value": [
+            "guest_house",
+            "hostel"
+          ]
+        },
+        {
+          "op": "within_distance",
+          "meters": 2000,
+          "ref": {
+            "table": "poi",
+            "name": "Hội quán Hải Nam"
+          }
+        }
+      ],
+      "limit": 10
+    },
+    "gold_sql": "SELECT t.name, ST_AsGeoJSON(t.geom) AS geom\nFROM accommodation t\nWHERE t.price_level = %s\n  AND t.tourism = ANY(%s)\n  AND ST_DWithin(t.geom::geography, (SELECT geom FROM poi  WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))  ORDER BY length(name) LIMIT 1)::geography, %s)\nLIMIT %s",
+    "gold_params": [
+      "Rẻ",
+      [
+        "guest_house",
+        "hostel"
+      ],
+      "%Hội quán Hải Nam%",
+      2000.0,
+      10
+    ],
+    "gold_results": [
+      "Accommodation 1576490972",
+      "Nhà Nghỉ Thời Đại",
+      "Hoi An Green Life Homestay",
+      "Trust Villa",
+      "Memories Guest House",
+      "VIP Garden Home",
+      "Accommodation 4141988889",
+      "rang dong sunrise",
+      "Cloudy Homestay",
+      "Petunia Garden Homestay & Hostel"
+    ]
   }
 ]

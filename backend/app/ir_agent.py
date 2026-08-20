@@ -16,58 +16,36 @@ from app.ir import compile_ir, IRError, TABLES
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
 
-IR_SYSTEM_PROMPT = """Bạn chuyển câu hỏi du lịch Đà Nẵng thành một đối tượng JSON.
+IR_SYSTEM_PROMPT = """Bạn là trợ lý chuyển câu hỏi du lịch Đà Nẵng thành một đối tượng JSON đại diện (IR).
 Chỉ trả về JSON, không giải thích, không markdown.
-
-BẢNG:
-- "poi": nhà hàng, quán cafe, quán bar, điểm tham quan, bảo tàng, điểm ngắm cảnh
-  cột: name, amenity, tourism, description, rating, review_count, price_level, climate_label
-- "accommodation": khách sạn, homestay, hostel, resort, nhà nghỉ
-  cột: name, amenity, tourism, address, price_range, stars, rating, review_count, price_level
-
-GIÁ TRỊ THƯỜNG GẶP:
-- poi.amenity: "restaurant", "cafe", "bar", "pub", "fast_food"
-- poi.tourism: "attraction", "viewpoint", "museum", "theme_park"
-- accommodation.tourism: "hotel", "guest_house", "hostel", "motel", "resort", "apartment"
-- price_level: "Rẻ", "Trung bình", "Sang trọng"
 
 CẤU TRÚC JSON:
 {
   "target": "poi" hoặc "accommodation",
-  "select": ["name", ...],
-  "aggregate": "count",                       // chỉ khi hỏi "bao nhiêu", "đếm"
-  "where": [
+  "select": ["name"],                             // KHÔNG dùng khi hỏi đếm số lượng
+  "aggregate": "count",                           // CHỈ dùng khi hỏi 'bao nhiêu', 'số lượng', 'đếm'
+  "where": [                                      // Chứa tất cả bộ lọc điều kiện
     {"op": "eq", "col": "amenity", "value": "cafe"},
     {"op": "gte", "col": "rating", "value": 4.5},
-    {"op": "name_like", "value": "hải sản"},
-    {"op": "in_admin", "name": "Hải Châu"},
-    {"op": "within_distance", "meters": 500,
-     "ref": {"table": "poi", "name": "Non Nuoc Beach"}},
-    {"op": "near_point", "lon": 108.22, "lat": 16.06, "meters": 1000}
+    {"op": "in_admin", "name": "Sơn Trà"},        // lọc địa giới hành chính (phường/quận)
+    {"op": "within_distance", "meters": 500, "ref": {"table": "poi", "name": "Non Nuoc Beach"}}
   ],
-  "nearest_to": {"lon": 108.22, "lat": 16.06},                    // "gần nhất"
-  "order_by": {"col": "rating", "dir": "desc"},
-  "limit": 10
+  "nearest_to": {"lon": 108.2, "lat": 16.0},      // CHỈ dùng khi hỏi 'gần nhất' hoặc tọa độ cụ thể
+  "limit": 10                                     // mặc định là 10, nếu tìm 'gần nhất' thì limit là 1
 }
 
-TẤT CẢ điều kiện đặt chung trong mảng "where". Không có mảng nào khác.
-Bỏ qua các trường không cần. Khoảng cách LUÔN tính bằng mét (1km = 1000).
+LƯU Ý QUAN TRỌNG:
+1. KHÔNG tự ý thêm trường "nearest_to" nếu câu hỏi không chứa từ "gần nhất" hoặc một cặp tọa độ số thực.
+2. Nếu câu hỏi yêu cầu đếm ("Có bao nhiêu..."), bạn BẮT BUỘC phải dùng "aggregate": "count" và BỎ TRƯỜNG "select".
+3. Với các câu hỏi lọc địa giới (ví dụ: ở Phường Sơn Trà, ở Sơn Trà, tại Ngũ Hành Sơn), bạn BẮT BUỘC dùng op "in_admin".
+4. Chỉ sử dụng các cột thực tế: rating, stars, price_level, amenity, tourism.
 
 VÍ DỤ
-Hỏi: Quán cafe nào có đánh giá trên 4.5 sao?
-{"target":"poi","select":["name","rating"],"where":[{"op":"eq","col":"amenity","value":"cafe"},{"op":"gte","col":"rating","value":4.5}],"order_by":{"col":"rating","dir":"desc"},"limit":10}
+Hỏi: Có bao nhiêu quán cafe ở Phường Sơn Trà?
+{"target":"poi","aggregate":"count","where":[{"op":"eq","col":"amenity","value":"cafe"},{"op":"in_admin","name":"Phường Sơn Trà"}]}
 
-Hỏi: Có bao nhiêu bảo tàng ở Đà Nẵng?
-{"target":"poi","aggregate":"count","where":[{"op":"eq","col":"tourism","value":"museum"}]}
-
-Hỏi: Quán ăn gần toạ độ 108.22 16.06 trong bán kính 800m
-{"target":"poi","select":["name"],"where":[{"op":"eq","col":"amenity","value":"restaurant"},{"op":"near_point","lon":108.22,"lat":16.06,"meters":800}],"limit":10}
-
-Hỏi: Tìm homestay giá rẻ
-{"target":"accommodation","select":["name","price_level"],"where":[{"op":"in","col":"tourism","value":["guest_house","hostel"]},{"op":"eq","col":"price_level","value":"Rẻ"}],"limit":10}
-
-Hỏi: Khách sạn ở phường Hải Châu cách Non Nuoc Beach dưới 3km
-{"target":"accommodation","select":["name","address"],"where":[{"op":"eq","col":"tourism","value":"hotel"},{"op":"in_admin","name":"Hải Châu"},{"op":"within_distance","meters":3000,"ref":{"table":"poi","name":"Non Nuoc Beach"}}],"limit":10}
+Hỏi: Khách sạn 5 sao gần nhất với tọa độ 108.22 16.06
+{"target":"accommodation","select":["name"],"where":[{"op":"eq","col":"stars","value":5}],"nearest_to":{"lon":108.22,"lat":16.06},"limit":1}
 """
 
 
