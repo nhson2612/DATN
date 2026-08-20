@@ -162,6 +162,8 @@ def compile_ir(ir):
         raise IRError("IR phải là một đối tượng JSON")
 
     table = ir.get("target")
+    if table is None or table == "none":
+        return "SELECT NULL WHERE FALSE", []
     if table not in TABLES:
         raise IRError(f"target '{table}' không hợp lệ. Hợp lệ: {sorted(TABLES)}")
 
@@ -213,6 +215,8 @@ def compile_ir(ir):
             col = _check_column(table, ob["col"])
             direction = "DESC" if str(ob.get("dir", "desc")).lower() == "desc" else "ASC"
             sql += f"\nORDER BY t.{col} {direction} NULLS LAST"
+        else:
+            sql += "\nORDER BY t.name ASC"
 
     # LIMIT luôn có, và bị chặn trần để một câu hỏi không kéo về cả bảng
     try:

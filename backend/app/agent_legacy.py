@@ -163,11 +163,13 @@ def self_correct_loop(vietnamese_question):
     
     # Initial SQL generation prompt
     prompt = f"Generate a PostGIS SQL query to answer this question: '{vietnamese_question}'"
-    sql = query_ollama(prompt, system_prompt=SYSTEM_PROMPT)
-    sql = crs_guard(sql)
+    raw_sql = query_ollama(prompt, system_prompt=SYSTEM_PROMPT)
+    raw_sql = raw_sql.replace("```sql", "").replace("```", "").strip()
+    sql = crs_guard(raw_sql)
     
     debug_logs.append({
         "step": "initial_generation",
+        "raw_sql": raw_sql,
         "sql": sql
     })
     
@@ -176,10 +178,6 @@ def self_correct_loop(vietnamese_question):
     for attempt in range(max_attempts):
         try:
             print(f"Testing SQL query (Attempt {attempt+1})...")
-            # Try running the query.
-            # To be safe, we wrap it in EXPLAIN to check syntax and structure without running heavy calculations.
-            # But since pgRouting queries can have complex subqueries that fail in execution, let's dry run or run it with LIMIT 100.
-            # Make sure we don't accidentally execute a heavy write statement. All queries generated should be SELECT.
             if not sql.strip().upper().startswith("SELECT"):
                 raise ValueError("Query is not a SELECT statement.")
                 
@@ -194,6 +192,7 @@ def self_correct_loop(vietnamese_question):
             return {
                 "success": True,
                 "sql": sql,
+                "raw_sql": debug_logs[0].get("raw_sql", sql),
                 "results": results,
                 "debug": debug_logs
             }
@@ -215,21 +214,23 @@ def self_correct_loop(vietnamese_question):
             # Formulate the error correction prompt
             correction_prompt = f"""You generated this SQL query for the question: "{vietnamese_question}"
 SQL: {sql}
-
+ 
 Running this query failed with the following database error:
 {error_message}
-
+ 
 Please correct the SQL query to fix the error. Remember:
 - Do not use tables or columns that do not exist in the schema.
 - Pay attention to geography casting for distance calculations.
 - Return ONLY the raw SQL query, no markdown syntax, no explanations.
 """
-            sql = query_ollama(correction_prompt, system_prompt=SYSTEM_PROMPT)
-            sql = crs_guard(sql)
+            new_raw_sql = query_ollama(correction_prompt, system_prompt=SYSTEM_PROMPT)
+            new_raw_sql = new_raw_sql.replace("```sql", "").replace("```", "").strip()
+            sql = crs_guard(new_raw_sql)
             
     return {
         "success": False,
         "sql": sql,
+        "raw_sql": debug_logs[0].get("raw_sql", sql),
         "error": "Failed to generate valid SQL query after multiple attempts.",
         "debug": debug_logs
     }

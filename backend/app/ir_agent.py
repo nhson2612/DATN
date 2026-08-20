@@ -39,13 +39,30 @@ LƯU Ý QUAN TRỌNG:
 2. Nếu câu hỏi yêu cầu đếm ("Có bao nhiêu..."), bạn BẮT BUỘC phải dùng "aggregate": "count" và BỎ TRƯỜNG "select".
 3. Với các câu hỏi lọc địa giới (ví dụ: ở Phường Sơn Trà, ở Sơn Trà, tại Ngũ Hành Sơn), bạn BẮT BUỘC dùng op "in_admin".
 4. Chỉ sử dụng các cột thực tế: rating, stars, price_level, amenity, tourism.
+   * BẢNG TRÀ CỨU GIÁ TRỊ (MAPPING):
+     - "quán cà phê", "quán cafe", "tiệm cà phê", "cửa hàng cafe" -> "amenity": "cafe"
+     - "nhà hàng", "quán ăn", "tiệm ăn" -> "amenity": "restaurant"
+     - "quán bar", "quán rượu", "bar" -> "amenity": "bar"
+     - "cửa hàng đồ ăn nhanh", "quán ăn nhanh", "tiệm ăn nhanh", "quán fast food" -> "amenity": "fast_food"
+     - "chợ", "trung tâm thương mại", "khu mua sắm" -> "amenity": "marketplace"
+     - "bến phà", "bến tàu", "bến tàu thủy" -> "amenity": "ferry_terminal"
+     - "nhà văn hóa", "trung tâm cộng đồng", "nhà sinh hoạt cộng đồng" -> "amenity": "community_centre"
+     - "khách sạn", "hotel" -> "tourism": "hotel" (target: "accommodation")
+     - "nhà khách", "guest house" -> "tourism": "guest_house" (target: "accommodation")
+     - "nhà trọ", "hostel" -> "tourism": "hostel" (target: "accommodation")
+     - "nhà nghỉ", "motel" -> "tourism": "motel" (target: "accommodation")
+5. Với các câu hỏi nằm ngoài phạm vi dữ liệu hoặc không thể trả lời được (ví dụ: thời tiết, giá vé cáp treo, tình trạng đông đúc, thời gian thực), bạn BẮT BUỘC trả về cấu trúc: {"target": null, "reason": "Không có dữ liệu trong DB để trả lời câu hỏi này."}
+6. Tuyệt đối KHÔNG tự ý thêm bộ lọc tên (ví dụ: {"op": "eq", "col": "name", "value": "..."}) nếu câu hỏi chỉ hỏi "tên là gì?" mà không chỉ đích danh một địa điểm cụ thể. Chỉ lọc theo tên khi câu hỏi chỉ định một địa danh cụ thể (ví dụ: "chùa Linh Ứng", "Cầu Rồng").
 
 VÍ DỤ
-Hỏi: Có bao nhiêu quán cafe ở Phường Sơn Trà?
-{"target":"poi","aggregate":"count","where":[{"op":"eq","col":"amenity","value":"cafe"},{"op":"in_admin","name":"Phường Sơn Trà"}]}
+Hỏi: Có bao nhiêu tiệm ăn ở Phường Hải Châu?
+{"target": "poi", "aggregate": "count", "where": [{"op": "eq", "col": "amenity", "value": "restaurant"}, {"op": "in_admin", "name": "Phường Hải Châu"}]}
 
-Hỏi: Khách sạn 5 sao gần nhất với tọa độ 108.22 16.06
-{"target":"accommodation","select":["name"],"where":[{"op":"eq","col":"stars","value":5}],"nearest_to":{"lon":108.22,"lat":16.06},"limit":1}
+Hỏi: Nơi lưu trú có đánh giá từ 4.0 trở lên nằm gần nhất với tọa độ 108.2206 16.0638 tên là gì?
+{"target": "accommodation", "select": ["name"], "where": [{"op": "gte", "col": "rating", "value": 4.0}], "nearest_to": {"lon": 108.2206, "lat": 16.0638}, "limit": 1}
+
+Hỏi: Thời tiết ở Đà Nẵng ngày mai như thế nào?
+{"target": null, "reason": "Không có thông tin thời tiết trong cơ sở dữ liệu."}
 """
 
 

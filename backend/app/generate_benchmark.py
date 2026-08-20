@@ -2,291 +2,467 @@ import json
 import random
 import os
 from app.db import execute_query
-from app.ir import compile_ir
+from app.gold_templates import get_gold_sql_and_params
 
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "benchmark_gsqa_auto.json")
 
+AMENITY_MAP = {
+    "cafe": ["quán cà phê", "quán cafe", "tiệm cà phê", "cửa hàng cafe"],
+    "restaurant": ["nhà hàng", "quán ăn", "tiệm ăn"],
+    "bar": ["quán bar", "quán rượu", "bar"],
+    "fast_food": ["cửa hàng đồ ăn nhanh", "quán ăn nhanh", "tiệm ăn nhanh", "quán fast food"],
+    "marketplace": ["chợ", "trung tâm thương mại", "khu mua sắm"],
+    "ferry_terminal": ["bến phà", "bến tàu", "bến tàu thủy"],
+    "community_centre": ["nhà văn hóa", "trung tâm cộng đồng", "nhà sinh hoạt cộng đồng"]
+}
+
+L0_QUESTIONS = [
+    "Thời tiết ở Đà Nẵng ngày mai như thế nào?",
+    "Giá vé cáp treo Bà Nà hiện tại là bao nhiêu?",
+    "Quán cà phê Cộng ở đường Bạch Đằng giờ này có đông khách không?",
+    "Cho tôi biết lịch trình xe buýt từ Đà Nẵng đi Hội An hôm nay.",
+    "Bảo tàng Chăm mở cửa lúc mấy giờ?",
+    "Lễ hội pháo hoa quốc tế Đà Nẵng diễn ra vào ngày nào năm nay?",
+    "Khách sạn Mường Thanh có còn phòng trống vào tối nay không?",
+    "Đường Bạch Đằng hiện tại có bị tắc đường không?",
+    "Nhà hàng ẩm thực Trần có ngon không?",
+    "Có sự kiện ca nhạc nào diễn ra ở Công viên Châu Á tối nay không?",
+    "Giá phòng trung bình của homestay ở Sơn Trà năm 2026 là bao nhiêu?",
+    "Tôi muốn đặt bàn trước cho 5 người ở nhà hàng chay Hoa Sen.",
+    "Quán bar Golden Pine có quy định trang phục gì không?",
+    "Tình trạng triều cường ở bãi biển Mỹ Khê hôm nay thế nào?",
+    "Thông tin liên hệ số điện thoại của UBND thành phố Đà Nẵng là gì?"
+]
+
 def fetch_db_entities():
-    """Fetches real spatial and attribute entities from the database to populate templates."""
-    print("Fetching real Da Nang entities from database...")
+    """Fetches real spatial and attribute entities from the database deterministically."""
+    print("Fetching unique entities in Da Nang bounding box...")
     
-    # 1. Fetch wards (boundaries)
-    wards_res = execute_query("SELECT name FROM boundaries WHERE name LIKE '%Phường%' ORDER BY ST_Area(geom) DESC LIMIT 15;")
-    wards = [r["name"] for r in wards_res] if wards_res else ["Phường Hải Châu I", "Phường Sơn Trà", "Phường Hòa Xuân", "Phường Ngũ Hành Sơn"]
+    # 1. Fetch unique level 6 boundaries (wards) in Da Nang
+    wards = execute_query("""
+        SELECT id, name
+        FROM boundaries b
+        WHERE admin_level = 6
+          AND (SELECT count(*) FROM boundaries WHERE name = b.name) = 1
+          AND ST_Within(geom, ST_MakeEnvelope(107.95, 15.95, 108.35, 16.20, 4326))
+        ORDER BY name;
+    """)
     
-    # 2. Fetch landmarks/POIs (points)
-    poi_res = execute_query("SELECT name, ST_X(geom) as lon, ST_Y(geom) as lat FROM poi WHERE tourism = 'attraction' AND name IS NOT NULL LIMIT 15;")
-    pois = []
-    if poi_res:
-        for r in poi_res:
-            pois.append({"name": r["name"], "lon": round(r["lon"], 4), "lat": round(r["lat"], 4)})
-    else:
-        pois = [
-            {"name": "Cầu Sông Hàn", "lon": 108.225, "lat": 16.072},
-            {"name": "Cầu Rồng", "lon": 108.227, "lat": 16.061},
-            {"name": "Cầu Trần Thị Lý", "lon": 108.228, "lat": 16.050},
-            {"name": "Bãi biển Mỹ Khê", "lon": 108.248, "lat": 16.060}
-        ]
-        
-    # 3. Fetch amenities (POI types)
-    amenity_res = execute_query("SELECT DISTINCT amenity FROM poi WHERE amenity IS NOT NULL AND amenity != 'place_of_worship' LIMIT 10;")
-    amenities = [r["amenity"] for r in amenity_res] if amenity_res else ["cafe", "restaurant", "bar", "fast_food"]
-    
-    # 4. Fetch stars and price levels for accommodations
-    stars = [3, 4, 5]
-    price_ranges = ["Rẻ", "Trung bình", "Sang trọng"]  # Capitalized to match DB price_level
+    # 2. Fetch unique POIs (landmarks) in Da Nang BBox (no auto-generated names)
+    pois = execute_query("""
+        SELECT id, name, ST_X(geom) as lon, ST_Y(geom) as lat
+        FROM poi p
+        WHERE name IS NOT NULL
+          AND name !~ '^(POI|Accommodation|Road) [0-9]+$'
+          AND (SELECT count(*) FROM poi WHERE name = p.name) = 1
+          AND ST_Within(geom, ST_MakeEnvelope(107.95, 15.95, 108.35, 16.20, 4326))
+        ORDER BY name;
+    """)
     
     return {
         "wards": wards,
-        "pois": pois,
-        "amenities": amenities,
-        "stars": stars,
-        "price_ranges": price_ranges
+        "pois": pois
     }
 
-def get_gold_results(sql, params, aggregate):
-    """Executes the gold SQL and returns standard target values (count or list of names)."""
+def run_gold_query(sql, params):
     try:
-        rows = execute_query(sql, params)
-        if not rows:
-            return 0 if aggregate == "count" else []
-            
-        if aggregate == "count":
-            # Extract the first value of the first row
-            return list(rows[0].values())[0]
-        else:
-            return [row["name"] for row in rows if "name" in row]
+        return execute_query(sql, params) or []
     except Exception as e:
-        print(f"Error executing gold SQL: {e}")
-        return 0 if aggregate == "count" else []
+        print(f"Error executing gold query: {e}")
+        return []
 
-def generate_benchmark():
-    data = fetch_db_entities()
-    
-    test_cases = []
-    qid = 1
-    
-    raw_templates = []
-    
-    # Define templates and corresponding parameters
+def try_generate_case(template_type, data):
+    """
+    Attempts to generate a single valid test case for a template.
+    Returns case dict if valid and non-degenerate, else None.
+    """
     # 1. intersects+count
-    for _ in range(7):
+    if template_type == "intersects+count":
         ward = random.choice(data["wards"])
-        amenity = random.choice(data["amenities"])
+        amenity = random.choice(list(AMENITY_MAP.keys()))
+        amenity_vn = random.choice(AMENITY_MAP[amenity])
         
-        ir = {
-            "target": "poi",
-            "aggregate": "count",
-            "where": [
-                {"op": "eq", "col": "amenity", "value": amenity},
-                {"op": "in_admin", "name": ward}
-            ]
-        }
+        sql, params = get_gold_sql_and_params("intersects+count", "poi", [amenity, ward["id"]])
+        results = run_gold_query(sql, params)
         
-        raw_templates.append({
-            "template": "intersects+count",
-            "question": f"Có bao nhiêu {amenity} ở {ward}?",
-            "target": "poi",
+        # Check non-degenerate threshold: count >= 3
+        count = int(list(results[0].values())[0]) if results else 0
+        if count < 3:
+            return None
+            
+        return {
+            "template": template_type,
             "difficulty": "Easy",
-            "ir": ir
-        })
-        
+            "question": f"Có bao nhiêu {amenity_vn} ở {ward['name']}?",
+            "target": "poi",
+            "answerable": True,
+            "ref_entities": [{"table": "boundaries", "id": ward["id"], "name": ward["name"]}],
+            "gold_ir": {
+                "target": "poi",
+                "aggregate": "count",
+                "where": [
+                    {"op": "eq", "col": "amenity", "value": amenity},
+                    {"op": "in_admin", "name": ward["name"]}
+                ]
+            },
+            "gold_sql": sql,
+            "gold_params": params,
+            "gold_results": results,
+            "key_cols": ["total"],
+            "ordered": False
+        }
+
     # 2. intersects+name
-    for _ in range(7):
+    elif template_type == "intersects+name":
         ward = random.choice(data["wards"])
-        amenity = random.choice(data["amenities"])
+        amenity = random.choice(list(AMENITY_MAP.keys()))
+        amenity_vn = random.choice(AMENITY_MAP[amenity])
         
-        ir = {
-            "target": "poi",
-            "select": ["name"],
-            "where": [
-                {"op": "eq", "col": "amenity", "value": amenity},
-                {"op": "in_admin", "name": ward}
-            ],
-            "limit": 10
-        }
+        sql, params = get_gold_sql_and_params("intersects+name", "poi", [amenity, ward["id"]])
+        results = run_gold_query(sql, params)
         
-        raw_templates.append({
-            "template": "intersects+name",
-            "question": f"Liệt kê danh sách các {amenity} nằm ở {ward}",
-            "target": "poi",
+        # Check non-degenerate threshold: list >= 3
+        if len(results) < 3:
+            return None
+            
+        return {
+            "template": template_type,
             "difficulty": "Easy",
-            "ir": ir
-        })
+            "question": f"Liệt kê tất cả {amenity_vn} nằm ở {ward['name']}",
+            "target": "poi",
+            "answerable": True,
+            "ref_entities": [{"table": "boundaries", "id": ward["id"], "name": ward["name"]}],
+            "gold_ir": {
+                "target": "poi",
+                "select": ["name"],
+                "where": [
+                    {"op": "eq", "col": "amenity", "value": amenity},
+                    {"op": "in_admin", "name": ward["name"]}
+                ]
+            },
+            "gold_sql": sql,
+            "gold_params": params,
+            "gold_results": results,
+            "key_cols": ["name"],
+            "ordered": False
+        }
 
     # 3. range+count
-    for _ in range(7):
+    elif template_type == "range+count":
         poi = random.choice(data["pois"])
-        meters = random.choice([500, 1000, 1500, 2000])
         target = random.choice(["poi", "accommodation"])
         label = "địa điểm" if target == "poi" else "nơi lưu trú"
+        meters = random.choice([500, 1000, 1500, 2000])
         
-        ir = {
-            "target": target,
-            "aggregate": "count",
-            "where": [
-                {"op": "within_distance", "meters": meters, "ref": {"table": "poi", "name": poi["name"]}}
-            ]
-        }
+        sql, params = get_gold_sql_and_params("range+count", target, [poi["id"], float(meters)])
+        results = run_gold_query(sql, params)
         
-        raw_templates.append({
-            "template": "range+count",
+        count = int(list(results[0].values())[0]) if results else 0
+        if count < 3:
+            return None
+            
+        return {
+            "template": template_type,
+            "difficulty": "Medium",
             "question": f"Có bao nhiêu {label} trong vòng {meters}m xung quanh {poi['name']}?",
             "target": target,
-            "difficulty": "Medium",
-            "ir": ir
-        })
+            "answerable": True,
+            "ref_entities": [{"table": "poi", "id": poi["id"], "name": poi["name"]}],
+            "gold_ir": {
+                "target": target,
+                "aggregate": "count",
+                "where": [
+                    {"op": "within_distance", "meters": meters, "ref": {"table": "poi", "name": poi["name"]}}
+                ]
+            },
+            "gold_sql": sql,
+            "gold_params": params,
+            "gold_results": results,
+            "key_cols": ["total"],
+            "ordered": False
+        }
 
     # 4. range+name
-    for _ in range(7):
+    elif template_type == "range+name":
         poi = random.choice(data["pois"])
-        meters = random.choice([500, 1000, 1500, 2000])
         target = random.choice(["poi", "accommodation"])
         label = "địa điểm du lịch" if target == "poi" else "khách sạn"
+        meters = random.choice([500, 1000, 1500, 2000])
         
-        ir = {
-            "target": target,
-            "select": ["name"],
-            "where": [
-                {"op": "within_distance", "meters": meters, "ref": {"table": "poi", "name": poi["name"]}}
-            ],
-            "limit": 10
-        }
+        sql, params = get_gold_sql_and_params("range+name", target, [poi["id"], float(meters)])
+        results = run_gold_query(sql, params)
         
-        raw_templates.append({
-            "template": "range+name",
-            "question": f"Tìm các {label} nằm trong bán kính {meters}m tính từ {poi['name']}",
-            "target": target,
+        if len(results) < 3:
+            return None
+            
+        return {
+            "template": template_type,
             "difficulty": "Medium",
-            "ir": ir
-        })
+            "question": f"Liệt kê tất cả {label} nằm trong bán kính {meters}m tính từ {poi['name']}",
+            "target": target,
+            "answerable": True,
+            "ref_entities": [{"table": "poi", "id": poi["id"], "name": poi["name"]}],
+            "gold_ir": {
+                "target": target,
+                "select": ["name"],
+                "where": [
+                    {"op": "within_distance", "meters": meters, "ref": {"table": "poi", "name": poi["name"]}}
+                ]
+            },
+            "gold_sql": sql,
+            "gold_params": params,
+            "gold_results": results,
+            "key_cols": ["name"],
+            "ordered": False
+        }
 
     # 5. knn+name
-    for _ in range(6):
+    elif template_type == "knn+name":
         poi = random.choice(data["pois"])
-        lon = round(poi["lon"] + random.uniform(-0.005, 0.005), 4)
-        lat = round(poi["lat"] + random.uniform(-0.005, 0.005), 4)
-        amenity = random.choice(data["amenities"])
+        lon = round(poi["lon"] + random.uniform(-0.003, 0.003), 4)
+        lat = round(poi["lat"] + random.uniform(-0.003, 0.003), 4)
+        amenity = random.choice(list(AMENITY_MAP.keys()))
+        amenity_vn = random.choice(AMENITY_MAP[amenity])
         
-        ir = {
-            "target": "poi",
-            "select": ["name"],
-            "where": [
-                {"op": "eq", "col": "amenity", "value": amenity}
-            ],
-            "nearest_to": {"lon": lon, "lat": lat},
-            "limit": 1
-        }
+        sql, params = get_gold_sql_and_params("knn+name", "poi", [amenity, lon, lat, 1])
+        results = run_gold_query(sql, params)
         
-        raw_templates.append({
-            "template": "knn+name",
-            "question": f"Quán {amenity} nào nằm gần nhất với tọa độ {lon} {lat}?",
-            "target": "poi",
+        if len(results) != 1:
+            return None
+            
+        return {
+            "template": template_type,
             "difficulty": "Medium",
-            "ir": ir
-        })
+            "question": f"Quán {amenity_vn} nào nằm gần nhất với tọa độ {lon} {lat}?",
+            "target": "poi",
+            "answerable": True,
+            "ref_entities": [],
+            "gold_ir": {
+                "target": "poi",
+                "select": ["name"],
+                "where": [
+                    {"op": "eq", "col": "amenity", "value": amenity}
+                ],
+                "nearest_to": {"lon": lon, "lat": lat},
+                "limit": 1
+            },
+            "gold_sql": sql,
+            "gold_params": params,
+            "gold_results": results,
+            "key_cols": ["name"],
+            "ordered": True
+        }
 
     # 6. knn+distance
-    # Note: In our current ir.py compiler, nearest_to returns the actual records ordered by distance.
-    # To answer "how far" (distance), we can select the record.
-    for _ in range(6):
+    elif template_type == "knn+distance":
         poi = random.choice(data["pois"])
-        lon = round(poi["lon"] + random.uniform(-0.005, 0.005), 4)
-        lat = round(poi["lat"] + random.uniform(-0.005, 0.005), 4)
+        lon = round(poi["lon"] + random.uniform(-0.003, 0.003), 4)
+        lat = round(poi["lat"] + random.uniform(-0.003, 0.003), 4)
         
-        ir = {
-            "target": "accommodation",
-            "select": ["name"],
-            "nearest_to": {"lon": lon, "lat": lat},
-            "limit": 1
-        }
+        sql, params = get_gold_sql_and_params("knn+distance", "accommodation", [lon, lat, 1])
+        results = run_gold_query(sql, params)
         
-        raw_templates.append({
-            "template": "knn+distance",
+        if len(results) != 1:
+            return None
+            
+        return {
+            "template": template_type,
+            "difficulty": "Hard",
             "question": f"Nơi lưu trú gần nhất với vị trí {lon} {lat} tên là gì?",
             "target": "accommodation",
-            "difficulty": "Hard",
-            "ir": ir
-        })
+            "answerable": True,
+            "ref_entities": [],
+            "gold_ir": {
+                "target": "accommodation",
+                "select": ["name"],
+                "nearest_to": {"lon": lon, "lat": lat},
+                "limit": 1
+            },
+            "gold_sql": sql,
+            "gold_params": params,
+            "gold_results": results,
+            "key_cols": ["name"],
+            "ordered": True
+        }
 
     # 7. knn:non_spat_filter+name
-    for _ in range(5):
+    elif template_type == "knn:non_spat_filter+name":
         poi = random.choice(data["pois"])
-        lon = round(poi["lon"] + random.uniform(-0.005, 0.005), 4)
-        lat = round(poi["lat"] + random.uniform(-0.005, 0.005), 4)
-        star = random.choice(data["stars"])
+        lon = round(poi["lon"] + random.uniform(-0.003, 0.003), 4)
+        lat = round(poi["lat"] + random.uniform(-0.003, 0.003), 4)
+        rating = random.choice([4.0, 4.2, 4.5])
         
-        ir = {
-            "target": "accommodation",
-            "select": ["name"],
-            "where": [
-                {"op": "eq", "col": "stars", "value": star}
-            ],
-            "nearest_to": {"lon": lon, "lat": lat},
-            "limit": 1
-        }
+        sql, params = get_gold_sql_and_params("knn:non_spat_filter+name", "accommodation", [float(rating), lon, lat, 1])
+        results = run_gold_query(sql, params)
         
-        raw_templates.append({
-            "template": "knn:non_spat_filter+name",
-            "question": f"Khách sạn {star} sao nằm gần nhất với tọa độ {lon} {lat} tên là gì?",
-            "target": "accommodation",
+        if len(results) != 1:
+            return None
+            
+        return {
+            "template": template_type,
             "difficulty": "Hard",
-            "ir": ir
-        })
+            "question": f"Nơi lưu trú có đánh giá từ {rating} trở lên nằm gần nhất với tọa độ {lon} {lat} tên là gì?",
+            "target": "accommodation",
+            "answerable": True,
+            "ref_entities": [],
+            "gold_ir": {
+                "target": "accommodation",
+                "select": ["name"],
+                "where": [
+                    {"op": "gte", "col": "rating", "value": rating}
+                ],
+                "nearest_to": {"lon": lon, "lat": lat},
+                "limit": 1
+            },
+            "gold_sql": sql,
+            "gold_params": params,
+            "gold_results": results,
+            "key_cols": ["name"],
+            "ordered": True
+        }
 
     # 8. range:non_spat_filter+name
-    for _ in range(5):
+    elif template_type == "range:non_spat_filter+name":
         poi = random.choice(data["pois"])
+        price_level = random.choice(["Rẻ", "Trung bình", "Sang trọng"])
+        price_vn = price_level.lower()
         meters = random.choice([1000, 2000])
-        price = random.choice(data["price_ranges"])
         
-        ir = {
-            "target": "accommodation",
-            "select": ["name"],
-            "where": [
-                {"op": "eq", "col": "price_level", "value": price},
-                {"op": "in", "col": "tourism", "value": ["guest_house", "hostel"]},
-                {"op": "within_distance", "meters": meters, "ref": {"table": "poi", "name": poi["name"]}}
-            ],
-            "limit": 10
-        }
+        sql, params = get_gold_sql_and_params("range:non_spat_filter+name", "accommodation", [price_level, poi["id"], float(meters)])
+        results = run_gold_query(sql, params)
         
-        raw_templates.append({
-            "template": "range:non_spat_filter+name",
-            "question": f"Liệt kê các homestay giá {price} cách {poi['name']} dưới {meters}m",
-            "target": "accommodation",
-            "difficulty": "Hard",
-            "ir": ir
-        })
-
-    # Process all cases, compiling SQL and fetching gold results
-    print("Compiling gold SQL and running query references...")
-    for t in raw_templates:
-        try:
-            sql, params = compile_ir(t["ir"])
-            agg = t["ir"].get("aggregate")
-            gold_res = get_gold_results(sql, params, agg)
+        if len(results) < 3:
+            return None
             
-            test_cases.append({
-                "id": qid,
-                "template": t["template"],
-                "question": t["question"],
-                "target": t["target"],
-                "difficulty": t["difficulty"],
-                "gold_ir": t["ir"],
-                "gold_sql": sql,
-                "gold_params": params,
-                "gold_results": gold_res
-            })
-            qid += 1
-        except Exception as e:
-            print(f"Skipping template {t['template']} due to compilation failure: {e}")
+        return {
+            "template": template_type,
+            "difficulty": "Hard",
+            "question": f"Liệt kê tất cả homestay giá {price_vn} cách {poi['name']} dưới {meters}m",
+            "target": "accommodation",
+            "answerable": True,
+            "ref_entities": [{"table": "poi", "id": poi["id"], "name": poi["name"]}],
+            "gold_ir": {
+                "target": "accommodation",
+                "select": ["name"],
+                "where": [
+                    {"op": "eq", "col": "price_level", "value": price_level},
+                    {"op": "in", "col": "tourism", "value": ["guest_house", "hostel"]},
+                    {"op": "within_distance", "meters": meters, "ref": {"table": "poi", "name": poi["name"]}}
+                ]
+            },
+            "gold_sql": sql,
+            "gold_params": params,
+            "gold_results": results,
+            "key_cols": ["name"],
+            "ordered": False
+        }
+
+    return None
+
+def generate_benchmark():
+    random.seed(42)  # Secure deterministic generation
+    data = fetch_db_entities()
+    
+    categories = [
+        "intersects+count",
+        "intersects+name",
+        "range+count",
+        "range+name",
+        "knn+name",
+        "knn+distance",
+        "knn:non_spat_filter+name",
+        "range:non_spat_filter+name"
+    ]
+    
+    cases_by_category = {cat: [] for cat in categories}
+    
+    print("Generating non-degenerate test cases...")
+    for cat in categories:
+        attempts = 0
+        while len(cases_by_category[cat]) < 17 and attempts < 1000:
+            attempts += 1
+            case = try_generate_case(cat, data)
+            if case:
+                cases_by_category[cat].append(case)
+        print(f"Generated {len(cases_by_category[cat])} cases for {cat} in {attempts} attempts.")
+        if len(cases_by_category[cat]) < 17:
+            print(f"Warning: could only generate {len(cases_by_category[cat])} cases for {cat}.")
+
+    # Generate unanswerable (L0) cases
+    l0_cases = []
+    for q in L0_QUESTIONS[:14]:
+        l0_cases.append({
+            "template": "unanswerable",
+            "difficulty": "Hard",
+            "question": q,
+            "target": None,
+            "answerable": False,
+            "ref_entities": [],
+            "gold_ir": {
+                "target": None,
+                "reason": "Không có dữ liệu trong DB để trả lời câu hỏi này."
+            },
+            "gold_sql": "SELECT NULL WHERE FALSE",
+            "gold_params": [],
+            "gold_results": [],
+            "key_cols": [],
+            "ordered": False
+        })
+    print(f"Generated {len(l0_cases)} unanswerable (L0) cases.")
+
+    # Distribute splits: pool (10), dev (40), test (100)
+    # Target counts:
+    # pool: 1 from each category (8 total) + 2 from L0 = 10
+    # dev: 4 from each category (32 total) + 8 from L0 = 40
+    # test: remaining 12 from each category (96 total) + 4 from L0 = 100
+    
+    pool_cases = []
+    dev_cases = []
+    test_cases = []
+    
+    for cat in categories:
+        cat_list = cases_by_category[cat]
+        # Distribute
+        pool_cases.extend(cat_list[0:1])
+        dev_cases.extend(cat_list[1:5])
+        test_cases.extend(cat_list[5:17])
+        
+    pool_cases.extend(l0_cases[0:2])
+    dev_cases.extend(l0_cases[2:10])
+    test_cases.extend(l0_cases[10:14])
+    
+    # Set split label and unified ID
+    qid = 1
+    final_dataset = []
+    
+    for case in pool_cases:
+        case["id"] = f"T{qid:03d}"
+        case["split"] = "pool"
+        final_dataset.append(case)
+        qid += 1
+        
+    for case in dev_cases:
+        case["id"] = f"T{qid:03d}"
+        case["split"] = "dev"
+        final_dataset.append(case)
+        qid += 1
+        
+    for case in test_cases:
+        case["id"] = f"T{qid:03d}"
+        case["split"] = "test"
+        final_dataset.append(case)
+        qid += 1
+
+    print(f"Total dataset size: {len(final_dataset)} cases.")
+    print(f"Pool size: {len(pool_cases)}")
+    print(f"Dev size: {len(dev_cases)}")
+    print(f"Test size: {len(test_cases)}")
 
     # Save to file
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(test_cases, f, ensure_ascii=False, indent=2)
+        json.dump(final_dataset, f, ensure_ascii=False, indent=2)
         
-    print(f"Successfully generated {len(test_cases)} validated test cases with gold answers in {OUTPUT_FILE}.")
+    print(f"Successfully generated new benchmark dataset at {OUTPUT_FILE}.")
 
 if __name__ == "__main__":
     generate_benchmark()
