@@ -1,0 +1,66 @@
+.routing-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.coord-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.coord-input {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: background 0.2s ease;
+}
+
+.coord-input:hover {
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.coord-input i {
+    font-size: 20px;
+}
+
+.coord-input i.start-icon {
+    color: #10b981;
+}
+
+.coord-input i.end-icon {
+    color: #ef4444;
+}
+
+.coord-input div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.coord-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+.coord-val {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.route-info {
+    display: none;
+    background: rgba(16, 185, 129, 0.05);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    flex-direction: column;
+    gap: 8px;
+}

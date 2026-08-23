@@ -1,0 +1,68 @@
+<div id="sidebar">
+    <!-- Left Navigation Sidebar -->
+    <div class="sidebar-nav-left">
+        <div class="nav-left-top">
+            <div id="logo-container">
+                <i class="fa-solid fa-earth-asia"></i>
+                <span class="logo-title">GeoAI <span class="logo-accent">Tourism</span></span>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('chat-tab')">
+                    <i class="fa-solid fa-comments"></i> <span>Hỏi đáp</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('routing-tab')">
+                    <i class="fa-solid fa-compass"></i> <span>Dẫn đường</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('itinerary-tab')">
+                    <i class="fa-solid fa-calendar-days"></i> <span>Lịch trình AI</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="nav-left-bottom">
+            <!-- Promo box: GeoAI Pro -->
+            <div class="pro-promo-card">
+                <div class="pro-header">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Trải nghiệm GeoAI Pro</span>
+                </div>
+                <p>Mở khóa tính năng nâng cao và đề xuất thông minh hơn.</p>
+                <button class="pro-btn" onclick="alert('Tính năng nâng cấp đang được phát triển!')">Nâng cấp ngay</button>
+            </div>
+            
+            <!-- User Profile Bar -->
+            <div id="user-auth-bar">
+                <button id="auth-btn" class="auth-btn-action" onclick="openAuthModal()">
+                    <i class="fa-solid fa-user-lock"></i> Đăng nhập / Đăng ký
+                </button>
+                
+                <div id="user-info-container" style="display: none;" class="user-info-box">
+                    <div class="user-profile-row">
+                        <div class="user-avatar">
+                            <i class="fa-solid fa-circle-user"></i>
+                        </div>
+                        <div class="user-details">
+                            <span id="user-name-text">Khách du lịch</span>
+                            <div class="user-role-row">
+                                <span id="user-role-text" class="role-badge">Free</span>
+                                <i class="fa-solid fa-chevron-down profile-arrow"></i>
+                            </div>
+                        </div>
+                        <button class="logout-btn" onclick="handleLogout()" title="Đăng xuất">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Panel (Active Tab Container) -->
+    <div class="sidebar-tab-content-right">
+        <!-- Placeholders loaded dynamically by app.js -->
+        <div id="chat-tab-placeholder"></div>
+        <div id="routing-tab-placeholder"></div>
+        <div id="itinerary-tab-placeholder"></div>
+    </div>
+</div>

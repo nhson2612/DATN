@@ -1,0 +1,90 @@
+.itin-day-block {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.itin-day-block:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.itin-day-title {
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-glow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.view-day-route-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent-purple);
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.view-day-route-btn:hover {
+    color: var(--accent-glow);
+}
+
+.itin-act-list {
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.itin-act-item {
+    padding-left: 10px;
+    border-left: 2px solid var(--accent-purple);
+    margin-bottom: 2px;
+}
+
+.time-badge {
+    background: rgba(129, 140, 248, 0.15);
+    color: var(--accent-purple);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.place-link {
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: color 0.2s;
+    font-weight: 600;
+}
+
+.place-link:hover {
+    color: var(--accent-glow);
+    text-decoration: underline;
+}
+
+.saved-itin-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.saved-itin-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
