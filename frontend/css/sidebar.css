@@ -1,0 +1,276 @@
+/* Light Theme Sidebar Layout Stylesheet */
+#sidebar {
+    width: 580px;
+    height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    z-index: 10;
+    display: flex;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+/* Left Navigation Column */
+.sidebar-nav-left {
+    width: 250px;
+    height: 100%;
+    border-right: 1px solid #f1f5f9;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.nav-left-top {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+#logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#logo-container i {
+    font-size: 24px;
+    color: #2563eb;
+}
+
+.logo-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.logo-accent {
+    color: #2563eb;
+}
+
+/* Tabs list */
+.tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    color: #64748b;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tab-btn i {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.tab-btn span {
+    font-weight: 700;
+}
+
+.tab-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.tab-btn.active {
+    background: rgba(37, 99, 235, 0.08);
+    color: #2563eb;
+}
+
+/* Bottom Sidebar Elements */
+.nav-left-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Pro Promo Card */
+.pro-promo-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    text-align: left;
+}
+
+.pro-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #2563eb;
+    margin-bottom: 6px;
+}
+
+.pro-promo-card p {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.45;
+    margin: 0 0 12px 0;
+}
+
+.pro-btn {
+    width: 100%;
+    padding: 8px 12px;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pro-btn:hover {
+    background: #1d4ed8;
+}
+
+/* User Auth Box */
+#user-auth-bar {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 16px;
+}
+
+.auth-btn-action {
+    width: 100%;
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.auth-btn-action:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+
+.user-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    box-sizing: border-box;
+}
+
+.user-profile-row:hover {
+    background: #f8fafc;
+}
+
+.user-avatar {
+    font-size: 28px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    text-align: left;
+}
+
+#user-name-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-role-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.role-badge {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #10b981;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    background: rgba(16, 185, 129, 0.08);
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.profile-arrow {
+    font-size: 9px;
+    color: #94a3b8;
+}
+
+.logout-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 6px;
+    transition: color 0.2s;
+}
+
+.logout-btn:hover {
+    color: #ef4444;
+}
+
+/* Right Tab Content drawer */
+.sidebar-tab-content-right {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.tab-panel {
+    display: none;
+    padding: 24px;
+    flex: 1;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.tab-panel.active {
+    display: flex;
+}

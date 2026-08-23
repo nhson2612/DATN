@@ -3,883 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoAI Tourism — Bản đồ hỏi đáp thông minh Đà Nẵng</title>
+    <title>GeoAI Tourism - Bản đồ Du lịch Đà Nẵng</title>
+
     <!-- MapLibre GL -->
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    
-    <style>
-        :root {
-            --bg-primary: #0b0f19;
-            --bg-sidebar: rgba(15, 23, 42, 0.75);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --accent-glow: #38bdf8;
-            --accent-purple: #818cf8;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --glass-bg: rgba(15, 23, 42, 0.6);
-            --glass-blur: blur(16px);
-        }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-        }
-
-        #app-container {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-
-        /* Sidebar Styling with Glassmorphism */
-        #sidebar {
-            width: 440px;
-            height: 100vh;
-            background: var(--bg-sidebar);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border-right: 1px solid var(--border-color);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        #logo-container {
-            padding: 24px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        #logo-container i {
-            font-size: 28px;
-            background: linear-gradient(135deg, var(--accent-glow), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        #logo-container h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        #logo-container span {
-            color: var(--accent-glow);
-        }
-
-        /* Tabs Selection */
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            background: transparent;
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .tab-btn.active {
-            color: var(--accent-glow);
-            border-bottom: 2px solid var(--accent-glow);
-            background: rgba(56, 189, 248, 0.05);
-        }
-
-        /* Tab Content Panel */
-        .tab-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .tab-panel {
-            display: none;
-            height: 100%;
-            flex-direction: column;
-        }
-
-        .tab-panel.active {
-            display: flex;
-        }
-
-        /* Chat Window styling */
-        #chat-history {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            padding-bottom: 20px;
-            scrollbar-width: thin;
-        }
-
-        .message {
-            max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 16px;
-            font-size: 14px;
-            line-height: 1.5;
-            position: relative;
-        }
-
-        .message.user {
-            background: linear-gradient(135deg, rgba(129, 140, 248, 0.2), rgba(99, 102, 241, 0.2));
-            border: 1px solid rgba(129, 140, 248, 0.3);
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.agent {
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-
-        .message .sql-box {
-            background: #020617;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 8px;
-            font-size: 12px;
-            overflow-x: auto;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #38bdf8;
-        }
-
-        .message .debug-tag {
-            font-size: 10px;
-            color: #a855f7;
-            text-transform: uppercase;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-bottom: 6px;
-        }
-
-        /* Loading Indicator */
-        .loading-dots {
-            display: inline-flex;
-            gap: 4px;
-            align-items: center;
-        }
-
-        .loading-dots span {
-            width: 8px;
-            height: 8px;
-            background: var(--accent-glow);
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-
-        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-
-        /* Chat Input Box */
-        .chat-input-container {
-            display: flex;
-            gap: 8px;
-            padding: 16px 0;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .chat-input-container input {
-            flex: 1;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 14px 16px;
-            color: var(--text-primary);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .chat-input-container input:focus {
-            border-color: var(--accent-glow);
-        }
-
-        .send-btn {
-            background: linear-gradient(135deg, var(--accent-glow), var(--accent-purple));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            width: 48px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: opacity 0.2s;
-        }
-
-        .send-btn:hover {
-            opacity: 0.9;
-        }
-
-        /* Routing Panel Styling */
-        .routing-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .coord-box {
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .coord-input {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .coord-input i {
-            width: 20px;
-            text-align: center;
-        }
-
-        .coord-input i.start-icon { color: #10b981; }
-        .coord-input i.end-icon { color: #ef4444; }
-
-        .coord-input div {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex: 1;
-        }
-
-        .coord-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            font-weight: 700;
-        }
-
-        .coord-val {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .route-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-        }
-
-        .route-btn:disabled {
-            background: #334155;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .route-info {
-            background: rgba(56, 189, 248, 0.05);
-            border: 1px solid rgba(56, 189, 248, 0.1);
-            border-radius: 12px;
-            padding: 16px;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        /* Map styling */
-        #map {
-            flex: 1;
-            height: 100vh;
-        }
-
-        /* Popup customization */
-        .maplibregl-popup-content {
-            background: var(--bg-primary) !important;
-            color: var(--text-primary) !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: 12px !important;
-            padding: 16px !important;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        .maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--bg-primary) !important; }
-        .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--bg-primary) !important; }
-        .maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: var(--bg-primary) !important; }
-        .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: var(--bg-primary) !important; }
-
-        .popup-title {
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            color: var(--accent-glow);
-        }
-
-        .popup-desc {
-            font-size: 12px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-
-        /* Floating Info Card */
-        #floating-card {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 16px 20px;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        }
-
-        #floating-card i {
-            font-size: 24px;
-            color: var(--accent-glow);
-        }
-
-        #floating-card div {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        #floating-card h4 {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        #floating-card p {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-    </style>
+    <!-- Modular Component Stylesheets -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/routing.css">
+    <link rel="stylesheet" href="css/itinerary.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
 
-    <div id="app-container">
-        
-        <!-- Sidebar -->
-        <div id="sidebar">
-            <div id="logo-container">
-                <i class="fa-solid fa-earth-asia"></i>
-                <div>
-                    <h1>GeoAI <span>Tourism</span></h1>
-                </div>
-            </div>
-
-            <!-- Tabs selector -->
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('chat-tab')">
-                    <i class="fa-solid fa-comments"></i> Hỏi đáp AI
-                </button>
-                <button class="tab-btn" onclick="switchTab('routing-tab')">
-                    <i class="fa-solid fa-route"></i> Dẫn đường
-                </button>
-            </div>
-
-            <!-- Tab contents -->
-            <div class="tab-content">
-                <!-- Chat Panel -->
-                <div id="chat-tab" class="tab-panel active">
-                    <div id="chat-history">
-                        <div class="message agent">
-                            Chào bạn! Mình là AI hỗ trợ du lịch Đà Nẵng tích hợp GIS. Bạn có thể hỏi mình những câu hỏi không gian phức tạp như:<br/><br/>
-                            • <i>"Tìm homestay 3 sao ở Sơn Trà cách biển dưới 500m"</i><br/>
-                            • <i>"Có nhà hàng hải sản nào gần cầu Rồng dưới 1km không?"</i>
-                        </div>
-                    </div>
-
-                    <div class="chat-input-container">
-                        <input type="text" id="chat-input" placeholder="Hỏi đáp bản đồ bằng tiếng Việt..." onkeydown="handleChatKey(event)">
-                        <button class="send-btn" onclick="sendChatMessage()">
-                            <i class="fa-solid fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Routing Panel -->
-                <div id="routing-tab" class="tab-panel">
-                    <div class="routing-panel">
-                        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">
-                            Chọn điểm đi và điểm đến trực tiếp bằng cách **click chuột trên bản đồ** để tìm đường đi ngắn nhất sử dụng mạng lưới giao thông của Đà Nẵng (pgRouting).
-                        </p>
-
-                        <div class="coord-box">
-                            <div class="coord-input">
-                                <i class="fa-solid fa-circle-play start-icon"></i>
-                                <div>
-                                    <span class="coord-label">Điểm bắt đầu</span>
-                                    <span id="start-coord-label" class="coord-val">Click trên bản đồ...</span>
-                                </div>
-                            </div>
-                            <div style="height: 1px; background: var(--border-color);"></div>
-                            <div class="coord-input">
-                                <i class="fa-solid fa-location-dot end-icon"></i>
-                                <div>
-                                    <span class="coord-label">Điểm kết thúc</span>
-                                    <span id="end-coord-label" class="coord-val">Click trên bản đồ...</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button id="find-route-btn" class="route-btn" onclick="calculateRoute()" disabled>
-                            <i class="fa-solid fa-compass"></i> Tìm đường đi ngắn nhất
-                        </button>
-
-                        <div id="route-result-info" class="route-info">
-                            <span style="font-size: 14px; font-weight: 700; color: #10b981;">
-                                <i class="fa-solid fa-road"></i> Kết quả tìm đường
-                            </span>
-                            <span id="route-distance-text" style="font-size: 13px;">Quãng đường: ...</span>
-                            <span style="font-size: 11px; color: var(--text-secondary);">Mạng lưới tính toán trực tiếp bằng pgRouting (Dijkstra).</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Map container -->
-        <div id="map"></div>
-
-        <!-- Floating Info Card -->
-        <div id="floating-card">
-            <i class="fa-solid fa-circle-info"></i>
-            <div>
-                <h4>Đà Nẵng & Hội An System</h4>
-                <p>PostGIS & pgRouting • EPSG:3406 (VN-2000 UTM Zone 49N)</p>
-            </div>
-        </div>
-
+    <!-- Landing Page (Shown when not logged in) -->
+    <div id="landing-page" style="display: none;">
+        <!-- Dynamically loaded from components/landing.html -->
     </div>
 
-    <script>
-        const API_BASE = "http://localhost:8000/api";
-        let map;
-        let startPoint = null;
-        let endPoint = null;
-        let startMarker = null;
-        let endMarker = null;
-        let routeLayerId = 'routing-path';
-        let queryLayers = [];
-        let queryMarkers = [];
+    <div id="app-container">
+        <!-- Sidebar Placeholder (dynamically loaded) -->
+        <div id="sidebar-container">
+            <div style="text-align: center; padding: 40px 0; color: var(--text-secondary); width: 250px;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 12px; color: var(--accent-glow);"></i>
+                <p>Đang tải giao diện hệ thống...</p>
+            </div>
+        </div>
 
-        // Initialize MapLibre
-        document.addEventListener("DOMContentLoaded", () => {
-            map = new maplibregl.Map({
-                container: 'map',
-                style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json', // Beautiful dark-themed vector style
-                center: [108.206, 16.047], // Da Nang center
-                zoom: 12,
-                pitch: 30
-            });
+        <!-- Map View Container & Overlay Widgets -->
+        <div class="map-view-wrapper" style="flex: 1; height: 100vh; position: relative;">
+            <div id="map" style="width: 100%; height: 100%;"></div>
 
-            map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+            <!-- Top Left Floating Search Input -->
+            <div class="map-search-bar">
+                <input type="text" id="map-search-input" placeholder="Tìm địa điểm, khách sạn, nhà hàng...">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            </div>
 
-            // Handle clicks on map for routing
-            map.on('click', (e) => {
-                const activeTab = document.querySelector('.tab-panel.active').id;
-                if (activeTab === 'routing-tab') {
-                    handleMapClickForRouting(e.lngLat);
-                }
-            });
-        });
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
-
-            const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(
-                btn => btn.innerHTML.includes(tabId === 'chat-tab' ? 'Hỏi đáp AI' : 'Dẫn đường')
-            );
-            if (targetBtn) targetBtn.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-        }
-
-        // --- Chat AI Implementation ---
-
-        function handleChatKey(e) {
-            if (e.key === 'Enter') {
-                sendChatMessage();
-            }
-        }
-
-        async function sendChatMessage() {
-            const inputEl = document.getElementById('chat-input');
-            const question = inputEl.value.strip ? inputEl.value.strip() : inputEl.value.trim();
-            if (!question) return;
-
-            inputEl.value = '';
-            
-            // Append User message
-            appendMessage(question, 'user');
-
-            // Append Agent placeholder with loading indicator
-            const agentMsgId = 'agent-' + Date.now();
-            appendMessage(`
-                <div class="loading-dots">
-                    <span></span><span></span><span></span>
-                </div>
-            `, 'agent', agentMsgId);
-
-            // Clear previous map layers/markers
-            clearQueryLayersAndMarkers();
-
-            try {
-                const response = await fetch(`${API_BASE}/chat`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question })
-                });
-                
-                const data = await response.json();
-                const agentEl = document.getElementById(agentMsgId);
-
-                if (!data.success) {
-                    agentEl.innerHTML = `Lỗi hệ thống: ${data.error || 'Không thể tạo truy vấn hợp lệ'}`;
-                    return;
-                }
-
-                // Render answer
-                let responseHtml = `<div>${data.explanation}</div>`;
-                
-                // Append SQL debug details
-                responseHtml += `
-                    <div style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
-                        <span class="debug-tag"><i class="fa-solid fa-code"></i> PostGIS SQL Sinh ra</span>
-                        <div class="sql-box">${data.sql}</div>
+            <!-- Top Right Floating System Status & Map Styles -->
+            <div class="map-top-right-widgets">
+                <!-- Connected status badge -->
+                <div class="system-status-badge">
+                    <span class="pulse-dot"></span>
+                    <div class="status-info">
+                        <strong>Đã kết nối & Hệ thống hoạt động</strong>
+                        <span>PostGIS • pgRouting • VN-2000 UTM Zone 49N</span>
                     </div>
-                `;
+                </div>
 
-                // If self-correction loop had errors, display them as debug info
-                const attemptsCount = data.debug.length;
-                if (attemptsCount > 1) {
-                    const errors = data.debug.filter(d => d.status === 'failed').map(d => d.error).join('<br/>');
-                    responseHtml += `
-                        <div style="margin-top: 8px; font-size: 11px; color: #f472b6;">
-                            <i class="fa-solid fa-bug"></i> Hệ thống tự phát hiện lỗi và sửa (${attemptsCount - 1} lần)
+                <!-- Map Type Selectors -->
+                <div class="map-type-selector">
+                    <button class="style-btn active" onclick="changeMapStyle('streets')"><i class="fa-solid fa-map"></i> Bản đồ</button>
+                    <button class="style-btn" onclick="changeMapStyle('satellite')"><i class="fa-solid fa-satellite"></i> Vệ tinh</button>
+                    <button class="style-btn" onclick="changeMapStyle('3d')"><i class="fa-solid fa-cube"></i> 3D</button>
+                    <button class="style-btn" onclick="changeMapStyle('traffic')"><i class="fa-solid fa-traffic-light"></i> Giao thông</button>
+                </div>
+            </div>
+
+            <!-- Right Floating Layer Filter Panel -->
+            <div class="map-right-filters-card">
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-hotel" checked onchange="toggleFilter('hotel')">
+                    <label for="filter-hotel"><i class="fa-solid fa-hotel icon-hotel"></i> Khách sạn</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-restaurant" checked onchange="toggleFilter('restaurant')">
+                    <label for="filter-restaurant"><i class="fa-solid fa-utensils icon-restaurant"></i> Nhà hàng</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-attraction" checked onchange="toggleFilter('attraction')">
+                    <label for="filter-attraction"><i class="fa-solid fa-tree icon-attraction"></i> Điểm tham quan</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-cafe" checked onchange="toggleFilter('cafe')">
+                    <label for="filter-cafe"><i class="fa-solid fa-mug-hot icon-cafe"></i> Cà phê</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-other" checked onchange="toggleFilter('other')">
+                    <label for="filter-other"><i class="fa-solid fa-location-dot icon-other"></i> Khác</label>
+                </div>
+                <button class="btn-advanced-filter" onclick="alert('Bộ lọc nâng cao đang được phát triển!')"><i class="fa-solid fa-sliders"></i> Bộ lọc nâng cao</button>
+            </div>
+
+            <!-- Bottom Left Radius Selector -->
+            <div class="map-radius-selector-card">
+                <h4>Tìm kiếm quanh đây</h4>
+                <div class="radius-options">
+                    <button class="radius-btn" onclick="setSearchRadius(500)">500m</button>
+                    <button class="radius-btn active" onclick="setSearchRadius(1000)">1km</button>
+                    <button class="radius-btn" onclick="setSearchRadius(2000)">2km</button>
+                    <button class="radius-btn" onclick="setSearchRadius(5000)">5km</button>
+                </div>
+            </div>
+
+            <!-- Bottom Right Zoom & Center Controls -->
+            <div class="map-zoom-controls">
+                <button class="zoom-btn target-btn" onclick="locateUser()"><i class="fa-solid fa-location-crosshairs"></i></button>
+                <div class="zoom-btn-group">
+                    <button class="zoom-btn" onclick="mapZoomIn()"><i class="fa-solid fa-plus"></i></button>
+                    <button class="zoom-btn" onclick="mapZoomOut()"><i class="fa-solid fa-minus"></i></button>
+                </div>
+            </div>
+
+            <!-- Bottom Suggestion Slider (Gợi ý cho bạn) -->
+            <div class="map-bottom-suggestions">
+                <div class="suggestions-header">
+                    <h3>Gợi ý cho bạn</h3>
+                    <a href="#" class="see-all-link" onclick="alert('Đang tải toàn bộ danh sách gợi ý!')">Xem tất cả</a>
+                </div>
+                <div class="suggestions-slider-row">
+                    <div class="suggestion-slide-card" onclick="fillChatSuggestion('Tìm khách sạn 4 sao gần vị trí của tôi')">
+                        <div class="slide-icon blue-icon"><i class="fa-solid fa-hotel"></i></div>
+                        <div class="slide-info">
+                            <h4>Khách sạn gần bạn</h4>
+                            <p>Tìm khách sạn chất lượng xung quanh vị trí hiện tại</p>
                         </div>
-                    `;
-                }
+                    </div>
+                    <div class="suggestion-slide-card" onclick="fillChatSuggestion('Tìm nhà hàng hải sản ngon gần đây dưới 1.5km')">
+                        <div class="slide-icon orange-icon"><i class="fa-solid fa-utensils"></i></div>
+                        <div class="slide-info">
+                            <h4>Nhà hàng hải sản</h4>
+                            <p>Khám phá nhà hàng hải sản ngon gần bạn</p>
+                        </div>
+                    </div>
+                    <div class="suggestion-slide-card" onclick="fillChatSuggestion('Gợi ý điểm du lịch tham quan nổi tiếng ở Đà Nẵng')">
+                        <div class="slide-icon green-icon"><i class="fa-solid fa-tree"></i></div>
+                        <div class="slide-info">
+                            <h4>Điểm tham quan</h4>
+                            <p>Top địa điểm không thể bỏ qua khi đến Đà Nẵng</p>
+                        </div>
+                    </div>
+                    <div class="suggestion-slide-card" onclick="switchTab('itinerary-tab')">
+                        <div class="slide-icon purple-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div class="slide-info">
+                            <h4>Lịch trình gợi ý</h4>
+                            <p>AI tạo lịch trình phù hợp với sở thích của bạn</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                agentEl.innerHTML = responseHtml;
+    <!-- User Auth Modal Overlay Placeholder (dynamically loaded) -->
+    <div id="auth-modal-container"></div>
 
-                // Render results on the map!
-                if (data.results && data.results.length > 0) {
-                    renderQueryResultsOnMap(data.results);
-                }
+    <!-- Modular Component Logic Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/routing.js"></script>
+    <script src="js/itinerary.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
 
-            } catch (err) {
-                console.error(err);
-                document.getElementById(agentMsgId).innerHTML = `Không thể kết nối đến máy chủ backend (Localhost:8000).`;
-            }
-        }
-
-        function appendMessage(text, sender, id = null) {
-            const chatHistory = document.getElementById('chat-history');
-            const msgEl = document.createElement('div');
-            msgEl.className = `message ${sender}`;
-            if (id) msgEl.id = id;
-            msgEl.innerHTML = text;
-            chatHistory.appendChild(msgEl);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-        }
-
-        function clearQueryLayersAndMarkers() {
-            // Clear markers
-            queryMarkers.forEach(m => m.remove());
-            queryMarkers = [];
-
-            // Clear layers
-            queryLayers.forEach(id => {
-                if (map.getLayer(id)) map.removeLayer(id);
-                if (map.getSource(id)) map.removeSource(id);
-            });
-            queryLayers = [];
-        }
-
-        function renderQueryResultsOnMap(results) {
-            const points = [];
-
-            results.forEach((item, index) => {
-                // Check if geom field is present
-                let geom = item.geom || item.geometry;
-                if (!geom) return;
-
-                const name = item.name || `Địa điểm ${index + 1}`;
-                const detail = item.address || item.description || item.tourism || item.amenity || '';
-
-                if (geom.type === 'Point') {
-                    const coords = geom.coordinates;
-                    points.push(coords);
-
-                    // Create standard Marker
-                    const el = document.createElement('div');
-                    el.style.width = '16px';
-                    el.style.height = '16px';
-                    el.style.borderRadius = '50%';
-                    el.style.background = 'radial-gradient(circle, #38bdf8 0%, #818cf8 100%)';
-                    el.style.border = '2px solid white';
-                    el.style.boxShadow = '0 0 10px #38bdf8';
-                    el.style.cursor = 'pointer';
-
-                    const popup = new maplibregl.Popup({ offset: 10 })
-                        .setHTML(`<div class="popup-title">${name}</div><div class="popup-desc">${detail}</div>`);
-
-                    const marker = new maplibregl.Marker({ element: el })
-                        .setLngLat(coords)
-                        .setPopup(popup)
-                        .addTo(map);
-
-                    queryMarkers.push(marker);
-                } 
-                else if (geom.type === 'Polygon' || geom.type === 'MultiPolygon') {
-                    const layerId = `layer-result-${index}`;
-                    map.addSource(layerId, {
-                        type: 'geojson',
-                        data: {
-                            type: 'Feature',
-                            properties: { name, detail },
-                            geometry: geom
-                        }
-                    });
-
-                    // Add outline
-                    map.addLayer({
-                        id: `${layerId}-outline`,
-                        type: 'line',
-                        source: layerId,
-                        layout: {},
-                        paint: {
-                            'line-color': '#818cf8',
-                            'line-width': 2
-                        }
-                    });
-
-                    // Add fill
-                    map.addLayer({
-                        id: layerId,
-                        type: 'fill',
-                        source: layerId,
-                        layout: {},
-                        paint: {
-                            'fill-color': '#38bdf8',
-                            'fill-opacity': 0.15
-                        }
-                    });
-
-                    queryLayers.push(layerId);
-                    queryLayers.push(`${layerId}-outline`);
-                }
-            });
-
-            // Center map to fit bounds of queried points
-            if (points.length > 0) {
-                const bounds = new maplibregl.LngLatBounds();
-                points.forEach(pt => bounds.extend(pt));
-                map.fitBounds(bounds, { padding: 50, maxZoom: 15 });
-            }
-        }
-
-        // --- pgRouting Implementation ---
-
-        function handleMapClickForRouting(lngLat) {
-            const coordsText = `${lngLat.lng.toFixed(5)}, ${lngLat.lat.toFixed(5)}`;
-
-            if (!startPoint) {
-                // Set start point
-                startPoint = [lngLat.lng, lngLat.lat];
-                document.getElementById('start-coord-label').innerText = coordsText;
-
-                // Add marker
-                if (startMarker) startMarker.remove();
-                
-                const el = document.createElement('div');
-                el.className = 'fa-solid fa-circle-play';
-                el.style.fontSize = '24px';
-                el.style.color = '#10b981';
-                el.style.textShadow = '0 0 5px white';
-
-                startMarker = new maplibregl.Marker({ element: el })
-                    .setLngLat(startPoint)
-                    .addTo(map);
-
-            } else if (!endPoint) {
-                // Set end point
-                endPoint = [lngLat.lng, lngLat.lat];
-                document.getElementById('end-coord-label').innerText = coordsText;
-
-                // Add marker
-                if (endMarker) endMarker.remove();
-                
-                const el = document.createElement('div');
-                el.className = 'fa-solid fa-location-dot';
-                el.style.fontSize = '24px';
-                el.style.color = '#ef4444';
-                el.style.textShadow = '0 0 5px white';
-
-                endMarker = new maplibregl.Marker({ element: el })
-                    .setLngLat(endPoint)
-                    .addTo(map);
-
-                // Enable button
-                document.getElementById('find-route-btn').disabled = false;
-            } else {
-                // Reset points
-                startPoint = [lngLat.lng, lngLat.lat];
-                endPoint = null;
-                document.getElementById('start-coord-label').innerText = coordsText;
-                document.getElementById('end-coord-label').innerText = "Click trên bản đồ...";
-                document.getElementById('find-route-btn').disabled = true;
-
-                if (startMarker) startMarker.remove();
-                if (endMarker) endMarker.remove();
-                clearRouteLayer();
-
-                const el = document.createElement('div');
-                el.className = 'fa-solid fa-circle-play';
-                el.style.fontSize = '24px';
-                el.style.color = '#10b981';
-                
-                startMarker = new maplibregl.Marker({ element: el })
-                    .setLngLat(startPoint)
-                    .addTo(map);
-            }
-        }
-
-        function clearRouteLayer() {
-            if (map.getLayer(routeLayerId)) map.removeLayer(routeLayerId);
-            if (map.getSource(routeLayerId)) map.removeSource(routeLayerId);
-            document.getElementById('route-result-info').style.display = 'none';
-        }
-
-        async function calculateRoute() {
-            if (!startPoint || !endPoint) return;
-
-            document.getElementById('find-route-btn').innerText = "Đang tính toán tuyến đường...";
-            clearRouteLayer();
-
-            try {
-                const response = await fetch(`${API_BASE}/route`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        start_lon: startPoint[0],
-                        start_lat: startPoint[1],
-                        end_lon: endPoint[0],
-                        end_lat: endPoint[1]
-                    })
-                });
-
-                const data = await response.json();
-                document.getElementById('find-route-btn').innerHTML = `<i class="fa-solid fa-compass"></i> Tìm đường đi ngắn nhất`;
-
-                if (!data.success || !data.path || data.path.length === 0) {
-                    alert("Không tìm thấy đường đi giữa hai điểm này trên mạng lưới đường bộ.");
-                    return;
-                }
-
-                // Compile features into single GeoJSON line representation
-                const features = data.path.map(segment => ({
-                    type: 'Feature',
-                    properties: { name: segment.street_name },
-                    geometry: segment.geom
-                }));
-
-                // Add source and layer
-                map.addSource(routeLayerId, {
-                    type: 'geojson',
-                    data: {
-                        type: 'FeatureCollection',
-                        features: features
-                    }
-                });
-
-                map.addLayer({
-                    id: routeLayerId,
-                    type: 'line',
-                    source: routeLayerId,
-                    layout: {
-                        'line-join': 'round',
-                        'line-cap': 'round'
-                    },
-                    paint: {
-                        'line-color': '#10b981',
-                        'line-width': 5,
-                        'line-opacity': 0.85
-                    }
-                });
-
-                // Display info
-                const distanceKm = (data.total_distance_meters / 1000).toFixed(2);
-                document.getElementById('route-distance-text').innerText = `Quãng đường: ${distanceKm} km (${data.total_distance_meters.toFixed(0)} mét)`;
-                document.getElementById('route-result-info').style.display = 'flex';
-
-            } catch (err) {
-                console.error(err);
-                alert("Lỗi khi gửi yêu cầu định tuyến tới backend.");
-                document.getElementById('find-route-btn').innerHTML = `<i class="fa-solid fa-compass"></i> Tìm đường đi ngắn nhất`;
-            }
-        }
-    </script>
 </body>
 </html>

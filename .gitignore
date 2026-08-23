@@ -11,10 +11,7 @@ env/
 **/*.pyd
 .pytest_cache/
 
-# Ignore specific markdown files in the workspace (except README.md)
-danh-gia-y-tuong-app-map-du-lich.md
-gis-va-llm-huong-de-tai.md
-y-tuong-datn-du-lich-ai.md
-y-tuong-moi-datn-du-lich-ai.md
+# Ignore markdown in the workspace except README.md
+# NOTE: this also ignores CLAUDE.md and docs/*.md -> need `git add -f` to commit them
 *.md
 !README.md

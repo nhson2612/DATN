@@ -1,0 +1,266 @@
+<nav class="landing-nav">
+    <div class="landing-brand">
+        <i class="fa-solid fa-earth-asia"></i>
+        <span>GeoAI Tourism</span>
+    </div>
+    <button class="btn-secondary" style="border-radius: 20px; padding: 8px 20px; border-color: rgba(37, 99, 235, 0.3); color: #2563eb; background: #ffffff;" onclick="scrollToLogin()">
+        <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+    </button>
+</nav>
+
+<div class="landing-hero-container">
+    <div class="landing-hero-left">
+        <div class="landing-tag">
+            <i class="fa-solid fa-location-dot"></i> HỆ THỐNG GIS DU LỊCH ĐÀ NẴNG
+        </div>
+        <h1 class="landing-title">
+            Khám Phá Đà Nẵng Theo Cách Thông Minh Hơn Với AI <span class="sparkle-blue">✦</span>
+        </h1>
+        <p class="landing-subtitle">
+            Hỗ trợ tìm kiếm không gian tự động bằng ngôn ngữ tự nhiên, tính toán dẫn đường tối ưu với pgRouting và lên lịch trình tour cá nhân hóa thông minh cùng trợ lý ảo GeoAI.
+        </p>
+        
+        <div class="landing-hero-cards">
+            <div class="hero-card-item">
+                <div class="hero-card-icon"><i class="fa-solid fa-comments"></i></div>
+                <div class="hero-card-info">
+                    <h4>Trợ Lý GeoAI</h4>
+                    <p>Tự động dịch ngôn ngữ tự nhiên thành truy vấn Spatial SQL trong cơ sở dữ liệu PostGIS.</p>
+                </div>
+                <i class="fa-solid fa-chevron-right hero-card-arrow"></i>
+            </div>
+            
+            <div class="hero-card-item">
+                <div class="hero-card-icon"><i class="fa-solid fa-route"></i></div>
+                <div class="hero-card-info">
+                    <h4>Định Tuyến pgRouting</h4>
+                    <p>Tìm kiếm đường đi ngắn nhất chính xác theo hệ tọa độ lưới VN-2000 UTM Zone 49N.</p>
+                </div>
+                <i class="fa-solid fa-chevron-right hero-card-arrow"></i>
+            </div>
+            
+            <div class="hero-card-item">
+                <div class="hero-card-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                <div class="hero-card-info">
+                    <h4>Lên Lịch Trình AI</h4>
+                    <p>Tự động hóa hành trình theo ngày khớp chính xác với ngân sách, xếp hạng khách sạn, sở thích của bạn.</p>
+                </div>
+                <i class="fa-solid fa-chevron-right hero-card-arrow"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Graphic Floating behind / beside the Login Section -->
+    <div class="landing-hero-center-graphic">
+        <img src="assets/danang_map_illustration.png" alt="Da Nang Map Illustration">
+    </div>
+
+    <div class="landing-hero-right" id="login-section">
+        <!-- Landing Card containing Login/Register Forms -->
+        <div class="landing-auth-card">
+            <!-- Login Form Panel -->
+            <div id="landing-login-panel">
+                <h3 class="auth-card-title"><i class="fa-solid fa-user-lock"></i> Đăng nhập hệ thống</h3>
+                <p class="auth-card-desc">Đăng nhập tài khoản của bạn để bắt đầu khám phá và lưu trữ lịch trình cá nhân.</p>
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px; letter-spacing: 0.5px;">ĐỊA CHỈ EMAIL</label>
+                    <input type="email" id="landing-email" class="itin-input" placeholder="Ví dụ: user@gmail.com hoặc admin@gmail.com">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px; position: relative;">
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px; letter-spacing: 0.5px;">MẬT KHẨU</label>
+                    <input type="password" id="landing-password" class="itin-input" placeholder="••••••••" style="padding-right: 40px;">
+                    <i class="fa-regular fa-eye-slash password-toggle-eye" onclick="togglePasswordVisibility('landing-password')" style="position: absolute; right: 12px; bottom: 12px; color: #64748b; cursor: pointer;"></i>
+                </div>
+                
+                <button class="route-btn" style="margin-top: 10px; width: 100%; background: #2563eb; color: #ffffff;" onclick="handleLandingLogin()">
+                    <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập ngay
+                </button>
+                
+                <p class="auth-switch-text">
+                    Chưa có tài khoản? <a href="javascript:void(0)" onclick="toggleLandingAuth(false)">Đăng ký tài khoản mới</a>
+                </p>
+            </div>
+
+            <!-- Register Form Panel -->
+            <div id="landing-register-panel" style="display: none;">
+                <h3 class="auth-card-title"><i class="fa-solid fa-user-plus"></i> Đăng ký tài khoản</h3>
+                <p class="auth-card-desc">Tạo tài khoản mới để trải nghiệm đầy đủ các tính năng lập tour du lịch thông minh.</p>
+                
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px; letter-spacing: 0.5px;">HỌ VÀ TÊN</label>
+                    <input type="text" id="landing-reg-name" class="itin-input" placeholder="Nguyễn Văn A">
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px; letter-spacing: 0.5px;">ĐỊA CHỈ EMAIL</label>
+                    <input type="email" id="landing-reg-email" class="itin-input" placeholder="user@gmail.com">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px; position: relative;">
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px; letter-spacing: 0.5px;">MẬT KHẨU</label>
+                    <input type="password" id="landing-reg-password" class="itin-input" placeholder="Tối thiểu 6 ký tự" style="padding-right: 40px;">
+                    <i class="fa-regular fa-eye-slash password-toggle-eye" onclick="togglePasswordVisibility('landing-reg-password')" style="position: absolute; right: 12px; bottom: 12px; color: #64748b; cursor: pointer;"></i>
+                </div>
+                
+                <button class="route-btn" style="margin-top: 10px; width: 100%; background: #2563eb; color: #ffffff;" onclick="handleLandingRegister()">
+                    <i class="fa-solid fa-user-plus"></i> Đăng ký tài khoản
+                </button>
+                
+                <p class="auth-switch-text">
+                    Đã có tài khoản? <a href="javascript:void(0)" onclick="toggleLandingAuth(true)">Đăng nhập tại đây</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 2: Interactive Feature Showcase -->
+<div class="landing-showcase-container">
+    <h2 class="showcase-title">Trải Nghiệm Các Tính Năng Đột Phá</h2>
+    <p class="showcase-subtitle">Nhấp chuột vào từng tính năng bên dưới để xem mô phỏng hoạt động trực quan bằng công nghệ GIS và Trí tuệ nhân tạo.</p>
+    
+    <div class="showcase-grid">
+        <!-- Left: Selectors -->
+        <div class="showcase-selectors">
+            <div class="showcase-card active" onclick="activateShowcase('geoai')">
+                <div class="showcase-icon"><i class="fa-solid fa-comments"></i></div>
+                <div class="showcase-card-info">
+                    <h3>Trợ lý không gian GeoAI</h3>
+                    <p>Tự động sinh mã truy vấn PostGIS SQL từ ngôn ngữ tự nhiên.</p>
+                </div>
+                <i class="fa-solid fa-chevron-right showcase-card-arrow"></i>
+            </div>
+            
+            <div class="showcase-card" onclick="activateShowcase('routing')">
+                <div class="showcase-icon"><i class="fa-solid fa-route"></i></div>
+                <div class="showcase-card-info">
+                    <h3>Tìm đường tối ưu pgRouting</h3>
+                    <p>Tìm đường đi ngắn nhất sử dụng thuật toán Dijkstra trên đồ thị giao thông thực tế.</p>
+                </div>
+                <i class="fa-solid fa-chevron-right showcase-card-arrow"></i>
+            </div>
+            
+            <div class="showcase-card" onclick="activateShowcase('itinerary')">
+                <div class="showcase-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                <div class="showcase-card-info">
+                    <h3>Lên lịch trình thông minh</h3>
+                    <p>Phân tích ngân sách và thời gian để sắp xếp lịch trình tối ưu từng ngày.</p>
+                </div>
+                <i class="fa-solid fa-chevron-right showcase-card-arrow"></i>
+            </div>
+        </div>
+
+        <!-- Right: Simulated Monitor -->
+        <div class="showcase-monitor">
+            <!-- Screen Header -->
+            <div class="monitor-header">
+                <div class="monitor-dots">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                </div>
+                <span class="monitor-title">GeoAI Tourism Console • Live Preview</span>
+                <span class="monitor-status-dot"><span class="pulse-dot"></span> Đang hoạt động</span>
+            </div>
+            
+            <!-- Screen Body -->
+            <div class="monitor-body">
+                <!-- Preview 1: GeoAI -->
+                <div id="preview-geoai" class="monitor-preview-pane active">
+                    <div class="preview-chat-box">
+                        <div class="sim-message user">
+                            <span class="sim-user-avatar"><i class="fa-solid fa-user-astronaut"></i></span>
+                            <span class="sim-user-text">"Tìm các khách sạn 3 sao ở Ngũ Hành Sơn gần bãi biển dưới 1km"</span>
+                        </div>
+                        <div class="sim-message agent-stream-container" id="geoai-sim-body">
+                            <!-- Dynamic simulated streaming will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview 2: Routing -->
+                <div id="preview-routing" class="monitor-preview-pane">
+                    <div class="preview-routing-box">
+                        <div class="sim-route-controls">
+                            <span><i class="fa-solid fa-circle-play" style="color: #2563eb;"></i> Cầu Rồng (Start)</span>
+                            <i class="fa-solid fa-arrow-right text-secondary"></i>
+                            <span><i class="fa-solid fa-location-dot" style="color: #ef4444;"></i> Chùa Linh Ứng (End)</span>
+                        </div>
+                        <div class="sim-graph-canvas">
+                            <svg viewBox="0 0 400 200" class="routing-svg">
+                                <!-- Graph Nodes -->
+                                <circle cx="50" cy="150" r="6" fill="#2563eb" id="node-start"></circle>
+                                <text x="35" y="135" fill="#1e293b" font-weight="700" font-size="10">Cầu Rồng</text>
+                                
+                                <circle cx="150" cy="120" r="5" fill="#94a3b8"></circle>
+                                <circle cx="180" cy="170" r="5" fill="#94a3b8"></circle>
+                                <circle cx="280" cy="80" r="5" fill="#94a3b8"></circle>
+                                
+                                <circle cx="350" cy="50" r="6" fill="#ef4444" id="node-end"></circle>
+                                <text x="310" y="35" fill="#1e293b" font-weight="700" font-size="10">Chùa Linh Ứng</text>
+                                
+                                <!-- Graph Edges -->
+                                <line x1="50" y1="150" x2="150" y2="120" stroke="#cbd5e1" stroke-width="2" id="edge-1"></line>
+                                <line x1="50" y1="150" x2="180" y2="170" stroke="#cbd5e1" stroke-width="2" id="edge-2"></line>
+                                <line x1="150" y1="120" x2="280" y2="80" stroke="#cbd5e1" stroke-width="2" id="edge-3"></line>
+                                <line x1="180" y1="170" x2="280" y2="80" stroke="#cbd5e1" stroke-width="2" id="edge-4"></line>
+                                <line x1="280" y1="80" x2="350" y2="50" stroke="#cbd5e1" stroke-width="2" id="edge-5"></line>
+                                
+                                <!-- Animated Glowing Path -->
+                                <path d="M 50 150 L 150 120 L 280 80 L 350 50" fill="none" stroke="#2563eb" stroke-width="3" stroke-dasharray="400" stroke-dashoffset="400" class="active-route-path"></path>
+                            </svg>
+                            <div class="sim-distance-overlay">Distance: 8.4 km (Calculated by Dijkstra)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview 3: Itinerary -->
+                <div id="preview-itinerary" class="monitor-preview-pane">
+                    <div class="preview-itinerary-box">
+                        <div class="sim-itin-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: #2563eb;"></i> Tour 3 ngày Đà Nẵng (Khớp ngân sách Trung bình)</div>
+                        <div class="sim-itin-days">
+                            <div class="sim-itin-day-card" style="animation-delay: 0.1s;">
+                                <div class="day-num">Ngày 1</div>
+                                <div class="day-desc">Đón sân bay • Checkin khách sạn 3 sao • Dạo mát bãi biển Mỹ Khê.</div>
+                            </div>
+                            <div class="sim-itin-day-card" style="animation-delay: 0.3s;">
+                                <div class="day-num">Ngày 2</div>
+                                <div class="day-desc">Tham quan Ngũ Hành Sơn • Ăn trưa hải sản • Khám phá phố cổ Hội An buổi tối.</div>
+                            </div>
+                            <div class="sim-itin-day-card" style="animation-delay: 0.5s;">
+                                <div class="day-num">Ngày 3</div>
+                                <div class="day-desc">Check-out khách sạn • Trải nghiệm cáp treo Bà Nà Hills • Mua sắm quà lưu niệm.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 3: Bottom Highlight Features Grid -->
+<div class="landing-highlights-container">
+    <div class="highlight-card item-blue">
+        <div class="highlight-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3>Dữ liệu chính xác</h3>
+        <p>Nguồn dữ liệu GIS chuẩn xác, được cập nhật thường xuyên.</p>
+    </div>
+    
+    <div class="highlight-card item-green">
+        <div class="highlight-icon"><i class="fa-solid fa-bolt"></i></div>
+        <h3>Xử lý nhanh chóng</h3>
+        <p>Công nghệ AI và GIS tối ưu, phản hồi trong giây lát.</p>
+    </div>
+    
+    <div class="highlight-card item-purple">
+        <div class="highlight-icon"><i class="fa-solid fa-user-check"></i></div>
+        <h3>Cá nhân hóa</h3>
+        <p>Gợi ý thông minh phù hợp với sở thích và ngân sách của bạn.</p>
+    </div>
+    
+    <div class="highlight-card item-orange">
+        <div class="highlight-icon"><i class="fa-solid fa-lock"></i></div>
+        <h3>Bảo mật tuyệt đối</h3>
+        <p>Thông tin tài khoản và dữ liệu cá nhân được bảo vệ an toàn.</p>
+    </div>
+</div>
