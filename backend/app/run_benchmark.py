@@ -2,7 +2,6 @@ import json
 import time
 import os
 import re
-import sys
 import unicodedata
 from collections import Counter
 from decimal import Decimal
@@ -11,8 +10,7 @@ from app import agent_legacy as old_agent
 from app import ir_agent as new_agent
 
 # Load benchmark questions
-benchmark_filename = "benchmark_gsqa.json" if "--legacy-file" in sys.argv else "benchmark_gsqa_auto.json"
-BENCHMARK_FILE = os.path.join(os.path.dirname(__file__), benchmark_filename)
+BENCHMARK_FILE = os.path.join(os.path.dirname(__file__), "benchmark_gsqa_auto.json")
 
 def check_crs_violation(sql):
     """
@@ -46,6 +44,25 @@ def check_crs_violation(sql):
                 return True
                 
     return False
+
+def is_abstention(res):
+    """Agent co TU CHOI tra loi mot cach tuong minh hay khong.
+
+    Truoc day benchmark coi "tra ve 0 dong" la tu choi. Sai o hai huong:
+      - Agent fail hoan toan (khong sinh duoc SQL) cung duoc tinh la tu choi,
+        nen mot agent luon crash se dat 100% tren nhom cau hoi L0.
+      - Cau hoi tra loi duoc nhung khong co ket qua bi tinh la tu choi sai.
+    Tu choi that phai la tin hieu ro rang: IR co target=None, hoac SQL dung
+    dang "SELECT NULL WHERE FALSE" ma compile_ir sinh cho truong hop do.
+    """
+    if not res.get("success"):
+        return False                      # that bai KHONG phai tu choi
+    ir = res.get("ir")
+    if isinstance(ir, dict) and ir.get("target") in (None, "none"):
+        return True
+    sql = (res.get("sql") or "").strip().rstrip(";").upper()
+    return sql == "SELECT NULL WHERE FALSE"
+
 
 def norm(v):
     if v is None:
@@ -111,8 +128,11 @@ def compute_semantic_accuracy(agent_rows, gold_results, is_count):
         if not gold_names and len(gold_results) > 0:
             gold_names = [list(row.values())[0] for row in gold_results]
             
-        agent_set = set(str(n).strip().lower() for n in agent_names)
-        gold_set = set(str(n).strip().lower() for n in gold_names)
+        # Dung chung norm() voi execution_match: str().lower() khong chuan hoa
+        # NFC nen ten tieng Viet luu NFD trong DB vs NFC trong gold JSON co the
+        # ex_match=True ma Jaccard=0 cho cung mot dong.
+        agent_set = set(norm(n) for n in agent_names)
+        gold_set = set(norm(n) for n in gold_names)
         
         if not agent_set and not gold_set:
             return 1.0
@@ -177,7 +197,9 @@ def run_benchmark():
             old_sql = old_res.get("sql", "")
             old_raw_sql = old_res.get("raw_sql", old_sql)
             
-            old_calls = len(old_res.get("debug", []))
+            # Dung so dem tuong minh tu agent. len(debug) khong phai so lan
+            # goi LLM: agent cu ghi them 1 entry moi lan thu chay -> lech +1.
+            old_calls = old_res.get("llm_calls", len(old_res.get("debug", [])))
             old_llm_calls.append(old_calls)
             
             # Check for CRS violations in RAW generated SQL (P2.3)
@@ -190,8 +212,15 @@ def run_benchmark():
                 
             old_rows = old_res.get("results", []) if old_ok else []
             
-            # Execution accuracy (binary match)
-            old_ex_match = execution_match(old_rows, gold_results, key_cols, ordered, is_count)
+            old_abstained = is_abstention(old_res)
+
+            # Execution accuracy. Voi cau hoi L0 (khong tra loi duoc) thi
+            # dung "co tu choi tuong minh hay khong" — so khop bang rong
+            # se cho diem ca nhung luot agent fail sach.
+            if not answerable:
+                old_ex_match = old_abstained
+            else:
+                old_ex_match = execution_match(old_rows, gold_results, key_cols, ordered, is_count)
             if old_ex_match:
                 old_ex_count += 1
                 
@@ -199,15 +228,14 @@ def run_benchmark():
             old_acc = compute_semantic_accuracy(old_rows, gold_results, is_count)
             old_accuracies.append(old_acc)
             
-            # Update old agent abstention counters
-            old_empty = (len(old_rows) == 0)
+            # Abstention confusion matrix — theo tin hieu tu choi tuong minh.
             if not answerable:
-                if old_empty:
+                if old_abstained:
                     old_tp += 1
                 else:
                     old_fn += 1
             else:
-                if old_empty:
+                if old_abstained:
                     old_fp += 1
                 else:
                     old_tn += 1
@@ -220,6 +248,7 @@ def run_benchmark():
                 "crs_violation": old_violation,
                 "accuracy": old_acc,
                 "ex_match": old_ex_match,
+                "abstained": old_abstained,
                 "llm_calls": old_calls,
                 "results_count": len(old_rows),
                 "error": old_res.get("error", "") if not old_ok else ""
@@ -229,10 +258,13 @@ def run_benchmark():
             old_latencies.append(old_time)
             old_accuracies.append(0.0)
             old_llm_calls.append(1)
+            # Crash KHONG phai tu choi: cau L0 ma crash la fn, cau tra loi
+            # duoc ma crash la tn. Truoc day crash duoc tinh tp -> mot agent
+            # luon loi se co abstention recall = 100%.
             if not answerable:
-                old_tp += 1  # count as abstained on error
+                old_fn += 1
             else:
-                old_fp += 1
+                old_tn += 1
             old_info = {
                 "success": False,
                 "sql": "",
@@ -241,6 +273,7 @@ def run_benchmark():
                 "crs_violation": False,
                 "accuracy": 0.0,
                 "ex_match": False,
+                "abstained": False,
                 "llm_calls": 1,
                 "results_count": 0,
                 "error": str(e)
@@ -257,7 +290,9 @@ def run_benchmark():
             new_ok = new_res.get("success", False)
             new_sql = new_res.get("sql", "")
             
-            new_calls = len(new_res.get("debug", []))
+            # Dung so dem tuong minh tu agent. len(debug) khong phai so lan
+            # goi LLM: agent cu ghi them 1 entry moi lan thu chay -> lech +1.
+            new_calls = new_res.get("llm_calls", len(new_res.get("debug", [])))
             new_llm_calls.append(new_calls)
             
             new_violation = check_crs_violation(new_sql)
@@ -269,23 +304,29 @@ def run_benchmark():
                 
             new_rows = new_res.get("results", []) if new_ok else []
             
-            # Execution accuracy (binary match)
-            new_ex_match = execution_match(new_rows, gold_results, key_cols, ordered, is_count)
+            new_abstained = is_abstention(new_res)
+
+            # Execution accuracy. Voi cau hoi L0 (khong tra loi duoc) thi
+            # dung "co tu choi tuong minh hay khong" — so khop bang rong
+            # se cho diem ca nhung luot agent fail sach.
+            if not answerable:
+                new_ex_match = new_abstained
+            else:
+                new_ex_match = execution_match(new_rows, gold_results, key_cols, ordered, is_count)
             if new_ex_match:
                 new_ex_count += 1
                 
             new_acc = compute_semantic_accuracy(new_rows, gold_results, is_count)
             new_accuracies.append(new_acc)
             
-            # Update new agent abstention counters
-            new_empty = (len(new_rows) == 0)
+            # Abstention confusion matrix — theo tin hieu tu choi tuong minh.
             if not answerable:
-                if new_empty:
+                if new_abstained:
                     new_tp += 1
                 else:
                     new_fn += 1
             else:
-                if new_empty:
+                if new_abstained:
                     new_fp += 1
                 else:
                     new_tn += 1
@@ -297,6 +338,7 @@ def run_benchmark():
                 "crs_violation": new_violation,
                 "accuracy": new_acc,
                 "ex_match": new_ex_match,
+                "abstained": new_abstained,
                 "llm_calls": new_calls,
                 "results_count": len(new_rows),
                 "error": new_res.get("error", "") if not new_ok else ""
@@ -306,10 +348,13 @@ def run_benchmark():
             new_latencies.append(new_time)
             new_accuracies.append(0.0)
             new_llm_calls.append(1)
+            # Crash KHONG phai tu choi: cau L0 ma crash la fn, cau tra loi
+            # duoc ma crash la tn. Truoc day crash duoc tinh tp -> mot agent
+            # luon loi se co abstention recall = 100%.
             if not answerable:
-                new_tp += 1
+                new_fn += 1
             else:
-                new_fp += 1
+                new_tn += 1
             new_info = {
                 "success": False,
                 "sql": "",
@@ -317,6 +362,7 @@ def run_benchmark():
                 "crs_violation": False,
                 "accuracy": 0.0,
                 "ex_match": False,
+                "abstained": False,
                 "llm_calls": 1,
                 "results_count": 0,
                 "error": str(e)

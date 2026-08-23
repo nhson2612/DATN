@@ -8,13 +8,15 @@ hay lỗi hệ toạ độ đều bị loại bỏ ở tầng biên dịch.
 
 import json
 import os
+import unicodedata
+
 import requests
 
 from app.db import execute_query
 from app.ir import compile_ir, IRError, TABLES
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
 
 IR_SYSTEM_PROMPT = """Bạn là trợ lý chuyển câu hỏi du lịch Đà Nẵng thành một đối tượng JSON đại diện (IR).
 Chỉ trả về JSON, không giải thích, không markdown.
@@ -24,35 +26,50 @@ CẤU TRÚC JSON:
   "target": "poi" hoặc "accommodation",
   "select": ["name"],                             // KHÔNG dùng khi hỏi đếm số lượng
   "aggregate": "count",                           // CHỈ dùng khi hỏi 'bao nhiêu', 'số lượng', 'đếm'
-  "where": [                                      // Chứa tất cả bộ lọc điều kiện
-    {"op": "eq", "col": "amenity", "value": "cafe"},
-    {"op": "gte", "col": "rating", "value": 4.5},
-    {"op": "in_admin", "name": "Sơn Trà"},        // lọc địa giới hành chính (phường/quận)
-    {"op": "within_distance", "meters": 500, "ref": {"table": "poi", "name": "Non Nuoc Beach"}}
+  "where": [                                      // Chứa tất cả bộ lọc điều kiện.
+                                                  // MỖI dòng dưới đây là TUỲ CHỌN — chỉ đưa vào
+                                                  // khi câu hỏi thực sự yêu cầu điều đó.
+    {"op": "eq",  "col": "<amenity|tourism>", "value": "<giá trị tra từ BẢNG MAPPING>"},
+    {"op": "gte", "col": "<rating|stars>",    "value": <số lấy từ câu hỏi>},
+    {"op": "in_admin", "name": "<tên phường/quận LẤY NGUYÊN TỪ CÂU HỎI>"},
+    {"op": "within_distance", "meters": <số lấy từ câu hỏi>,
+                              "ref": {"table": "poi", "name": "<tên địa điểm LẤY NGUYÊN TỪ CÂU HỎI>"}}
   ],
-  "nearest_to": {"lon": 108.2, "lat": 16.0},      // CHỈ dùng khi hỏi 'gần nhất' hoặc tọa độ cụ thể
-  "limit": 10                                     // mặc định là 10, nếu tìm 'gần nhất' thì limit là 1
+  "nearest_to": {"lon": <kinh độ trong câu hỏi>, "lat": <vĩ độ trong câu hỏi>},
+  "limit": <số>                                   // BỎ TRƯỜNG NÀY nếu câu hỏi không nêu số lượng
+                                                  // cụ thể; chỉ đặt 1 khi hỏi 'gần nhất'.
 }
 
 LƯU Ý QUAN TRỌNG:
-1. KHÔNG tự ý thêm trường "nearest_to" nếu câu hỏi không chứa từ "gần nhất" hoặc một cặp tọa độ số thực.
-2. Nếu câu hỏi yêu cầu đếm ("Có bao nhiêu..."), bạn BẮT BUỘC phải dùng "aggregate": "count" và BỎ TRƯỜNG "select".
-3. Với các câu hỏi lọc địa giới (ví dụ: ở Phường Sơn Trà, ở Sơn Trà, tại Ngũ Hành Sơn), bạn BẮT BUỘC dùng op "in_admin".
-4. Chỉ sử dụng các cột thực tế: rating, stars, price_level, amenity, tourism.
+1. TUYỆT ĐỐI KHÔNG bịa giá trị. Mọi "name" (trong "in_admin", trong "ref") và mọi số
+   ("meters", "lon", "lat", giá trị so sánh) BẮT BUỘC phải xuất hiện ngay trong câu hỏi.
+   Các tên và số trong phần CẤU TRÚC và VÍ DỤ chỉ là minh hoạ — KHÔNG được sao chép chúng
+   vào câu trả lời. Câu hỏi không nhắc tên địa điểm nào thì KHÔNG được thêm "within_distance".
+2. Nếu câu hỏi nêu LOẠI địa điểm (quán cà phê, nhà hàng, khách sạn, quán bar...) thì BẮT BUỘC
+   phải có bộ lọc {"op": "eq", "col": "amenity" HOẶC "tourism", "value": ...} tra từ BẢNG MAPPING.
+   Thiếu bộ lọc loại này thì câu trả lời SAI, vì truy vấn sẽ trả về mọi loại địa điểm.
+3. Chọn "target" theo LOẠI địa điểm: chỗ ăn/uống/tham quan (cafe, nhà hàng, bar, chợ, bảo tàng,
+   điểm ngắm cảnh) -> "poi". Chỗ NGỦ QUA ĐÊM (khách sạn, nhà nghỉ, hostel, homestay, resort)
+   -> "accommodation". Bảng "accommodation" KHÔNG có nhà hàng hay quán cà phê.
+4. KHÔNG tự ý thêm trường "nearest_to" nếu câu hỏi không chứa từ "gần nhất" hoặc một cặp tọa độ số thực.
+5. Nếu câu hỏi yêu cầu đếm ("Có bao nhiêu..."), bạn BẮT BUỘC phải dùng "aggregate": "count" và BỎ TRƯỜNG "select".
+6. Với các câu hỏi lọc địa giới (ví dụ: ở Phường Sơn Trà, ở Sơn Trà, tại Ngũ Hành Sơn), bạn BẮT BUỘC dùng op "in_admin".
+7. Chỉ sử dụng các cột thực tế: rating, stars, price_level, amenity, tourism.
    * BẢNG TRÀ CỨU GIÁ TRỊ (MAPPING):
-     - "quán cà phê", "quán cafe", "tiệm cà phê", "cửa hàng cafe" -> "amenity": "cafe"
-     - "nhà hàng", "quán ăn", "tiệm ăn" -> "amenity": "restaurant"
-     - "quán bar", "quán rượu", "bar" -> "amenity": "bar"
-     - "cửa hàng đồ ăn nhanh", "quán ăn nhanh", "tiệm ăn nhanh", "quán fast food" -> "amenity": "fast_food"
-     - "chợ", "trung tâm thương mại", "khu mua sắm" -> "amenity": "marketplace"
-     - "bến phà", "bến tàu", "bến tàu thủy" -> "amenity": "ferry_terminal"
-     - "nhà văn hóa", "trung tâm cộng đồng", "nhà sinh hoạt cộng đồng" -> "amenity": "community_centre"
+     (nhóm dưới đây LUÔN đi với target: "poi" — cột "amenity" CHỈ tồn tại ở bảng poi)
+     - "quán cà phê", "quán cafe", "tiệm cà phê", "cửa hàng cafe" -> target "poi", "amenity": "cafe"
+     - "nhà hàng", "quán ăn", "tiệm ăn" -> target "poi", "amenity": "restaurant"
+     - "quán bar", "quán rượu", "bar" -> target "poi", "amenity": "bar"
+     - "cửa hàng đồ ăn nhanh", "quán ăn nhanh", "tiệm ăn nhanh", "quán fast food" -> target "poi", "amenity": "fast_food"
+     - "chợ", "trung tâm thương mại", "khu mua sắm" -> target "poi", "amenity": "marketplace"
+     - "bến phà", "bến tàu", "bến tàu thủy" -> target "poi", "amenity": "ferry_terminal"
+     - "nhà văn hóa", "trung tâm cộng đồng", "nhà sinh hoạt cộng đồng" -> target "poi", "amenity": "community_centre"
      - "khách sạn", "hotel" -> "tourism": "hotel" (target: "accommodation")
      - "nhà khách", "guest house" -> "tourism": "guest_house" (target: "accommodation")
      - "nhà trọ", "hostel" -> "tourism": "hostel" (target: "accommodation")
      - "nhà nghỉ", "motel" -> "tourism": "motel" (target: "accommodation")
-5. Với các câu hỏi nằm ngoài phạm vi dữ liệu hoặc không thể trả lời được (ví dụ: thời tiết, giá vé cáp treo, tình trạng đông đúc, thời gian thực), bạn BẮT BUỘC trả về cấu trúc: {"target": null, "reason": "Không có dữ liệu trong DB để trả lời câu hỏi này."}
-6. Tuyệt đối KHÔNG tự ý thêm bộ lọc tên (ví dụ: {"op": "eq", "col": "name", "value": "..."}) nếu câu hỏi chỉ hỏi "tên là gì?" mà không chỉ đích danh một địa điểm cụ thể. Chỉ lọc theo tên khi câu hỏi chỉ định một địa danh cụ thể (ví dụ: "chùa Linh Ứng", "Cầu Rồng").
+8. Với các câu hỏi nằm ngoài phạm vi dữ liệu hoặc không thể trả lời được (ví dụ: thời tiết, giá vé cáp treo, tình trạng đông đúc, thời gian thực), bạn BẮT BUỘC trả về cấu trúc: {"target": null, "reason": "Không có dữ liệu trong DB để trả lời câu hỏi này."}
+9. Tuyệt đối KHÔNG tự ý thêm bộ lọc tên (ví dụ: {"op": "eq", "col": "name", "value": "..."}) nếu câu hỏi chỉ hỏi "tên là gì?" mà không chỉ đích danh một địa điểm cụ thể. Chỉ lọc theo tên khi câu hỏi chỉ định một địa danh cụ thể (ví dụ: "chùa Linh Ứng", "Cầu Rồng").
 
 VÍ DỤ
 Hỏi: Có bao nhiêu tiệm ăn ở Phường Hải Châu?
@@ -64,6 +81,79 @@ Hỏi: Nơi lưu trú có đánh giá từ 4.0 trở lên nằm gần nhất v�
 Hỏi: Thời tiết ở Đà Nẵng ngày mai như thế nào?
 {"target": null, "reason": "Không có thông tin thời tiết trong cơ sở dữ liệu."}
 """
+
+
+def _norm(text):
+    """Bo dau, ha chu thuong — de so khop ten trong cau hoi khong phu thuoc dau."""
+    text = str(text).lower().replace("đ", "d")
+    text = unicodedata.normalize("NFD", text)
+    return "".join(c for c in text if unicodedata.category(c) != "Mn")
+
+
+def prune_ungrounded(ir, question):
+    """Bo cac dieu kien co ten rieng khong he xuat hien trong cau hoi.
+
+    Model nho hay tu them "within_distance" tro toi mot dia diem khong nam trong
+    cau hoi — copy tu vi du trong prompt, hoac bia han. SQL sinh ra van chay
+    nhung tra ve 0 dong, tuc that bai im lang. Nhac trong prompt khong du.
+
+    Chon PRUNE thay vi nem IRError: thu nghiem cho thay qwen2.5:1.5b lap lai
+    dung loi do ca 3 luot retry, khien ca cau truy van fail cung — te hon la tra
+    ve ket qua rong. Mot dieu kien tro toi dia diem khong co trong cau hoi thi
+    chac chan khong thuoc y dinh nguoi dung, nen bo di la dung. Moi lan bo deu
+    duoc ghi vao debug, khong bo im lang.
+
+    Quy tac: it nhat mot nua so tu (dai >= 2 ky tu) cua ten phai xuat hien trong
+    cau hoi. Nho vay "bai bien My Khe" -> "My Khe Beach" van duoc giu, con
+    "hotel" hay "Non Nuoc Beach" trong cau hoi khong nhac gi thi bi bo.
+
+    Tra ve danh sach mo ta cac dieu kien da bo (rong neu khong bo gi).
+    """
+    # IR sai hinh dang (list/str/int/None) khong xu ly o day: tra ve ngay de
+    # compile_ir nem IRError nhu truoc, roi vong lap retry re-prompt model.
+    # Neu khong, ir.get() nem AttributeError va thoat ca question_to_sql -> 500.
+    if not isinstance(ir, dict):
+        return []
+
+    q = _norm(question)
+
+    def grounded(name):
+        tokens = [t for t in _norm(name).split() if len(t) >= 2]
+        if not tokens:
+            return False
+        return sum(1 for t in tokens if t in q) * 2 >= len(tokens)
+
+    def ungrounded_reason(cond):
+        op = cond.get("op")
+        if op == "within_distance":
+            name = (cond.get("ref") or {}).get("name", "")
+            if not grounded(name):
+                return f"bo 'within_distance' -> '{name}' (cau hoi khong nhac den)"
+        elif op == "in_admin":
+            name = cond.get("name", "")
+            if not grounded(name):
+                return f"bo 'in_admin' -> '{name}' (cau hoi khong nhac den)"
+        return None
+
+    dropped = []
+    for key in ("where", "filters", "spatial"):
+        conds = ir.get(key)
+        if not conds:
+            continue
+        if not isinstance(conds, list):
+            continue
+        kept = []
+        for cond in conds:
+            if not isinstance(cond, dict):
+                kept.append(cond)      # de compile_ir bao loi dung cho
+                continue
+            reason = ungrounded_reason(cond)
+            if reason:
+                dropped.append(reason)
+            else:
+                kept.append(cond)
+        ir[key] = kept
+    return dropped
 
 
 def query_ollama_json(prompt, system_prompt):
@@ -93,10 +183,12 @@ def question_to_sql(question, max_attempts=3):
     từ IR hợp lệ thì luôn chạy được, nên không cần retry vì lỗi cú pháp.
     """
     debug = []
+    llm_calls = 0
     prompt = f"Hỏi: {question}"
 
     for attempt in range(max_attempts):
         raw = query_ollama_json(prompt, IR_SYSTEM_PROMPT)
+        llm_calls += 1
         if not raw:
             debug.append({"attempt": attempt + 1, "error": "LLM không trả về gì"})
             break
@@ -107,6 +199,8 @@ def question_to_sql(question, max_attempts=3):
             debug.append({"attempt": attempt + 1, "raw": raw, "error": f"JSON hỏng: {e}"})
             prompt = f"Hỏi: {question}\n\nLần trước bạn trả về JSON hỏng. Chỉ trả về JSON hợp lệ."
             continue
+
+        pruned = prune_ungrounded(ir, question)
 
         try:
             sql, params = compile_ir(ir)
@@ -121,12 +215,17 @@ def question_to_sql(question, max_attempts=3):
             )
             continue
 
-        debug.append({"attempt": attempt + 1, "ir": ir, "status": "ok"})
-        return {"success": True, "ir": ir, "sql": sql, "params": params, "debug": debug}
+        entry = {"attempt": attempt + 1, "ir": ir, "status": "ok"}
+        if pruned:
+            entry["pruned"] = pruned
+        debug.append(entry)
+        return {"success": True, "ir": ir, "sql": sql, "params": params,
+                "llm_calls": llm_calls, "debug": debug}
 
     return {
         "success": False,
         "error": "Không tạo được truy vấn hợp lệ từ câu hỏi.",
+        "llm_calls": llm_calls,
         "debug": debug,
     }
 

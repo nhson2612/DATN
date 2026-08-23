@@ -186,7 +186,10 @@ def try_generate_case(template_type, data):
     elif template_type == "range+name":
         poi = random.choice(data["pois"])
         target = random.choice(["poi", "accommodation"])
-        label = "địa điểm du lịch" if target == "poi" else "khách sạn"
+        # Gold template khong he filter theo `tourism`, nen nhan phai trung tinh.
+        # Ghi "khach san" se buoc agent them tourism='hotel' theo dung luat trong
+        # prompt, roi bi gold phat — tuc phat dung hanh vi tuan chuan.
+        label = "địa điểm" if target == "poi" else "nơi lưu trú"
         meters = random.choice([500, 1000, 1500, 2000])
         
         sql, params = get_gold_sql_and_params("range+name", target, [poi["id"], float(meters)])
@@ -233,7 +236,9 @@ def try_generate_case(template_type, data):
         return {
             "template": template_type,
             "difficulty": "Medium",
-            "question": f"Quán {amenity_vn} nào nằm gần nhất với tọa độ {lon} {lat}?",
+            # Khong hardcode "Quan " o dau: amenity_vn da chua san danh tu
+            # ("cho", "ben tau", "nha van hoa"), ghep vao thanh "Quan cho".
+            "question": f"{amenity_vn[0].upper()}{amenity_vn[1:]} nào nằm gần nhất với tọa độ {lon} {lat}?",
             "target": "poi",
             "answerable": True,
             "ref_entities": [],
@@ -337,7 +342,9 @@ def try_generate_case(template_type, data):
         return {
             "template": template_type,
             "difficulty": "Hard",
-            "question": f"Liệt kê tất cả homestay giá {price_vn} cách {poi['name']} dưới {meters}m",
+            # Gold filter la tourism IN ('guest_house','hostel'). "homestay" khong
+            # co trong bang MAPPING cua prompt, nen dung dung tu vung anh xa duoc.
+            "question": f"Liệt kê tất cả nhà khách hoặc nhà trọ giá {price_vn} cách {poi['name']} dưới {meters}m",
             "target": "accommodation",
             "answerable": True,
             "ref_entities": [{"table": "poi", "id": poi["id"], "name": poi["name"]}],
@@ -390,7 +397,7 @@ def generate_benchmark():
 
     # Generate unanswerable (L0) cases
     l0_cases = []
-    for q in L0_QUESTIONS[:14]:
+    for q in L0_QUESTIONS:
         l0_cases.append({
             "template": "unanswerable",
             "difficulty": "Hard",
@@ -410,10 +417,9 @@ def generate_benchmark():
         })
     print(f"Generated {len(l0_cases)} unanswerable (L0) cases.")
 
-    # Distribute splits: pool (10), dev (40), test (100)
-    # Target counts:
-    # pool: 1 from each category (8 total) + 2 from L0 = 10
-    # dev: 4 from each category (32 total) + 8 from L0 = 40
+    # Distribute splits: pool (11), dev (40), test (100)
+    # pool: 1 from each category (8 total) + 3 from L0 = 11
+    # dev:  4 from each category (32 total) + 8 from L0 = 40
     # test: remaining 12 from each category (96 total) + 4 from L0 = 100
     
     pool_cases = []
@@ -427,9 +433,12 @@ def generate_benchmark():
         dev_cases.extend(cat_list[1:5])
         test_cases.extend(cat_list[5:17])
         
-    pool_cases.extend(l0_cases[0:2])
-    dev_cases.extend(l0_cases[2:10])
-    test_cases.extend(l0_cases[10:14])
+    # 15 cau L0: 3 vao pool, 8 vao dev, 4 vao test. Truoc day code dung
+    # L0_QUESTIONS[:14] nen am tham bo mat cau thu 15; gio dung ca 15 va don
+    # cau du vao pool de kich thuoc tap test giu nguyen 100.
+    pool_cases.extend(l0_cases[0:3])
+    dev_cases.extend(l0_cases[3:11])
+    test_cases.extend(l0_cases[11:15])
     
     # Set split label and unified ID
     qid = 1

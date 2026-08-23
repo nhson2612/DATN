@@ -39,7 +39,11 @@ TABLES = {
         "rating", "review_count", "price_level", "climate_label",
     },
     "accommodation": {
-        "name", "amenity", "tourism", "address", "price_range",
+        # "amenity" co ton tai trong bang nhung chi 2/1040 dong co gia tri, nen
+        # co tinh KHONG dua vao whitelist: IR kieu {accommodation, amenity=restaurant}
+        # se bi tu choi bang IRError roi LLM tu sua, thay vi bien dich thanh cong
+        # va tra ve 0 dong — that bai im lang.
+        "name", "tourism", "address", "price_range",
         "stars", "rating", "review_count", "price_level",
     },
 }
@@ -83,6 +87,14 @@ def _compile_condition(table, f, where, params):
     thường xuyên đặt nhầm toán tử không gian vào mảng thuộc tính khi IR có
     hai mảng song song. Cấu trúc phẳng loại bỏ hẳn lớp lỗi này.
     """
+    if not isinstance(f, dict):
+        # Mot phan tu khong phai object trong "where" tung nem AttributeError va
+        # thoat ca question_to_sql. Phai la IRError de vong lap retry xu ly duoc.
+        raise IRError(
+            f"Moi dieu kien trong \"where\" phai la mot doi tuong JSON, "
+            f"nhan duoc {f!r}"
+        )
+
     op = f.get("op")
 
     if op in SPATIAL_OPS:
@@ -102,8 +114,17 @@ def _compile_condition(table, f, where, params):
 
     elif op in COMPARISONS:
         col = _check_column(table, f["col"])
-        where.append(f"t.{col} {COMPARISONS[op]} %s")
-        params.append(f["value"])
+        value = f.get("value")
+        if op in ("eq", "neq") and isinstance(value, str):
+            # So khop text khong phan biet hoa/thuong lan dau. Gia tri trong DB
+            # viet hoa ('Rẻ', 'Trung bình', 'Sang trọng') con nguoi dung — va do
+            # do ca LLM — go chu thuong ('rẻ'), nen `t.col = %s` tra ve 0 dong
+            # trong khi IR hoan toan dung y dinh.
+            negate = "NOT " if op == "neq" else ""
+            where.append(f"{negate}unaccent(lower(t.{col})) = unaccent(lower(%s))")
+        else:
+            where.append(f"t.{col} {COMPARISONS[op]} %s")
+        params.append(value)
 
     else:
         raise IRError(

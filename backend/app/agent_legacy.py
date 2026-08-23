@@ -4,7 +4,7 @@ import requests
 from app.db import execute_query
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
 
 SYSTEM_PROMPT = """You are an expert PostGIS and Spatial SQL generator for a Vietnam tourism database.
 Your task is to generate PostgreSQL + PostGIS SQL queries to answer natural language questions about tourism in Da Nang.
@@ -160,10 +160,15 @@ def crs_guard(sql):
 
 def self_correct_loop(vietnamese_question):
     debug_logs = []
+    # Dem so lan goi LLM MOT CACH TUONG MINH. Truoc day benchmark suy ra tu
+    # len(debug), nhung ham nay ghi 1 entry cho lan sinh dau + 1 entry moi lan
+    # thu chay, nen len(debug) luon = so lan goi + 1 -> bao cao lech +1.
+    llm_calls = 0
     
     # Initial SQL generation prompt
     prompt = f"Generate a PostGIS SQL query to answer this question: '{vietnamese_question}'"
     raw_sql = query_ollama(prompt, system_prompt=SYSTEM_PROMPT)
+    llm_calls += 1
     raw_sql = raw_sql.replace("```sql", "").replace("```", "").strip()
     sql = crs_guard(raw_sql)
     
@@ -192,8 +197,9 @@ def self_correct_loop(vietnamese_question):
             return {
                 "success": True,
                 "sql": sql,
-                "raw_sql": debug_logs[0].get("raw_sql", sql),
+                "raw_sql": raw_sql,        # ban tho cua dung lan sinh ra `sql`
                 "results": results,
+                "llm_calls": llm_calls,
                 "debug": debug_logs
             }
             
@@ -224,14 +230,25 @@ Please correct the SQL query to fix the error. Remember:
 - Return ONLY the raw SQL query, no markdown syntax, no explanations.
 """
             new_raw_sql = query_ollama(correction_prompt, system_prompt=SYSTEM_PROMPT)
+            llm_calls += 1
             new_raw_sql = new_raw_sql.replace("```sql", "").replace("```", "").strip()
+            # Cap nhat raw_sql theo lan sinh moi nhat, va ghi lai vao debug —
+            # truoc day ban tho cua cac lan sua khong duoc luu o dau ca, nen
+            # check_crs_violation chi soi duoc lan dau.
+            raw_sql = new_raw_sql
             sql = crs_guard(new_raw_sql)
+            debug_logs.append({
+                "step": f"correction_{attempt+1}",
+                "raw_sql": new_raw_sql,
+                "sql": sql
+            })
             
     return {
         "success": False,
         "sql": sql,
-        "raw_sql": debug_logs[0].get("raw_sql", sql),
+        "raw_sql": raw_sql,
         "error": "Failed to generate valid SQL query after multiple attempts.",
+        "llm_calls": llm_calls,
         "debug": debug_logs
     }
 

@@ -527,13 +527,43 @@
         document.addEventListener("DOMContentLoaded", () => {
             map = new maplibregl.Map({
                 container: 'map',
-                style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json', // Beautiful dark-themed vector style
+                style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', // Bright, colorful and highly readable map style
                 center: [108.206, 16.047], // Da Nang center
                 zoom: 12,
                 pitch: 30
             });
 
             map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+
+            // Fetch and display the routing roads network in DB
+            map.on('load', async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/roads`);
+                    if (response.ok) {
+                        const roadsData = await response.json();
+                        map.addSource('db-roads', {
+                            type: 'geojson',
+                            data: roadsData
+                        });
+                        map.addLayer({
+                            id: 'db-roads-layer',
+                            type: 'line',
+                            source: 'db-roads',
+                            layout: {
+                                'line-join': 'round',
+                                'line-cap': 'round'
+                            },
+                            paint: {
+                                'line-color': '#4f46e5', // Deep indigo for routing network visibility on light theme
+                                'line-width': 2.2,
+                                'line-opacity': 0.6
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error("Lỗi khi tải mạng lưới đường từ DB:", err);
+                }
+            });
 
             // Handle clicks on map for routing
             map.on('click', (e) => {
@@ -830,8 +860,15 @@
                     })
                 });
 
-                const data = await response.json();
                 document.getElementById('find-route-btn').innerHTML = `<i class="fa-solid fa-compass"></i> Tìm đường đi ngắn nhất`;
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    alert(errData.detail || "Có lỗi xảy ra khi tính toán tuyến đường.");
+                    return;
+                }
+
+                const data = await response.json();
 
                 if (!data.success || !data.path || data.path.length === 0) {
                     alert("Không tìm thấy đường đi giữa hai điểm này trên mạng lưới đường bộ.");
@@ -844,6 +881,36 @@
                     properties: { name: segment.street_name },
                     geometry: segment.geom
                 }));
+
+                // Connect the exact clicked start coordinate to the snapped start node
+                if (data.start_snap_lon !== undefined && data.start_snap_lat !== undefined) {
+                    features.unshift({
+                        type: 'Feature',
+                        properties: { name: 'Kết nối bắt đầu (Đi bộ)' },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [startPoint[0], startPoint[1]],
+                                [data.start_snap_lon, data.start_snap_lat]
+                            ]
+                        }
+                    });
+                }
+
+                // Connect the snapped end node to the exact clicked end coordinate
+                if (data.end_snap_lon !== undefined && data.end_snap_lat !== undefined) {
+                    features.push({
+                        type: 'Feature',
+                        properties: { name: 'Kết nối kết thúc (Đi bộ)' },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [data.end_snap_lon, data.end_snap_lat],
+                                [endPoint[0], endPoint[1]]
+                            ]
+                        }
+                    });
+                }
 
                 // Add source and layer
                 map.addSource(routeLayerId, {
