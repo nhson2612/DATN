@@ -137,12 +137,20 @@ def _compile_spatial(s, where, params):
     op = s.get("op")
 
     if op == "in_admin":
+        # Ưu tiên khớp CHÍNH XÁC trước khi rơi về LIKE. Trước đây chỉ có
+        # "ORDER BY ST_Area(geom) DESC LIMIT 1", nên "Phường Hội An" trả về
+        # "Phường Hội An Tây" (diện tích lớn hơn) — sai im lặng: 40 quán cafe
+        # thay vì 13. Tên có thêm đuôi ("Tây", "Đông") thường là phường mới
+        # tách ra và TO hơn phường gốc, nên heuristic cũ ngược 180 độ.
+        name = s.get("name", "")
         where.append(
             f"ST_Contains((SELECT {VALID_BOUNDARY} FROM boundaries "
             f"WHERE {NAME_MATCH.format(col='name')} "
-            f"ORDER BY ST_Area(geom) DESC LIMIT 1), t.geom)"
+            f"ORDER BY (unaccent(lower(name)) = unaccent(lower(%s))) DESC, "
+            f"length(name) ASC, ST_Area(geom) DESC LIMIT 1), t.geom)"
         )
-        params.append(f"%{s['name']}%")
+        params.append(f"%{name}%")
+        params.append(name)
 
     elif op == "within_distance":
         ref = s.get("ref") or {}
@@ -151,14 +159,29 @@ def _compile_spatial(s, where, params):
             raise IRError(
                 f"ref.table '{ref_table}' không hợp lệ. Hợp lệ: {sorted(TABLES)}"
             )
-        # ::geography do compiler sinh -> khoảng cách luôn tính bằng mét
+        # ::geography do compiler sinh -> khoảng cách luôn tính bằng mét.
+        #
+        # Gom TẤT CẢ điểm khớp thay vì chọn một cái. Trước đây
+        # "ORDER BY length(name) LIMIT 1" gặp 24 POI tên y hệt "Highlands
+        # Coffee" — length(name) bằng nhau nên là tie hoàn toàn, Postgres trả
+        # về điểm nào tuỳ thứ tự quét, tức không xác định. "Gần Highlands
+        # Coffee" gần như chắc chắn có nghĩa "gần BẤT KỲ Highlands Coffee nào",
+        # nên ST_Collect mới là ngữ nghĩa đúng.
+        #
+        # rank() giữ lại các dòng khớp CHÍNH XÁC; chỉ khi không dòng nào khớp
+        # chính xác mới giữ toàn bộ dòng khớp LIKE. Nhờ vậy tên duy nhất
+        # (trường hợp benchmark dùng) vẫn chỉ ra đúng một điểm.
+        ref_name = ref.get("name", "")
         where.append(
             f"ST_DWithin(t.geom::geography, "
-            f"(SELECT geom FROM {ref_table} "
-            f" WHERE {NAME_MATCH.format(col='name')} "
-            f" ORDER BY length(name) LIMIT 1)::geography, %s)"
+            f"(SELECT ST_Collect(c.geom) FROM ("
+            f" SELECT geom, rank() OVER ("
+            f" ORDER BY (unaccent(lower(name)) = unaccent(lower(%s))) DESC) AS r"
+            f" FROM {ref_table} WHERE {NAME_MATCH.format(col='name')}"
+            f" ) c WHERE c.r = 1)::geography, %s)"
         )
-        params.append(f"%{ref.get('name', '')}%")
+        params.append(ref_name)
+        params.append(f"%{ref_name}%")
         params.append(_number(s.get("meters"), "meters"))
 
     elif op == "near_point":

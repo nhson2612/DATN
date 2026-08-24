@@ -345,19 +345,20 @@ def chat(request: ChatRequest, raw_req: Request):
 @app.post("/api/route")
 def route(request: RouteRequest):
     try:
+        # Đọc component từ bảng đã vật hoá, KHÔNG gọi pgr_connectedComponents ở
+        # đây. Hàm đó là O(V+E) trên toàn graph và câu này chạy 2 lần mỗi
+        # request (start + end), tức 2 lần quét cả mạng đường cho một lần bấm
+        # chỉ đường. Làm mới bảng bằng backend/refresh_road_components.py sau
+        # mỗi lần `roads` thay đổi.
         start_node_query = """
-            WITH components AS (
-                SELECT node, component, count(*) OVER (PARTITION BY component) as comp_size
-                FROM pgr_connectedComponents('SELECT id, source, target, cost, reverse_cost FROM roads')
-            )
             SELECT v.id,
                    ST_X(v.the_geom) as lon,
                    ST_Y(v.the_geom) as lat,
                    ST_Distance(v.the_geom::geography, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography) as dist_m
             FROM roads_vertices_pgr v
-            JOIN components c ON v.id = c.node
+            JOIN roads_components c ON c.node = v.id
             WHERE c.comp_size > 100
-            ORDER BY v.the_geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326) 
+            ORDER BY v.the_geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)
             LIMIT 1;
         """
         start_res = execute_query(start_node_query, (request.start_lon, request.start_lat, request.start_lon, request.start_lat))

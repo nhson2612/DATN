@@ -156,6 +156,63 @@ def prune_ungrounded(ir, question):
     return dropped
 
 
+def check_admin_ambiguity(ir):
+    """Từ chối khi tên đơn vị hành chính vẫn còn nhập nhằng — đừng đoán.
+
+    compile_ir đã ưu tiên khớp CHÍNH XÁC (xem in_admin trong ir.py), nên phần
+    lớn trường hợp đã được xử lý đúng. Nhưng nếu người dùng gõ thiếu ("Hội An"
+    thay vì "Phường Hội An") thì không có dòng nào khớp chính xác và cả 3 ứng
+    viên đều ngang nhau — compiler vẫn phải chọn một cái, tức lại đoán.
+
+    Ở đây chặn trước khi biên dịch và trả IRError kèm danh sách ứng viên, để
+    vòng self-repair đưa thông báo về cho LLM. Thất bại có tiếng thay vì một
+    con số trông hợp lý mà sai.
+
+    Hàm này cần truy vấn DB nên KHÔNG nằm trong ir.py — compiler được giữ
+    thuần, không phụ thuộc kết nối.
+    """
+    conditions = []
+    for key in ("where", "filters", "spatial"):
+        conditions.extend(ir.get(key) or [])
+
+    for cond in conditions:
+        if not isinstance(cond, dict) or cond.get("op") != "in_admin":
+            continue
+        name = cond.get("name") or ""
+        if not name:
+            continue
+        # 94 dòng nên seq scan là miễn phí. Ở quy mô toàn quốc cần index biểu
+        # thức trên unaccent(lower(name)).
+        rows = execute_query(
+            """
+            SELECT name,
+                   unaccent(lower(name)) = unaccent(lower(%s)) AS exact_hit
+            FROM boundaries
+            WHERE unaccent(lower(name)) LIKE unaccent(lower(%s))
+            ORDER BY length(name)
+            """,
+            (name, f"%{name}%"),
+        ) or []
+
+        exact = [r["name"] for r in rows if r["exact_hit"]]
+        if len(exact) > 1:
+            raise IRError(
+                f"Có {len(exact)} đơn vị hành chính tên đúng '{name}'. "
+                f"Cần nêu rõ quận/huyện hoặc tỉnh."
+            )
+        if exact:
+            continue                       # khớp chính xác duy nhất -> ổn
+        if len(rows) > 1:
+            ds = ", ".join(f"'{r['name']}'" for r in rows[:5])
+            raise IRError(
+                f"Tên '{name}' khớp {len(rows)} đơn vị hành chính ({ds}). "
+                f"Hãy dùng đúng tên đầy đủ của một trong số đó."
+            )
+        # 0 hoặc 1 ứng viên: để compile_ir chạy. Không khớp gì thì trả kết quả
+        # rỗng — trung thực hơn là fail cứng, và model nhỏ lặp lại lỗi cả 3 lượt
+        # retry nên raise ở đây chỉ đổi "rỗng" thành "vỡ".
+
+
 def query_ollama_json(prompt, system_prompt):
     """Gọi Ollama ở chế độ ép định dạng JSON."""
     payload = {
@@ -203,6 +260,7 @@ def question_to_sql(question, max_attempts=3):
         pruned = prune_ungrounded(ir, question)
 
         try:
+            check_admin_ambiguity(ir)
             sql, params = compile_ir(ir)
         except IRError as e:
             debug.append({"attempt": attempt + 1, "ir": ir, "error": str(e)})

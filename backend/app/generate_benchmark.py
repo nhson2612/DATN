@@ -43,7 +43,8 @@ def fetch_db_entities():
         SELECT id, name
         FROM boundaries b
         WHERE admin_level = 6
-          AND (SELECT count(*) FROM boundaries WHERE name = b.name) = 1
+          AND (SELECT count(*) FROM boundaries
+               WHERE unaccent(lower(name)) = unaccent(lower(b.name))) = 1
           AND ST_Within(geom, ST_MakeEnvelope(107.95, 15.95, 108.35, 16.20, 4326))
         ORDER BY name;
     """)
@@ -54,7 +55,13 @@ def fetch_db_entities():
         FROM poi p
         WHERE name IS NOT NULL
           AND name !~ '^(POI|Accommodation|Road) [0-9]+$'
-          AND (SELECT count(*) FROM poi WHERE name = p.name) = 1
+          -- Phai chuan hoa: "name = p.name" phan biet dau VA phan biet dang
+          -- Unicode, nen "Bánh mì" vs "Banh Mi" va NFD vs NFC deu lot qua ->
+          -- sinh ra case thoai hoa (T021 co 4 POI khop, T078 co 2).
+          AND (SELECT count(*) FROM poi
+               WHERE unaccent(lower(name)) = unaccent(lower(p.name))) = 1
+          -- Ten qua ngan thuong la danh tu chung ("Bánh mì"), khong phai dia danh
+          AND length(p.name) >= 6
           AND ST_Within(geom, ST_MakeEnvelope(107.95, 15.95, 108.35, 16.20, 4326))
         ORDER BY name;
     """)
