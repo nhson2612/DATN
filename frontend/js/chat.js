@@ -160,14 +160,38 @@ function renderQueryResultsOnMap(results) {
             const coords = geom.coordinates;
             points.push(coords);
 
-            const el = document.createElement('div');
-            el.style.width = '16px';
-            el.style.height = '16px';
-            el.style.borderRadius = '50%';
-            el.style.background = 'radial-gradient(circle, #38bdf8 0%, #818cf8 100%)';
-            el.style.border = '2px solid white';
-            el.style.boxShadow = '0 0 10px #38bdf8';
-            el.style.cursor = 'pointer';
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.alignItems = 'center';
+            container.style.pointerEvents = 'none';
+
+            const dot = document.createElement('div');
+            dot.style.width = '16px';
+            dot.style.height = '16px';
+            dot.style.borderRadius = '50%';
+            dot.style.background = 'radial-gradient(circle, #38bdf8 0%, #818cf8 100%)';
+            dot.style.border = '2px solid white';
+            dot.style.boxShadow = '0 0 10px #38bdf8';
+            dot.style.cursor = 'pointer';
+            dot.style.pointerEvents = 'auto'; // enable interaction on dot
+
+            const label = document.createElement('div');
+            label.innerText = name;
+            label.style.fontSize = '10px';
+            label.style.fontWeight = '700';
+            label.style.color = '#1e293b';
+            label.style.background = 'rgba(255, 255, 255, 0.9)';
+            label.style.border = '1px solid #cbd5e1';
+            label.style.padding = '2px 6px';
+            label.style.borderRadius = '4px';
+            label.style.marginTop = '4px';
+            label.style.whiteSpace = 'nowrap';
+            label.style.boxShadow = '0 1.5px 3px rgba(0,0,0,0.1)';
+            label.style.pointerEvents = 'auto'; // enable interaction on label too
+
+            container.appendChild(dot);
+            container.appendChild(label);
 
             let popupContent = `<div class="popup-title">${name}</div><div class="popup-desc">${detail}</div>`;
             if (currentUser && currentUser.role === 'admin') {
@@ -183,7 +207,7 @@ function renderQueryResultsOnMap(results) {
             const popup = new maplibregl.Popup({ offset: 10 })
                 .setHTML(popupContent);
 
-            const marker = new maplibregl.Marker({ element: el })
+            const marker = new maplibregl.Marker({ element: container })
                 .setLngLat(coords)
                 .setPopup(popup)
                 .addTo(map);

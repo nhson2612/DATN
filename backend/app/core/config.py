@@ -67,6 +67,22 @@ class Settings(BaseSettings):
     ir_default_limit: int = 20
     ir_max_attempts: int = 3
 
+    # ---- Ghi log ----
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    log_format: Literal["text", "json"] = "text"
+    log_file: str | None = Field(
+        default=None,
+        description="Đường dẫn file log. Bỏ trống thì chỉ ghi ra stdout.",
+    )
+    log_sql: bool = Field(
+        default=False,
+        description="Ghi log mọi câu SQL kèm thời gian chạy. Rất ồn, chỉ dùng khi debug.",
+    )
+    log_slow_query_ms: int = Field(
+        default=500,
+        description="Câu SQL chậm hơn ngưỡng này luôn được ghi WARNING, kể cả khi LOG_SQL=false.",
+    )
+
     # ---- Tài khoản khởi tạo lần đầu ----
     # Chỉ được tạo khi bảng users còn trống. Mật khẩu trước đây hardcode
     # "admin"/"123456" ngay trong main.py.

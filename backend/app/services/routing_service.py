@@ -1,7 +1,10 @@
 """Định tuyến: snap hai đầu, tìm đường, xử lý chiều lưu thông."""
 
 from app.core.config import settings
+from app.core.logging import get_logger, log_duration
 from app.repositories import road_repo
+
+logger = get_logger(__name__)
 
 
 class SnapTooFarError(Exception):
@@ -22,7 +25,12 @@ def _snap(lon: float, lat: float, which: str):
     if not node:
         raise NoRouteError(f"Không tìm được đỉnh mạng lưới gần {which}")
     if node["dist_m"] > settings.max_snap_distance_meters:
+        logger.info(
+            "%s cách mạng lưới %.0fm, vượt ngưỡng %dm",
+            which, node["dist_m"], settings.max_snap_distance_meters,
+        )
         raise SnapTooFarError(which, node["dist_m"])
+    logger.debug("%s snap vào đỉnh %s, cách %.0fm", which, node["id"], node["dist_m"])
     return node
 
 
@@ -39,11 +47,26 @@ def find_route(start_lon, start_lat, end_lon, end_lat):
     start = _snap(start_lon, start_lat, "Điểm bắt đầu")
     end = _snap(end_lon, end_lat, "Điểm kết thúc")
 
-    path = road_repo.shortest_path(start["id"], end["id"], directed=True)
+    with log_duration(logger, "pgr_dijkstra directed=true",
+                      start=start["id"], end=end["id"]):
+        path = road_repo.shortest_path(start["id"], end["id"], directed=True)
     may_violate_oneway = False
     if not path:
-        path = road_repo.shortest_path(start["id"], end["id"], directed=False)
+        # Không có tuyến hợp pháp -> bỏ qua chiều. Phải ghi WARNING: tuyến trả
+        # về có thể đi ngược chiều đường một chiều.
+        logger.warning(
+            "Không có tuyến đúng chiều %s->%s, thử lại không xét chiều",
+            start["id"], end["id"],
+        )
+        with log_duration(logger, "pgr_dijkstra directed=false",
+                          start=start["id"], end=end["id"]):
+            path = road_repo.shortest_path(start["id"], end["id"], directed=False)
         may_violate_oneway = bool(path)
+        if path:
+            logger.warning(
+                "Tuyến %s->%s CÓ THỂ đi ngược chiều (%d đoạn)",
+                start["id"], end["id"], len(path),
+            )
     if not path:
         raise NoRouteError(
             "Không tìm được tuyến đường giữa hai điểm này trong mạng lưới đường bộ."

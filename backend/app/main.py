@@ -13,18 +13,26 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.middleware import RequestLogMiddleware
 from app.api.routes import auth, chat, itineraries, places, routing
 from app.core.bootstrap import create_default_users
+from app.core.logging import get_logger, setup_logging
+
+setup_logging()
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Khởi động GeoAI Tourism API")
     create_default_users()
     yield
+    logger.info("Tắt GeoAI Tourism API")
 
 
 app = FastAPI(title="GeoAI Tourism API", lifespan=lifespan)
 
+app.add_middleware(RequestLogMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

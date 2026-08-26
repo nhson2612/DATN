@@ -105,6 +105,33 @@ Every tunable lives in `app/core/config.py` (pydantic-settings) and is read from
   `API_BASE` from `window.location` and can be overridden by `js/config.js`
   (gitignored, with `config.example.js` alongside).
 
+### Logging
+
+`app/core/logging.py` is the only place logging is configured; call
+`get_logger(__name__)` instead of `print()`. The project used bare `print()`
+everywhere before, so there were no levels, no timestamps, no way to turn output
+off, and no file sink.
+
+- **`request_id` ties a whole API call together.** `RequestLogMiddleware` puts an
+  8-hex id in a `ContextVar`, so every line emitted during that request — including
+  SQL run deep inside a repository — carries the same id, and it comes back to the
+  caller in the `X-Request-ID` header. Pass `X-Request-ID` in and it is reused.
+- **Slow SQL is always logged at WARNING**, over `LOG_SLOW_QUERY_MS` (default
+  500 ms), even when `LOG_SQL=false`. This is the one thing that shows which query
+  is costing time without turning on full statement logging.
+- `log_duration(logger, "what", **ctx)` is a context manager for the expensive
+  steps — LLM calls, `pgr_dijkstra`. It logs on the way out even when the block
+  raises, at ERROR.
+- `LOG_FORMAT=json` emits one JSON object per line; anything passed as
+  `extra={"ctx_foo": ...}` becomes a top-level `foo` field.
+- A fallback to `directed := false` in routing logs **WARNING** — that route may
+  travel the wrong way down a one-way street, so it should be visible in logs and
+  not only in the `may_violate_oneway` response field.
+
+`app/research/` and `backend/scripts/` still use `print()` on purpose: they are
+batch jobs whose output is meant to be read directly on a terminal, and
+`research/` is the thesis code that should not be touched.
+
 ### Tests
 
 `backend/tests/`, run with `cd backend && ./venv/bin/python -m unittest discover -s tests`.

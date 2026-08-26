@@ -98,6 +98,12 @@ function renderItineraryDayOnMap(dayNumber) {
         if (act.lon !== undefined && act.lat !== undefined) {
             points.push([act.lon, act.lat]);
             
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.alignItems = 'center';
+            container.style.pointerEvents = 'none';
+
             const el = document.createElement('div');
             el.className = 'itin-marker';
             el.innerHTML = `<span>${idx + 1}</span>`;
@@ -114,11 +120,29 @@ function renderItineraryDayOnMap(dayNumber) {
             el.style.border = '2px solid white';
             el.style.boxShadow = '0 0 5px rgba(0,0,0,0.5)';
             el.style.cursor = 'pointer';
+            el.style.pointerEvents = 'auto';
+
+            const label = document.createElement('div');
+            label.innerText = act.name;
+            label.style.fontSize = '10px';
+            label.style.fontWeight = '700';
+            label.style.color = '#1e293b';
+            label.style.background = 'rgba(255, 255, 255, 0.9)';
+            label.style.border = '1px solid #cbd5e1';
+            label.style.padding = '2px 6px';
+            label.style.borderRadius = '4px';
+            label.style.marginTop = '4px';
+            label.style.whiteSpace = 'nowrap';
+            label.style.boxShadow = '0 1.5px 3px rgba(0,0,0,0.1)';
+            label.style.pointerEvents = 'auto';
+
+            container.appendChild(el);
+            container.appendChild(label);
             
             const popup = new maplibregl.Popup({ offset: 10 })
                 .setHTML(`<div class="popup-title">${act.time}: ${act.name}</div><div class="popup-desc">${act.description}</div>`);
                 
-            const marker = new maplibregl.Marker({ element: el })
+            const marker = new maplibregl.Marker({ element: container })
                 .setLngLat([act.lon, act.lat])
                 .setPopup(popup)
                 .addTo(map);
@@ -380,6 +404,12 @@ async function renderSavedItineraryDayOnMap(dayNumber) {
         if (act.lon !== undefined && act.lat !== undefined) {
             points.push([act.lon, act.lat]);
             
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.alignItems = 'center';
+            container.style.pointerEvents = 'none';
+
             const el = document.createElement('div');
             el.className = 'itin-marker';
             el.innerHTML = `<span>${idx + 1}</span>`;
@@ -396,11 +426,29 @@ async function renderSavedItineraryDayOnMap(dayNumber) {
             el.style.border = '2px solid white';
             el.style.boxShadow = '0 0 5px rgba(0,0,0,0.5)';
             el.style.cursor = 'pointer';
+            el.style.pointerEvents = 'auto';
+
+            const label = document.createElement('div');
+            label.innerText = act.name;
+            label.style.fontSize = '10px';
+            label.style.fontWeight = '700';
+            label.style.color = '#1e293b';
+            label.style.background = 'rgba(255, 255, 255, 0.9)';
+            label.style.border = '1px solid #cbd5e1';
+            label.style.padding = '2px 6px';
+            label.style.borderRadius = '4px';
+            label.style.marginTop = '4px';
+            label.style.whiteSpace = 'nowrap';
+            label.style.boxShadow = '0 1.5px 3px rgba(0,0,0,0.1)';
+            label.style.pointerEvents = 'auto';
+
+            container.appendChild(el);
+            container.appendChild(label);
             
             const popup = new maplibregl.Popup({ offset: 10 })
                 .setHTML(`<div class="popup-title">${act.time}: ${act.name}</div><div class="popup-desc">${act.description}</div>`);
                 
-            const marker = new maplibregl.Marker({ element: el })
+            const marker = new maplibregl.Marker({ element: container })
                 .setLngLat([act.lon, act.lat])
                 .setPopup(popup)
                 .addTo(map);

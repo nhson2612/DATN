@@ -4,9 +4,12 @@ import json
 
 from app.core.config import settings
 from app.core.database import execute_query
+from app.core.logging import get_logger, log_duration
 from app.llm.adapter import query_llm
 from app.repositories import place_repo
 from app.services import routing_service
+
+logger = get_logger(__name__)
 
 # Tên placeholder do importer sinh khi OSM không có tên (778 dòng trong poi).
 # Phải loại, nếu không lịch trình sẽ gợi ý khách đến "POI 5107802323".
@@ -102,9 +105,14 @@ def recommend(duration_days: int, preferences: str, budget: str):
     candidates = get_candidates(preferences, budget)
     prompt = _build_prompt(duration_days, preferences, budget, candidates)
 
-    raw = query_llm(
-        prompt, json_mode=True, temperature=0.2, timeout=settings.llm_timeout
+    logger.info(
+        "Lập lịch trình %d ngày: %d ứng viên, sở thích=%r ngân sách=%r",
+        duration_days, len(candidates), preferences, budget,
     )
+    with log_duration(logger, "LLM lập lịch trình", days=duration_days):
+        raw = query_llm(
+            prompt, json_mode=True, temperature=0.2, timeout=settings.llm_timeout
+        )
     # query_llm bắt mọi exception và trả "" (xem llm/adapter.py), nên không có
     # Timeout nào ném ra để bắt. Phải kiểm chuỗi rỗng tường minh, không thì
     # json.loads("") ném JSONDecodeError và người dùng nhận thông báo vô nghĩa.
@@ -155,8 +163,16 @@ def recommend(duration_days: int, preferences: str, budget: str):
                     })
         day["route_geojson"] = {"type": "FeatureCollection", "features": features}
 
-    if sum(len(d.get("activities") or []) for d in days) == 0:
+    kept_total = sum(len(d.get("activities") or []) for d in days)
+    if dropped:
+        logger.warning(
+            "Loại %d hoạt động khỏi lịch trình (giữ %d): %s",
+            len(dropped), kept_total,
+            [d.get("reason") for d in dropped[:5]],
+        )
+    if kept_total == 0:
         raise NoUsableItineraryError(dropped)
+    logger.info("Lịch trình xong: %d ngày, %d hoạt động", len(days), kept_total)
 
     return {
         "explanation": result.get("explanation", ""),

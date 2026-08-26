@@ -2,8 +2,11 @@
 
 from app.core.config import settings
 from app.core.database import execute_query
+from app.core.logging import get_logger
 from app.core.security import hash_password
 from app.repositories import user_repo
+
+logger = get_logger(__name__)
 
 
 def create_default_users():
@@ -28,9 +31,9 @@ def create_default_users():
             "Khách du lịch",
             "user",
         )
-        print(
-            f"Đã tạo tài khoản mặc định: {settings.seed_admin_email} (admin), "
-            f"{settings.seed_user_email} (user)"
+        logger.info(
+            "Đã tạo tài khoản mặc định: %s (admin), %s (user)",
+            settings.seed_admin_email, settings.seed_user_email,
         )
     except Exception as e:
-        print(f"Không khởi tạo được tài khoản mặc định: {e}")
+        logger.error("Không khởi tạo được tài khoản mặc định: %s", e, exc_info=True)

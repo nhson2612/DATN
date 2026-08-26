@@ -4,6 +4,9 @@ import requests
 from fastapi import Request
 
 from app.core.config import settings
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 _PRIVATE_PREFIXES = ("192.168.", "10.", "172.16.")
 _LOCALHOST = ("127.0.0.1", "localhost", "::1")
@@ -30,5 +33,5 @@ def coords_from_ip(ip: str):
         if data.get("status") == "success":
             return data["lon"], data["lat"]
     except Exception as e:
-        print(f"Error resolving IP geolocation: {e}")
+        logger.warning("Không phân giải được vị trí từ IP %s: %s", ip, e)
     return settings.default_lon, settings.default_lat

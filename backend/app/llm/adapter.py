@@ -3,6 +3,9 @@
 import requests
 
 from app.core.config import settings
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 # Giữ tên cũ để mã hiện có còn import được, nhưng giá trị đến từ cấu hình.
 DEFAULT_PROVIDER = settings.llm_provider
@@ -83,6 +86,11 @@ def query_llm(prompt, system_prompt=None, *, json_mode=False, temperature=0, tim
     if timeout is None:
         timeout = settings.llm_timeout
     provider = settings.llm_provider.lower()
+    logger.debug(
+        "Gọi LLM provider=%s json_mode=%s timeout=%ss",
+        provider, json_mode, timeout,
+        extra={"ctx_provider": provider},
+    )
     try:
         if provider == "ollama":
             return _query_ollama(
@@ -102,5 +110,6 @@ def query_llm(prompt, system_prompt=None, *, json_mode=False, temperature=0, tim
             )
         raise ValueError(f"unsupported LLM_PROVIDER: {provider}")
     except Exception as e:
-        print(f"LLM adapter error ({provider}): {e}")
+        logger.error("Lỗi adapter LLM (provider=%s): %s", provider, e,
+                     extra={"ctx_provider": provider}, exc_info=True)
         return ""

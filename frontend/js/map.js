@@ -6,6 +6,7 @@ let endMarker = null;
 let routeLayerId = 'routing-path';
 let queryLayers = [];
 let queryMarkers = [];
+let allPlacesData = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     map = new maplibregl.Map({
@@ -52,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`${API_BASE}/places`);
             if (response.ok) {
                 const placesData = await response.json();
+                allPlacesData = placesData;
                 map.addSource('db-places', {
                     type: 'geojson',
                     data: placesData
@@ -80,6 +82,28 @@ document.addEventListener("DOMContentLoaded", () => {
                         'circle-opacity': 0.85
                     }
                 });
+
+                // POI and accommodation labels layer
+                map.addLayer({
+                    id: 'db-places-labels',
+                    type: 'symbol',
+                    source: 'db-places',
+                    minzoom: 14, // Only show when zoomed in to avoid clutter
+                    layout: {
+                        'text-field': ['get', 'name'],
+                        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                        'text-size': 11,
+                        'text-offset': [0, 0.9],
+                        'text-anchor': 'top',
+                        'text-max-width': 12
+                    },
+                    paint: {
+                        'text-color': '#1e293b',
+                        'text-halo-color': '#ffffff',
+                        'text-halo-width': 1.5
+                    }
+                });
+
 
                 // Show popups on place click
                 map.on('click', 'db-places-layer', (e) => {
@@ -135,6 +159,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Handle map search bar input
+    const searchInput = document.getElementById('map-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleMapSearch(searchInput.value);
+            }
+        });
+        
+        const searchIcon = document.querySelector('.map-search-bar .search-icon');
+        if (searchIcon) {
+            searchIcon.style.cursor = 'pointer';
+            searchIcon.addEventListener('click', () => {
+                handleMapSearch(searchInput.value);
+            });
+        }
+    }
+
     // Handle map clicks
     map.on('click', (e) => {
         // If on the standalone admin page
@@ -156,6 +198,56 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+function handleMapSearch(query) {
+    if (!query || !allPlacesData) return;
+    const q = query.trim().toLowerCase();
+    if (!q) return;
+
+    const removeAccents = (str) => {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    };
+
+    const qNormalized = removeAccents(q);
+
+    const matches = allPlacesData.features.filter(f => {
+        const name = f.properties.name || "";
+        const nameNorm = removeAccents(name.toLowerCase());
+        return nameNorm.includes(qNormalized);
+    });
+
+    if (matches.length > 0) {
+        const match = matches[0];
+        const coordinates = match.geometry.coordinates;
+        
+        map.flyTo({
+            center: coordinates,
+            zoom: 16,
+            essential: true
+        });
+
+        const props = match.properties;
+        let popupContent = `
+            <div class="popup-title" style="font-weight:700; font-size:13px; color:#1e293b; margin-bottom:4px;">${props.name}</div>
+            <div class="popup-desc" style="font-size:11px; color:#64748b; line-height:1.4;">${props.description || 'Không có mô tả.'}</div>
+        `;
+        if (props.amenity || props.tourism) {
+            popupContent += `
+                <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
+                    ${props.amenity ? `<span style="font-size: 9px; background: rgba(56, 189, 248, 0.15); color: #0284c7; padding: 2px 5px; border-radius: 3px; font-weight: bold;">${props.amenity}</span>` : ''}
+                    ${props.tourism ? `<span style="font-size: 9px; background: rgba(129, 140, 248, 0.15); color: #4f46e5; padding: 2px 5px; border-radius: 3px; font-weight: bold;">${props.tourism}</span>` : ''}
+                </div>
+            `;
+        }
+
+        new maplibregl.Popup({ offset: 10 })
+            .setLngLat(coordinates)
+            .setHTML(popupContent)
+            .addTo(map);
+    } else {
+        alert(`Không tìm thấy địa điểm nào khớp với "${query}"`);
+    }
+}
+
 async function reloadPlacesSource() {
     if (map && map.getSource('db-places')) {
         try {
@@ -163,6 +255,7 @@ async function reloadPlacesSource() {
             if (response.ok) {
                 const data = await response.json();
                 map.getSource('db-places').setData(data);
+                allPlacesData = data;
             }
         } catch (e) {
             console.error("Error reloading places source:", e);
@@ -230,8 +323,14 @@ function toggleFilter(layerName) {
     if (clauses.length === 0) {
         // Bo hết -> an tat ca
         map.setFilter('db-places-layer', ['==', ['get', 'type'], '__none__']);
+        if (map.getLayer('db-places-labels')) {
+            map.setFilter('db-places-labels', ['==', ['get', 'type'], '__none__']);
+        }
     } else {
         map.setFilter('db-places-layer', ['any'].concat(clauses));
+        if (map.getLayer('db-places-labels')) {
+            map.setFilter('db-places-labels', ['any'].concat(clauses));
+        }
     }
 }
 
