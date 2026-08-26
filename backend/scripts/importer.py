@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.core.config import settings
 
+import json
 import sys
 import time
 import requests
@@ -154,13 +155,15 @@ def import_accommodations(conn):
                 
                 cur.execute(
                     """
-                    INSERT INTO accommodation (osm_id, name, amenity, tourism, price_range, stars, address, geom)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
+                    INSERT INTO accommodation (osm_id, name, amenity, tourism, price_range, stars, address, tags, geom)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
                     ON CONFLICT (osm_id) DO UPDATE
                     SET name = EXCLUDED.name, amenity = EXCLUDED.amenity, tourism = EXCLUDED.tourism, 
-                        price_range = EXCLUDED.price_range, stars = EXCLUDED.stars, address = EXCLUDED.address, geom = EXCLUDED.geom;
+                        price_range = EXCLUDED.price_range, stars = EXCLUDED.stars, address = EXCLUDED.address,
+                        tags = EXCLUDED.tags, geom = EXCLUDED.geom;
                     """,
-                    (osm_id, name, amenity, tourism, price_range, stars, address, lon, lat)
+                    (osm_id, name, amenity, tourism, price_range, stars, address,
+                     json.dumps(tags, ensure_ascii=False), lon, lat)
                 )
                 count += 1
         conn.commit()
@@ -201,16 +204,24 @@ def import_pois(conn):
                 amenity = tags.get("amenity")
                 tourism = tags.get("tourism")
                 description = tags.get("description") or tags.get("cuisine", "")
-                
+                # Giu NGUYEN toan bo tag OSM vao cot jsonb `tags`.
+                # Truoc day chi 4 khoa duoc doc (name/amenity/tourism/cuisine) roi
+                # bo ca dict, nen moi lan can them mot thuoc tinh — mon an, gio mo
+                # cua, so nha, so dien thoai, thuong hieu — lai phai them mot cot
+                # moi hoac di duong vong (LIKE tren `name`). Luu het mot lan thi
+                # truy van bang tags->>'cuisine', tags->>'addr:street', ... ma
+                # khong phai doi schema nua.
                 cur.execute(
                     """
-                    INSERT INTO poi (osm_id, name, amenity, tourism, description, geom)
-                    VALUES (%s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
+                    INSERT INTO poi (osm_id, name, amenity, tourism, description, tags, geom)
+                    VALUES (%s, %s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
                     ON CONFLICT (osm_id) DO UPDATE
                     SET name = EXCLUDED.name, amenity = EXCLUDED.amenity, tourism = EXCLUDED.tourism, 
-                        description = EXCLUDED.description, geom = EXCLUDED.geom;
+                        description = EXCLUDED.description, tags = EXCLUDED.tags,
+                        geom = EXCLUDED.geom;
                     """,
-                    (osm_id, name, amenity, tourism, description, lon, lat)
+                    (osm_id, name, amenity, tourism, description,
+                     json.dumps(tags, ensure_ascii=False), lon, lat)
                 )
                 count += 1
         conn.commit()

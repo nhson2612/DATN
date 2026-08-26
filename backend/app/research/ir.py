@@ -18,6 +18,8 @@ Nhờ vậy:
       {"op": "eq"|"neq"|"gt"|"gte"|"lt"|"lte", "col": <cột>, "value": <giá trị>},
       {"op": "in",        "col": <cột>, "value": [<giá trị>, ...]},
       {"op": "name_like", "value": "<chuỗi con của tên>"},
+      {"op": "tag", "key": "<khoá OSM: cuisine|addr:street|opening_hours|...>",
+                    "value": "<giá trị>"},          // khớp chuỗi con, không phân biệt dấu
       {"op": "in_admin",  "name": "<tên quận/phường>"},
       {"op": "within_distance", "meters": <số>,
                                 "ref": {"table": "poi"|"accommodation", "name": "<tên>"}},
@@ -50,7 +52,7 @@ TABLES = {
 
 COMPARISONS = {"eq": "=", "neq": "<>", "gt": ">", "gte": ">=", "lt": "<", "lte": "<="}
 SPATIAL_OPS = {"in_admin", "within_distance", "near_point"}
-ALL_OPS = sorted(set(COMPARISONS) | {"in", "name_like"} | SPATIAL_OPS)
+ALL_OPS = sorted(set(COMPARISONS) | {"in", "name_like", "tag"} | SPATIAL_OPS)
 
 # Ranh giới lấy từ OSM bị tự cắt (84/94 bản ghi) nên bắt buộc phải làm sạch
 # trước khi dùng ST_Contains, nếu không kết quả không xác định.
@@ -103,6 +105,21 @@ def _compile_condition(table, f, where, params):
     if op == "name_like":
         where.append(NAME_MATCH.format(col="t.name"))
         params.append(f"%{f['value']}%")
+
+    elif op == "tag":
+        # Truy van THANG vao tags jsonb, thay vi them mot cot (roi mot op) cho
+        # tung thuoc tinh moi. `cuisine` cho mon an, `addr:street` cho ten duong,
+        # `opening_hours`, `brand`, `phone`... deu dung chung mot duong nay.
+        # Khoa duoc tham so hoa nen khong can whitelist rieng: jsonb khong the
+        # thoat ra khoi bieu thuc, va gia tri luon di qua %s.
+        key = f.get("key")
+        if not key or not isinstance(key, str):
+            raise IRError("Toán tử 'tag' cần 'key' là tên khoá OSM (chuỗi).")
+        where.append(
+            "unaccent(lower(t.tags->>%s)) LIKE unaccent(lower(%s))"
+        )
+        params.append(key)
+        params.append(f"%{f.get('value', '')}%")
 
     elif op == "in":
         col = _check_column(table, f["col"])

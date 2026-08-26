@@ -11,9 +11,11 @@ import unicodedata
 
 from app.db import execute_query
 from app.ir import compile_ir, IRError, TABLES
+from app.core.config import settings
 from app.llm_adapter import query_llm
 
-IR_SYSTEM_PROMPT = """Bạn là trợ lý chuyển câu hỏi du lịch Đà Nẵng thành một đối tượng JSON đại diện (IR).
+# Không dùng f-string: prompt chứa đầy JSON mẫu, mọi { } sẽ thành placeholder.
+IR_SYSTEM_PROMPT = """Bạn là trợ lý chuyển câu hỏi du lịch __SCOPE__ thành một đối tượng JSON đại diện (IR).
 Chỉ trả về JSON, không giải thích, không markdown.
 
 CẤU TRÚC JSON:
@@ -25,10 +27,16 @@ CẤU TRÚC JSON:
                                                   // MỖI dòng dưới đây là TUỲ CHỌN — chỉ đưa vào
                                                   // khi câu hỏi thực sự yêu cầu điều đó.
     {"op": "eq",  "col": "<amenity|tourism>", "value": "<giá trị tra từ BẢNG MAPPING>"},
+    {"op": "neq", "col": "<cột>", "value": "<giá trị>"},
     {"op": "gte", "col": "<rating|stars>",    "value": <số lấy từ câu hỏi>},
+    {"op": "gt",  "col": "<cột số>", "value": <số>},   // > ; còn có "lt" (<), "lte" (<=)
+    {"op": "in",  "col": "<cột>", "value": ["<giá trị 1>", "<giá trị 2>"]},
+    {"op": "name_like", "value": "<chuỗi con trong TÊN quán/địa điểm>"},
+    {"op": "tag", "key": "<khoá OSM>", "value": "<giá trị>"},  // xem BẢNG KHOÁ TAG
     {"op": "in_admin", "name": "<tên phường/quận LẤY NGUYÊN TỪ CÂU HỎI>"},
     {"op": "within_distance", "meters": <số lấy từ câu hỏi>,
-                              "ref": {"table": "poi", "name": "<tên địa điểm LẤY NGUYÊN TỪ CÂU HỎI>"}}
+                              "ref": {"table": "poi", "name": "<tên địa điểm LẤY NGUYÊN TỪ CÂU HỎI>"}},
+    {"op": "near_point", "lon": <kinh độ>, "lat": <vĩ độ>, "meters": <số>}
   ],
   "nearest_to": {"lon": <kinh độ trong câu hỏi>, "lat": <vĩ độ trong câu hỏi>},
   "limit": <số>                                   // BỎ TRƯỜNG NÀY nếu câu hỏi không nêu số lượng
@@ -40,16 +48,13 @@ LƯU Ý QUAN TRỌNG:
    ("meters", "lon", "lat", giá trị so sánh) BẮT BUỘC phải xuất hiện ngay trong câu hỏi.
    Các tên và số trong phần CẤU TRÚC và VÍ DỤ chỉ là minh hoạ — KHÔNG được sao chép chúng
    vào câu trả lời. Câu hỏi không nhắc tên địa điểm nào thì KHÔNG được thêm "within_distance".
-2. Nếu câu hỏi nêu LOẠI địa điểm (quán cà phê, nhà hàng, khách sạn, quán bar...) thì BẮT BUỘC
-   phải có bộ lọc {"op": "eq", "col": "amenity" HOẶC "tourism", "value": ...} tra từ BẢNG MAPPING.
-   Thiếu bộ lọc loại này thì câu trả lời SAI, vì truy vấn sẽ trả về mọi loại địa điểm.
-3. Chọn "target" theo LOẠI địa điểm: chỗ ăn/uống/tham quan (cafe, nhà hàng, bar, chợ, bảo tàng,
+2. Chọn "target" theo LOẠI địa điểm: chỗ ăn/uống/tham quan (cafe, nhà hàng, bar, chợ, bảo tàng,
    điểm ngắm cảnh) -> "poi". Chỗ NGỦ QUA ĐÊM (khách sạn, nhà nghỉ, hostel, homestay, resort)
    -> "accommodation". Bảng "accommodation" KHÔNG có nhà hàng hay quán cà phê.
-4. KHÔNG tự ý thêm trường "nearest_to" nếu câu hỏi không chứa từ "gần nhất" hoặc một cặp tọa độ số thực.
-5. Nếu câu hỏi yêu cầu đếm ("Có bao nhiêu..."), bạn BẮT BUỘC phải dùng "aggregate": "count" và BỎ TRƯỜNG "select".
-6. Với các câu hỏi lọc địa giới (ví dụ: ở Phường Sơn Trà, ở Sơn Trà, tại Ngũ Hành Sơn), bạn BẮT BUỘC dùng op "in_admin".
-7. Chỉ sử dụng các cột thực tế: rating, stars, price_level, amenity, tourism.
+3. KHÔNG tự ý thêm trường "nearest_to" nếu câu hỏi không chứa từ "gần nhất" hoặc một cặp tọa độ số thực.
+4. Nếu câu hỏi yêu cầu đếm ("Có bao nhiêu..."), bạn BẮT BUỘC phải dùng "aggregate": "count" và BỎ TRƯỜNG "select".
+5. Với các câu hỏi lọc địa giới (ví dụ: ở Phường Sơn Trà, ở Sơn Trà, tại Ngũ Hành Sơn), bạn BẮT BUỘC dùng op "in_admin".
+6. Chỉ sử dụng các cột thực tế: rating, stars, price_level, amenity, tourism.
    * BẢNG TRÀ CỨU GIÁ TRỊ (MAPPING):
      (nhóm dưới đây LUÔN đi với target: "poi" — cột "amenity" CHỈ tồn tại ở bảng poi)
      - "quán cà phê", "quán cafe", "tiệm cà phê", "cửa hàng cafe" -> target "poi", "amenity": "cafe"
@@ -63,8 +68,15 @@ LƯU Ý QUAN TRỌNG:
      - "nhà khách", "guest house" -> "tourism": "guest_house" (target: "accommodation")
      - "nhà trọ", "hostel" -> "tourism": "hostel" (target: "accommodation")
      - "nhà nghỉ", "motel" -> "tourism": "motel" (target: "accommodation")
-8. Với các câu hỏi nằm ngoài phạm vi dữ liệu hoặc không thể trả lời được (ví dụ: thời tiết, giá vé cáp treo, tình trạng đông đúc, thời gian thực), bạn BẮT BUỘC trả về cấu trúc: {"target": null, "reason": "Không có dữ liệu trong DB để trả lời câu hỏi này."}
-9. Tuyệt đối KHÔNG tự ý thêm bộ lọc tên (ví dụ: {"op": "eq", "col": "name", "value": "..."}) nếu câu hỏi chỉ hỏi "tên là gì?" mà không chỉ đích danh một địa điểm cụ thể. Chỉ lọc theo tên khi câu hỏi chỉ định một địa danh cụ thể (ví dụ: "chùa Linh Ứng", "Cầu Rồng").
+   * BẢNG KHOÁ TAG (dùng với {"op": "tag"}): mọi thuộc tính KHÔNG phải loại địa điểm
+     đều nằm trong "tags". BẢNG MAPPING ở trên chỉ có LOẠI địa điểm, nên phần nào của
+     câu hỏi không tra được ở đó thì tra ở đây:
+     - MÓN ĂN / ĐỒ UỐNG (hải sản, món Hàn, lẩu, pizza...) -> key "cuisine"
+     - TÊN ĐƯỜNG / ĐỊA CHỈ ("đường Trần Phú", "102 Lê Lai") -> key "addr:street" (BỎ số nhà)
+     - GIỜ MỞ CỬA -> key "opening_hours"; SỐ ĐIỆN THOẠI -> key "phone"
+     - THƯƠNG HIỆU ("Highlands", "Circle K") -> key "brand"
+7. Với các câu hỏi nằm ngoài phạm vi dữ liệu hoặc không thể trả lời được (ví dụ: thời tiết, giá vé cáp treo, tình trạng đông đúc, thời gian thực), bạn BẮT BUỘC trả về cấu trúc: {"target": null, "reason": "Không có dữ liệu trong DB để trả lời câu hỏi này."}
+8. Tuyệt đối KHÔNG tự ý thêm bộ lọc tên (ví dụ: {"op": "eq", "col": "name", "value": "..."}) nếu câu hỏi chỉ hỏi "tên là gì?" mà không chỉ đích danh một địa điểm cụ thể. Chỉ lọc theo tên khi câu hỏi chỉ định một địa danh cụ thể (ví dụ: "chùa Linh Ứng", "Cầu Rồng").
 
 VÍ DỤ
 Hỏi: Có bao nhiêu tiệm ăn ở Phường Hải Châu?
@@ -76,6 +88,11 @@ Hỏi: Nơi lưu trú có đánh giá từ 4.0 trở lên nằm gần nhất v�
 Hỏi: Thời tiết ở Đà Nẵng ngày mai như thế nào?
 {"target": null, "reason": "Không có thông tin thời tiết trong cơ sở dữ liệu."}
 """
+
+# Phạm vi lấy từ cấu hình: prompt cũ hardcode "Đà Nẵng" nên khi DATABASE_URL
+# trỏ sang gis_vietnam, LLM coi mọi địa danh ngoài Đà Nẵng là ngoài phạm vi
+# và trả về {"target": null} thay vì sinh IR.
+IR_SYSTEM_PROMPT = IR_SYSTEM_PROMPT.replace("__SCOPE__", settings.db_scope)
 
 
 def _norm(text):
@@ -151,6 +168,21 @@ def prune_ungrounded(ir, question):
     return dropped
 
 
+class AdminAmbiguityError(IRError):
+    """Tên địa giới khớp nhiều đơn vị — cần NGƯỜI DÙNG chọn, không phải LLM đoán.
+
+    Tách khỏi IRError thường vì cách xử lý ngược nhau: IRError thì feed lại cho
+    LLM tự sửa, còn ở đây LLM không có thêm thông tin nào để sửa — nó chỉ đoán
+    lại, hết 3 lượt retry rồi trả kết quả sai một cách im lặng. Thông tin thiếu
+    nằm ở phía người dùng, nên phải hỏi họ.
+    """
+
+    def __init__(self, message, name, candidates):
+        super().__init__(message)
+        self.name = name
+        self.candidates = candidates
+
+
 def check_admin_ambiguity(ir):
     """Từ chối khi tên đơn vị hành chính vẫn còn nhập nhằng — đừng đoán.
 
@@ -191,17 +223,20 @@ def check_admin_ambiguity(ir):
 
         exact = [r["name"] for r in rows if r["exact_hit"]]
         if len(exact) > 1:
-            raise IRError(
+            raise AdminAmbiguityError(
                 f"Có {len(exact)} đơn vị hành chính tên đúng '{name}'. "
-                f"Cần nêu rõ quận/huyện hoặc tỉnh."
+                f"Cần nêu rõ quận/huyện hoặc tỉnh.",
+                name, exact,
             )
         if exact:
             continue                       # khớp chính xác duy nhất -> ổn
         if len(rows) > 1:
-            ds = ", ".join(f"'{r['name']}'" for r in rows[:5])
-            raise IRError(
+            names = [r["name"] for r in rows]
+            ds = ", ".join(f"'{n}'" for n in names[:5])
+            raise AdminAmbiguityError(
                 f"Tên '{name}' khớp {len(rows)} đơn vị hành chính ({ds}). "
-                f"Hãy dùng đúng tên đầy đủ của một trong số đó."
+                f"Hãy dùng đúng tên đầy đủ của một trong số đó.",
+                name, names,
             )
         # 0 hoặc 1 ứng viên: để compile_ir chạy. Không khớp gì thì trả kết quả
         # rỗng — trung thực hơn là fail cứng, và model nhỏ lặp lại lỗi cả 3 lượt
@@ -210,7 +245,8 @@ def check_admin_ambiguity(ir):
 
 def query_ollama_json(prompt, system_prompt):
     """Gọi LLM ở chế độ ép định dạng JSON qua adapter."""
-    return query_llm(prompt, system_prompt, json_mode=True, temperature=0, timeout=120)
+    return query_llm(prompt, system_prompt, json_mode=True, temperature=0,
+                     timeout=settings.llm_timeout_sql)
 
 
 def question_to_sql(question, max_attempts=3):
@@ -243,6 +279,22 @@ def question_to_sql(question, max_attempts=3):
         try:
             check_admin_ambiguity(ir)
             sql, params = compile_ir(ir)
+        except AdminAmbiguityError as e:
+            # KHONG retry: LLM khong biet nguoi dung muon don vi nao, retry chi
+            # de no doan lai roi tra ket qua sai im lang. Thoat ngay de tang tren
+            # hoi nguoi dung.
+            debug.append({"attempt": attempt + 1, "ir": ir, "error": str(e),
+                          "ambiguous": {"name": e.name, "candidates": e.candidates}})
+            return {
+                "success": False,
+                "needs_clarification": True,
+                "question": question,
+                "ambiguous_name": e.name,
+                "candidates": e.candidates,
+                "error": str(e),
+                "llm_calls": llm_calls,
+                "debug": debug,
+            }
         except IRError as e:
             debug.append({"attempt": attempt + 1, "ir": ir, "error": str(e)})
             # Phản hồi lỗi cụ thể cho LLM — đây là điểm khác biệt so với
@@ -302,7 +354,7 @@ def answer(question):
 
 
 def query_ollama(prompt, system_prompt=None):
-    return query_llm(prompt, system_prompt, timeout=90)
+    return query_llm(prompt, system_prompt, timeout=settings.llm_timeout_explain)
 
 
 def generate_explanation(vietnamese_question, sql, results):
