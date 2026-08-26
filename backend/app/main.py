@@ -688,7 +688,7 @@ def recommend_itinerary(request: RecommendRequest):
         candidates = get_recommendation_candidates(request.preferences, request.budget)
         candidates_json = json.dumps(candidates, ensure_ascii=False)
         
-        from app.ir_agent import OLLAMA_MODEL, OLLAMA_URL
+        from app.llm_adapter import query_llm
         prompt = f"""Bạn là chuyên gia thiết kế lịch trình du lịch Đà Nẵng chuyên nghiệp.
 Hãy lập một lịch trình chi tiết {request.duration_days} ngày dựa trên sở thích và ngân sách của du khách.
 
@@ -725,16 +725,7 @@ QUY TẮC BẮT BUỘC:
   ]
 }}
 """
-        payload = {
-            "model": OLLAMA_MODEL,
-            "prompt": prompt,
-            "stream": False,
-            "format": "json",
-            "options": {"temperature": 0.2},
-        }
-        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
-        response.raise_for_status()
-        raw_res = response.json().get("response", "").strip()
+        raw_res = query_llm(prompt, json_mode=True, temperature=0.2, timeout=120)
         
         result = json.loads(raw_res)
         days = result.get("days", [])

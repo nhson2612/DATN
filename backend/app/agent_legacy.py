@@ -1,10 +1,6 @@
-import os
 import re
-import requests
 from app.db import execute_query
-
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+from app.llm_adapter import query_llm
 
 SYSTEM_PROMPT = """You are an expert PostGIS and Spatial SQL generator for a Vietnam tourism database.
 Your task is to generate PostgreSQL + PostGIS SQL queries to answer natural language questions about tourism in Da Nang.
@@ -90,21 +86,7 @@ OUTPUT FORMAT:
 """
 
 def query_ollama(prompt, system_prompt=None):
-    payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False
-    }
-    if system_prompt:
-        payload["system"] = system_prompt
-        
-    try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=90)
-        response.raise_for_status()
-        return response.json().get("response", "").strip()
-    except Exception as e:
-        print(f"Ollama API error: {e}")
-        return ""
+    return query_llm(prompt, system_prompt, timeout=90)
 
 def crs_guard(sql):
     """
