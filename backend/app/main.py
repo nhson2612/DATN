@@ -733,7 +733,7 @@ def recommend_itinerary(request: RecommendRequest):
         candidates = get_recommendation_candidates(request.preferences, request.budget)
         candidates_json = json.dumps(candidates, ensure_ascii=False)
         
-        from app.ir_agent import OLLAMA_MODEL, OLLAMA_URL
+        from app.llm_adapter import query_llm
         prompt = f"""Bạn là chuyên gia thiết kế lịch trình du lịch Đà Nẵng chuyên nghiệp.
 Hãy lập một lịch trình chi tiết {request.duration_days} ngày dựa trên sở thích và ngân sách của du khách.
 
@@ -770,20 +770,26 @@ QUY TẮC BẮT BUỘC:
   ]
 }}
 """
-        payload = {
-            "model": OLLAMA_MODEL,
-            "prompt": prompt,
-            "stream": False,
-            "format": "json",
-            "options": {"temperature": 0.2},
-        }
-        # timeout 120s la qua ngan: qwen2.5:7b (4.7 GB) khong vua 4 GB VRAM cua
-        # Quadro P600 nen phai do sang CPU, sinh ~2400 ky tu JSON mat >120s ->
-        # endpoint tra 500 "Read timed out" va tinh nang coi nhu khong dung duoc.
-        timeout_s = int(os.getenv("OLLAMA_TIMEOUT", "300"))
-        response = requests.post(OLLAMA_URL, json=payload, timeout=timeout_s)
-        response.raise_for_status()
-        raw_res = response.json().get("response", "").strip()
+        # Giu adapter query_llm cua main, ap fix timeout cua nhanh nay len no.
+        # timeout=120 la qua ngan: qwen2.5:7b (4.7 GB) khong vua 4 GB VRAM cua
+        # Quadro P600 nen phai do sang CPU, sinh ~2400 ky tu JSON mat 236s ->
+        # endpoint luon tra 500 va tinh nang coi nhu khong dung duoc.
+        timeout_s = int(os.getenv("LLM_TIMEOUT", "300"))
+        raw_res = query_llm(prompt, json_mode=True, temperature=0.2, timeout=timeout_s)
+
+        # query_llm BAT MOI exception va tra ve "" (xem llm_adapter.py), nen
+        # khong con Timeout nao nem ra de bat. Phai kiem chuoi rong tuong minh,
+        # neu khong json.loads("") se nem JSONDecodeError va nguoi dung nhan
+        # "Expecting value: line 1 column 1" thay vi biet la LLM khong phan hoi.
+        if not raw_res:
+            raise HTTPException(
+                status_code=504,
+                detail=(
+                    f"Mô hình không phản hồi trong {timeout_s}s (hoặc lỗi kết nối "
+                    f"tới provider LLM). Tăng LLM_TIMEOUT, kiểm tra LLM_PROVIDER "
+                    f"và GROQ_API_KEY, hoặc dùng mô hình nhỏ hơn."
+                ),
+            )
         
         result = json.loads(raw_res)
         days = result.get("days", [])
@@ -909,13 +915,5 @@ QUY TẮC BẮT BUỘC:
         # Khong de except Exception nuot HTTPException roi boc lai thanh 500
         # (cung bug da gap o /api/route).
         raise
-    except requests.exceptions.Timeout:
-        raise HTTPException(
-            status_code=504,
-            detail=(
-                f"Mô hình {OLLAMA_MODEL} không phản hồi trong {timeout_s}s. "
-                "Tăng OLLAMA_TIMEOUT, hoặc dùng mô hình nhỏ hơn."
-            ),
-        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Recommendation error: {str(e)}")

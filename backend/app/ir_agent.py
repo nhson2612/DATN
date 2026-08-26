@@ -7,16 +7,11 @@ hay lỗi hệ toạ độ đều bị loại bỏ ở tầng biên dịch.
 """
 
 import json
-import os
 import unicodedata
-
-import requests
 
 from app.db import execute_query
 from app.ir import compile_ir, IRError, TABLES
-
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+from app.llm_adapter import query_llm
 
 IR_SYSTEM_PROMPT = """Bạn là trợ lý chuyển câu hỏi du lịch Đà Nẵng thành một đối tượng JSON đại diện (IR).
 Chỉ trả về JSON, không giải thích, không markdown.
@@ -214,22 +209,8 @@ def check_admin_ambiguity(ir):
 
 
 def query_ollama_json(prompt, system_prompt):
-    """Gọi Ollama ở chế độ ép định dạng JSON."""
-    payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt,
-        "system": system_prompt,
-        "stream": False,
-        "format": "json",          # Ollama ép model sinh JSON hợp lệ
-        "options": {"temperature": 0},
-    }
-    try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
-        response.raise_for_status()
-        return response.json().get("response", "").strip()
-    except Exception as e:
-        print(f"Ollama API error: {e}")
-        return ""
+    """Gọi LLM ở chế độ ép định dạng JSON qua adapter."""
+    return query_llm(prompt, system_prompt, json_mode=True, temperature=0, timeout=120)
 
 
 def question_to_sql(question, max_attempts=3):
@@ -321,21 +302,7 @@ def answer(question):
 
 
 def query_ollama(prompt, system_prompt=None):
-    payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False
-    }
-    if system_prompt:
-        payload["system"] = system_prompt
-        
-    try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=90)
-        response.raise_for_status()
-        return response.json().get("response", "").strip()
-    except Exception as e:
-        print(f"Ollama API error: {e}")
-        return ""
+    return query_llm(prompt, system_prompt, timeout=90)
 
 
 def generate_explanation(vietnamese_question, sql, results):
@@ -361,4 +328,3 @@ Yêu cầu:
 """
     explanation = query_ollama(prompt)
     return explanation
-
