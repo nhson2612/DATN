@@ -31,17 +31,26 @@ class Settings(BaseSettings):
     db_pool_max: int = 10
 
     # ---- LLM ----
-    llm_provider: Literal["ollama", "groq"] = "ollama"
+    llm_provider: Literal["ollama", "deepseek"] = "ollama"
     llm_timeout: int = Field(default=300, ge=1)
     ollama_url: str = "http://localhost:11434/api/generate"
     ollama_model: str = "qwen2.5:7b"
-    groq_url: str = "https://api.groq.com/openai/v1/chat/completions"
-    groq_model: str = "qwen/qwen3.6-27b"
-    groq_api_key: str | None = None
+    deepseek_url: str = "https://api.deepseek.com/chat/completions"
+    deepseek_model: str = "deepseek-v4-pro"
+    deepseek_api_key: str | None = None
+
+    # Phạm vi địa lý của DB đang dùng, chèn vào IR_SYSTEM_PROMPT. Mặc định là
+    # "Đà Nẵng" để giữ nguyên prompt mà mọi số benchmark đo trên đó; đổi sang
+    # "Việt Nam" khi DATABASE_URL trỏ tới gis_vietnam, nếu không LLM coi mọi
+    # địa danh ngoài Đà Nẵng là ngoài phạm vi và từ chối trả lời.
+    db_scope: str = "Việt Nam"
 
     # Timeout riêng cho từng loại lời gọi (giây)
-    llm_timeout_sql: int = 120
-    llm_timeout_explain: int = 90
+    # 120s KHONG du: qwen2.5:7b (4.7 GB) khong vua 4 GB VRAM nen do sang CPU,
+    # do duoc 236s cho mot lan sinh JSON. Timeout cu khien /api/chat luon
+    # ReadTimeout roi van tra 200.
+    llm_timeout_sql: int = 300
+    llm_timeout_explain: int = 180
 
     # ---- Bảo mật ----
     # KHÔNG có giá trị mặc định. Thiếu là app từ chối khởi động — trước đây
@@ -77,6 +86,10 @@ class Settings(BaseSettings):
     log_sql: bool = Field(
         default=False,
         description="Ghi log mọi câu SQL kèm thời gian chạy. Rất ồn, chỉ dùng khi debug.",
+    )
+    slow_request_warn_ms: int = Field(
+        default=5000,
+        description="Request chậm hơn ngưỡng này ghi WARNING dù trả 2xx.",
     )
     log_slow_query_ms: int = Field(
         default=500,

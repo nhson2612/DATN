@@ -9,6 +9,9 @@ class ChatRequest(BaseModel):
     question: str
     user_lon: Optional[float] = None
     user_lat: Optional[float] = None
+    # Tên đơn vị hành chính người dùng đã chọn từ `candidates` của lượt trước,
+    # khi câu hỏi bị nhập nhằng. Gửi lại nguyên câu hỏi cũ kèm trường này.
+    resolved_admin: Optional[str] = None
 
 
 class RouteRequest(BaseModel):
