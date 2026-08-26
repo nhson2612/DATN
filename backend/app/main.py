@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import json
+import os
 import requests
 from app.db import execute_query
 from app.ir_agent import answer, generate_explanation
@@ -395,7 +396,24 @@ def route(request: RouteRequest):
         
         print(f"Calculating routing path from node {start_node} to {end_node}...")
         
-        routing_query = """
+        # Chieu luu thong: uu tien tuyen HOP PHAP, chi bo qua chieu khi bat buoc.
+        #
+        # directed := true ton trong cost/reverse_cost = -1 (duong mot chieu).
+        # Truoc day code luon dung false, tuc bo qua hoan toan chieu luu thong:
+        # mot doan mot chieu 135 m bi di nguoc chieu va bao 135 m, trong khi
+        # tuyen dung phai di vong 225 m — sai 40% va khong he bao loi.
+        #
+        # Ti le doan mot chieu: gis_tourism 49% (3878/7924),
+        # gis_vietnam 25.7% (224748/873873).
+        #
+        # Do 2026-08-25, ti le CHI directed that bai (undirected van ra tuyen):
+        #   gis_vietnam lien tinh   0/20
+        #   gis_vietnam noi thanh   1/12  (<=3 km quanh HN/HCM/DN)
+        #   gis_tourism             1/20
+        # Nen phai co fallback: mat 5-8% truy van la khong chap nhan duoc voi mot
+        # app demo, nhung tra tuyen nguoc chieu ma im lang thi con te hon. Fallback
+        # giu duoc ca hai va NOI RO tuyen nao khong dang tin qua co "may_violate_oneway".
+        ROUTING_SQL = """
             SELECT 
                 d.seq, 
                 d.node, 
@@ -408,13 +426,30 @@ def route(request: RouteRequest):
                 'SELECT id, source, target, cost, reverse_cost FROM roads', 
                 %s, 
                 %s, 
-                directed := false
+                directed := {directed}
             ) d
             JOIN roads r ON d.edge = r.id
             ORDER BY d.seq;
         """
-        path_res = execute_query(routing_query, (start_node, end_node))
-        
+
+        path_res = execute_query(
+            ROUTING_SQL.format(directed="true"), (start_node, end_node)
+        )
+        may_violate_oneway = False
+
+        if not path_res:
+            print("Khong tim duoc tuyen dung chieu — thu lai khong xet chieu...")
+            path_res = execute_query(
+                ROUTING_SQL.format(directed="false"), (start_node, end_node)
+            )
+            may_violate_oneway = bool(path_res)
+
+        if not path_res:
+            raise HTTPException(
+                status_code=404,
+                detail="Không tìm được tuyến đường giữa hai điểm này trong mạng lưới đường bộ.",
+            )
+
         for row in path_res:
             if row.get("geom"):
                 try:
@@ -434,9 +469,18 @@ def route(request: RouteRequest):
             "end_snap_lon": end_snap_lon,
             "end_snap_lat": end_snap_lat,
             "total_distance_meters": total_distance,
+            # true = tuyen nay co the di nguoc chieu mot chieu. Frontend PHAI canh bao.
+            "may_violate_oneway": may_violate_oneway,
             "path": path_res
         }
         
+    except HTTPException:
+        # HTTPException la subclass cua Exception, nen nhanh `except Exception`
+        # ben duoi tung nuot no va boc lai thanh 500 voi noi dung long nhau
+        # ("Routing error: 400: Diem bat dau cach mang luoi qua xa..."). Nghia la
+        # moi loi 400/404 co y nghia deu bi bao cao thanh 500 — ke ca canh 404
+        # "khong tim duoc tuyen" cua fallback mot chieu. Phai nem lai nguyen ven.
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Routing error: {str(e)}")
 
@@ -716,8 +760,8 @@ QUY TẮC BẮT BUỘC:
       "activities": [
         {{
           "time": "Sáng",
-          "place_id": 123,
-          "place_type": "poi",
+          "place_id": <id LAY TU DANH SACH tren, khong duoc bia>,
+          "place_type": "poi" hoac "accommodation" (dung dung `type` cua id do),
           "description": "Tham quan cầu Rồng và bảo tàng Chăm."
         }},
         ...
@@ -733,12 +777,22 @@ QUY TẮC BẮT BUỘC:
             "format": "json",
             "options": {"temperature": 0.2},
         }
-        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
+        # timeout 120s la qua ngan: qwen2.5:7b (4.7 GB) khong vua 4 GB VRAM cua
+        # Quadro P600 nen phai do sang CPU, sinh ~2400 ky tu JSON mat >120s ->
+        # endpoint tra 500 "Read timed out" va tinh nang coi nhu khong dung duoc.
+        timeout_s = int(os.getenv("OLLAMA_TIMEOUT", "300"))
+        response = requests.post(OLLAMA_URL, json=payload, timeout=timeout_s)
         response.raise_for_status()
         raw_res = response.json().get("response", "").strip()
         
         result = json.loads(raw_res)
         days = result.get("days", [])
+
+        # Bug: duration_days khong duoc ap dat. Do thuc te: yeu cau 2 ngay,
+        # qwen2.5:7b tra 3 ngay, qwen2.5:1.5b tra 1 ngay.
+        days = days[: request.duration_days]
+
+        dropped = []
         
         for day in days:
             coords = []
@@ -747,13 +801,26 @@ QUY TẮC BẮT BUỘC:
                 place_id = act.get("place_id")
                 place_type = act.get("place_type")
                 if not place_id or not place_type:
+                    dropped.append({"place_id": place_id, "place_type": place_type,
+                                    "reason": "thieu place_id hoac place_type"})
                     continue
                 
-                table = "poi" if place_type == "poi" else "accommodation"
+                # Phai kiem place_type. Truoc day moi gia tri khac "poi" deu roi
+                # vao "accommodation", nen LLM tra place_type='attraction' hay
+                # 'restaurant' la di tra sai bang -> khong tim thay -> hoat dong
+                # bi bo am tham, API van tra success:true voi days rong.
+                if place_type not in ("poi", "accommodation"):
+                    dropped.append({"place_id": place_id, "place_type": place_type,
+                                    "reason": "place_type khong hop le"})
+                    continue
+                table = place_type
                 res = execute_query(
                     f"SELECT id, name, ST_X(geom) as lon, ST_Y(geom) as lat FROM {table} WHERE id = %s",
                     (place_id,)
                 )
+                if not res:
+                    dropped.append({"place_id": place_id, "place_type": place_type,
+                                    "reason": f"khong co id nay trong bang {table}"})
                 if res:
                     lon = res[0]["lon"]
                     lat = res[0]["lat"]
@@ -784,24 +851,32 @@ QUY TẮC BẮT BUỘC:
                     sn = start_node_res[0]["id"]
                     en = end_node_res[0]["id"]
                     
+                    # Cung chien luoc nhu /api/route: uu tien tuyen dung chieu,
+                    # chi bo qua chieu khi khong con cach nao. Xem ghi chu day du
+                    # o /api/route. Tuyen fallback duoc danh dau trong properties
+                    # de frontend biet ma canh bao.
                     routing_query = """
                         SELECT ST_AsGeoJSON(r.geom) as geom
                         FROM pgr_dijkstra(
                             'SELECT id, source, target, cost, reverse_cost FROM roads', 
                             %s, 
                             %s, 
-                            directed := false
+                            directed := {directed}
                         ) d
                         JOIN roads r ON d.edge = r.id
                         ORDER BY d.seq;
                     """
-                    path_res = execute_query(routing_query, (sn, en))
+                    path_res = execute_query(routing_query.format(directed="true"), (sn, en))
+                    leg_may_violate = False
+                    if not path_res:
+                        path_res = execute_query(routing_query.format(directed="false"), (sn, en))
+                        leg_may_violate = bool(path_res)
                     for row in path_res:
                         if row.get("geom"):
                             day_features.append({
                                 "type": "Feature",
                                 "geometry": json.loads(row["geom"]),
-                                "properties": {}
+                                "properties": {"may_violate_oneway": leg_may_violate}
                             })
             
             day["route_geojson"] = {
@@ -809,11 +884,38 @@ QUY TẮC BẮT BUỘC:
                 "features": day_features
             }
             
+        # Neu LLM khong cho ra du lieu dung nao thi PHAI noi ro, dung tra
+        # success:true voi lich trinh rong kem loi giai thich nghe rat that.
+        total_acts = sum(len(d.get("activities") or []) for d in days)
+        if total_acts == 0:
+            raise HTTPException(
+                status_code=502,
+                detail=(
+                    "Mô hình không tạo được lịch trình dùng được: "
+                    f"{len(dropped)} hoạt động bị loại vì không khớp danh sách địa điểm. "
+                    "Hãy thử lại, hoặc dùng mô hình lớn hơn."
+                ),
+            )
+
         return {
             "success": True,
             "explanation": result.get("explanation", ""),
-            "days": days
+            "days": days,
+            # Cac hoat dong bi loai va LY DO. Truoc day chung bi bo im lang.
+            "dropped_activities": dropped,
         }
-        
+
+    except HTTPException:
+        # Khong de except Exception nuot HTTPException roi boc lai thanh 500
+        # (cung bug da gap o /api/route).
+        raise
+    except requests.exceptions.Timeout:
+        raise HTTPException(
+            status_code=504,
+            detail=(
+                f"Mô hình {OLLAMA_MODEL} không phản hồi trong {timeout_s}s. "
+                "Tăng OLLAMA_TIMEOUT, hoặc dùng mô hình nhỏ hơn."
+            ),
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Recommendation error: {str(e)}")

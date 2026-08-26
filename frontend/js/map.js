@@ -193,31 +193,45 @@ function changeMapStyle(styleName) {
 }
 
 // Checkbox Category Filters
-function toggleFilter(layerName) {
-    const filters = [];
-    if (document.getElementById('filter-hotel').checked) {
-        filters.push('accommodation');
-    }
-    if (document.getElementById('filter-attraction').checked) {
-        filters.push('poi');
-    }
-    // Since mock databases typically contain 'poi' and 'accommodation', map filters accordingly
-    if (document.getElementById('filter-restaurant').checked) {
-        filters.push('restaurant');
-    }
-    if (document.getElementById('filter-cafe').checked) {
-        filters.push('cafe');
-    }
-    if (document.getElementById('filter-other').checked) {
-        filters.push('other');
-    }
+//
+// Loc theo `amenity`/`tourism`, KHONG loc theo `type`. /api/places chi dat
+// properties.type = 'poi' | 'accommodation', nen ban truoc day day cac gia tri
+// 'restaurant' / 'cafe' / 'other' vao filter theo `type` -> khong bao gio khop:
+// 3 trong 5 checkbox khong co tac dung, va "Diem tham quan" (loc 'poi') thi an
+// luon ca nha hang va ca phe vi chung cung la poi.
+const FILTER_RESTAURANT = ['restaurant', 'fast_food'];
+const FILTER_CAFE       = ['cafe'];
+const FILTER_ATTRACTION = ['attraction', 'viewpoint', 'museum', 'theme_park'];
 
-    if (filters.length === 0) {
-        // Hide all elements
-        map.setFilter('db-places-layer', ['==', 'type', 'none']);
+function toggleFilter(layerName) {
+    if (!map.getLayer('db-places-layer')) return;
+
+    const on = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.checked : false;
+    };
+
+    const inList = (prop, values) => ['in', ['get', prop], ['literal', values]];
+
+    // "Khac" = poi khong thuoc nha hang / ca phe / diem tham quan
+    const isOther = ['all',
+        ['==', ['get', 'type'], 'poi'],
+        ['!', inList('amenity', FILTER_RESTAURANT.concat(FILTER_CAFE))],
+        ['!', inList('tourism', FILTER_ATTRACTION)]
+    ];
+
+    const clauses = [];
+    if (on('filter-hotel'))      clauses.push(['==', ['get', 'type'], 'accommodation']);
+    if (on('filter-restaurant')) clauses.push(inList('amenity', FILTER_RESTAURANT));
+    if (on('filter-cafe'))       clauses.push(inList('amenity', FILTER_CAFE));
+    if (on('filter-attraction')) clauses.push(inList('tourism', FILTER_ATTRACTION));
+    if (on('filter-other'))      clauses.push(isOther);
+
+    if (clauses.length === 0) {
+        // Bo hết -> an tat ca
+        map.setFilter('db-places-layer', ['==', ['get', 'type'], '__none__']);
     } else {
-        // Filter by elements in array
-        map.setFilter('db-places-layer', ['in', ['get', 'type'], ['literal', filters]]);
+        map.setFilter('db-places-layer', ['any'].concat(clauses));
     }
 }
 

@@ -10,7 +10,8 @@ from app import agent_legacy as old_agent
 from app import ir_agent as new_agent
 
 # Load benchmark questions
-BENCHMARK_FILE = os.path.join(os.path.dirname(__file__), "benchmark_gsqa_auto.json")
+BENCHMARK_NAME = "benchmark_gsqa_auto.json"
+BENCHMARK_FILE = os.path.join(os.path.dirname(__file__), BENCHMARK_NAME)
 
 def check_crs_violation(sql):
     """
@@ -433,11 +434,16 @@ def run_benchmark():
         results, old_va_rate, new_va_rate, old_ex_rate, new_ex_rate, 
         old_avg_accuracy, new_avg_accuracy, old_crs_violation_rate, new_crs_violation_rate, 
         old_avg_latency, new_avg_latency, old_avg_calls, new_avg_calls, 
-        old_f1, new_f1, benchmark_filename
+        old_f1, new_f1, BENCHMARK_NAME
     )
 
 def write_markdown_report(results, old_va, new_va, old_ex, new_ex, old_acc, new_acc, old_crs, new_crs, old_lat, new_lat, old_calls, new_calls, old_f1, new_f1, benchmark_name):
-    report_path = "/home/nhson2612/Desktop/datn/docs/benchmark_results.md"
+    # Suy ra tu vi tri file, khong hardcode duong dan tuyet doi.
+    # app/ -> backend/ -> goc repo
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    report_path = os.getenv(
+        "BENCHMARK_REPORT", os.path.join(repo_root, "docs", "benchmark_results.md")
+    )
     os.makedirs(os.path.dirname(report_path), exist_ok=True)
     
     # Load cases for Gold SQL printing
@@ -453,7 +459,14 @@ def write_markdown_report(results, old_va, new_va, old_ex, new_ex, old_acc, new_
         f.write("# Báo cáo Thử nghiệm Đánh giá trên Benchmark GS-QA Độc lập\n\n")
         f.write(f"> **Ngày đánh giá:** 2026-08-20  \n")
         f.write(f"> **Bộ dữ liệu thử nghiệm:** `{benchmark_name}` (Tập `test` độc lập - 100 câu)  \n")
-        f.write(f"> **Mô hình LLM sử dụng:** `qwen2.5:1.5b` (Ollama)  \n")
+        # Ten model PHAI lay tu cau hinh that. Truoc day hardcode "qwen2.5:1.5b",
+        # nen sau khi doi OLLAMA_MODEL thi bao cao ghi sai model — dung loai sai
+        # sot lam nguoi doc luan van rut ket luan nham.
+        assert old_agent.OLLAMA_MODEL == new_agent.OLLAMA_MODEL, (
+            f"Hai agent dung model khac nhau ({old_agent.OLLAMA_MODEL} vs "
+            f"{new_agent.OLLAMA_MODEL}) — so sanh se khong cong bang."
+        )
+        f.write(f"> **Mô hình LLM sử dụng:** `{new_agent.OLLAMA_MODEL}` (Ollama)  \n")
         f.write(f"> **Cơ sở dữ liệu:** PostgreSQL + PostGIS (Đà Nẵng tourism dataset)  \n\n")
         
         f.write("## 1. Kết quả Tổng quan\n\n")

@@ -280,9 +280,23 @@ def question_to_sql(question, max_attempts=3):
         return {"success": True, "ir": ir, "sql": sql, "params": params,
                 "llm_calls": llm_calls, "debug": debug}
 
+    # Dua ly do CU THE ra ngoai. Truoc day chi tra cau chung chung, nen khi
+    # check_admin_ambiguity chan vi "co 13 don vi ten 'Xa Tan Thanh'" thi nguoi
+    # dung khong he biet phai neu ro tinh/huyen — thong tin duy nhat giup ho sua
+    # cau hoi lai nam trong debug, khong ai thay.
+    last_error = ""
+    for entry in reversed(debug):
+        if entry.get("error"):
+            last_error = str(entry["error"])
+            break
+
+    message = "Không tạo được truy vấn hợp lệ từ câu hỏi."
+    if last_error:
+        message = f"{message} {last_error}"
+
     return {
         "success": False,
-        "error": "Không tạo được truy vấn hợp lệ từ câu hỏi.",
+        "error": message,
         "llm_calls": llm_calls,
         "debug": debug,
     }

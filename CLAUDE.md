@@ -194,8 +194,16 @@ the test split stays at 100).
   `pgr_nodeNetwork`, and must be run after `importer.py`. Effect measured on the live DB:
   roads 5787 → 7924 segments, vertices 5830 → 6341, and 98.7% of vertices now sit in one
   component (19 components, largest 6260). `main.py` still snaps only to vertices with
-  `comp_size > 100` and calls `pgr_dijkstra` with `directed := false`, so `oneway` is encoded
-  in `cost`/`reverse_cost = -1` and then ignored at query time.
+  `comp_size > 100`. **`pgr_dijkstra` now runs with `directed := true`** and falls back to
+  `directed := false` only when the directed search finds nothing; the fallback route is
+  flagged to the caller as `may_violate_oneway` (a `properties` field per leg in
+  `/api/itineraries/recommend`). It used to always pass `false`, which threw away every
+  one-way constraint — a 135 m one-way segment was driven the wrong way and reported as
+  135 m when the legal route is 225 m, i.e. 40% short with no error. One-way share:
+  `gis_tourism` 49% (3,878/7,924), `gis_vietnam` 25.7% (224,748/873,873). Measured
+  2026-08-25, share of pairs where only the directed search fails: `gis_vietnam` long-haul
+  0/20, `gis_vietnam` urban (≤3 km) 1/12, `gis_tourism` 1/20 — hence the fallback rather
+  than a hard switch.
 - **`pgr_connectedComponents` must never run inside a request.** `/api/route` used to call it
   in the snap query — twice per request, O(V+E) over the whole graph. It is now materialised
   into `roads_components` by `backend/refresh_road_components.py`, which **must be re-run
@@ -238,6 +246,42 @@ Nothing in the schema or docs marks them as synthetic. Two consequences:
 No open dataset supplies real ratings for this region (verified: Overture Places and
 Foursquare OS Places both omit rating/review/price fields; the UCSD Google Local dataset is
 US-only). Real ratings require a paid API.
+
+### A second database, `gis_vietnam`, holds nationwide data
+
+Built 2026-08-25 from **Overture Maps** (release `2026-08-19.0`) via DuckDB → CSV → PostGIS,
+*not* Overpass — Overpass cannot query the whole country without timing out. `gis_tourism` is
+untouched; switch with `DATABASE_URL`. Roughly 1.2 GB.
+
+| | `gis_tourism` (Da Nang) | `gis_vietnam` |
+| :--- | ---: | ---: |
+| `poi` | 3,274 | 306,173 |
+| `accommodation` | 1,040 | 39,231 |
+| `boundaries` | 94 | 3,454 |
+| `roads` | 7,924 | 873,873 |
+
+- **`pgr_nodeNetwork` is unnecessary here.** Overture segments carry a `connectors` array, so
+  the graph arrives already noded and `source`/`target` come straight from it. The plan
+  document originally budgeted 1–2 weeks for national routing on the assumption that noding
+  was required; it took ~25 minutes. See `docs/ke-hoach-full-vietnam.md` §7.
+- Only the **main network** is loaded (motorway/trunk/primary/secondary/tertiary). The
+  3.64 M `residential` and 1.00 M `service` segments are deliberately excluded: they would
+  push the DB past 10 GB and `pgr_dijkstra` already loads the whole edge table per request.
+  Consequence: addresses down small lanes snap to the nearest main road and may exceed
+  `MAX_SNAP_DISTANCE_METERS`.
+- `pgr_dijkstra` takes ~2.2 s here, and the time barely changes between a 102 km and a
+  1,470 km route — the cost is loading 874 k edges, not the search. Bounding the edge query
+  by the bbox of the two endpoints is the fix.
+- **`rating`, `review_count`, `price_level` are DEFAULT values, not data.** Overture has no
+  such fields (verified against the parquet schema). `populate_tourism_attributes.py` was
+  deliberately *not* run here — it would only manufacture 306 k more fake numbers.
+- **Boundary coverage has holes.** `Phường Bến Nghé` (District 1, HCMC) matches nothing, and
+  `admin_level=4` holds 55 rows for 34 distinct names when Vietnam has 34 provinces — Overture
+  `divisions` appears to mix in superseded boundaries. If boundary quality matters, take
+  `boundaries` from OSM instead; this is the one theme where the source is genuinely suspect.
+- Name collisions at national scale are what `check_admin_ambiguity` exists for:
+  `Xã Tân Thành` matches **14** boundaries, so the old "largest area wins" heuristic would be
+  wrong 93% of the time. 12.0% of ward names and 14.8% of POI names are duplicated.
 
 ## Repo conventions
 

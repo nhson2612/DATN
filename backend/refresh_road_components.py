@@ -9,18 +9,25 @@ PHẢI chạy lại sau mỗi lần bảng `roads` thay đổi, đặc biệt sa
 node_and_rebuild_topology.py (nó tạo lại `roads` từ đầu nên id đỉnh đổi hết).
 """
 
+import os
 import sys
 import time
 
 import psycopg
 
-DB_CONN = "postgresql://postgres:postgres@localhost:5432/gis_tourism"
+# Doc DATABASE_URL truoc, chi fallback ve gis_tourism khi khong co. Truoc day
+# chuoi ket noi bi hardcode nen chay voi DATABASE_URL=... tro tro DB khac van
+# am tham refresh gis_tourism -> bang roads_components cua DB kia bi bo cu.
+DB_CONN = os.getenv(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/gis_tourism"
+)
 
 EDGE_SQL = "SELECT id, source, target, cost, reverse_cost FROM roads"
 
 
 def refresh():
     t0 = time.time()
+    print(f"DB: {DB_CONN.rsplit('/', 1)[-1]}")
     try:
         with psycopg.connect(DB_CONN) as conn:
             with conn.cursor() as cur:
