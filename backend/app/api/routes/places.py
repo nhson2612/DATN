@@ -1,6 +1,6 @@
 """Endpoint địa điểm: GeoJSON cho bản đồ + CRUD cho trang quản trị."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.security import get_current_admin
 from app.schemas.requests import AccommodationCreateUpdate, POICreateUpdate
@@ -10,8 +10,16 @@ router = APIRouter(prefix="/api", tags=["places"])
 
 
 @router.get("/places")
-def get_places_geojson():
-    return places_service.all_places_geojson()
+def get_places_geojson(
+    min_lon: float = Query(None, description="Bbox: kinh độ nhỏ nhất"),
+    min_lat: float = Query(None, description="Bbox: vĩ độ nhỏ nhất"),
+    max_lon: float = Query(None, description="Bbox: kinh độ lớn nhất"),
+    max_lat: float = Query(None, description="Bbox: vĩ độ lớn nhất"),
+    limit: int = Query(None, ge=1, le=100000),
+):
+    bbox_vals = [min_lon, min_lat, max_lon, max_lat]
+    bbox = tuple(bbox_vals) if all(v is not None for v in bbox_vals) else None
+    return places_service.all_places_geojson(bbox=bbox, limit=limit)
 
 
 def _crud_routes(table: str, path: str, schema):

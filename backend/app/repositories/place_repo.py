@@ -23,8 +23,19 @@ def get_by_id(table: str, place_id: int):
     return rows[0] if rows else None
 
 
-def all_as_geojson():
-    """Toàn bộ poi + accommodation dạng GeoJSON FeatureCollection."""
+def all_as_geojson(bbox=None, limit=None):
+    """poi + accommodation dạng GeoJSON FeatureCollection.
+
+    bbox/limit là BẮT BUỘC ở quy mô toàn quốc: gis_vietnam có 345k địa điểm,
+    dựng hết thành một FeatureCollection là ~87 MB JSON và mất ~26s. Trên
+    gis_tourism (4.3k dòng) thì không ai để ý nên endpoint này ra đời không có
+    giới hạn nào. Giống hệt ca /api/roads.
+
+    LƯU Ý: limit áp cho TỪNG bảng, không phải tổng — limit=5000 trả tối đa
+    5000 poi + 5000 accommodation = 10.000 features.
+    """
+    where = "WHERE geom && ST_MakeEnvelope(%s, %s, %s, %s, 4326)" if bbox else ""
+    lim = "LIMIT %s" if limit else ""
     rows = execute_query(
         f"""
         SELECT json_build_object(
@@ -42,7 +53,7 @@ def all_as_geojson():
                     'description', description
                 )
             ) AS f
-            FROM poi
+            FROM (SELECT * FROM poi {where} {lim}) p
             UNION ALL
             SELECT json_build_object(
                 'type', 'Feature',
@@ -54,9 +65,12 @@ def all_as_geojson():
                     'stars', stars, 'price_range', price_range, 'address', address
                 )
             ) AS f
-            FROM accommodation
+            FROM (SELECT * FROM accommodation {where} {lim}) a
         ) sub;
-        """
+        """,
+        # LIMIT khong hop le ngay truoc UNION ALL nen moi nhanh duoc boc thanh
+        # subquery rieng. Tham so lap lai cho ca hai nhanh, dung thu tu xuat hien.
+        tuple((list(bbox) if bbox else []) + ([limit] if limit else [])) * 2 or None,
     )
     return rows[0]["geojson"] if rows and rows[0].get("geojson") else None
 
