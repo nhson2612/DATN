@@ -38,11 +38,11 @@ cd frontend && python3 -m http.server 5500     # expects API at http://localhost
 
 # Data import, in this order (all hit the live Overpass API, slow, mirror-rotating)
 cd backend
-./venv/bin/python importer.py                     # boundaries, accommodation, poi, roads + pgr_createTopology
-./venv/bin/python import_primary.py               # adds highway=primary (idempotent: skips if any exist)
-./venv/bin/python node_and_rebuild_topology.py    # REQUIRED: pgr_nodeNetwork — importer alone leaves a broken graph
-./venv/bin/python refresh_road_components.py      # REQUIRED after any change to `roads`
-./venv/bin/python populate_tourism_attributes.py  # SYNTHETIC attrs — see "Data provenance"
+./venv/bin/python scripts/importer.py                     # boundaries, accommodation, poi, roads + pgr_createTopology
+./venv/bin/python scripts/import_primary.py               # adds highway=primary (idempotent: skips if any exist)
+./venv/bin/python scripts/node_and_rebuild_topology.py    # REQUIRED: pgr_nodeNetwork — importer alone leaves a broken graph
+./venv/bin/python scripts/refresh_road_components.py      # REQUIRED after any change to `roads`
+./venv/bin/python scripts/populate_tourism_attributes.py  # SYNTHETIC attrs — see "Data provenance"
 
 # Benchmark
 cd backend
@@ -58,8 +58,68 @@ override via `OLLAMA_URL` / `OLLAMA_MODEL`. `qwen2.5:1.5b` is also pulled locall
 figure in `docs/benchmark_results.md` predating this switch was measured on **1.5b** — numbers
 from the two models are not comparable, so state the model next to any figure you quote.
 Several design notes below cite 1.5b failure modes as the *reason* a guard exists; those
-rationales still hold historically even though the default has moved. `app/db.py` reads `DATABASE_URL`; the standalone `backend/*.py` importer
-scripts hardcode the connection string instead.
+rationales still hold historically even though the default has moved. All configuration, including `DATABASE_URL`, comes from `app/core/config.py`
+(see **Configuration** below). The importer scripts no longer hardcode a DSN.
+
+## Layout
+
+`main.py` is 42 lines and only assembles routers — it holds no SQL and no
+business logic. The rule is: **routes have no SQL, repositories have no business
+logic, services do not know about HTTP.**
+
+```
+backend/app/
+  api/routes/     HTTP layer      auth, chat, routing, places, itineraries
+  services/       business logic  routing, places, itinerary, geo_ip
+  repositories/   SQL only        place, road, user, itinerary, boundary
+  schemas/        Pydantic request models
+  core/           config, database, security, bootstrap
+  llm/            provider adapter (ollama | groq)
+  research/       THE THESIS — see below. Move only, never refactor.
+backend/scripts/  importer, import_primary, node_and_rebuild_topology,
+                  refresh_road_components, populate_tourism_attributes
+```
+
+`app/db.py`, `app/auth.py`, `app/llm_adapter.py`, `app/ir.py`, `app/ir_agent.py`,
+`app/agent_legacy.py`, `app/gold_templates.py`, `app/run_benchmark.py` and
+`app/generate_benchmark.py` are **re-export shims** kept so existing imports and
+`python -m app.run_benchmark` still work. Put nothing new in them.
+
+### Configuration: nothing is hardcoded
+
+Every tunable lives in `app/core/config.py` (pydantic-settings) and is read from
+`.env` at the repo root. `.env.example` is committed and documents each key;
+`.env` is gitignored. The only DSN string left in the repo is the default in
+`config.py`.
+
+- **`JWT_SECRET` has no default** — a missing value refuses to boot, and the
+  validator rejects the string `danang_gis_tourism_secret_key_12345` because that
+  value was committed to a public GitHub repo, meaning anyone who read the repo
+  could mint an admin token. It still sits in git history; rotating the secret is
+  what actually invalidates old tokens.
+- `settings` is loaded once at import via `lru_cache`, so mutating `os.environ`
+  afterwards has no effect. Use `reload_settings()` when a test needs to change
+  configuration at runtime — it updates `settings` in place so modules that did
+  `from ... import settings` see the new values.
+- The frontend has no bundler, so it cannot read `.env`. `js/api.js` derives
+  `API_BASE` from `window.location` and can be overridden by `js/config.js`
+  (gitignored, with `config.example.js` alongside).
+
+### Tests
+
+`backend/tests/`, run with `cd backend && ./venv/bin/python -m unittest discover -s tests`.
+Requires `httpx2` for `TestClient`.
+
+`test_api_surface.py` pins all 15 OpenAPI paths and the auth contract. Two
+regressions it exists to catch, both introduced during the refactor:
+
+- **JWT `sub` must be the email**, not the id. `get_current_user` looks the user
+  up by email, so `sub=str(id)` produced a valid token under which every
+  authenticated endpoint returned 401 while `/login` still returned 200.
+- **Do not count routes with `isinstance(r, APIRoute)`.** FastAPI 0.141 wraps an
+  included router in `_IncludedRouter` instead of flattening its routes into
+  `app.routes`, so that check reports 1 route when 18 are registered. Assert
+  against `/openapi.json` instead.
 
 ## Architecture
 

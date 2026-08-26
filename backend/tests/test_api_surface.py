@@ -76,6 +76,30 @@ class ApiSurfaceTest(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertIn("may_violate_oneway", res.json())
 
+    def test_login_token_works_on_protected_routes(self):
+        """Token tu /login phai dung duoc ngay — chan regression sub=id vs email.
+
+        get_current_user tra user theo email, nen `sub` phai la email. Lan
+        refactor dau tien dat sub=str(id): login tra 200 nhung moi endpoint can
+        dang nhap tra 401.
+        """
+        login = self.client.post(
+            "/api/auth/login",
+            json={"email": "admin@gmail.com", "password": "admin"},
+        )
+        if login.status_code != 200:
+            self.skipTest("khong co tai khoan admin mac dinh trong DB")
+        token = login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        me = self.client.get("/api/auth/me", headers=headers)
+        self.assertEqual(me.status_code, 200, me.text)
+        self.assertEqual(me.json()["user"]["role"], "admin")
+
+        self.assertEqual(
+            self.client.get("/api/itineraries", headers=headers).status_code, 200
+        )
+
     def test_chat_rejects_empty_question(self):
         res = self.client.post("/api/chat", json={"question": "   "})
         self.assertEqual(res.status_code, 400)

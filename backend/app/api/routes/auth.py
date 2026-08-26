@@ -30,7 +30,10 @@ def login(data: UserLogin):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email hoặc mật khẩu không đúng.",
         )
-    token = create_access_token({"sub": str(user["id"]), "role": user["role"]})
+    # `sub` PHAI la email: get_current_user trong core/security.py tra user theo
+    # email. Trong lan refactor toi da doi sang str(id) khien token hop le nhung
+    # khong tra ra user -> moi endpoint can dang nhap tra 401.
+    token = create_access_token({"sub": user["email"]})
     return {
         "success": True,
         "access_token": token,
