@@ -1,5 +1,10 @@
 """Vật hoá kết quả pgr_connectedComponents ra bảng roads_components.
 
+import os
+import sys
+
+
+
 main.py trước đây gọi pgr_connectedComponents ngay trong câu truy vấn tìm đỉnh
 snap, tức 2 lần mỗi request /api/route. Hàm đó là O(V+E) trên TOÀN graph: đo
 được 51ms ở 6.341 vertex — tuyến tính, nên ở quy mô lớn là hàng chục giây cho
@@ -8,6 +13,14 @@ mỗi lần bấm chỉ đường.
 PHẢI chạy lại sau mỗi lần bảng `roads` thay đổi, đặc biệt sau
 node_and_rebuild_topology.py (nó tạo lại `roads` từ đầu nên id đỉnh đổi hết).
 """
+
+import sys
+from pathlib import Path
+
+# Cho phep import app.* khi chay script truc tiep
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.core.config import settings
 
 import os
 import sys
@@ -18,9 +31,7 @@ import psycopg
 # Doc DATABASE_URL truoc, chi fallback ve gis_tourism khi khong co. Truoc day
 # chuoi ket noi bi hardcode nen chay voi DATABASE_URL=... tro tro DB khac van
 # am tham refresh gis_tourism -> bang roads_components cua DB kia bi bo cu.
-DB_CONN = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/gis_tourism"
-)
+DB_CONN = settings.database_url
 
 EDGE_SQL = "SELECT id, source, target, cost, reverse_cost FROM roads"
 

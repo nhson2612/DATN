@@ -1,8 +1,21 @@
+import sys
+from pathlib import Path
+
+# Cho phep import app.* khi chay script truc tiep
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.core.config import settings
+
 import psycopg
 import sys
 import time
 
-DB_CONN = "postgresql://postgres:postgres@localhost:5432/gis_tourism"
+import os
+import sys
+
+
+
+DB_CONN = settings.database_url
 
 def rebuild():
     print("Connecting to PostgreSQL...")

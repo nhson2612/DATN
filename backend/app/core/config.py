@@ -67,6 +67,14 @@ class Settings(BaseSettings):
     ir_default_limit: int = 20
     ir_max_attempts: int = 3
 
+    # ---- Tài khoản khởi tạo lần đầu ----
+    # Chỉ được tạo khi bảng users còn trống. Mật khẩu trước đây hardcode
+    # "admin"/"123456" ngay trong main.py.
+    seed_admin_email: str = "admin@gmail.com"
+    seed_admin_password: str = "admin"
+    seed_user_email: str = "user@gmail.com"
+    seed_user_password: str = "123456"
+
     # ---- Vị trí mặc định (Đà Nẵng) khi không phân giải được IP ----
     default_lon: float = 108.206
     default_lat: float = 16.047
