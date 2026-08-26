@@ -1,23 +1,6 @@
-import os
-from contextlib import contextmanager
-from psycopg_pool import ConnectionPool
+"""Giữ lại để tương thích: các module cũ import `app.db`.
 
-DB_CONN = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/gis_tourism")
+Nguồn thật là app/core/database.py. Không thêm logic mới vào đây.
+"""
 
-# Initialize connection pool
-pool = ConnectionPool(conninfo=DB_CONN, min_size=2, max_size=10)
-
-@contextmanager
-def get_db_connection():
-    with pool.connection() as conn:
-        yield conn
-
-def execute_query(query, params=None):
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(query, params)
-            if cur.description:
-                columns = [desc[0] for desc in cur.description]
-                return [dict(zip(columns, row)) for row in cur.fetchall()]
-            conn.commit()
-            return None
+from app.core.database import execute_query, get_db_connection, pool  # noqa: F401

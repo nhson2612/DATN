@@ -15,3 +15,7 @@ env/
 # NOTE: this also ignores CLAUDE.md and docs/*.md -> need `git add -f` to commit them
 *.md
 !README.md
+
+# Cấu hình thật — không commit
+.env
+frontend/js/config.js

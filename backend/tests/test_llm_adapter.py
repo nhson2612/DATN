@@ -1,5 +1,8 @@
 import os
 import sys
+
+# core.config bat buoc co JWT_SECRET; dat gia tri test truoc khi import app.*
+os.environ.setdefault("JWT_SECRET", "test-secret-key-for-unittest-only")
 import types
 import unittest
 from unittest.mock import patch
@@ -17,7 +20,9 @@ if "psycopg_pool" not in sys.modules:
     fake_psycopg_pool.ConnectionPool = DummyPool
     sys.modules["psycopg_pool"] = fake_psycopg_pool
 
-from app import agent_legacy, ir_agent, llm_adapter
+from app import agent_legacy, ir_agent
+from app.core.config import reload_settings
+from app.llm import adapter as llm_adapter
 
 
 class FakeResponse:
@@ -54,7 +59,8 @@ class LLMAdapterTest(unittest.TestCase):
             },
             clear=False,
         ):
-            with patch("app.llm_adapter.requests.post", return_value=FakeResponse(data)) as post:
+            reload_settings()
+            with patch("app.llm.adapter.requests.post", return_value=FakeResponse(data)) as post:
                 result = llm_adapter.query_llm("Hoi?", "System", json_mode=True)
 
         self.assertEqual(result, '{"target": null}')
@@ -83,7 +89,8 @@ class LLMAdapterTest(unittest.TestCase):
             },
             clear=False,
         ):
-            with patch("app.llm_adapter.requests.post", return_value=FakeResponse(data)) as post:
+            reload_settings()
+            with patch("app.llm.adapter.requests.post", return_value=FakeResponse(data)) as post:
                 result = llm_adapter.query_llm("Generate SQL", "System")
 
         self.assertEqual(result, "SELECT 1")
