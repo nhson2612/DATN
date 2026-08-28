@@ -1,5 +1,6 @@
 import re
 from app.db import execute_query
+from app.core.config import settings
 from app.llm_adapter import query_llm
 
 SYSTEM_PROMPT = """You are an expert PostGIS and Spatial SQL generator for a Vietnam tourism database.
@@ -86,7 +87,7 @@ OUTPUT FORMAT:
 """
 
 def query_ollama(prompt, system_prompt=None):
-    return query_llm(prompt, system_prompt, timeout=90)
+    return query_llm(prompt, system_prompt, timeout=settings.llm_timeout_explain)
 
 def crs_guard(sql):
     """

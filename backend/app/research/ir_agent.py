@@ -43,50 +43,6 @@ CẤU TRÚC JSON:
                                                   // cụ thể; chỉ đặt 1 khi hỏi 'gần nhất'.
 }
 
-LƯU Ý QUAN TRỌNG:
-1. TUYỆT ĐỐI KHÔNG bịa giá trị. Mọi "name" (trong "in_admin", trong "ref") và mọi số
-   ("meters", "lon", "lat", giá trị so sánh) BẮT BUỘC phải xuất hiện ngay trong câu hỏi.
-   Các tên và số trong phần CẤU TRÚC và VÍ DỤ chỉ là minh hoạ — KHÔNG được sao chép chúng
-   vào câu trả lời. Câu hỏi không nhắc tên địa điểm nào thì KHÔNG được thêm "within_distance".
-2. Chọn "target" theo LOẠI địa điểm: chỗ ăn/uống/tham quan (cafe, nhà hàng, bar, chợ, bảo tàng,
-   điểm ngắm cảnh) -> "poi". Chỗ NGỦ QUA ĐÊM (khách sạn, nhà nghỉ, hostel, homestay, resort)
-   -> "accommodation". Bảng "accommodation" KHÔNG có nhà hàng hay quán cà phê.
-3. KHÔNG tự ý thêm trường "nearest_to" nếu câu hỏi không chứa từ "gần nhất" hoặc một cặp tọa độ số thực.
-4. Nếu câu hỏi yêu cầu đếm ("Có bao nhiêu..."), bạn BẮT BUỘC phải dùng "aggregate": "count" và BỎ TRƯỜNG "select".
-5. Với các câu hỏi lọc địa giới (ví dụ: ở Phường Sơn Trà, ở Sơn Trà, tại Ngũ Hành Sơn), bạn BẮT BUỘC dùng op "in_admin".
-6. Chỉ sử dụng các cột thực tế: rating, stars, price_level, amenity, tourism.
-   * BẢNG TRÀ CỨU GIÁ TRỊ (MAPPING):
-     (nhóm dưới đây LUÔN đi với target: "poi" — cột "amenity" CHỈ tồn tại ở bảng poi)
-     - "quán cà phê", "quán cafe", "tiệm cà phê", "cửa hàng cafe" -> target "poi", "amenity": "cafe"
-     - "nhà hàng", "quán ăn", "tiệm ăn" -> target "poi", "amenity": "restaurant"
-     - "quán bar", "quán rượu", "bar" -> target "poi", "amenity": "bar"
-     - "cửa hàng đồ ăn nhanh", "quán ăn nhanh", "tiệm ăn nhanh", "quán fast food" -> target "poi", "amenity": "fast_food"
-     - "chợ", "trung tâm thương mại", "khu mua sắm" -> target "poi", "amenity": "marketplace"
-     - "bến phà", "bến tàu", "bến tàu thủy" -> target "poi", "amenity": "ferry_terminal"
-     - "nhà văn hóa", "trung tâm cộng đồng", "nhà sinh hoạt cộng đồng" -> target "poi", "amenity": "community_centre"
-     - "khách sạn", "hotel" -> "tourism": "hotel" (target: "accommodation")
-     - "nhà khách", "guest house" -> "tourism": "guest_house" (target: "accommodation")
-     - "nhà trọ", "hostel" -> "tourism": "hostel" (target: "accommodation")
-     - "nhà nghỉ", "motel" -> "tourism": "motel" (target: "accommodation")
-   * BẢNG KHOÁ TAG (dùng với {"op": "tag"}): mọi thuộc tính KHÔNG phải loại địa điểm
-     đều nằm trong "tags". BẢNG MAPPING ở trên chỉ có LOẠI địa điểm, nên phần nào của
-     câu hỏi không tra được ở đó thì tra ở đây:
-     - MÓN ĂN / ĐỒ UỐNG (hải sản, món Hàn, lẩu, pizza...) -> key "cuisine"
-     - TÊN ĐƯỜNG / ĐỊA CHỈ ("đường Trần Phú", "102 Lê Lai") -> key "addr:street" (BỎ số nhà)
-     - GIỜ MỞ CỬA -> key "opening_hours"; SỐ ĐIỆN THOẠI -> key "phone"
-     - THƯƠNG HIỆU ("Highlands", "Circle K") -> key "brand"
-7. Với các câu hỏi nằm ngoài phạm vi dữ liệu hoặc không thể trả lời được (ví dụ: thời tiết, giá vé cáp treo, tình trạng đông đúc, thời gian thực), bạn BẮT BUỘC trả về cấu trúc: {"target": null, "reason": "Không có dữ liệu trong DB để trả lời câu hỏi này."}
-8. Tuyệt đối KHÔNG tự ý thêm bộ lọc tên (ví dụ: {"op": "eq", "col": "name", "value": "..."}) nếu câu hỏi chỉ hỏi "tên là gì?" mà không chỉ đích danh một địa điểm cụ thể. Chỉ lọc theo tên khi câu hỏi chỉ định một địa danh cụ thể (ví dụ: "chùa Linh Ứng", "Cầu Rồng").
-
-VÍ DỤ
-Hỏi: Có bao nhiêu tiệm ăn ở Phường Hải Châu?
-{"target": "poi", "aggregate": "count", "where": [{"op": "eq", "col": "amenity", "value": "restaurant"}, {"op": "in_admin", "name": "Phường Hải Châu"}]}
-
-Hỏi: Nơi lưu trú có đánh giá từ 4.0 trở lên nằm gần nhất với tọa độ 108.2206 16.0638 tên là gì?
-{"target": "accommodation", "select": ["name"], "where": [{"op": "gte", "col": "rating", "value": 4.0}], "nearest_to": {"lon": 108.2206, "lat": 16.0638}, "limit": 1}
-
-Hỏi: Thời tiết ở Đà Nẵng ngày mai như thế nào?
-{"target": null, "reason": "Không có thông tin thời tiết trong cơ sở dữ liệu."}
 """
 
 # Phạm vi lấy từ cấu hình: prompt cũ hardcode "Đà Nẵng" nên khi DATABASE_URL

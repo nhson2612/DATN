@@ -119,7 +119,7 @@ def recommend(duration_days: int, preferences: str, budget: str):
     if not raw:
         raise LLMUnavailableError(
             f"Mô hình không phản hồi trong {settings.llm_timeout}s hoặc lỗi provider "
-            f"({settings.llm_provider}). Kiểm tra LLM_TIMEOUT / GROQ_API_KEY."
+            f"({settings.llm_provider}). Kiểm tra LLM_TIMEOUT / DEEPSEEK_API_KEY."
         )
 
     result = json.loads(raw)

@@ -51,6 +51,55 @@ def run_query(query):
         time.sleep(15)
     return None
 
+# ---- Danh sach loai dia diem PHUC VU DU LICH ----
+# Khong liet ke tuy tien 9 dong nhu ban cu (bo mat karaoke, bai bien, chua...),
+# cung khong lay sach moi thu OSM co (keo theo ghe da, truong hoc, tiem giat la,
+# van phong cong ty — rac voi ung dung du lich). Whitelist theo 6 nhom nhu cau
+# that cua khach du lich.
+TOURIST_TAGS = {
+    # 1. Cho o
+    "tourism": ["hotel", "guest_house", "hostel", "motel", "resort", "apartment",
+                "chalet", "camp_site", "caravan_site",
+                # 3. Diem tham quan
+                "attraction", "viewpoint", "museum", "theme_park", "gallery",
+                "artwork", "zoo", "aquarium", "picnic_site", "information"],
+    # 2. An uong  +  4. Vui choi  +  5. Di lai  +  6. Mua sam
+    "amenity": ["restaurant", "cafe", "fast_food", "bar", "pub", "food_court",
+                "ice_cream", "biergarten",
+                "karaoke_box", "nightclub", "cinema", "theatre", "casino",
+                "place_of_worship", "marketplace", "fountain",
+                "bus_station", "ferry_terminal", "taxi", "car_rental",
+                "bicycle_rental", "motorcycle_rental", "fuel", "parking"],
+    "leisure": ["beach_resort", "water_park", "swimming_pool", "park", "garden",
+                "nature_reserve", "marina", "sports_centre", "fitness_centre",
+                "amusement_arcade", "escape_game", "bowling_alley", "golf_course"],
+    "shop": ["mall", "department_store", "supermarket", "gift", "souvenir",
+             "convenience", "travel_agency", "art", "craft", "antiques",
+             "jewelry", "clothes", "bakery", "confectionery", "greengrocer"],
+    "historic": ["monument", "memorial", "ruins", "castle", "archaeological_site",
+                 "city_gate", "fort", "tomb", "wayside_shrine"],
+    "natural": ["beach", "peak", "cave_entrance", "waterfall", "hot_spring",
+                "spring", "bay", "cliff", "volcano"],
+    "aeroway": ["aerodrome", "terminal"],
+    "railway": ["station", "halt"],
+}
+
+
+def _tourist_query(bbox):
+    """Sinh Overpass QL cho mot bbox: chi cac loai trong TOURIST_TAGS.
+
+    Dung `nwr` chu khong phai `node`: OSM ve khach san lon, cong vien, bai bien
+    thanh way/relation, ban cu chi lay `node` nen mat sach nhung cai do.
+    `out center tags` tra ve mot diem dai dien cho way/relation.
+    """
+    parts = []
+    for key, vals in TOURIST_TAGS.items():
+        rx = "|".join(vals)
+        parts.append(f'  nwr["{key}"~"^({rx})$"]({bbox});')
+    body = "\n".join(parts)
+    return f"[out:json][timeout:240];\n(\n{body}\n);\nout center tags;"
+
+
 def import_boundaries(conn):
     print("Fetching boundaries for Da Nang...")
     query = """
@@ -171,19 +220,21 @@ def import_accommodations(conn):
 
 def import_pois(conn):
     print("Fetching POIs...")
+    # KHONG liet ke tung loai. Danh sach cu chi co 9 dong nen moi thu ngoai do
+    # bien mat khoi DB: do trong bbox trung tam Da Nang, OSM co 150 loai khac
+    # nhau (amenity/leisure/shop) trong khi DB chi giu 6. karaoke_box, pharmacy,
+    # atm, bank, convenience, massage, hairdresser... deu bi vut. Hau qua: hoi
+    # "quan karaoke" thi LLM khong co gia tri hop le nao de dung, no bia ra mot
+    # cai roi truy van tra 0 dong — that bai im lang, va moi lan them mot loai
+    # lai phai sua 4 cho (query, cot DB, BANG MAPPING, prompt).
     query = """
-    [out:json];
+    [out:json][timeout:180];
     area["name"="Thành phố Đà Nẵng"]->.a;
     (
-      node["tourism"="attraction"](area.a);
-      node["tourism"="viewpoint"](area.a);
-      node["tourism"="museum"](area.a);
-      node["tourism"="theme_park"](area.a);
-      node["amenity"="restaurant"](area.a);
-      node["amenity"="cafe"](area.a);
-      node["amenity"="fast_food"](area.a);
-      node["amenity"="bar"](area.a);
-      node["amenity"="pub"](area.a);
+      node["amenity"](area.a);
+      node["tourism"](area.a);
+      node["leisure"](area.a);
+      node["shop"](area.a);
     );
     out body;
     """
@@ -201,7 +252,11 @@ def import_pois(conn):
                 lon = elem["lon"]
                 tags = elem.get("tags", {})
                 name = tags.get("name", f"POI {osm_id}")
-                amenity = tags.get("amenity")
+                # shop/leisure khong co cot rieng. Do vao `amenity` de van loc
+                # duoc bang mot cot duy nhat — gia tri goc luon con nguyen trong
+                # `tags` neu can phan biet nguon.
+                amenity = (tags.get("amenity") or tags.get("shop")
+                           or tags.get("leisure"))
                 tourism = tags.get("tourism")
                 description = tags.get("description") or tags.get("cuisine", "")
                 # Giu NGUYEN toan bo tag OSM vao cot jsonb `tags`.

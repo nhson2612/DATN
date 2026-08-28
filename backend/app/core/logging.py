@@ -75,10 +75,17 @@ def setup_logging() -> None:
         root.addHandler(handler)
 
     # uvicorn tự cấu hình logger riêng; cho chúng dùng chung handler của ta.
-    for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+    for name in ("uvicorn", "uvicorn.error"):
         uvicorn_logger = logging.getLogger(name)
         uvicorn_logger.handlers = handlers
         uvicorn_logger.propagate = False
+
+    # TẮT uvicorn.access: nó in lại đúng thứ RequestLogMiddleware đã in, nhưng
+    # không có request_id nên vừa nhiễu gấp đôi vừa không lần được theo id.
+    access = logging.getLogger("uvicorn.access")
+    access.handlers = []
+    access.propagate = False
+    access.disabled = True
 
     _CONFIGURED = True
 
