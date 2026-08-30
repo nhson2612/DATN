@@ -123,11 +123,18 @@ class TestQuanTri(unittest.TestCase):
             self.assertIsInstance(tk[k], int, f"khoá {k}")
             self.assertGreaterEqual(tk[k], 0, f"khoá {k}")
 
-    def test_so_dia_diem_khong_bang_khong(self):
-        # reltuples bằng 0 nghĩa là bảng chưa ANALYZE — con số hiển thị sẽ sai
-        # hoàn toàn chứ không chỉ lệch vài phần nghìn.
+    def test_so_dia_diem_dung_chinh_xac(self):
+        """Phải khớp COUNT(*) chứ không phải ước lượng.
+
+        Bản đầu đếm bằng `reltuples` của pg_class cho nhanh; đo lại thì con số
+        đó lệch 15,6% ở bảng accommodation (60.180 so với 52.046 thật) vì bảng
+        chưa ANALYZE sau lần import cuối.
+        """
+        from app.core.database import execute_query
         tk = self.c.get("/api/admin/stats", headers=self.AH).json()["stats"]
-        self.assertGreater(tk["poi"], 0)
+        for khoa, bang in (("poi", "poi"), ("luu_tru", "accommodation")):
+            that = execute_query(f"SELECT count(*) AS n FROM {bang}")[0]["n"]
+            self.assertEqual(tk[khoa], that, f"{khoa} lệch so với COUNT(*)")
 
     def test_nguoi_dung_thuong_khong_xem_duoc(self):
         self.assertEqual(self.c.get("/api/admin/stats", headers=self.H).status_code, 403)

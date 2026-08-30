@@ -166,10 +166,37 @@ CSDL `gis_vietnam` — PostgreSQL + PostGIS + pgRouting.
 
 ### Lưu ý về chất lượng dữ liệu
 
-> **Các cột sau chỉ chứa giá trị mặc định, KHÔNG phải dữ liệu thật:**
-> `rating` (luôn 4.0), `review_count` (luôn 10), `price_level` (luôn "Trung bình"),
-> `climate_label`, `stars` (luôn 0), `address`, `price_range`, `description`.
-> Overture không cung cấp các trường này. Đừng dùng chúng để đánh giá hay xếp hạng.
+> **Các cột sau KHÔNG phải dữ liệu thật.** Overture không cung cấp chúng.
+
+Trong `gis_vietnam` (toàn quốc) chúng là giá trị mặc định của cột — mọi dòng
+giống hệt nhau, kiểm bằng `count(DISTINCT ...)` đều ra **1**:
+
+| Cột | Giá trị | Số dòng |
+| :--- | :--- | ---: |
+| `poi.rating` / `accommodation.rating` | luôn `4.0` | 805.729 / 52.046 |
+| `poi.review_count` | luôn `10` | 805.729 |
+| `accommodation.review_count` | luôn `15` | 52.046 |
+| `price_level` | luôn `"Trung bình"` | cả hai bảng |
+| `accommodation.stars`, `price_range` | luôn `NULL` | 52.046 |
+
+Trong `gis_tourism` (Đà Nẵng, dùng cho benchmark) thì **tệ hơn**: script
+`backend/scripts/populate_tourism_attributes.py` đã ghi đè bằng số **ngẫu
+nhiên** — `random.uniform(3.5, 5.0)` cho rating, `random.choice(['Rẻ',
+'Trung bình', 'Sang trọng'])` cho mức giá. Nên ở đó `rating` có 16 giá trị khác
+nhau và *trông như dữ liệu thật*, nhưng "Golden Holiday 5.0 sao" chỉ có nghĩa là
+bộ sinh số ngẫu nhiên của Python đã chọn như vậy.
+
+**Hệ quả với benchmark:** 34/151 câu (23%) trong `app/benchmark_gsqa_auto.json`
+có đáp án chuẩn phụ thuộc vào hai cột này — dạng "Nơi lưu trú có đánh giá từ 4.5
+trở lên gần nhất với toạ độ X" (17 câu) và "nhà trọ **giá rẻ** cách Y dưới
+2000m" (17 câu). Điểm số trên nhóm câu đó đo khả năng dịch câu hỏi thành truy
+vấn đúng, **không** đo được chất lượng gợi ý, vì bản thân đáp án là ngẫu nhiên.
+Khi báo cáo kết quả cần tách riêng nhóm này hoặc loại hẳn.
+
+Mã ứng dụng không đọc ba cột đó ở bất kỳ đâu: `destination_repo` xếp hạng bằng
+độ đầy đủ thông tin, `search_service` xếp thuần theo khoảng cách, và
+`itinerary_service` đã bỏ `ORDER BY rating DESC` của bản cũ. Chỉ còn
+`app/research/` (phần benchmark) và script sinh dữ liệu là còn tham chiếu.
 
 Dữ liệu đã được cắt theo biên giới Việt Nam bằng `vn_mask`: bbox hình chữ nhật bao
 Việt Nam trùm cả Thái Lan, Lào, Campuchia nên lần import đầu lẫn 289.121 địa điểm

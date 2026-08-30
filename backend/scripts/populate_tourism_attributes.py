@@ -1,3 +1,18 @@
+"""SINH DỮ LIỆU ĐÁNH GIÁ GIẢ — KHÔNG CHẠY TRÊN CSDL DÙNG ĐỂ BÁO CÁO.
+
+Script này ghi `rating`, `review_count`, `price_level` bằng `random.uniform` và
+`random.choice`. Kết quả TRÔNG như dữ liệu thật (rating rải từ 3.5 đến 5.0, ba
+mức giá) nên rất dễ bị hiểu nhầm là đã thu thập được đánh giá.
+
+Nó đã chạy trên `gis_tourism` (Đà Nẵng) và làm 34/151 câu benchmark có đáp án
+chuẩn phụ thuộc số ngẫu nhiên — xem README §4. `gis_vietnam` chưa chạy và nên
+giữ nguyên như vậy.
+
+Giữ lại file chỉ để tra lại nguồn gốc các con số trong `gis_tourism`. Muốn có
+đánh giá thật thì phải lấy từ nguồn ngoài (Google Places, TripAdvisor) hoặc để
+người dùng tự chấm, không phải sinh ra.
+"""
+
 import sys
 from pathlib import Path
 

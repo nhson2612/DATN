@@ -101,15 +101,17 @@ def update_booking_status(booking_id: int, status: str):
 def thong_ke():
     """Số liệu thật cho trang quản trị.
 
-    Đếm bằng `reltuples` của bộ lập kế hoạch chứ không `COUNT(*)`: hai bảng địa
-    điểm có hơn 850 nghìn dòng, đếm chính xác mỗi lần mở trang là quét toàn bảng.
-    Sai số vài phần nghìn không ảnh hưởng gì với một ô hiển thị tổng quan.
+    Đếm chính xác bằng COUNT(*). Bản đầu dùng `reltuples` của bộ lập kế hoạch để
+    tránh quét toàn bảng, nhưng đo lại thì con số đó lệch 15,6% ở bảng
+    accommodation (60.180 ước lượng / 52.046 thật) vì bảng chưa được ANALYZE sau
+    lần import cuối — trong khi COUNT(*) chỉ mất 33ms + 5ms nhờ index-only scan.
+    Đổi 38ms lấy một con số sai 8 nghìn dòng là món hời ngược.
     """
     rows = execute_query(
         """
         SELECT
-          (SELECT reltuples::bigint FROM pg_class WHERE relname = 'poi')           AS poi,
-          (SELECT reltuples::bigint FROM pg_class WHERE relname = 'accommodation') AS luu_tru,
+          (SELECT count(*) FROM poi)                                               AS poi,
+          (SELECT count(*) FROM accommodation)                                     AS luu_tru,
           (SELECT count(*) FROM users)                                             AS nguoi_dung,
           (SELECT count(*) FROM itineraries)                                       AS lich_trinh,
           (SELECT count(*) FROM tours)                                             AS tour,

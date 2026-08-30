@@ -99,8 +99,8 @@ function TongQuan() {
   );
 
   const o = [
-    { nhan: "Địa điểm (POI)", v: tk.poi, chu: "ước lượng từ thống kê bảng" },
-    { nhan: "Cơ sở lưu trú", v: tk.luu_tru, chu: "ước lượng từ thống kê bảng" },
+    { nhan: "Địa điểm (POI)", v: tk.poi },
+    { nhan: "Cơ sở lưu trú", v: tk.luu_tru },
     { nhan: "Ảnh đã lấy về", v: tk.anh },
     { nhan: "Người dùng", v: tk.nguoi_dung },
     { nhan: "Lịch trình đã lưu", v: tk.lich_trinh },
