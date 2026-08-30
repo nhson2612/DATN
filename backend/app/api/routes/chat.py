@@ -23,7 +23,7 @@ def _khoang_cach(met):
     return f"{met:.0f} m" if met < 1000 else f"{met / 1000:.1f} km"
 
 
-def _tom_tat(results, anchor):
+def _tom_tat(results, anchor, trong_vung=False):
     """Sinh câu trả lời bằng code, KHÔNG gọi LLM.
 
     Trước đây bước này gọi LLM để diễn giải danh sách. Đo thực tế: tìm kiếm hết
@@ -34,7 +34,12 @@ def _tom_tat(results, anchor):
     Danh sách đã có sẵn tên, loại và khoảng cách; LLM không thêm thông tin nào
     mà chỉ diễn đạt lại. Sinh bằng code thì kết quả tức thì và không bao giờ bịa.
     """
-    dau = f"gần {anchor['name']}" if anchor else "quanh vị trí của bạn"
+    if not anchor:
+        dau = "quanh vị trí của bạn"
+    else:
+        # "trong Tỉnh Hà Tĩnh" khác hẳn "gần Tỉnh Hà Tĩnh": cái sau nghe như
+        # các địa điểm nằm ngoài tỉnh, cạnh ranh giới.
+        dau = f"{'trong' if trong_vung else 'gần'} {anchor['name']}"
     dong = [
         f"{i}. {r['name']} — cách {_khoang_cach(r['met'])}"
         for i, r in enumerate(results[:5], 1)
@@ -95,7 +100,7 @@ def chat(request: ChatRequest, raw_req: Request):
             ),
         }
 
-    explanation = _tom_tat(results, anchor)
+    explanation = _tom_tat(results, anchor, res.get("trong_vung", False))
 
     return {
         "success": True,

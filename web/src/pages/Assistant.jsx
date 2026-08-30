@@ -64,19 +64,36 @@ export default function Assistant() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qUrl]);
 
-  async function hoi(text) {
+  /* `chonMoc` là địa danh người dùng đã chọn ở lượt hỏi lại trước.
+   *
+   * Phải gửi kèm CÂU HỎI GỐC chứ không gửi tên địa danh như một câu hỏi mới:
+   * hỏi "bãi biển ở Hà Tĩnh" rồi trả lời "Tỉnh Hà Tĩnh" mà gửi mỗi chuỗi đó thì
+   * backend hiểu người dùng đang tìm địa điểm TÊN "tỉnh hà tĩnh", và khớp mờ ra
+   * "Tịnh Hiên Chay", "Chùa Tỉnh Hội" quanh chỗ đang đứng. */
+  async function hoi(text, chonMoc) {
     const q = (text ?? cauHoi).trim();
     if (!q || dangHoi) return;
     setCauHoi(""); setLoi(""); setChon(null); setDangHoi(true);
-    setLuot((l) => [...l, { hoi: q }]);
+    setLuot((l) => [...l, { hoi: chonMoc ? `${q} · ${chonMoc}` : q }]);
     // replace chứ không push: gõ 5 câu rồi bấm Back không nên phải bấm 5 lần
     // mới rời được trang.
     if (params.get("q") !== q) setParams({ q }, { replace: true });
     try {
-      const d = await api.chat({ question: q, user_lon: viTri?.lon, user_lat: viTri?.lat });
+      const d = await api.chat({
+        question: q,
+        resolved_admin: chonMoc || undefined,
+        user_lon: viTri?.lon, user_lat: viTri?.lat,
+      });
       setLuot((l) => [
         ...l.slice(0, -1),
-        { hoi: q, dap: d.explanation, anchor: d.anchor, results: d.results || [] },
+        {
+          hoi: chonMoc ? `${q} · ${chonMoc}` : q,
+          goc: q,                        // giữ để lượt chọn mốc gửi lại
+          dap: d.explanation,
+          anchor: d.anchor,
+          results: d.results || [],
+          candidates: d.candidates || [],
+        },
       ]);
     } catch (e) {
       setLoi(e.message);
@@ -173,6 +190,26 @@ export default function Assistant() {
                 {t.dap && (
                   <div className="ui-card p-4 bg-white dark:bg-zinc-900">
                     <p className="text-sm whitespace-pre-wrap">{t.dap}</p>
+
+                    {/* Địa danh nhập nhằng: cho bấm chọn thẳng. Bắt gõ lại tên
+                        thì câu trả lời bị hiểu thành câu hỏi mới. */}
+                    {t.candidates?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {t.candidates.map((c) => (
+                          <button key={c.name} onClick={() => hoi(t.goc, c.name)} disabled={dangHoi}
+                                  className="text-sm px-3 py-1.5 rounded-full border
+                                             border-zinc-300 dark:border-zinc-700
+                                             hover:border-accent-600 hover:text-accent-700
+                                             disabled:opacity-50 transition">
+                            {c.name}
+                            <span className="text-zinc-400 ml-1.5">
+                              {c.la_vung ? "cả vùng" : "một điểm"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {t.anchor && (
                       <p className="mt-2 text-xs text-zinc-500">
                         <i className="fa-solid fa-location-dot" /> Tính từ <b>{t.anchor.name}</b>

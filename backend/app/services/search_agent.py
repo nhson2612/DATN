@@ -101,11 +101,13 @@ THẬT trong cơ sở dữ liệu có tên khớp. Chọn đúng một cái.
 Trả JSON: {"chon": <số thứ tự>} nếu chắc chắn,
 hoặc {"chon": null, "hoi_lai": "câu hỏi ngắn cho người dùng"} nếu thật sự nhập nhằng.
 
-Chỉ được chọn trong danh sách. Không bịa thêm địa danh nào."""
+Chỉ được chọn trong danh sách. Không bịa thêm địa danh nào.
+Câu hỏi lại phải dùng ĐÚNG tên trong danh sách, không thêm chữ nào — danh sách
+chỉ có "Hà Tĩnh" và "Tỉnh Hà Tĩnh" thì không được hỏi về "thành phố Hà Tĩnh"."""
 
 
-def b2_phan_giai_moc(dia_danh, lon, lat, tu_dong=True, chinh_xac=None):
-    """Trả (mốc, câu_hỏi_lại). Không có ứng viên -> (None, None).
+def b2_phan_giai_moc(dia_danh, lon, lat, tu_dong=True, chinh_xac=None, y_dinh="gan"):
+    """Trả (mốc, câu_hỏi_lại, ứng_viên_đã_lọc).
 
     `chinh_xac` là tên người dùng ĐÃ CHỌN ở lượt hỏi lại trước. Phải khớp đúng
     tên đó, không được lấy ứng viên đầu danh sách: hỏi "Hà Tĩnh (điểm) hay Tỉnh
@@ -115,19 +117,31 @@ def b2_phan_giai_moc(dia_danh, lon, lat, tu_dong=True, chinh_xac=None):
     ung_vien = ts.anchor_candidates(dia_danh, lon, lat)
     if not ung_vien:
         logger.info("B2 không có địa danh nào tên %r trong CSDL", dia_danh)
-        return None, None
+        return None, None, []
     if chinh_xac:
         khop = [c for c in ung_vien
                 if ts._norm(c["name"]) == ts._norm(chinh_xac)]
         if khop:
             logger.info("B2 dùng lựa chọn của người dùng: %r", khop[0]["name"])
-            return khop[0], None
+            return khop[0], None, ung_vien
         logger.warning("B2 %r không còn trong danh sách ứng viên", chinh_xac)
+    # "ở TRONG X" chỉ có nghĩa khi X là một VÙNG — không ai ở bên trong một cái
+    # chấm. Loại ứng viên sai hình dạng trước khi hỏi, vì đó là sự thật hình học
+    # chứ không phải phỏng đoán: "bãi biển ở Hà Tĩnh" từng bị LLM gán vào POI tên
+    # "Hà Tĩnh" rồi trả về hai quán ăn cách đó 2km.
+    if y_dinh == "trong":
+        vung = [c for c in ung_vien if c["la_vung"]]
+        if vung:
+            if len(vung) < len(ung_vien):
+                logger.info("B2 ý định 'trong' -> bỏ %d ứng viên là điểm",
+                            len(ung_vien) - len(vung))
+            ung_vien = vung
+
     if len(ung_vien) == 1 or tu_dong:
         m = ung_vien[0]
         logger.info("B2 mốc: %s %r %s", m["kind"], m["name"],
                     "[vùng]" if m["la_vung"] else "[điểm]")
-        return m, None
+        return m, None, ung_vien
 
     ds = "\n".join(
         f'{i}. {c["name"]} ({"vùng" if c["la_vung"] else "điểm"}, '
@@ -137,8 +151,10 @@ def b2_phan_giai_moc(dia_danh, lon, lat, tu_dong=True, chinh_xac=None):
     out = _hoi_llm(SYS_CHON_MOC, f'Người dùng viết: "{dia_danh}"\n\n{ds}\n\nTrả JSON.', 2)
     i = out.get("chon")
     if isinstance(i, int) and 0 <= i < len(ung_vien):
-        return ung_vien[i], None
-    return None, out.get("hoi_lai") or f'Ý bạn là "{ung_vien[0]["name"]}" hay nơi khác?'
+        return ung_vien[i], None, ung_vien
+    hoi = out.get("hoi_lai") or f'Ý bạn là "{ung_vien[0]["name"]}" hay nơi khác?'
+    return None, hoi, [{"name": c["name"], "la_vung": bool(c["la_vung"])}
+                       for c in ung_vien]
 
 
 # ── B3: phạm vi lấy từ hình dạng mốc ─────────────────────────────────────────
@@ -221,15 +237,16 @@ def _search_llm(question, lon, lat, limit, resolved_admin):
     moc, hoi_lai = None, None
     if resolved_admin:
         # Người dùng đã chọn từ lượt hỏi lại trước — không hỏi nữa.
-        moc, _ = b2_phan_giai_moc(resolved_admin, lon, lat,
-                                  tu_dong=True, chinh_xac=resolved_admin)
+        moc, _, _ = b2_phan_giai_moc(resolved_admin, lon, lat, tu_dong=True,
+                                     chinh_xac=resolved_admin, y_dinh=y_dinh)
     elif dia_danh:
-        moc, hoi_lai = b2_phan_giai_moc(dia_danh, lon, lat, tu_dong=False)
+        moc, hoi_lai, hoi_lai_ung_vien = b2_phan_giai_moc(
+            dia_danh, lon, lat, tu_dong=False, y_dinh=y_dinh)
         if hoi_lai:
             logger.info("B2 nhập nhằng, hỏi lại: %s", hoi_lai)
             return {"results": [], "anchor": None, "keywords": tim,
                     "hoi_lai": hoi_lai,
-                    "candidates": [c["name"] for c in ts.anchor_candidates(dia_danh, lon, lat)],
+                    "candidates": hoi_lai_ung_vien,
                     "che_do": "nhieu_buoc"}
 
     trong_vung, ban_kinh = b3_pham_vi(moc, y_dinh)
@@ -288,6 +305,8 @@ def _search_llm(question, lon, lat, limit, resolved_admin):
         "anchor": ({"kind": moc["kind"], "name": moc["name"],
                     "lon": moc["lon"], "lat": moc["lat"]} if moc else None),
         "keywords": tim,
+        # Câu trả lời phải nói đúng đã tìm TRONG vùng hay QUANH một điểm.
+        "trong_vung": trong_vung,
         "che_do": "nhieu_buoc",
         "cac_buoc": buoc_da_lam,
     }

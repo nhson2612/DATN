@@ -226,11 +226,29 @@ class TestKhongHoiLaiKhiNguoiDungDaChon(unittest.TestCase):
     def test_resolved_admin_chon_dung_ung_vien(self):
         """Hỏi "Hà Tĩnh (điểm) hay Tỉnh Hà Tĩnh (vùng)?" rồi người dùng chọn tỉnh
         mà vẫn tìm quanh cái điểm thì lượt hỏi lại thành vô nghĩa."""
-        moc, hoi = ag.b2_phan_giai_moc("Hà Tĩnh", 105.9, 18.3,
-                                       tu_dong=True, chinh_xac="Tỉnh Hà Tĩnh")
+        moc, hoi, _ = ag.b2_phan_giai_moc("Hà Tĩnh", 105.9, 18.3,
+                                          tu_dong=True, chinh_xac="Tỉnh Hà Tĩnh")
         self.assertIsNone(hoi)
         self.assertEqual(moc["name"], "Tỉnh Hà Tĩnh")
         self.assertTrue(moc["la_vung"])
+
+
+@requires_db
+class TestYDinhRangBuocMoc(unittest.TestCase):
+    """"Ở TRONG X" chỉ có nghĩa khi X là vùng — không ai ở bên trong một cái chấm."""
+
+    def test_y_dinh_trong_loai_ung_vien_la_diem(self):
+        # CSDL có cả POI tên "Hà Tĩnh" lẫn ranh giới "Tỉnh Hà Tĩnh". LLM từng
+        # chọn cái POI cho "bãi biển ở Hà Tĩnh" rồi trả về hai quán ăn cách 2km.
+        moc, hoi, _ = ag.b2_phan_giai_moc("Hà Tĩnh", 108.244, 16.06,
+                                          tu_dong=False, y_dinh="trong")
+        self.assertIsNone(hoi, "chỉ còn một ứng viên là vùng thì không được hỏi lại")
+        self.assertTrue(moc["la_vung"])
+
+    def test_y_dinh_gan_van_giu_ca_diem(self):
+        ds = ts.anchor_candidates("Hà Tĩnh", 108.244, 16.06)
+        self.assertTrue(any(not c["la_vung"] for c in ds),
+                        "cần có ít nhất một ứng viên là điểm để test có nghĩa")
 
 
 if __name__ == "__main__":
