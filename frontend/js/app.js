@@ -10,6 +10,16 @@ function switchTab(tabId) {
     // Show active panel
     const panel = document.getElementById(tabId);
     if (panel) panel.classList.add('active');
+
+    // Nạp dữ liệu khi mở tab, không nạp sẵn lúc khởi động: danh sách điểm đến
+    // và yêu thích đều gọi API, mà người dùng có thể không mở tab nào trong số
+    // đó cả.
+    if (tabId === 'explore-tab' && typeof taiDanhSachDiemDen === 'function') {
+        taiDanhSachDiemDen();
+    }
+    if (tabId === 'favorites-tab' && typeof taiYeuThich === 'function') {
+        taiYeuThich();
+    }
 }
 
 // Dynamically load HTML component files
@@ -31,7 +41,9 @@ async function loadComponents() {
         const tabSpecs = [
             { id: 'chat-tab-placeholder', url: 'components/chat.html' },
             { id: 'routing-tab-placeholder', url: 'components/routing.html' },
-            { id: 'itinerary-tab-placeholder', url: 'components/itinerary.html' }
+            { id: 'itinerary-tab-placeholder', url: 'components/itinerary.html' },
+            { id: 'explore-tab-placeholder', url: 'components/explore.html' },
+            { id: 'favorites-tab-placeholder', url: 'components/favorites.html' }
         ];
         
         await Promise.all(tabSpecs.map(async (spec) => {
@@ -72,5 +84,9 @@ async function loadComponents() {
 
 // Trigger initialization on DOM ready
 document.addEventListener("DOMContentLoaded", () => {
-    loadComponents();
+    loadComponents().then(() => {
+        // Khám phá là tab mặc định: trang du lịch bắt đầu bằng "đi đâu", không
+        // phải bằng ô chat.
+        if (typeof taiDanhSachDiemDen === 'function') taiDanhSachDiemDen();
+    });
 });

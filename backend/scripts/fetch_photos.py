@@ -26,7 +26,7 @@ import psycopg
 from app.core.config import settings
 
 API = "https://vi.wikipedia.org/w/api.php"
-NGHI_GIAY = 1.0          # Wikipedia chặn tạm thời nếu gọi dồn dập
+NGHI_GIAY = 2.5          # Wikipedia chặn tạm nếu gọi dồn; chậm mà chắc
 NHOM_UU_TIEN = ("cultural_and_historic", "geographic_entities")
 
 
@@ -46,19 +46,43 @@ def _goi_api(params):
         return None
 
 
+def _norm(t: str) -> str:
+    import unicodedata
+    t = str(t).lower().replace("đ", "d")
+    t = unicodedata.normalize("NFD", t)
+    return "".join(c for c in t if unicodedata.category(c) != "Mn")
+
+
+def _dung_dia_diem(ten: str, tieu_de: str) -> bool:
+    """Trang Wikipedia tìm được có đúng là địa điểm này không?
+
+    Tìm kiếm Wikipedia LUÔN trả về kết quả gần nhất dù chẳng liên quan gì: tra
+    "Hm" ra ảnh Premier League, "QD" ra ảnh điện thoại Nokia. Không kiểm thì
+    trang du lịch đầy ảnh sai — mà ảnh sai còn tệ hơn không có ảnh.
+
+    Quy tắc: quá nửa số từ trong tên địa điểm phải xuất hiện ở tiêu đề trang.
+    """
+    tu_ten = {t for t in _norm(ten).split() if len(t) >= 2}
+    if len(tu_ten) < 2:
+        return False          # tên một từ quá dễ khớp bừa
+    tu_tieu_de = set(_norm(tieu_de).split())
+    return len(tu_ten & tu_tieu_de) * 2 >= len(tu_ten)
+
+
 def tim_anh(ten: str):
-    """Tên địa điểm -> (url ảnh, nguồn) hoặc None."""
+    """Tên địa điểm -> (url ảnh, nguồn), hoặc None nếu không chắc đúng."""
     d = _goi_api({
         "action": "query", "format": "json", "generator": "search",
-        "gsrsearch": ten, "gsrlimit": 1,
+        "gsrsearch": ten, "gsrlimit": 3,
         "prop": "pageimages", "piprop": "original", "pilicense": "any",
     })
     if not d:
         return None
     for page in (d.get("query", {}).get("pages") or {}).values():
         src = (page.get("original") or {}).get("source")
-        if src:
-            return src, f"Wikipedia tiếng Việt — {page.get('title', ten)}"
+        tieu_de = page.get("title", "")
+        if src and _dung_dia_diem(ten, tieu_de):
+            return src, f"Wikipedia tiếng Việt — {tieu_de}"
     return None
 
 
@@ -77,7 +101,14 @@ def main():
                   AND t.tags->>'category_root' = ANY(%s)
                   AND t.name !~ '^(POI|Accommodation|Road) [0-9]+$'
                   AND t.name ~ '^[A-Za-zÀ-ỹ]'
-                ORDER BY length(t.name)
+                  -- Tên quá ngắn ("Hm", "Lá", "QD") thì tìm kiếm Wikipedia trả
+                  -- về bất kỳ thứ gì: từng lấy ảnh Premier League cho "Hm" và
+                  -- ảnh điện thoại Nokia cho "QD".
+                  AND length(t.name) >= 10
+                  -- landmark_and_historical_building là thùng chứa của Overture,
+                  -- gộp cả căn hộ cho thuê; ưu tiên loại cụ thể.
+                  AND t.amenity <> 'landmark_and_historical_building'
+                ORDER BY length(t.name) DESC
                 LIMIT %s
                 """,
                 (list(NHOM_UU_TIEN), gioi_han),
@@ -101,7 +132,7 @@ def main():
                     co += 1
                 else:
                     khong += 1
-                if i % 25 == 0:
+                if i % 10 == 0:
                     conn.commit()
                     print(f"  {i}/{len(ds)} — có ảnh {co}, không {khong}", flush=True)
                 time.sleep(NGHI_GIAY)

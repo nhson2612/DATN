@@ -8,7 +8,10 @@
             </div>
             
             <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('chat-tab')">
+                <button class="tab-btn active" onclick="switchTab('explore-tab')">
+                    <i class="fa-solid fa-compass"></i> <span>Khám phá</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('chat-tab')">
                     <i class="fa-solid fa-comments"></i> <span>Hỏi đáp</span>
                 </button>
                 <button class="tab-btn" onclick="switchTab('routing-tab')">
@@ -16,6 +19,9 @@
                 </button>
                 <button class="tab-btn" onclick="switchTab('itinerary-tab')">
                     <i class="fa-solid fa-calendar-days"></i> <span>Lịch trình AI</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('favorites-tab')">
+                    <i class="fa-solid fa-heart"></i> <span>Yêu thích</span>
                 </button>
                 <!-- auth.js đã có sẵn logic ẩn/hiện nút này theo role nhưng không
                      HTML nào định nghĩa id, nên admin phải gõ tay /admin.html. -->
@@ -67,8 +73,10 @@
     <!-- Right Panel (Active Tab Container) -->
     <div class="sidebar-tab-content-right">
         <!-- Placeholders loaded dynamically by app.js -->
+        <div id="explore-tab-placeholder"></div>
         <div id="chat-tab-placeholder"></div>
         <div id="routing-tab-placeholder"></div>
         <div id="itinerary-tab-placeholder"></div>
+        <div id="favorites-tab-placeholder"></div>
     </div>
 </div>
