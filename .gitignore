@@ -19,3 +19,4 @@ env/
 # Cấu hình thật — không commit
 .env
 frontend/js/config.js
+backend/logs/
