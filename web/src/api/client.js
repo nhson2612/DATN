@@ -60,12 +60,15 @@ export const api = {
   createBooking: (body) =>
     request("/booking-requests", { method: "POST", body: JSON.stringify(body) }),
 
-  // Lịch trình
+  // Chuyến đi tự lên lịch
   recommend: (body) =>
     request("/itineraries/recommend", { method: "POST", body: JSON.stringify(body) }),
   itineraries: () => request("/itineraries"),
   saveItinerary: (body) =>
     request("/itineraries", { method: "POST", body: JSON.stringify(body) }),
+  updateItinerary: (id, body) =>
+    request(`/itineraries/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  deleteItinerary: (id) => request(`/itineraries/${id}`, { method: "DELETE" }),
 
   // Trợ lý
   chat: (body) => request("/chat", { method: "POST", body: JSON.stringify(body) }),

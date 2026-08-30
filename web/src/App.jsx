@@ -10,6 +10,8 @@ import PlaceDetail from "./pages/PlaceDetail";
 import PlaceList from "./pages/PlaceList";
 import TourDetail from "./pages/TourDetail";
 import Tours from "./pages/Tours";
+import TripPlanner from "./pages/TripPlanner";
+import Trips from "./pages/Trips";
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -41,6 +43,10 @@ export default function App() {
             <Route path="/tour" element={<Tours />} />
             <Route path="/tour/:slug"
                    element={<TourDetail user={user} onNeedAuth={canDangNhap} />} />
+            <Route path="/chuyen-di"
+                   element={<Trips user={user} onNeedAuth={canDangNhap} />} />
+            <Route path="/chuyen-di/:id"
+                   element={<TripPlanner user={user} onNeedAuth={canDangNhap} />} />
             <Route path="/yeu-thich"
                    element={<Favorites user={user} onNeedAuth={canDangNhap} />} />
           </Routes>

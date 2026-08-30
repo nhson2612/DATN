@@ -39,40 +39,67 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Hai kiểu đi du lịch khác hẳn nhau về nghiệp vụ, nên tách rõ ngay từ
-          trang chủ thay vì để người dùng tự mò: đi tour thì mọi thứ đã soạn sẵn
-          và có giá cụ thể; đi tự túc thì tự chọn địa điểm, tự lên lịch trình. */}
-      <section className="max-w-6xl mx-auto px-4 -mt-8 relative z-10">
+      {/* HAI ZONE. Đây là quyết định sản phẩm quan trọng nhất của trang chủ:
+          hai cách đi du lịch vận hành khác hẳn nhau, nên phải tách thành hai
+          lối vào riêng chứ không trộn vào một danh sách tính năng.
+
+            Tour trọn gói  giao dịch: chọn gói có sẵn, xem giá, đặt chỗ.
+            Tự lên lịch    công cụ: gom địa điểm, xếp vào ngày, xem trên bản đồ.
+
+          Người dùng chọn zone trước, mọi thứ sau đó nằm gọn trong zone đó. */}
+      <section className="max-w-6xl mx-auto px-4 -mt-10 relative z-10">
         <div className="grid md:grid-cols-2 gap-4">
+
           <article onClick={() => nav("/tour")}
-                   className="cursor-pointer ui-card bg-white dark:bg-zinc-900 p-6 hover:border-accent-600 transition">
-            <div className="w-11 h-11 rounded-field bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-500 flex items-center justify-center mb-3">
-              <i className="fa-solid fa-route text-xl" />
+                   className="group cursor-pointer ui-card bg-white dark:bg-zinc-900 p-6 hover:border-accent-600 transition">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-11 h-11 rounded-field bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-500 flex items-center justify-center">
+                <i className="fa-solid fa-suitcase-rolling text-lg" />
+              </div>
+              <span className="text-[11px] font-semibold text-accent-700 dark:text-accent-500 bg-accent-50 dark:bg-accent-900/30 px-2 py-1 rounded-full">
+                CÓ SẴN
+              </span>
             </div>
-            <h3 className="font-bold text-lg mb-1">Đi theo tour</h3>
-            <p className="text-sm text-zinc-500 mb-3">
-              Trọn gói xe, khách sạn, vé tham quan và hướng dẫn viên. Lịch trình đã
-              soạn sẵn, bạn chỉ chọn ngày khởi hành.
+            <h2 className="font-bold text-lg tracking-tight mb-1">Đi theo tour</h2>
+            <p className="text-sm text-zinc-500 mb-4">
+              Xe, khách sạn, vé tham quan và hướng dẫn viên đã gộp trong một giá.
+              Bạn chọn ngày khởi hành rồi đặt.
             </p>
-            <span className="text-sm font-semibold text-accent-700">
-              Xem tour <i className="fa-solid fa-arrow-right text-xs" />
+            <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1.5 mb-5">
+              <li><i className="fa-solid fa-check text-accent-600 w-4" /> Lịch trình soạn sẵn theo ngày</li>
+              <li><i className="fa-solid fa-check text-accent-600 w-4" /> Giá trọn gói, biết trước chi phí</li>
+              <li><i className="fa-solid fa-check text-accent-600 w-4" /> Có ngày khởi hành cố định</li>
+            </ul>
+            <span className="text-sm font-semibold text-accent-700 dark:text-accent-500">
+              Xem tour <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-0.5 transition-transform inline-block" />
             </span>
           </article>
 
-          <article onClick={() => document.getElementById("kham-pha")?.scrollIntoView({ behavior: "smooth" })}
-                   className="cursor-pointer ui-card bg-white dark:bg-zinc-900 p-6 hover:border-accent-600 transition">
-            <div className="w-11 h-11 rounded-field bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 flex items-center justify-center mb-3">
-              <i className="fa-solid fa-compass text-xl" />
+          <article onClick={() => nav("/chuyen-di")}
+                   className="group cursor-pointer ui-card bg-white dark:bg-zinc-900 p-6 hover:border-accent-600 transition">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-11 h-11 rounded-field bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center">
+                <i className="fa-solid fa-map-pin text-lg" />
+              </div>
+              <span className="text-[11px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">
+                TỰ SẮP XẾP
+              </span>
             </div>
-            <h3 className="font-bold text-lg mb-1">Đi tự túc</h3>
-            <p className="text-sm text-zinc-500 mb-3">
-              Tự chọn điểm đến, tìm chỗ ăn chỗ ở, rồi để AI gợi ý lịch trình theo
-              số ngày và sở thích của bạn.
+            <h2 className="font-bold text-lg tracking-tight mb-1">Tự lên lịch trình</h2>
+            <p className="text-sm text-zinc-500 mb-4">
+              Tự chọn địa điểm, xếp vào từng ngày và xem cả chuyến trên một bản
+              đồ. Đi đâu, khi nào là do bạn.
             </p>
-            <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">
-              Bắt đầu khám phá <i className="fa-solid fa-arrow-right text-xs" />
+            <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1.5 mb-5">
+              <li><i className="fa-solid fa-check text-zinc-400 w-4" /> Lịch trình và bản đồ cạnh nhau</li>
+              <li><i className="fa-solid fa-check text-zinc-400 w-4" /> Kéo địa điểm sang ngày khác</li>
+              <li><i className="fa-solid fa-check text-zinc-400 w-4" /> Lưu lại, sửa bất cứ lúc nào</li>
+            </ul>
+            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              Tạo chuyến đi <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-0.5 transition-transform inline-block" />
             </span>
           </article>
+
         </div>
       </section>
 

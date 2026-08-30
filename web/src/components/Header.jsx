@@ -1,12 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function Header({ user, onLogin, onLogout }) {
   const nav = useNavigate();
-  const NHOM = [
-    ["tham_quan", "Tham quan"],
-    ["an_uong", "Ăn uống"],
-    ["luu_tru", "Nơi ở"],
-  ];
+  const { pathname } = useLocation();
+  // Đánh dấu zone đang mở để người dùng luôn biết mình đang ở nhánh nào.
+  const zone = pathname.startsWith("/tour") ? "tour"
+             : pathname.startsWith("/chuyen-di") ? "tu-tuc" : null;
 
   return (
     <header className="sticky top-0 z-40 bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur border-b border-zinc-200 dark:border-zinc-800">
@@ -15,15 +14,25 @@ export default function Header({ user, onLogin, onLogout }) {
           <i className="fa-solid fa-mountain-sun" /> Đi Đâu
         </Link>
 
-        <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-zinc-600">
-          <Link to="/tour" className="hover:text-accent-700 font-semibold text-accent-700">
-            <i className="fa-solid fa-route" /> Tour trọn gói
+        {/* Hai zone tách hẳn nhau bằng vạch dọc: bên trái là mua gói có sẵn,
+            bên phải là tự lên lịch. Gộp chung một hàng link thì người dùng
+            không thấy đây là hai cách đi du lịch khác nhau. */}
+        <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
+          <Link to="/tour"
+                className={`flex items-center gap-1.5 ${zone === "tour"
+                  ? "text-accent-700 dark:text-accent-500" : "text-zinc-600 dark:text-zinc-400 hover:text-accent-700"}`}>
+            <i className="fa-solid fa-suitcase-rolling" /> Tour trọn gói
           </Link>
-          <Link to="/" className="hover:text-accent-700">Điểm đến</Link>
-          {NHOM.map(([k, t]) => (
-            <Link key={k} to={`/dia-diem?nhom=${k}`} className="hover:text-accent-700">{t}</Link>
-          ))}
-          <a href="/map.html" className="hover:text-accent-700">Bản đồ</a>
+
+          <span className="w-px h-5 bg-zinc-200 dark:bg-zinc-800" />
+
+          <Link to="/chuyen-di"
+                className={`flex items-center gap-1.5 ${zone === "tu-tuc"
+                  ? "text-accent-700 dark:text-accent-500" : "text-zinc-600 dark:text-zinc-400 hover:text-accent-700"}`}>
+            <i className="fa-solid fa-map-pin" /> Tự lên lịch
+          </Link>
+          <Link to="/" className="text-zinc-600 dark:text-zinc-400 hover:text-accent-700">Điểm đến</Link>
+          <a href="/map.html" className="text-zinc-600 dark:text-zinc-400 hover:text-accent-700">Bản đồ</a>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
