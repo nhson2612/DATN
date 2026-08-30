@@ -69,6 +69,8 @@ export const api = {
   updateItinerary: (id, body) =>
     request(`/itineraries/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   deleteItinerary: (id) => request(`/itineraries/${id}`, { method: "DELETE" }),
+  optimizeItinerary: (id, day) =>
+    request(`/itineraries/${id}/optimize${day ? `?day=${day}` : ""}`, { method: "POST" }),
 
   // Trợ lý
   chat: (body) => request("/chat", { method: "POST", body: JSON.stringify(body) }),

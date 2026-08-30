@@ -1,11 +1,11 @@
 """Endpoint lịch trình: CRUD của người dùng + gợi ý bằng LLM."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.security import get_current_user
 from app.repositories import itinerary_repo
 from app.schemas.requests import ItineraryCreateUpdate, RecommendRequest
-from app.services import itinerary_service
+from app.services import itinerary_service, route_optimizer
 
 router = APIRouter(prefix="/api/itineraries", tags=["itineraries"])
 
@@ -49,6 +49,31 @@ def delete_itinerary(id: int, current_user: dict = Depends(get_current_user)):
     _require_owned(id, current_user["id"])
     itinerary_repo.delete(id)
     return {"success": True, "id": id}
+
+
+@router.post("/{id}/optimize")
+def optimize(id: int, day: int = Query(None, ge=1, description="Bỏ trống = tối ưu mọi ngày"),
+             current_user: dict = Depends(get_current_user)):
+    """Sắp lại thứ tự các điểm trong ngày cho đi ít đường nhất.
+
+    Người dùng thêm địa điểm theo thứ tự nghĩ ra, không theo thứ tự đi được. Một
+    ngày 5 điểm thêm lộn xộn có thể phải chạy 11,9 km trong khi thứ tự tốt chỉ
+    mất 4,2 km.
+    """
+    _require_owned(id, current_user["id"])
+    rows = itinerary_repo.list_for_user(current_user["id"])
+    lt = next((r for r in rows if r["id"] == id), None)
+    if not lt:
+        raise HTTPException(status_code=404, detail="Không tìm thấy lịch trình.")
+
+    # Tối ưu trên bản ĐÃ TRA toạ độ, rồi lưu lại dạng tham chiếu {day,type,id}.
+    chi_tiet = itinerary_service.hydrate_stops(lt.get("stops") or [])
+    moi, thong_ke = route_optimizer.toi_uu_lich_trinh(chi_tiet, day)
+    itinerary_repo.update(
+        id, lt["name"], lt.get("description"), lt["duration_days"],
+        [{"day": s["day"], "type": s["type"], "id": s["id"]} for s in moi],
+    )
+    return {"success": True, "stops_details": moi, "thong_ke": thong_ke}
 
 
 @router.post("/recommend")

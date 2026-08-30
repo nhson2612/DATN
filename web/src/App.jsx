@@ -4,7 +4,6 @@ import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
 import AuthModal from "./components/AuthModal";
 import Header from "./components/Header";
 import Admin from "./pages/Admin";
-import Assistant from "./pages/Assistant";
 import Destination from "./pages/Destination";
 import Favorites from "./pages/Favorites";
 import Home from "./pages/Home";
@@ -62,7 +61,10 @@ export default function App() {
                    element={<Trips user={user} onNeedAuth={canDangNhap} />} />
             <Route path="/chuyen-di/:id"
                    element={<TripPlanner user={user} onNeedAuth={canDangNhap} />} />
-            <Route path="/tro-ly" element={<Assistant />} />
+            {/* Trợ lý bản đồ không còn là một màn riêng: hỏi đáp giờ là bước
+                đầu của trình lên lịch, để kết quả thêm thẳng được vào chuyến
+                thay vì phải nhớ tên rồi gõ lại. */}
+            <Route path="/tro-ly" element={<Navigate to="/chuyen-di" replace />} />
             <Route path="/quan-tri" element={<Admin user={user} />} />
             <Route path="/yeu-thich"
                    element={<Favorites user={user} onNeedAuth={canDangNhap} />} />
@@ -70,7 +72,7 @@ export default function App() {
             {/* Hai trang vanilla JS cũ đã bị xoá. Ai còn giữ link cũ trong tab
                 hoặc bookmark sẽ rơi vào vỏ React không khớp route nào và thấy
                 màn hình trắng, nên đưa thẳng sang trang thay thế. */}
-            <Route path="/map.html" element={<Navigate to="/tro-ly" replace />} />
+            <Route path="/map.html" element={<Navigate to="/chuyen-di" replace />} />
             <Route path="/admin.html" element={<Navigate to="/quan-tri" replace />} />
             <Route path="*" element={<KhongTimThay />} />
           </Routes>

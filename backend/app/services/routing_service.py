@@ -47,6 +47,22 @@ def find_route(start_lon, start_lat, end_lon, end_lat):
     start = _snap(start_lon, start_lat, "Điểm bắt đầu")
     end = _snap(end_lon, end_lat, "Điểm kết thúc")
 
+    # Hai điểm snap vào CÙNG một đỉnh: pgr_dijkstra trả rỗng và trước đây bị coi
+    # là "không có đường", ném 404. Nhưng đây là chuyện rất thường trong lịch
+    # trình — hai quán cùng một đoạn phố — và câu trả lời đúng là "đi bộ thẳng",
+    # không phải lỗi. Trình lên lịch nối 5 điểm gần nhau thì gặp ngay.
+    if start["id"] == end["id"]:
+        logger.info("Hai điểm cùng snap vào đỉnh %s — trả đoạn nối thẳng",
+                    start["id"])
+        return {
+            "path": [],
+            "total_distance_meters": 0.0,
+            "start_snap_lon": start_lon, "start_snap_lat": start_lat,
+            "end_snap_lon": end_lon, "end_snap_lat": end_lat,
+            "may_violate_oneway": False,
+            "cung_mot_dinh": True,
+        }
+
     with log_duration(logger, "pgr_dijkstra directed=true",
                       start=start["id"], end=end["id"]):
         path = road_repo.shortest_path(start["id"], end["id"], directed=True)

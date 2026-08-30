@@ -32,7 +32,6 @@ export default function Header({ user, onLogin, onLogout }) {
             <i className="fa-solid fa-map-pin" /> Tự lên lịch
           </Link>
           <Link to="/" className="text-zinc-600 dark:text-zinc-400 hover:text-accent-700">Điểm đến</Link>
-          <Link to="/tro-ly" className="text-zinc-600 dark:text-zinc-400 hover:text-accent-700">Trợ lý bản đồ</Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">

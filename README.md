@@ -98,7 +98,6 @@ vietnam.travel đều là trang nội dung — hero + ô tìm kiếm + lưới t
 | Chi tiết — ảnh, liên hệ, bản đồ nhỏ, địa điểm lân cận | `/dia-diem/:type/:id` |
 | Tour trọn gói — danh sách và chi tiết | `/tour`, `/tour/:slug` |
 | Tự lên lịch — danh sách chuyến, planner hai cột | `/chuyen-di`, `/chuyen-di/:id` |
-| Trợ lý bản đồ — hỏi đáp tiếng Việt + chỉ đường | `/tro-ly` |
 | Yêu thích | `/yeu-thich` |
 | Quản trị | `/quan-tri` |
 
@@ -107,8 +106,47 @@ viết bằng vanilla JS (6.770 dòng HTML/CSS/JS rời) đã bị xoá: nó dù
 bố cục khác hẳn nên trông như hai sản phẩm ghép lại, và có những nút chỉ hiện
 `alert("đang được phát triển")`.
 
-MapLibre chỉ nạp khi mở trang thật sự có bản đồ (chi tiết địa điểm, planner, trợ
-lý) — trang chủ và danh sách không phải chờ tải thư viện.
+MapLibre chỉ nạp khi mở trang thật sự có bản đồ (chi tiết địa điểm, planner) —
+trang chủ và danh sách không phải chờ tải thư viện.
+
+### Luồng tự lên lịch
+
+Cả sáu bước nằm trên một màn hình `/chuyen-di/:id`, lịch trình bên trái và bản đồ
+bên phải:
+
+```
+hỏi bằng tiếng Việt / tìm theo tên      PlaceFinder + /api/chat
+        ↓
+xem kết quả trên bản đồ                 vòng tròn RỖNG, khác điểm đã xếp
+        ↓
+thêm vào chuyến                         nút trên danh sách hoặc trên popup bản đồ
+        ↓
+chia theo ngày                          gồm cả kho "chưa xếp ngày"
+        ↓
+sắp thứ tự trong ngày                   mũi tên lên/xuống
+        ↓
+tối ưu thứ tự  ->  vẽ đường bộ thật     2-opt (chim bay) rồi pgRouting
+```
+
+Trước đây hỏi đáp nằm ở một trang riêng `/tro-ly`: người dùng hỏi ra danh sách
+hay rồi phải tự nhớ tên mà gõ lại vào ô tìm kiếm của trình lên lịch. Đường dẫn cũ
+nay chuyển hướng về `/chuyen-di`.
+
+**Vì sao tối ưu thứ tự bằng đường chim bay, không bằng pgRouting.** Một lượt
+`pgr_dijkstra` mất 2,7 giây (đo 2026-08-30 trên `gis_vietnam`). Xếp thứ tự cần ma
+trận n×n — 5 điểm là 10 lượt, tức 27 giây cho một cú bấm nút. Đường bộ thật chỉ
+được tính cho thứ tự đã chốt: n-1 lượt.
+
+Đo trên 5 điểm tham quan rải khắp Đà Nẵng, thêm vào theo thứ tự lộn xộn:
+
+| | Quãng đường |
+| :--- | ---: |
+| Thứ tự người dùng thêm vào (đường bộ thật) | 14,16 km |
+| Sau khi tối ưu (đường bộ thật) | **11,86 km** |
+| Chim bay, trước → sau | 10,53 → 9,07 km |
+
+Giảm 16% quãng đường bộ thật — tức tối ưu theo đường chim bay có tác dụng thật
+trên mạng đường, không chỉ trên lý thuyết.
 
 ### Trợ lý AI hoạt động thế nào
 

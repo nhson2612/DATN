@@ -91,9 +91,9 @@ export default function Home() {
               đồ. Đi đâu, khi nào là do bạn.
             </p>
             <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1.5 mb-5">
-              <li><i className="fa-solid fa-check text-zinc-400 w-4" /> Lịch trình và bản đồ cạnh nhau</li>
-              <li><i className="fa-solid fa-check text-zinc-400 w-4" /> Kéo địa điểm sang ngày khác</li>
-              <li><i className="fa-solid fa-check text-zinc-400 w-4" /> Lưu lại, sửa bất cứ lúc nào</li>
+              <li><i className="fa-solid fa-check text-zinc-400 w-4" /> Hỏi bằng tiếng Việt, kết quả hiện trên bản đồ</li>
+              <li><i className="fa-solid fa-check text-zinc-400 w-4" /> Thêm vào chuyến rồi chia theo ngày</li>
+              <li><i className="fa-solid fa-check text-zinc-400 w-4" /> Tối ưu thứ tự đi, vẽ đường thật</li>
             </ul>
             <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
               Tạo chuyến đi <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-0.5 transition-transform inline-block" />
