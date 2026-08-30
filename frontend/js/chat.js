@@ -69,21 +69,14 @@ async function sendChatMessage() {
         }
 
         // Render answer
-        let responseHtml = `<div>${data.explanation}</div>`;
-        
-        // Append SQL debug in light theme style
-        responseHtml += `
-            <div style="margin-top: 12px; border-top: 1px solid #f1f5f9; padding-top: 8px; text-align: left;">
-                <span class="debug-tag" style="background: rgba(37, 99, 235, 0.08); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.15);"><i class="fa-solid fa-code"></i> PostGIS SQL Sinh ra</span>
-                <div class="sql-box" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-family: monospace; font-size: 10.5px; border-radius: 6px; padding: 10px; margin-top: 6px; white-space: pre-wrap; word-break: break-all;">${data.sql}</div>
-            </div>
-        `;
+        let responseHtml = `<div style="white-space: pre-wrap;">${data.explanation}</div>`;
 
-        const attemptsCount = data.debug.length;
-        if (attemptsCount > 1) {
+        // Mốc vị trí mà hệ thống đã tra ra từ câu hỏi — cho người dùng thấy nó
+        // hiểu "gần X" là gần chỗ nào, để biết ngay khi nó hiểu nhầm.
+        if (data.anchor) {
             responseHtml += `
-                <div style="margin-top: 8px; font-size: 11px; color: #db2777;">
-                    <i class="fa-solid fa-bug"></i> Hệ thống tự phát hiện lỗi và sửa (${attemptsCount - 1} lần)
+                <div style="margin-top: 10px; font-size: 11.5px; color: #64748b;">
+                    <i class="fa-solid fa-location-dot"></i> Tính từ: <b>${data.anchor.name}</b>
                 </div>
             `;
         }

@@ -14,7 +14,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.middleware import RequestLogMiddleware
-from app.api.routes import auth, chat, itineraries, places, routing
+from app.api.routes import (auth, chat, destinations, itineraries, places,
+                            routing)
 from app.core.bootstrap import create_default_users
 from app.core.logging import get_logger, setup_logging
 
@@ -41,7 +42,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (auth, chat, routing, places, itineraries):
+for module in (auth, chat, routing, places, itineraries, destinations):
     app.include_router(module.router)
 
 

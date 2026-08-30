@@ -31,6 +31,8 @@ EXPECTED_PATHS = {
     "/api/itineraries",
     "/api/itineraries/{id}",
     "/api/itineraries/recommend",
+    "/api/destinations",
+    "/api/destinations/{slug}",
 }
 
 

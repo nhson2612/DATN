@@ -17,6 +17,12 @@
                 <button class="tab-btn" onclick="switchTab('itinerary-tab')">
                     <i class="fa-solid fa-calendar-days"></i> <span>Lịch trình AI</span>
                 </button>
+                <!-- auth.js đã có sẵn logic ẩn/hiện nút này theo role nhưng không
+                     HTML nào định nghĩa id, nên admin phải gõ tay /admin.html. -->
+                <button class="tab-btn" id="admin-tab-btn" style="display: none;"
+                        onclick="window.location.href='admin.html'">
+                    <i class="fa-solid fa-screwdriver-wrench"></i> <span>Quản trị</span>
+                </button>
             </div>
         </div>
         

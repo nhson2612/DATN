@@ -11,6 +11,19 @@ from app.services import routing_service
 
 logger = get_logger(__name__)
 
+# Bán kính gom ứng viên quanh điểm đến. 30 km đủ phủ một thành phố và vùng ven,
+# vẫn đảm bảo các điểm trong cùng một ngày đi lại được trong ngày.
+ITINERARY_RADIUS_M = 30000
+
+# Bảng địa điểm hợp lệ trong `stops` — chặn tên bảng tuỳ ý lọt vào SQL.
+TABLES_HOP_LE = ("poi", "accommodation")
+
+# Nhóm gốc Overture đáng đưa vào lịch trình. Bỏ shopping/services vì một ngày
+# du lịch hiếm khi dành cho cửa hàng tiện lợi.
+NHOM_DU_LICH = ("cultural_and_historic", "geographic_entities",
+                "food_and_drink", "arts_and_entertainment",
+                "sports_and_recreation")
+
 # Tên placeholder do importer sinh khi OSM không có tên (778 dòng trong poi).
 # Phải loại, nếu không lịch trình sẽ gợi ý khách đến "POI 5107802323".
 _REAL_NAME = r"name !~ '^(POI|Accommodation|Road) [0-9]+$'"
@@ -28,39 +41,130 @@ class NoUsableItineraryError(Exception):
         super().__init__(f"{len(dropped)} hoạt động bị loại")
 
 
-def get_candidates(preferences: str, budget: str):
-    budget_lower = (budget or "").lower()
-    price_val = "Trung bình"
-    if "rẻ" in budget_lower or "tiết kiệm" in budget_lower:
-        price_val = "Rẻ"
-    elif any(k in budget_lower for k in ("sang", "cao", "đắt")):
-        price_val = "Sang trọng"
+def get_candidates(destination: str, lon: float, lat: float, limit: int = 60):
+    """Chọn ứng viên QUANH ĐIỂM ĐẾN, phủ đủ các nhóm nhu cầu du lịch.
+
+    Bản cũ chọn bằng `ORDER BY rating DESC, review_count DESC` và lọc theo
+    `price_level` — cả ba cột đó trong CSDL đều chỉ chứa giá trị mặc định (4.0,
+    10, "Trung bình"), nên thứ tự thực chất là ngẫu nhiên và bộ lọc ngân sách
+    không lọc gì. Tệ hơn, nó không hề dùng vị trí: lịch trình 2 ngày có thể gồm
+    khách sạn Cà Mau và điểm tham quan Hà Giang.
+
+    Nay neo theo điểm đến và lấy theo khoảng cách. Mỗi nhóm lấy riêng một phần
+    để lịch trình có đủ chỗ ở, chỗ ăn và chỗ tham quan — chứ không phải 60 quán
+    cà phê.
+    """
+    ref = _diem_den_geom(destination, lon, lat)
 
     accs = execute_query(
         f"""
-        SELECT id, name, amenity, tourism, price_level, rating, review_count,
-               ST_X(geom) AS lon, ST_Y(geom) AS lat, 'accommodation' AS type
+        SELECT id, name, tourism AS category, 'accommodation' AS type,
+               ST_X(geom) AS lon, ST_Y(geom) AS lat,
+               round(ST_Distance(geom::geography, %s::geography)) AS met
         FROM accommodation
-        WHERE (price_level = %s OR price_level = 'Trung bình') AND {_REAL_NAME}
-        ORDER BY rating DESC, review_count DESC
-        LIMIT 15
+        WHERE ST_DWithin(geom::geography, %s::geography, %s) AND {_REAL_NAME}
+        ORDER BY geom <-> %s
+        LIMIT %s
         """,
-        (price_val,),
+        (ref, ref, ITINERARY_RADIUS_M, ref, limit // 4),
     ) or []
 
-    atts = execute_query(
+    # Nhóm gốc của Overture (xem scripts/import_overture_vn.py): tham quan, ăn
+    # uống, vui chơi, thiên nhiên — đúng những gì một lịch trình cần.
+    pois = execute_query(
         f"""
-        SELECT id, name, amenity, tourism, price_level, rating, review_count,
-               ST_X(geom) AS lon, ST_Y(geom) AS lat, 'poi' AS type
+        SELECT id, name, amenity AS category, 'poi' AS type,
+               ST_X(geom) AS lon, ST_Y(geom) AS lat,
+               round(ST_Distance(geom::geography, %s::geography)) AS met,
+               tags->>'category_root' AS nhom
         FROM poi
-        WHERE (tourism IN ('attraction', 'viewpoint', 'museum', 'theme_park')
-               OR amenity IN ('restaurant', 'cafe'))
-          AND {_REAL_NAME}
-        ORDER BY rating DESC, review_count DESC
-        LIMIT 38
-        """
+        WHERE ST_DWithin(geom::geography, %s::geography, %s)
+          AND tags->>'category_root' = ANY(%s) AND {_REAL_NAME}
+        ORDER BY geom <-> %s
+        LIMIT %s
+        """,
+        (ref, ref, ITINERARY_RADIUS_M, list(NHOM_DU_LICH), ref, limit),
     ) or []
-    return accs + atts
+
+    return accs + pois
+
+
+def _diem_den_geom(destination: str, lon: float, lat: float):
+    """Điểm đến -> một điểm neo. Tra CSDL, không bắt người dùng nhập toạ độ."""
+    # Thiếu cả điểm đến lẫn toạ độ thì ST_MakePoint(NULL, NULL) trả NULL và mọi
+    # ST_DWithin phía sau lặng lẽ trả rỗng. Rơi về mặc định có sẵn trong cấu hình.
+    if lon is None or lat is None:
+        lon, lat = settings.default_lon, settings.default_lat
+
+    if destination:
+        from app.services.search_service import find_anchor, _norm
+        anchor = find_anchor(_norm(destination), lon, lat)
+        if anchor:
+            logger.info("Điểm đến %r -> %r", destination, anchor["name"])
+            rows = execute_query(
+                "SELECT ST_Centroid(ST_GeomFromText(%s, 4326)) AS g",
+                (anchor["wkt"],),
+            )
+            if rows:
+                return rows[0]["g"]
+        logger.warning("Không tra được điểm đến %r, dùng vị trí người dùng",
+                       destination)
+    rows = execute_query(
+        "SELECT ST_SetSRID(ST_MakePoint(%s, %s), 4326) AS g", (lon, lat))
+    return rows[0]["g"]
+
+
+def hydrate_stops(stops):
+    """`stops` chỉ lưu tham chiếu {day, type, id} -> tra ra chi tiết địa điểm.
+
+    Lịch trình lưu trong CSDL cố tình chỉ giữ id, không giữ tên/toạ độ, để địa
+    điểm đổi tên hay dời vị trí thì lịch trình cũ vẫn đúng. Nhưng frontend cần
+    tên và toạ độ để vẽ lại lên bản đồ, nên phải tra ở đây — trước đây không có
+    bước này, mở lại lịch trình đã lưu là bản đồ trống.
+
+    Gom theo bảng rồi truy vấn một lần mỗi bảng, không tra từng điểm một.
+    """
+    if not stops:
+        return []
+
+    theo_bang = {}
+    for st in stops:
+        if isinstance(st, dict) and st.get("id") and st.get("type") in TABLES_HOP_LE:
+            theo_bang.setdefault(st["type"], set()).add(st["id"])
+
+    chi_tiet = {}
+    for bang, ids in theo_bang.items():
+        # accommodation không có cột description, poi không có address.
+        cot_mo_ta = "description" if bang == "poi" else "address"
+        rows = execute_query(
+            f"""
+            SELECT id, name, {cot_mo_ta} AS mo_ta,
+                   ST_X(geom) AS lon, ST_Y(geom) AS lat
+            FROM {bang} WHERE id = ANY(%s)
+            """,
+            (list(ids),),
+        ) or []
+        for r in rows:
+            chi_tiet[(bang, r["id"])] = r
+
+    ket_qua = []
+    for st in stops:
+        r = chi_tiet.get((st.get("type"), st.get("id")))
+        if not r:
+            continue          # địa điểm đã bị xoá khỏi CSDL
+        ket_qua.append({
+            "day": st.get("day"),
+            "id": r["id"],
+            "type": st["type"],
+            "name": r["name"],
+            "lon": r["lon"],
+            "lat": r["lat"],
+            "details": {
+                "description": r["mo_ta"] if st["type"] == "poi" else None,
+                "address": r["mo_ta"] if st["type"] == "accommodation" else None,
+            },
+        })
+    return ket_qua
 
 
 def _build_prompt(duration_days, preferences, budget, candidates):
@@ -101,13 +205,29 @@ QUY TẮC BẮT BUỘC:
 """
 
 
-def recommend(duration_days: int, preferences: str, budget: str):
-    candidates = get_candidates(preferences, budget)
+def _json_an_toan(candidates):
+    """Ép Decimal/date về kiểu JSON hiểu được.
+
+    Cột numeric của PostgreSQL về Python thành Decimal, mà json.dumps không
+    serialise được -> endpoint trả 500 ngay trước khi kịp gọi LLM.
+    """
+    from decimal import Decimal
+
+    return [
+        {k: (float(v) if isinstance(v, Decimal) else v) for k, v in c.items()}
+        for c in candidates
+    ]
+
+
+def recommend(duration_days: int, preferences: str, budget: str,
+              destination: str = "", lon: float = None, lat: float = None):
+    candidates = _json_an_toan(get_candidates(destination, lon, lat))
     prompt = _build_prompt(duration_days, preferences, budget, candidates)
 
     logger.info(
-        "Lập lịch trình %d ngày: %d ứng viên, sở thích=%r ngân sách=%r",
-        duration_days, len(candidates), preferences, budget,
+        "Lập lịch trình %d ngày tại %r: %d ứng viên, sở thích=%r ngân sách=%r",
+        duration_days, destination or "(vị trí người dùng)",
+        len(candidates), preferences, budget,
     )
     with log_duration(logger, "LLM lập lịch trình", days=duration_days):
         raw = query_llm(

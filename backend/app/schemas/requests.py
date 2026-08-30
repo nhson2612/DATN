@@ -63,3 +63,9 @@ class RecommendRequest(BaseModel):
     duration_days: int
     preferences: str
     budget: str
+    # Điểm đến của chuyến đi. Thiếu trường này thì lịch trình gom địa điểm bất kỳ
+    # trên toàn quốc — từng có thể xếp khách sạn Cà Mau chung ngày với điểm tham
+    # quan Hà Giang. Bỏ trống thì lấy vị trí hiện tại của người dùng làm tâm.
+    destination: Optional[str] = None
+    user_lon: Optional[float] = None
+    user_lat: Optional[float] = None

@@ -5,6 +5,11 @@ async function generateAIItinerary() {
     const duration_days = parseInt(document.getElementById("itin-days").value);
     const budget = document.getElementById("itin-budget").value;
     const preferences = document.getElementById("itin-prefs").value.trim() || "Ngẫu nhiên";
+    const destination = document.getElementById("itin-destination").value.trim();
+
+    // Không có điểm đến thì backend gom địa điểm quanh vị trí hiện tại; gửi kèm
+    // toạ độ GPS (userLocation do chat.js lấy lúc load trang) để nó có mốc.
+    const pos = (typeof userLocation !== "undefined" && userLocation) ? userLocation : null;
     
     const btn = document.getElementById("recommend-btn");
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang lập lịch trình bằng AI...`;
@@ -16,7 +21,11 @@ async function generateAIItinerary() {
     try {
         const res = await apiFetch("/itineraries/recommend", {
             method: 'POST',
-            body: JSON.stringify({ duration_days, budget, preferences })
+            body: JSON.stringify({
+                duration_days, budget, preferences, destination,
+                user_lon: pos ? pos.lon : null,
+                user_lat: pos ? pos.lat : null
+            })
         });
         
         btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Lập lịch trình bằng AI`;

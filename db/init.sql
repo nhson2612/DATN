@@ -79,3 +79,82 @@ CREATE INDEX IF NOT EXISTS poi_geog_idx
     ON poi USING GIST ((geom::geography));
 CREATE INDEX IF NOT EXISTS accommodation_geog_idx
     ON accommodation USING GIST ((geom::geography));
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Bảng ứng dụng
+-- ═══════════════════════════════════════════════════════════════════════════
+-- `users` và `itineraries` trước đây được tạo thủ công trên máy dev, không có
+-- trong migration nào. Dựng CSDL mới từ file này là thiếu hai bảng, và
+-- bootstrap.create_default_users báo lỗi "relation users does not exist" ngay
+-- lúc khởi động.
+
+CREATE TABLE IF NOT EXISTS users (
+    id              SERIAL PRIMARY KEY,
+    email           VARCHAR(255) NOT NULL UNIQUE,
+    hashed_password VARCHAR(255) NOT NULL,
+    full_name       VARCHAR(255),
+    role            VARCHAR(50) DEFAULT 'user',
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS itineraries (
+    id            SERIAL PRIMARY KEY,
+    user_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    name          VARCHAR(255) NOT NULL,
+    description   TEXT,
+    duration_days INTEGER DEFAULT 1,
+    -- Ngày khởi hành thật, để hiện "Thứ 7, 12/09" thay vì "Ngày 1".
+    start_date    DATE,
+    -- Mảng {day, type, id} — chỉ tham chiếu, không lưu tên/toạ độ, để địa điểm
+    -- đổi tên hay dời vị trí thì lịch trình cũ vẫn đúng. Chi tiết được tra lại
+    -- lúc đọc (itinerary_service.hydrate_stops).
+    stops         JSONB NOT NULL,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS itineraries_user_idx ON itineraries(user_id);
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Nghiệp vụ du lịch
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- Ảnh lấy từ Wikimedia Commons, cache lại để không gọi API mỗi lần hiển thị.
+-- `attribution` là bắt buộc: giấy phép Wikimedia yêu cầu ghi nguồn.
+CREATE TABLE IF NOT EXISTS place_photos (
+    id          SERIAL PRIMARY KEY,
+    place_type  VARCHAR(20) NOT NULL,      -- 'poi' | 'accommodation'
+    place_id    INTEGER NOT NULL,
+    url         TEXT NOT NULL,
+    attribution TEXT,
+    fetched_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (place_type, place_id)
+);
+
+CREATE TABLE IF NOT EXISTS favorites (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    place_type VARCHAR(20) NOT NULL,
+    place_id   INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, place_type, place_id)
+);
+CREATE INDEX IF NOT EXISTS favorites_user_idx ON favorites(user_id);
+
+-- Yêu cầu đặt chỗ. KHÔNG có thanh toán và KHÔNG có giá: CSDL không có dữ liệu
+-- giá phòng hay tình trạng phòng trống, nên hệ thống chỉ nhận yêu cầu rồi để
+-- admin liên hệ lại — đúng cách các website du lịch nhỏ ở Việt Nam đang làm.
+CREATE TABLE IF NOT EXISTS booking_requests (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    place_type VARCHAR(20) NOT NULL,
+    place_id   INTEGER NOT NULL,
+    full_name  VARCHAR(255) NOT NULL,
+    phone      VARCHAR(50)  NOT NULL,
+    email      VARCHAR(255),
+    check_in   DATE,
+    check_out  DATE,
+    guests     INTEGER DEFAULT 1,
+    note       TEXT,
+    status     VARCHAR(20) DEFAULT 'moi',   -- moi | da_lien_he | huy
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS booking_requests_status_idx ON booking_requests(status);

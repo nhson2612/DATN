@@ -5,6 +5,11 @@
             tuyến đường tối ưu trên bản đồ.
         </p>
         <div class="form-group">
+            <label>Bạn muốn đi đâu?</label>
+            <input type="text" id="itin-destination" class="itin-input"
+                   placeholder="Ví dụ: Đà Nẵng, Hội An, Sa Pa...">
+        </div>
+        <div class="form-group">
             <label>Số ngày du lịch:</label>
             <input type="number" id="itin-days" class="itin-input" min="1" max="7" value="3">
         </div>
@@ -22,22 +27,27 @@
                 placeholder="Ví dụ: Thích đi biển, ăn hải sản, tham quan danh lam thắng cảnh lịch sử, hạn chế đi bộ xa..."></textarea>
         </div>
 
-        <button id="generate-itin-btn" class="route-btn" onclick="generateItinerary()">
+        <button id="recommend-btn" class="route-btn" onclick="generateAIItinerary()">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo lịch trình thông minh với AI
         </button>
 
         <!-- Itinerary Results & Saved Panel -->
-        <div id="itinerary-results" style="display: none; margin-top: 20px;">
+        <div id="itin-result-container" style="display: none; margin-top: 20px;">
             <div
                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
                 <h4 style="color: var(--accent-glow); font-size: 14px;"><i class="fa-solid fa-list-check"></i> Lịch
                     trình chi tiết</h4>
-                <button id="save-itin-btn" onclick="saveCurrentItinerary()"
+                <button id="save-itin-btn" onclick="saveItinerary()"
                     style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
                     <i class="fa-solid fa-floppy-disk"></i> Lưu lịch trình
                 </button>
             </div>
-            <div id="itin-days-container"></div>
+            <p id="itin-explanation"
+               style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;"></p>
+            <input type="text" id="save-itin-name" class="itin-input"
+                   placeholder="Đặt tên cho lịch trình để lưu lại"
+                   style="margin-bottom: 12px;">
+            <div id="itin-days-list"></div>
         </div>
 
         <!-- Saved Itineraries List -->

@@ -62,7 +62,18 @@ def setup_logging() -> None:
 
     handlers = [logging.StreamHandler(sys.stdout)]
     if settings.log_file:
-        handlers.append(logging.FileHandler(settings.log_file, encoding="utf-8"))
+        # Neo đường dẫn tương đối vào gốc repo, không theo cwd: uvicorn chạy từ
+        # backend/ còn script chạy từ gốc, nên cùng một LOG_FILE sẽ ra hai chỗ
+        # khác nhau — hoặc ném FileNotFoundError nếu thư mục chưa có.
+        from pathlib import Path
+
+        from app.core.config import REPO_ROOT
+
+        path = Path(settings.log_file)
+        if not path.is_absolute():
+            path = REPO_ROOT / path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        handlers.append(logging.FileHandler(path, encoding="utf-8"))
     for handler in handlers:
         handler.setFormatter(formatter)
         handler.addFilter(id_filter)

@@ -87,12 +87,16 @@ def create(table: str, data: dict):
                   data.get("description"), data["lon"], data["lat"])
     else:
         sql = """
-            INSERT INTO accommodation (name, amenity, tourism, address, stars, geom)
-            VALUES (%s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
+            INSERT INTO accommodation (name, amenity, tourism, address, stars,
+                                       price_range, geom)
+            VALUES (%s, %s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
             RETURNING id
         """
+        # price_range từng bị bỏ quên ở cả INSERT lẫn UPDATE: schema nhận trường
+        # này, admin nhập vào form, rồi nó biến mất không báo lỗi.
         params = (data["name"], data.get("amenity"), data.get("tourism"),
-                  data.get("address"), data.get("stars"), data["lon"], data["lat"])
+                  data.get("address"), data.get("stars"), data.get("price_range"),
+                  data["lon"], data["lat"])
     rows = execute_query(sql, params)
     return rows[0]["id"] if rows else None
 
@@ -110,12 +114,13 @@ def update(table: str, place_id: int, data: dict):
     else:
         sql = """
             UPDATE accommodation SET name = %s, amenity = %s, tourism = %s,
-                   address = %s, stars = %s,
+                   address = %s, stars = %s, price_range = %s,
                    geom = ST_SetSRID(ST_MakePoint(%s, %s), 4326)
             WHERE id = %s RETURNING id
         """
         params = (data["name"], data.get("amenity"), data.get("tourism"),
-                  data.get("address"), data.get("stars"), data["lon"], data["lat"], place_id)
+                  data.get("address"), data.get("stars"), data.get("price_range"),
+                  data["lon"], data["lat"], place_id)
     rows = execute_query(sql, params)
     return rows[0]["id"] if rows else None
 

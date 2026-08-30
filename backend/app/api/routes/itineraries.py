@@ -17,7 +17,12 @@ def _require_owned(itinerary_id: int, user_id: int):
 
 @router.get("")
 def list_itineraries(current_user: dict = Depends(get_current_user)):
-    return {"success": True, "itineraries": itinerary_repo.list_for_user(current_user["id"])}
+    # Kèm `stops_details`: `stops` lưu trong CSDL chỉ là tham chiếu {day,type,id},
+    # còn frontend cần tên và toạ độ để vẽ lại lịch trình lên bản đồ.
+    rows = itinerary_repo.list_for_user(current_user["id"])
+    for r in rows:
+        r["stops_details"] = itinerary_service.hydrate_stops(r.get("stops") or [])
+    return {"success": True, "itineraries": rows}
 
 
 @router.post("")
@@ -47,10 +52,15 @@ def delete_itinerary(id: int, current_user: dict = Depends(get_current_user)):
 
 
 @router.post("/recommend")
-def recommend(request: RecommendRequest):
+def recommend(request: RecommendRequest,
+              current_user: dict = Depends(get_current_user)):
+    # Bắt buộc đăng nhập: đây là endpoint duy nhất trong nhóm itinerary còn để
+    # mở, mà nó lại là cái tốn tài nguyên nhất — mỗi lượt gọi một lần LLM.
     try:
         result = itinerary_service.recommend(
-            request.duration_days, request.preferences, request.budget
+            request.duration_days, request.preferences, request.budget,
+            destination=request.destination or "",
+            lon=request.user_lon, lat=request.user_lat,
         )
     except itinerary_service.LLMUnavailableError as e:
         raise HTTPException(status_code=504, detail=str(e))
