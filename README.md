@@ -65,7 +65,11 @@ dữ liệu: **toàn quốc**.
 ## 3. Kiến trúc
 
 ```
-frontend/            HTML + MapLibre GL, không dùng bundler
+web/                 React 19 + Vite + Tailwind CSS
+   ├── src/pages/    Trang: Home, Destination, PlaceList, PlaceDetail, Favorites
+   ├── src/components/  PlaceCard, Header, AuthModal, BookingForm, MiniMap
+   ├── src/api/      client gọi backend
+   └── public/       map.html, admin.html (giao diện bản đồ cũ, vanilla JS)
    │  HTTP + JSON
 backend/app/
    ├── api/routes/   tầng HTTP — không chứa SQL
@@ -77,6 +81,26 @@ backend/app/
    │
 PostgreSQL 15 + PostGIS 3 + pgRouting
 ```
+
+### Giao diện
+
+Trang du lịch, **không lấy bản đồ làm trung tâm**. Traveloka, Booking,
+vietnam.travel đều là trang nội dung — hero + ô tìm kiếm + lưới thẻ ảnh — còn bản
+đồ chỉ xuất hiện ở trang chi tiết, đúng lúc người dùng cần biết "chỗ này nằm
+đâu". Bản đầu của dự án làm ngược lại: bản đồ toàn màn hình với sidebar bên trái.
+
+| Trang | Đường dẫn |
+| :--- | :--- |
+| Trang chủ — hero + ô tìm + lưới điểm đến | `/` |
+| Một điểm đến — địa điểm gom theo nhóm | `/diem-den/:slug` |
+| Danh sách có bộ lọc + phân trang | `/dia-diem?destination=&nhom=` |
+| Chi tiết — ảnh, liên hệ, bản đồ nhỏ, địa điểm lân cận | `/dia-diem/:type/:id` |
+| Yêu thích | `/yeu-thich` |
+| Bản đồ, hỏi đáp AI, tìm đường, lịch trình (giao diện cũ) | `/map.html` |
+| Quản trị | `/admin.html` |
+
+MapLibre chỉ được nạp khi mở trang chi tiết — trang chủ và danh sách không cần
+bản đồ nên không phải chờ tải thư viện.
 
 ### Trợ lý AI hoạt động thế nào
 
@@ -176,11 +200,16 @@ python3 -m venv venv
 # 6. (tuỳ chọn) Lấy ảnh từ Wikimedia — chậm, chạy được lúc nào cũng được
 ./venv/bin/python scripts/fetch_photos.py 200
 
-# 7. Chạy server
+# 7. Chạy backend
 ./venv/bin/uvicorn app.main:app --reload
+
+# 8. Chạy frontend (cửa sổ terminal khác)
+cd ../web
+npm install
+npm run dev          # http://localhost:5173
 ```
 
-Mở `frontend/index.html`. Lần khởi động đầu tiên hệ thống tự tạo hai tài khoản mẫu:
+Mở `http://localhost:5173`. Lần khởi động đầu tiên hệ thống tự tạo hai tài khoản mẫu:
 `admin@gmail.com` (quyền admin) và `user@gmail.com`. Đổi mật khẩu qua biến
 `SEED_ADMIN_PASSWORD` / `SEED_USER_PASSWORD` trước khi triển khai thật.
 
