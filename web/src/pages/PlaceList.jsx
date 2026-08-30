@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
+import CardSkeleton from "../components/CardSkeleton";
 import PlaceCard from "../components/PlaceCard";
 
 const NHOM = {
@@ -31,7 +32,7 @@ export default function PlaceList() {
     setDangTai(true); setLoi("");
 
     // "Nơi lưu trú" nằm ở bảng accommodation, còn /places/search chỉ tra bảng
-    // poi — lấy qua trang điểm đến.
+    // poi · lấy qua trang điểm đến.
     const nap = nhom === "luu_tru"
       ? (destination
           ? api.destination(destination).then((d) => ({
@@ -55,11 +56,11 @@ export default function PlaceList() {
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">
       <button onClick={() => nav(destination ? `/diem-den/${destination}` : "/")}
-              className="text-sm text-slate-500 hover:text-brand-600 mb-4">
+              className="text-sm text-zinc-500 hover:text-accent-700 mb-4">
         <i className="fa-solid fa-arrow-left" /> Quay lại
       </button>
-      <h1 className="text-2xl font-bold mb-4">
-        {NHOM[nhom]?.ten || "Địa điểm"}{destination ? "" : " — cả nước"}
+      <h1 className="text-2xl font-bold tracking-tight mb-4">
+        {NHOM[nhom]?.ten || "Địa điểm"}{destination ? "" : " · cả nước"}
       </h1>
 
       <div className="flex flex-wrap gap-2 mb-6">
@@ -67,35 +68,36 @@ export default function PlaceList() {
           <button key={k}
                   onClick={() => setSp({ ...(destination && { destination }), nhom: k })}
                   className={`px-3 py-1.5 rounded-full text-sm border transition ${
-                    k === nhom ? "bg-brand-500 text-white border-brand-500"
-                               : "border-slate-300 text-slate-600 hover:border-brand-500"}`}>
+                    k === nhom ? "bg-accent-600 text-white border-accent-600"
+                               : "border-zinc-300 text-zinc-600 hover:border-accent-600"}`}>
             <i className={`fa-solid ${v.icon}`} /> {v.ten}
           </button>
         ))}
       </div>
 
-      {loi && <p className="text-slate-500 text-sm mb-4">{loi}</p>}
+      {loi && <p className="text-zinc-500 text-sm mb-4">{loi}</p>}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {dangTai && items.length === 0 && <CardSkeleton count={8} />}
         {items.map((p) => (
           <PlaceCard key={`${p.type}-${p.id}`} place={p} group={nhom}
                      onClick={() => nav(`/dia-diem/${p.type}/${p.id}`)} />
         ))}
       </div>
 
-      {dangTai && <p className="text-slate-400 text-sm mt-6">Đang tải...</p>}
+      
 
       {!dangTai && total > items.length && (
         <div className="text-center mt-8">
           <button onClick={() => setPage(page + 1)}
-                  className="px-6 py-2.5 border border-slate-300 rounded-lg hover:border-brand-500 text-sm font-medium">
+                  className="btn-ghost">
             Xem thêm ({(total - items.length).toLocaleString("vi-VN")} địa điểm)
           </button>
         </div>
       )}
       {!dangTai && items.length > 0 && total <= items.length && (
-        <p className="text-center text-sm text-slate-400 mt-8">
-          Đã hết — tổng {total.toLocaleString("vi-VN")} địa điểm.
+        <p className="text-center text-sm text-zinc-400 mt-8">
+          Đã hết · tổng {total.toLocaleString("vi-VN")} địa điểm.
         </p>
       )}
     </main>

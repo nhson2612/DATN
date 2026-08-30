@@ -40,6 +40,16 @@ export const api = {
   },
   place: (type, id) => request(`/places/${type}/${id}`),
 
+  // Tour trọn gói
+  tours: (params = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v != null && v !== "")
+    );
+    return request(`/tours?${qs}`);
+  },
+  tour: (slug) => request(`/tours/${encodeURIComponent(slug)}`),
+  bookTour: (body) => request("/tours/book", { method: "POST", body: JSON.stringify(body) }),
+
   // Yêu thích
   favorites: () => request("/favorites"),
   addFavorite: (place_type, place_id) =>

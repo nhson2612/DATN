@@ -93,3 +93,18 @@ class BookingRequest(BaseModel):
     check_out: Optional[date] = None
     guests: int = 1
     note: Optional[str] = None
+
+
+class TourBookingRequest(BaseModel):
+    """Đặt tour trọn gói — khác BookingRequest (đặt chỗ ở/địa điểm lẻ).
+
+    Tour có ngày khởi hành cố định và số chỗ giới hạn, nên phải chọn `departure_id`
+    thay vì tự nhập ngày nhận/trả.
+    """
+    tour_id: int
+    departure_id: Optional[int] = None
+    full_name: str
+    phone: str
+    email: Optional[str] = None
+    guests: int = 1
+    note: Optional[str] = None

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
+import CardSkeleton from "../components/CardSkeleton";
 import PlaceCard from "../components/PlaceCard";
 
 export default function Favorites({ user, onNeedAuth }) {
@@ -19,22 +20,23 @@ export default function Favorites({ user, onNeedAuth }) {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold mb-5">Địa điểm đã lưu</h1>
-      {!user && <p className="text-slate-500 text-sm">Đăng nhập để xem danh sách yêu thích.</p>}
-      {user && ds === null && <p className="text-slate-400 text-sm">Đang tải...</p>}
+      <h1 className="text-2xl font-bold tracking-tight mb-5">Địa điểm đã lưu</h1>
+      {!user && <p className="text-zinc-500 text-sm">Đăng nhập để xem danh sách yêu thích.</p>}
+      
       {user && ds?.length === 0 && (
-        <p className="text-slate-500 text-sm">
-          Chưa lưu địa điểm nào. <button onClick={() => nav("/")} className="text-brand-600">Khám phá ngay</button>
+        <p className="text-zinc-500 text-sm">
+          Chưa lưu địa điểm nào. <button onClick={() => nav("/")} className="text-accent-700">Khám phá ngay</button>
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {user && ds === null && <CardSkeleton count={4} />}
         {(ds || []).map((f) => (
           <PlaceCard key={`${f.place_type}-${f.place_id}`}
                      place={{ ...f, type: f.place_type }}
                      onClick={() => nav(`/dia-diem/${f.place_type}/${f.place_id}`)}
                      footer={
                        <button onClick={() => bo(f.place_type, f.place_id)}
-                               className="w-full py-2 text-xs text-slate-400 hover:text-rose-500 border-t border-slate-100">
+                               className="w-full py-2 text-xs text-zinc-400 hover:text-accent-700 dark:hover:text-accent-500 border-t border-zinc-100">
                          <i className="fa-solid fa-xmark" /> Bỏ lưu
                        </button>
                      } />

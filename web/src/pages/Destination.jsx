@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import DetailSkeleton from "../components/DetailSkeleton";
 import PlaceCard from "../components/PlaceCard";
 
 const ICON = {
@@ -22,19 +23,19 @@ export default function Destination() {
   if (loi) return (
     <main className="max-w-6xl mx-auto px-4 py-10">
       <h2 className="text-xl font-bold mb-2">Không tìm thấy điểm đến</h2>
-      <p className="text-slate-500 text-sm">Thử gõ tên tỉnh/thành, ví dụ "Đà Nẵng".</p>
-      <button onClick={() => nav("/")} className="mt-4 text-brand-600 text-sm">← Trang chủ</button>
+      <p className="text-zinc-500 text-sm">Thử gõ tên tỉnh/thành, ví dụ "Đà Nẵng".</p>
+      <button onClick={() => nav("/")} className="mt-4 text-accent-700 text-sm">← Trang chủ</button>
     </main>
   );
-  if (!d) return <main className="max-w-6xl mx-auto px-4 py-10 text-slate-400 text-sm">Đang tải...</main>;
+  if (!d) return <DetailSkeleton />;
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">
-      <button onClick={() => nav("/")} className="text-sm text-slate-500 hover:text-brand-600 mb-4">
+      <button onClick={() => nav("/")} className="text-sm text-zinc-500 hover:text-accent-700 mb-4">
         <i className="fa-solid fa-arrow-left" /> Tất cả điểm đến
       </button>
-      <h1 className="text-2xl font-bold">{d.name}</h1>
-      <p className="text-sm text-slate-500 mb-8">
+      <h1 className="text-2xl font-bold tracking-tight">{d.name}</h1>
+      <p className="text-sm text-zinc-500 mb-8">
         {d.groups.reduce((s, g) => s + g.items.length, 0)} địa điểm nổi bật
       </p>
 
@@ -42,10 +43,10 @@ export default function Destination() {
         <section key={g.key} className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold">
-              <i className={`fa-solid ${ICON[g.key] || "fa-location-dot"} text-brand-500`} /> {g.ten}
+              <i className={`fa-solid ${ICON[g.key] || "fa-location-dot"} text-accent-600`} /> {g.ten}
             </h2>
             <button onClick={() => nav(`/dia-diem?destination=${d.slug}&nhom=${g.key}`)}
-                    className="text-sm text-brand-600 font-medium hover:underline">
+                    className="text-sm text-accent-700 font-medium hover:underline">
               Xem tất cả
             </button>
           </div>

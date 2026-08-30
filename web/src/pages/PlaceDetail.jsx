@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import DetailSkeleton from "../components/DetailSkeleton";
 import MiniMap from "../components/MiniMap";
 import BookingForm from "../components/BookingForm";
 
@@ -26,18 +27,18 @@ export default function PlaceDetail({ user, onNeedAuth }) {
   }
 
   if (loi) return <main className="max-w-6xl mx-auto px-4 py-10 text-red-500">{loi}</main>;
-  if (!p) return <main className="max-w-6xl mx-auto px-4 py-10 text-slate-400 text-sm">Đang tải...</main>;
+  if (!p) return <DetailSkeleton />;
 
   const thongTin = [
     p.dia_chi && ["fa-location-dot", p.dia_chi],
-    p.dien_thoai && ["fa-phone", <a key="p" href={`tel:${p.dien_thoai}`} className="text-brand-600">{p.dien_thoai}</a>],
+    p.dien_thoai && ["fa-phone", <a key="p" href={`tel:${p.dien_thoai}`} className="text-accent-700">{p.dien_thoai}</a>],
     p.stars && ["fa-star", `${p.stars} sao`],
     p.price_range && ["fa-tag", p.price_range],
   ].filter(Boolean);
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">
-      <button onClick={() => nav(-1)} className="text-sm text-slate-500 hover:text-brand-600 mb-4">
+      <button onClick={() => nav(-1)} className="text-sm text-zinc-500 hover:text-accent-700 mb-4">
         <i className="fa-solid fa-arrow-left" /> Quay lại
       </button>
 
@@ -45,22 +46,22 @@ export default function PlaceDetail({ user, onNeedAuth }) {
         <div className="lg:col-span-2">
           {p.anh ? (
             <>
-              <img src={p.anh} className="w-full rounded-2xl mb-2" alt="" />
-              <p className="text-xs text-slate-400 mb-4">Ảnh: {p.anh_nguon || "Wikimedia Commons"}</p>
+              <img src={p.anh} className="w-full rounded-card mb-2" alt="" />
+              <p className="text-xs text-zinc-400 mb-4">Ảnh: {p.anh_nguon || "Wikimedia Commons"}</p>
             </>
           ) : (
-            <div className="w-full h-64 rounded-2xl bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center mb-4">
-              <i className="fa-solid fa-image text-4xl text-white" />
+            <div className="w-full h-64 rounded-card bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
+              <i className="fa-solid fa-image text-3xl text-zinc-300 dark:text-zinc-600" />
             </div>
           )}
 
-          <h1 className="text-2xl font-bold">{p.name}</h1>
-          <p className="text-sm text-brand-600 mb-4">{(p.category || "").replace(/_/g, " ")}</p>
-          {p.description && <p className="text-slate-600 leading-relaxed mb-6">{p.description}</p>}
+          <h1 className="text-2xl font-bold tracking-tight">{p.name}</h1>
+          <p className="text-sm text-accent-700 mb-4">{(p.category || "").replace(/_/g, " ")}</p>
+          {p.description && <p className="text-zinc-600 leading-relaxed mb-6">{p.description}</p>}
 
           <div className="space-y-2 text-sm mb-6">
             {thongTin.map(([ic, t], i) => (
-              <div key={i}><i className={`fa-solid ${ic} text-slate-400 w-5`} /> {t}</div>
+              <div key={i}><i className={`fa-solid ${ic} text-zinc-400 w-5`} /> {t}</div>
             ))}
           </div>
 
@@ -68,25 +69,25 @@ export default function PlaceDetail({ user, onNeedAuth }) {
         </div>
 
         <aside>
-          <div className="border border-slate-200 rounded-2xl p-5 sticky top-20">
+          <div className="ui-card bg-white dark:bg-zinc-900 p-5 sticky top-20">
             <button onClick={luu} disabled={daLuu}
-                    className="w-full mb-2 py-2.5 rounded-lg border border-slate-300 hover:border-rose-400 hover:text-rose-500 font-medium text-sm disabled:opacity-70">
-              <i className={`fa-${daLuu ? "solid" : "regular"} fa-heart ${daLuu ? "text-rose-500" : ""}`} />{" "}
+                    className="btn-ghost w-full mb-2 hover:!border-accent-600 hover:!text-accent-700">
+              <i className={`fa-${daLuu ? "solid" : "regular"} fa-heart ${daLuu ? "text-accent-600" : ""}`} />{" "}
               {daLuu ? "Đã lưu" : "Lưu yêu thích"}
             </button>
             <button onClick={() => (user ? setMoForm(true) : onNeedAuth())}
-                    className="w-full mb-2 py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm">
+                    className="btn-primary w-full mb-2">
               <i className="fa-solid fa-paper-plane" /> Gửi yêu cầu đặt chỗ
             </button>
             {p.website && (
               <a href={p.website} target="_blank" rel="noopener noreferrer"
-                 className="block text-center w-full py-2.5 rounded-lg border border-slate-300 hover:border-brand-500 text-sm font-medium">
+                 className="btn-ghost block w-full text-center">
                 <i className="fa-solid fa-arrow-up-right-from-square" /> Trang chính thức
               </a>
             )}
             {/* Baymard: 85% trang không link ra nguồn đánh giá bên thứ ba, mà
                 người dùng vốn không tin review nội bộ. */}
-            <p className="text-xs text-slate-400 mt-3 text-center">
+            <p className="text-xs text-zinc-400 mt-3 text-center">
               Xem đánh giá tại trang chính thức của địa điểm.
             </p>
           </div>
@@ -96,14 +97,14 @@ export default function PlaceDetail({ user, onNeedAuth }) {
       {p.nearby?.length > 0 && (
         <section className="mt-10">
           <h2 className="text-lg font-bold mb-4">
-            <i className="fa-solid fa-location-crosshairs text-brand-500" /> Gần đây
+            <i className="fa-solid fa-location-crosshairs text-accent-600" /> Gần đây
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {p.nearby.map((n) => (
               <article key={n.id} onClick={() => nav(`/dia-diem/poi/${n.id}`)}
-                       className="cursor-pointer rounded-xl border border-slate-200 p-3 hover:shadow-md transition">
+                       className="cursor-pointer ui-card bg-white dark:bg-zinc-900 p-3 hover:border-accent-600 transition">
                 <h3 className="font-semibold text-sm line-2">{n.name}</h3>
-                <p className="text-xs text-slate-400 mt-1">cách {n.met} m</p>
+                <p className="text-xs text-zinc-400 mt-1">cách {n.met} m</p>
               </article>
             ))}
           </div>

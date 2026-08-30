@@ -158,3 +158,65 @@ CREATE TABLE IF NOT EXISTS booking_requests (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS booking_requests_status_idx ON booking_requests(status);
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Tour trọn gói
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Hai kiểu đi du lịch khác hẳn nhau về nghiệp vụ:
+--
+--   1. ĐI THEO TOUR   — công ty soạn sẵn trọn gói: lịch trình, chỗ ở, giá, ngày
+--                       khởi hành. Khách chỉ chọn và đặt. Giá ở đây là dữ liệu
+--                       THẬT do admin nhập, khác `price_level` của POI vốn chỉ
+--                       là giá trị mặc định.
+--   2. ĐI TỰ TÚC      — khách tự tìm địa điểm, tự lập lịch trình (phần còn lại
+--                       của hệ thống: /destinations, /places, /itineraries).
+
+CREATE TABLE IF NOT EXISTS tours (
+    id            SERIAL PRIMARY KEY,
+    slug          VARCHAR(160) NOT NULL UNIQUE,
+    name          VARCHAR(255) NOT NULL,
+    summary       TEXT,                    -- mô tả ngắn hiện trên thẻ
+    description   TEXT,
+    province_id   INTEGER,                 -- điểm đến chính, trỏ tới provinces_clean
+    duration_days INTEGER NOT NULL DEFAULT 1,
+    price_from    BIGINT,                  -- VND, giá thấp nhất trong các ngày khởi hành
+    cover_url     TEXT,
+    highlights    JSONB,                   -- ["Bà Nà Hills", "Cầu Vàng", ...]
+    -- [{day, title, description, place_ids: [int]}] — nối được sang bảng poi để
+    -- vẽ lịch trình lên bản đồ.
+    itinerary     JSONB,
+    included      TEXT,                    -- giá đã bao gồm những gì
+    excluded      TEXT,
+    active        BOOLEAN DEFAULT TRUE,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS tours_province_idx ON tours(province_id);
+CREATE INDEX IF NOT EXISTS tours_active_idx   ON tours(active);
+
+-- Một tour chạy nhiều đợt, mỗi đợt giá và chỗ trống khác nhau.
+CREATE TABLE IF NOT EXISTS tour_departures (
+    id          SERIAL PRIMARY KEY,
+    tour_id     INTEGER NOT NULL REFERENCES tours(id) ON DELETE CASCADE,
+    depart_date DATE NOT NULL,
+    price       BIGINT,
+    seats_total INTEGER DEFAULT 20,
+    seats_left  INTEGER DEFAULT 20,
+    UNIQUE (tour_id, depart_date)
+);
+CREATE INDEX IF NOT EXISTS tour_departures_date_idx ON tour_departures(depart_date);
+
+CREATE TABLE IF NOT EXISTS tour_bookings (
+    id           SERIAL PRIMARY KEY,
+    tour_id      INTEGER NOT NULL REFERENCES tours(id) ON DELETE CASCADE,
+    departure_id INTEGER REFERENCES tour_departures(id) ON DELETE SET NULL,
+    user_id      INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    full_name    VARCHAR(255) NOT NULL,
+    phone        VARCHAR(50)  NOT NULL,
+    email        VARCHAR(255),
+    guests       INTEGER DEFAULT 1,
+    note         TEXT,
+    total_price  BIGINT,
+    status       VARCHAR(20) DEFAULT 'moi',   -- moi | da_lien_he | da_coc | huy
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS tour_bookings_status_idx ON tour_bookings(status);

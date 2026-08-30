@@ -1,15 +1,10 @@
 /* Thẻ địa điểm dùng chung cho lưới ở trang điểm đến, danh sách và yêu thích. */
 
-// Wikimedia chỉ có ảnh cho điểm nổi tiếng; phần lớn CSDL là địa điểm địa phương
-// nên đa số thẻ rơi vào nhánh nền gradient này. Để ô trống trông như lỗi tải.
-const MAU_NHOM = {
-  tham_quan: "from-amber-400 to-orange-500",
-  an_uong: "from-rose-400 to-red-500",
-  vui_choi: "from-violet-400 to-purple-500",
-  mua_sam: "from-emerald-400 to-teal-500",
-  luu_tru: "from-sky-400 to-blue-500",
-};
-
+/* Địa điểm chưa có ảnh: Wikimedia chỉ phủ được điểm nổi tiếng, phần lớn CSDL là
+ * địa điểm địa phương nên đa số thẻ rơi vào nhánh này. Trước đây mỗi nhóm một
+ * gradient màu khác nhau (sky, rose, violet, emerald...) · nhìn như bảng màu
+ * mẫu, thương hiệu tan biến. Nay chỉ còn nền trung tính và một biểu tượng, màu
+ * accent để dành cho hành động. */
 const ICON_NHOM = {
   tham_quan: "fa-landmark",
   an_uong: "fa-utensils",
@@ -20,29 +15,29 @@ const ICON_NHOM = {
 
 export default function PlaceCard({ place, group = "tham_quan", onClick, footer }) {
   return (
-    <article className="group rounded-xl overflow-hidden border border-slate-200 hover:shadow-lg hover:-translate-y-0.5 transition">
+    <article className="group ui-card overflow-hidden bg-white dark:bg-zinc-900 hover:border-accent-600 transition">
       <div onClick={onClick} className="cursor-pointer">
         {place.anh ? (
           <img src={place.anh} alt="" loading="lazy" className="card-img" />
         ) : (
-          <div
-            className={`card-img bg-gradient-to-br ${MAU_NHOM[group] || "from-slate-300 to-slate-400"} flex items-center justify-center`}
-          >
-            <i className={`fa-solid ${ICON_NHOM[group] || "fa-location-dot"} text-white/80 text-3xl`} />
+          <div className="card-img bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+            <i className={`fa-solid ${ICON_NHOM[group] || "fa-location-dot"} text-2xl text-zinc-300 dark:text-zinc-600`} />
           </div>
         )}
         <div className="p-3">
-          <h3 className="font-semibold text-sm line-2 group-hover:text-brand-600">{place.name}</h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <h3 className="font-semibold text-sm line-2 group-hover:text-accent-700 dark:group-hover:text-accent-500">
+            {place.name}
+          </h3>
+          <p className="text-xs text-zinc-500 mt-1">
             {(place.category || "").replace(/_/g, " ")}
           </p>
           {place.dia_chi && (
-            <p className="text-xs text-slate-400 mt-1 line-2">
+            <p className="text-xs text-zinc-400 mt-1 line-2">
               <i className="fa-solid fa-location-dot" /> {place.dia_chi}
             </p>
           )}
           {place.met != null && (
-            <p className="text-xs text-slate-400 mt-1">cách {place.met} m</p>
+            <p className="text-xs text-zinc-400 mt-1">cách {place.met} m</p>
           )}
         </div>
       </div>

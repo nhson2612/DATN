@@ -8,6 +8,8 @@ import Favorites from "./pages/Favorites";
 import Home from "./pages/Home";
 import PlaceDetail from "./pages/PlaceDetail";
 import PlaceList from "./pages/PlaceList";
+import TourDetail from "./pages/TourDetail";
+import Tours from "./pages/Tours";
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -26,7 +28,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="font-sans bg-white text-slate-800 min-h-screen flex flex-col">
+      <div className="font-sans min-h-screen flex flex-col">
         <Header user={user} onLogin={() => setMoAuth(true)} onLogout={dangXuat} />
 
         <div className="flex-1">
@@ -36,14 +38,17 @@ export default function App() {
             <Route path="/dia-diem" element={<PlaceList />} />
             <Route path="/dia-diem/:type/:id"
                    element={<PlaceDetail user={user} onNeedAuth={canDangNhap} />} />
+            <Route path="/tour" element={<Tours />} />
+            <Route path="/tour/:slug"
+                   element={<TourDetail user={user} onNeedAuth={canDangNhap} />} />
             <Route path="/yeu-thich"
                    element={<Favorites user={user} onNeedAuth={canDangNhap} />} />
           </Routes>
         </div>
 
-        <footer className="border-t border-slate-200 mt-16">
-          <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-slate-500">
-            <p className="font-semibold text-slate-700 mb-1">Đi Đâu — Khoá luận tốt nghiệp</p>
+        <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-16">
+          <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-zinc-500">
+            <p className="font-semibold text-zinc-700 mb-1">Đi Đâu · Khoá luận tốt nghiệp</p>
             <p>Dữ liệu địa điểm: Overture Maps · Mạng đường: OpenStreetMap · Ảnh: Wikimedia Commons</p>
           </div>
         </footer>

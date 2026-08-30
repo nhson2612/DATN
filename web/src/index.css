@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Nền và chữ không dùng đen/trắng tuyệt đối — mất hết chiều sâu. */
+@layer base {
+  html { color-scheme: light dark; }
+  body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100; }
+}
+
 @layer components {
   /* Ảnh chưa tải xong không được làm nhảy bố cục lưới. */
   .card-img { @apply w-full object-cover; aspect-ratio: 4/3; }
@@ -9,4 +15,26 @@
     display: -webkit-box; -webkit-line-clamp: 2;
     -webkit-box-orient: vertical; overflow: hidden;
   }
+
+  /* SHAPE LOCK — ba bậc bo góc, không dùng giá trị nào khác. */
+  .ui-card  { @apply rounded-card border border-zinc-200 dark:border-zinc-800; }
+  .ui-field { @apply rounded-field border border-zinc-300 dark:border-zinc-700
+                     bg-white dark:bg-zinc-900 px-3 py-2 text-sm
+                     outline-none focus:border-accent-600; }
+
+  /* Nút: pill, và :active lún xuống để bấm có cảm giác thật. */
+  .btn {
+    @apply rounded-full px-5 py-2.5 text-sm font-semibold transition
+           active:translate-y-px disabled:opacity-50;
+  }
+  .btn-primary { @apply btn bg-accent-600 text-white hover:bg-accent-700; }
+  .btn-ghost {
+    @apply btn border border-zinc-300 dark:border-zinc-700
+           hover:border-accent-600 hover:text-accent-700
+           dark:hover:text-accent-500;
+  }
+
+  /* Khung xương lúc tải, dựng theo đúng hình dạng nội dung thật thay vì
+     spinner tròn hay dòng chữ "Đang tải...". */
+  .skeleton { @apply animate-pulse bg-zinc-200 dark:bg-zinc-800; }
 }

@@ -39,6 +39,10 @@ EXPECTED_PATHS = {
     "/api/favorites/{place_type}/{place_id}",
     "/api/booking-requests",
     "/api/booking-requests/{booking_id}",
+    "/api/tours",
+    "/api/tours/{slug}",
+    "/api/tours/book",
+    "/api/tours/admin/bookings",
 }
 
 

@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
  *
  * Baymard: 57% trang du lịch thiếu bản đồ ở trang chi tiết, trong khi người dùng
  * cần biết địa điểm nằm đâu so với chỗ họ ở. Đây là chỗ DUY NHẤT trang này dùng
- * bản đồ — trang chủ và danh sách không cần, nên MapLibre chỉ được nạp khi mở
+ * bản đồ · trang chủ và danh sách không cần, nên MapLibre chỉ được nạp khi mở
  * trang chi tiết chứ không gói vào bundle.
  */
 export default function MiniMap({ lon, lat }) {
@@ -39,5 +39,5 @@ export default function MiniMap({ lon, lat }) {
     return () => map?.remove();
   }, [lon, lat]);
 
-  return <div ref={ref} className="w-full h-64 rounded-2xl border border-slate-200" />;
+  return <div ref={ref} className="w-full h-64 rounded-card border border-zinc-200" />;
 }

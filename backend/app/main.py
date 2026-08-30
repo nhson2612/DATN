@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.middleware import RequestLogMiddleware
 from app.api.routes import (auth, chat, destinations, engagement, itineraries,
-                            places, routing)
+                            places, routing, tours)
 from app.core.bootstrap import create_default_users
 from app.core.logging import get_logger, setup_logging
 
@@ -49,6 +49,7 @@ for module in (auth, chat, routing, places, itineraries, destinations):
 app.include_router(destinations.places_router)
 app.include_router(engagement.fav_router)
 app.include_router(engagement.booking_router)
+app.include_router(tours.router)
 
 
 @app.get("/")
