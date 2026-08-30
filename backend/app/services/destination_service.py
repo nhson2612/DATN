@@ -64,3 +64,38 @@ def get_destination(slug: str, limit_moi_nhom: int = 12):
         "lat": tinh["lat"],
         "groups": nhom,
     }
+
+
+def search_places(destination=None, nhom=None, category=None, q=None,
+                  has_photo=False, page=1, page_size=24):
+    """Danh sách địa điểm có lọc, dùng cho view lưới."""
+    province_id = None
+    if destination:
+        tinh = destination_repo.find_province(slugify(destination))
+        if not tinh:
+            return {"items": [], "total": 0, "page": page,
+                    "error": f"Không tìm thấy điểm đến '{destination}'."}
+        province_id = tinh["id"]
+
+    roots = destination_repo.NHOM_HIEN_THI[nhom]["roots"] if nhom in destination_repo.NHOM_HIEN_THI else None
+
+    items, tong = destination_repo.search_places(
+        province_id=province_id, roots=roots, category=category, q=q,
+        has_photo=has_photo, page=page, page_size=page_size)
+    return {"items": items, "total": tong, "page": page, "page_size": page_size}
+
+
+def place_detail(place_type: str, place_id: int):
+    """Chi tiết địa điểm + địa điểm lân cận.
+
+    Baymard: 57% trang du lịch thiếu bản đồ ở trang chi tiết, và 85% không link
+    ra nguồn đánh giá bên ngoài — người dùng không tin review nội bộ. Ở đây trả
+    kèm toạ độ (để vẽ bản đồ) và `website` (289.182 địa điểm có) thay vì tự dựng
+    hệ thống review.
+    """
+    place = destination_repo.get_place_detail(place_type, place_id)
+    if not place:
+        return None
+    place["nearby"] = destination_repo.nearby(
+        place["lon"], place["lat"], place_id if place_type == "poi" else -1)
+    return place

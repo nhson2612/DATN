@@ -1,5 +1,6 @@
 """Pydantic schema cho request. Tách khỏi route để service không phụ thuộc HTTP."""
 
+from datetime import date
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -69,3 +70,26 @@ class RecommendRequest(BaseModel):
     destination: Optional[str] = None
     user_lon: Optional[float] = None
     user_lat: Optional[float] = None
+
+
+class FavoriteRequest(BaseModel):
+    place_type: str            # 'poi' | 'accommodation'
+    place_id: int
+
+
+class BookingRequest(BaseModel):
+    """Yêu cầu đặt chỗ — KHÔNG có giá và KHÔNG thanh toán.
+
+    CSDL không có giá phòng hay tình trạng phòng trống (cột `price_range` gần
+    như rỗng, `stars` toàn 0), nên hệ thống chỉ nhận yêu cầu rồi để admin liên
+    hệ lại — đúng cách các website du lịch nhỏ ở Việt Nam đang làm.
+    """
+    place_type: str
+    place_id: int
+    full_name: str
+    phone: str
+    email: Optional[str] = None
+    check_in: Optional[date] = None
+    check_out: Optional[date] = None
+    guests: int = 1
+    note: Optional[str] = None

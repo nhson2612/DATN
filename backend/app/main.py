@@ -14,8 +14,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.middleware import RequestLogMiddleware
-from app.api.routes import (auth, chat, destinations, itineraries, places,
-                            routing)
+from app.api.routes import (auth, chat, destinations, engagement, itineraries,
+                            places, routing)
 from app.core.bootstrap import create_default_users
 from app.core.logging import get_logger, setup_logging
 
@@ -44,6 +44,11 @@ app.add_middleware(
 
 for module in (auth, chat, routing, places, itineraries, destinations):
     app.include_router(module.router)
+
+# destinations.py giữ thêm một router cho /api/places/search và trang chi tiết.
+app.include_router(destinations.places_router)
+app.include_router(engagement.fav_router)
+app.include_router(engagement.booking_router)
 
 
 @app.get("/")

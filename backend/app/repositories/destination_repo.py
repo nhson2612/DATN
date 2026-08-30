@@ -126,3 +126,129 @@ def accommodations(province_id: int, limit: int = 12):
         """,
         (province_id, limit),
     ) or []
+
+
+def search_places(province_id=None, roots=None, category=None, q=None,
+                  has_photo=False, page=1, page_size=24):
+    """Danh sách địa điểm có lọc + phân trang, cho view dạng lưới.
+
+    Khác place_repo.all_as_geojson (trả GeoJSON cho bản đồ): ở đây trả danh sách
+    phân trang kèm ảnh và thông tin liên hệ để render thẻ.
+
+    Baymard: 40% trang du lịch thiếu bộ lọc chuyên ngành và đó là lý do hàng đầu
+    khiến người dùng bỏ đi giữa chừng.
+    """
+    dieu_kien = ["t.name !~ '^(POI|Accommodation|Road) [0-9]+$'"]
+    params = []
+
+    if province_id:
+        dieu_kien.append("t.province_id = %s")
+        params.append(province_id)
+    if roots:
+        dieu_kien.append("t.tags->>'category_root' = ANY(%s)")
+        params.append(list(roots))
+    if category:
+        dieu_kien.append("t.amenity = %s")
+        params.append(category)
+    if q:
+        # norm_txt + chỉ mục trigram đã tạo sẵn cho search_service, dùng lại.
+        dieu_kien.append("norm_txt(t.name) %% norm_txt(%s)")
+        params.append(q)
+    if has_photo:
+        dieu_kien.append("ph.url IS NOT NULL")
+
+    where = " AND ".join(dieu_kien)
+    offset = (max(page, 1) - 1) * page_size
+
+    rows = execute_query(
+        f"""
+        SELECT t.id, t.name, t.amenity AS category, 'poi' AS type,
+               ST_X(t.geom) AS lon, ST_Y(t.geom) AS lat,
+               t.tags->>'addr:street' AS dia_chi,
+               t.tags->>'phone'       AS dien_thoai,
+               t.tags->>'website'     AS website,
+               ph.url                 AS anh,
+               count(*) OVER ()       AS tong
+        FROM poi t
+        LEFT JOIN place_photos ph ON ph.place_type = 'poi' AND ph.place_id = t.id
+        WHERE {where}
+        ORDER BY (t.amenity = 'landmark_and_historical_building'),
+                 (ph.url IS NULL),
+                 (t.name !~ '^[A-Za-zÀ-ỹ0-9]'),
+                 t.name
+        LIMIT %s OFFSET %s
+        """,
+        tuple(params) + (page_size, offset),
+    ) or []
+
+    tong = rows[0]["tong"] if rows else 0
+    for r in rows:
+        r.pop("tong", None)
+    return rows, tong
+
+
+def get_place_detail(place_type: str, place_id: int):
+    """Chi tiết một địa điểm cho trang detail."""
+    if place_type == "poi":
+        sql = """
+            SELECT t.id, t.name, t.amenity AS category, 'poi' AS type,
+                   t.description, t.province_id,
+                   ST_X(t.geom) AS lon, ST_Y(t.geom) AS lat,
+                   t.tags->>'addr:street'    AS dia_chi,
+                   t.tags->>'addr:city'      AS thanh_pho,
+                   t.tags->>'phone'          AS dien_thoai,
+                   t.tags->>'website'        AS website,
+                   t.tags->>'brand'          AS thuong_hieu,
+                   t.tags->>'category_root'  AS nhom,
+                   ph.url AS anh, ph.attribution AS anh_nguon
+            FROM poi t
+            LEFT JOIN place_photos ph
+                   ON ph.place_type = 'poi' AND ph.place_id = t.id
+            WHERE t.id = %s
+        """
+    elif place_type == "accommodation":
+        sql = """
+            SELECT a.id, a.name, a.tourism AS category, 'accommodation' AS type,
+                   NULL AS description, a.province_id,
+                   ST_X(a.geom) AS lon, ST_Y(a.geom) AS lat,
+                   a.address AS dia_chi, a.stars, a.price_range,
+                   a.tags->>'addr:city' AS thanh_pho,
+                   a.tags->>'phone'     AS dien_thoai,
+                   a.tags->>'website'   AS website,
+                   a.tags->>'brand'     AS thuong_hieu,
+                   ph.url AS anh, ph.attribution AS anh_nguon
+            FROM accommodation a
+            LEFT JOIN place_photos ph
+                   ON ph.place_type = 'accommodation' AND ph.place_id = a.id
+            WHERE a.id = %s
+        """
+    else:
+        return None
+    rows = execute_query(sql, (place_id,))
+    return rows[0] if rows else None
+
+
+def nearby(lon: float, lat: float, exclude_id: int, meters: int = 2000, limit: int = 6):
+    """Địa điểm gần đó — Baymard: người dùng muốn biết quanh đó còn gì."""
+    return execute_query(
+        """
+        SELECT t.id, t.name, t.amenity AS category, 'poi' AS type,
+               ST_X(t.geom) AS lon, ST_Y(t.geom) AS lat,
+               round(ST_Distance(t.geom::geography,
+                     ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)) AS met,
+               ph.url AS anh
+        FROM poi t
+        LEFT JOIN place_photos ph ON ph.place_type = 'poi' AND ph.place_id = t.id
+        WHERE t.id <> %s
+          AND ST_DWithin(t.geom::geography,
+                         ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography, %s)
+          AND t.name !~ '^(POI|Accommodation|Road) [0-9]+$'
+        -- Sắp theo CÙNG thước đo với cột `met`: toán tử <-> đo khoảng cách phẳng
+        -- theo độ, còn met đo mét trên mặt cầu, nên trộn hai cái cho ra thứ tự
+        -- lệch (từng trả 9, 12, 14, 15, 17, 16 m).
+        ORDER BY ST_Distance(t.geom::geography,
+                             ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)
+        LIMIT %s
+        """,
+        (lon, lat, exclude_id, lon, lat, meters, lon, lat, limit),
+    ) or []
