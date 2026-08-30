@@ -25,34 +25,40 @@ dữ liệu: **toàn quốc**.
 | Nhóm | Tính năng | Endpoint |
 | :--- | :--- | :--- |
 | Tài khoản | Đăng ký, đăng nhập (JWT), phân quyền admin/user | `POST /api/register`, `/api/login`, `GET /api/me` |
+| **Điểm đến** | Danh sách tỉnh/thành; trang từng điểm đến gom địa điểm theo nhóm | `GET /api/destinations`, `/api/destinations/{slug}` |
+| **Tìm & lọc** | Lọc theo điểm đến, nhóm, loại, từ khoá; phân trang | `GET /api/places/search` |
+| **Chi tiết địa điểm** | Ảnh, địa chỉ, điện thoại, link trang chính thức, địa điểm lân cận | `GET /api/places/{type}/{id}` |
+| **Yêu thích** | Lưu / bỏ / xem danh sách | `GET/POST/DELETE /api/favorites` |
+| **Yêu cầu đặt chỗ** | Khách gửi yêu cầu, admin xử lý | `POST /api/booking-requests`, `GET`, `PUT /{id}` |
 | Trợ lý AI | Hỏi đáp tiếng Việt → tìm địa điểm → trả lời + hiện lên bản đồ | `POST /api/chat` |
+| **Lịch trình AI** | Gợi ý lịch trình nhiều ngày quanh điểm đến, có tuyến đường | `POST /api/itineraries/recommend` |
+| Lịch trình | Xem, tạo, sửa, xoá lịch trình cá nhân | `GET/POST/PUT/DELETE /api/itineraries` |
 | Bản đồ | Tải địa điểm theo khung nhìn (bbox + limit) | `GET /api/places` |
 | Tìm đường | Đường đi ngắn nhất giữa hai điểm (pgRouting) | `POST /api/route` |
 | Mạng đường | Tải mạng đường theo khung nhìn | `GET /api/roads` |
-| Lịch trình | Xem, tạo, sửa, xoá lịch trình cá nhân | `GET/POST/PUT/DELETE /api/itineraries` |
 | Quản trị | CRUD địa điểm và nơi lưu trú (chỉ admin) | `/api/poi`, `/api/accommodation` |
-
-### Đang làm
-
-| Nhóm | Tính năng | Trạng thái |
-| :--- | :--- | :--- |
-| Gợi ý AI | Đề xuất lịch trình theo số ngày, sở thích, ngân sách | `POST /api/itineraries/recommend` **lỗi 500** — `TypeError: Object of type Decimal is not JSON serializable` |
 
 ### Nên có — chưa làm
 
+- **Ảnh cho phần lớn địa điểm.** Hạ tầng đã xong (bảng `place_photos`,
+  `scripts/fetch_photos.py`, hiển thị ở frontend) nhưng Wikimedia chỉ có bài cho
+  điểm nổi tiếng cấp quốc gia. Chùa làng, quán ăn nhỏ — phần lớn CSDL — không có
+  ảnh. Cần nguồn khác hoặc để admin tự tải lên.
 - **Lọc theo đánh giá / giá / hạng sao.** Các cột `rating`, `review_count`,
-  `price_level`, `stars` hiện **toàn giá trị mặc định**, không phải dữ liệu thật
-  (xem §4). Mọi câu hỏi dạng "khách sạn 4 sao", "quán ăn đánh giá cao" chưa trả lời
+  `price_level`, `stars` **toàn giá trị mặc định**, không phải dữ liệu thật
+  (xem §4). Câu hỏi dạng "khách sạn 4 sao", "quán ăn đánh giá cao" chưa trả lời
   được cho tới khi có nguồn đánh giá.
-- **Cá nhân hoá theo lịch sử người dùng** — hiện `/recommend` chỉ nhận tham số của
-  lần gọi, không dùng lịch sử tìm kiếm hay lịch trình đã lưu.
+- **Cá nhân hoá theo lịch sử người dùng** — `/recommend` chỉ nhận tham số của
+  lần gọi, chưa dùng lịch sử tìm kiếm hay danh sách yêu thích.
 - **Lưu lịch sử hội thoại** để trợ lý hiểu câu hỏi nối tiếp ("còn chỗ nào khác
   không?").
-- **Tìm kiếm theo món ăn / đặc sản.** Overture chỉ có loại địa điểm, không có món.
-  Cần bổ sung nguồn OSM (`cuisine`) cho các thành phố lớn.
-- **Ảnh địa điểm** — chưa có nguồn ảnh.
-- **Đánh giá hệ thống** theo 3 tiêu chí của đề tài (chính xác / khả năng sử dụng /
-  hiệu năng) — chưa có bộ câu hỏi kiểm thử và số đo.
+- **Tìm kiếm theo món ăn / đặc sản.** Overture chỉ có loại địa điểm, không có
+  món. Cần bổ sung nguồn OSM (`cuisine`) cho các thành phố lớn.
+- **Giờ mở cửa** — `opening_hours` rỗng 0/805.729. Đây là ràng buộc trung tâm
+  của bài toán lập lịch trình (time window): không có nó thì không đảm bảo được
+  điểm gợi ý đang mở cửa.
+- **Đánh giá hệ thống** theo 3 tiêu chí của đề tài (chính xác / khả năng sử dụng
+  / hiệu năng) — chưa có bộ câu hỏi kiểm thử và số đo trên người dùng thật.
 
 ---
 
@@ -113,7 +119,11 @@ CSDL `gis_vietnam` — PostgreSQL + PostGIS + pgRouting.
 | `roads_vertices_pgr` | 790.448 | pgRouting | Nút giao |
 | `roads_components` | 790.762 | pgRouting | Thành phần liên thông (materialize sẵn) |
 | `vn_mask` | 1 | tính từ `boundaries` | Union 55 tỉnh, dùng cắt dữ liệu ngoài biên giới |
+| `provinces_clean` | 55 | tính từ `boundaries` | Polygon tỉnh đã làm sạch (`ST_MakeValid`) |
+| `province_stats` | 55 | tính sẵn | Số địa điểm mỗi tỉnh — đếm trực tiếp mất 72s, nay 21ms |
 | `users`, `itineraries` | — | ứng dụng | Tài khoản và lịch trình |
+| `favorites`, `booking_requests` | — | ứng dụng | Yêu thích và yêu cầu đặt chỗ |
+| `place_photos` | — | Wikimedia | Ảnh địa điểm (cache, kèm ghi nguồn theo giấy phép) |
 
 **Hai nguồn dữ liệu bổ sung nhau:**
 
@@ -160,7 +170,13 @@ python3 -m venv venv
 # 4. Nạp dữ liệu du lịch toàn quốc (Overture, ~15 phút)
 ./venv/bin/python scripts/import_overture_vn.py
 
-# 5. Chạy server
+# 5. Gán địa điểm vào tỉnh/thành + tính bảng thống kê (BẮT BUỘC cho trang điểm đến)
+./venv/bin/python scripts/assign_province.py
+
+# 6. (tuỳ chọn) Lấy ảnh từ Wikimedia — chậm, chạy được lúc nào cũng được
+./venv/bin/python scripts/fetch_photos.py 200
+
+# 7. Chạy server
 ./venv/bin/uvicorn app.main:app --reload
 ```
 
@@ -186,6 +202,8 @@ Mở `frontend/index.html`. Lần khởi động đầu tiên hệ thống tự 
 | Script | Công dụng |
 | :--- | :--- |
 | `import_overture_vn.py` | Nạp địa điểm du lịch toàn quốc từ Overture |
+| `assign_province.py` | Gán địa điểm vào tỉnh + tính `province_stats` |
+| `fetch_photos.py` | Lấy ảnh địa điểm từ Wikimedia Commons |
 | `backfill_overture_tags.py` | Bổ sung `tags` (địa chỉ, điện thoại, thương hiệu) |
 | `importer.py` | Nạp dữ liệu Đà Nẵng từ OpenStreetMap qua Overpass |
 | `node_and_rebuild_topology.py` | Dựng lại topology mạng đường cho pgRouting |
