@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { api } from "../api/client";
+import ErrorBoundary from "../components/ErrorBoundary";
 import PlaceFinder from "../components/PlaceFinder";
 import TripMap from "../components/TripMap";
 
@@ -228,9 +229,11 @@ export default function TripPlanner({ user, onNeedAuth }) {
         </section>
 
         <section className="lg:sticky lg:top-20 h-[420px] lg:h-[calc(100vh-7rem)]">
-          <TripMap stops={stops} focusDay={duong ? duong.day : ngayXem}
-                   timThay={timThay} noiBat={noiBat} onThem={(p) => them(p)}
-                   duongThat={duong?.doan} />
+          <ErrorBoundary ten="Bản đồ">
+            <TripMap stops={stops} focusDay={duong ? duong.day : ngayXem}
+                     timThay={timThay} noiBat={noiBat} onThem={(p) => them(p)}
+                     duongThat={duong?.doan} />
+          </ErrorBoundary>
         </section>
       </div>
     </main>

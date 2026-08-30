@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import DetailSkeleton from "../components/DetailSkeleton";
+import ErrorBoundary from "../components/ErrorBoundary";
 import MiniMap from "../components/MiniMap";
 import BookingForm from "../components/BookingForm";
 
@@ -65,7 +66,7 @@ export default function PlaceDetail({ user, onNeedAuth }) {
             ))}
           </div>
 
-          <MiniMap lon={p.lon} lat={p.lat} />
+          <ErrorBoundary ten="Bản đồ"><MiniMap lon={p.lon} lat={p.lat} /></ErrorBoundary>
         </div>
 
         <aside>

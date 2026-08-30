@@ -32,6 +32,10 @@ export default function MiniMap({ lon, lat }) {
       css.href = "https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css";
       document.head.appendChild(css);
       const js = document.createElement("script");
+      // crossOrigin bắt buộc: thiếu nó thì MỌI lỗi ném ra từ maplibre chỉ hiện
+      // "Script error." không kèm stack, vì trình duyệt che chi tiết của script
+      // khác nguồn. Một lỗi vẽ bản đồ đã phải dò tay vì đúng lý do này.
+      js.crossOrigin = "anonymous";
       js.src = "https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js";
       js.onload = ve;
       document.head.appendChild(js);

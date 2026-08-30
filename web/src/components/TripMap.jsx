@@ -9,6 +9,26 @@ import { useEffect, useRef } from "react";
 const MAU_NGAY = ["#059669", "#0f766e", "#4d7c0f", "#a16207", "#9a3412",
                   "#7c2d12", "#065f46"];
 
+const laToaDo = (s) => Number.isFinite(+s?.lon) && Number.isFinite(+s?.lat);
+
+/* Đưa khung nhìn về vừa đủ các điểm.
+ *
+ * `map.fitBounds` với một LngLatBounds RỖNG ném "Cannot read properties of
+ * undefined (reading 'lng')" từ trong maplibre (getWest đọc this._sw.lng), và vì
+ * nó ném trong một effect nên React gỡ luôn cả cây — người dùng mất trắng trang
+ * lịch trình chứ không chỉ mất bản đồ. Bounds có thể rỗng dù mảng đầu vào không
+ * rỗng: `extend` lặng lẽ bỏ qua giá trị nó không hiểu thay vì báo lỗi.
+ *
+ * Nên kiểm bounds đã nhận điểm nào chưa, thay vì chỉ kiểm mảng có phần tử. */
+function veVungNhin(map, diem, opts) {
+  const hopLe = (diem || []).filter(laToaDo);
+  if (!hopLe.length) return;
+  const b = new window.maplibregl.LngLatBounds();
+  hopLe.forEach((s) => b.extend([+s.lon, +s.lat]));
+  if (!b.getSouthWest() || !b.getNorthEast()) return;
+  map.fitBounds(b, opts);
+}
+
 export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duongThat }) {
   const ref = useRef(null);
   const mapRef = useRef(null);
@@ -33,6 +53,10 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
       css.href = "https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css";
       document.head.appendChild(css);
       const js = document.createElement("script");
+      // crossOrigin bắt buộc: thiếu nó thì MỌI lỗi ném ra từ maplibre chỉ hiện
+      // "Script error." không kèm stack, vì trình duyệt che chi tiết của script
+      // khác nguồn. Một lỗi vẽ bản đồ đã phải dò tay vì đúng lý do này.
+      js.crossOrigin = "anonymous";
       js.src = "https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js";
       js.onload = dung;
       document.head.appendChild(js);
@@ -50,7 +74,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
       (map._tripMarkers || []).forEach((m) => m.remove());
       map._tripMarkers = [];
 
-      const hopLe = (stops || []).filter((s) => s.lon && s.lat);
+      const hopLe = (stops || []).filter(laToaDo);
       if (!hopLe.length) return;
 
       const theoNgay = {};
@@ -91,9 +115,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
         }
       });
 
-      const b = new window.maplibregl.LngLatBounds();
-      hopLe.forEach((s) => b.extend([s.lon, s.lat]));
-      map.fitBounds(b, { padding: 60, maxZoom: 14, duration: 600 });
+      veVungNhin(map, hopLe, { padding: 60, maxZoom: 14, duration: 600 });
     };
 
     if (map.isStyleLoaded()) ve();
@@ -112,7 +134,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
       map._timThay = [];
       map._chamTim = [];
 
-      const hopLe = (timThay || []).filter((s) => s.lon != null);
+      const hopLe = (timThay || []).filter(laToaDo);
       hopLe.forEach((s, i) => {
         const ngoai = document.createElement("div");
         const cham = document.createElement("div");
@@ -144,11 +166,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
             .setLngLat([s.lon, s.lat]).setPopup(popup).addTo(map));
       });
 
-      if (hopLe.length) {
-        const b = new window.maplibregl.LngLatBounds();
-        hopLe.forEach((s) => b.extend([s.lon, s.lat]));
-        map.fitBounds(b, { padding: 60, maxZoom: 15, duration: 600 });
-      }
+      veVungNhin(map, hopLe, { padding: 60, maxZoom: 15, duration: 600 });
     };
 
     map.isStyleLoaded() ? ve() : map.once("load", ve);
@@ -194,7 +212,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
   return (
     <div className="relative h-full">
       <div ref={ref} className="w-full h-full rounded-card border border-zinc-200 dark:border-zinc-800" />
-      {!(stops || []).some((s) => s.lon) && !(timThay || []).length && (
+      {!(stops || []).some(laToaDo) && !(timThay || []).length && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <p className="text-sm text-zinc-400 bg-white/90 dark:bg-zinc-900/90 px-4 py-2 rounded-full">
             Thêm địa điểm để thấy chúng trên bản đồ
