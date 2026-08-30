@@ -66,10 +66,11 @@ dữ liệu: **toàn quốc**.
 
 ```
 web/                 React 19 + Vite + Tailwind CSS
-   ├── src/pages/    Trang: Home, Destination, PlaceList, PlaceDetail, Favorites
-   ├── src/components/  PlaceCard, Header, AuthModal, BookingForm, MiniMap
-   ├── src/api/      client gọi backend
-   └── public/       map.html, admin.html (giao diện bản đồ cũ, vanilla JS)
+   ├── src/pages/    Home, Destination, PlaceList, PlaceDetail, Tours, TourDetail,
+   │                 Trips, TripPlanner, Assistant, Favorites, Admin
+   ├── src/components/  PlaceCard, Header, AuthModal, BookingForm,
+   │                    MiniMap, TripMap, SearchMap
+   └── src/api/      client gọi backend
    │  HTTP + JSON
 backend/app/
    ├── api/routes/   tầng HTTP — không chứa SQL
@@ -95,12 +96,19 @@ vietnam.travel đều là trang nội dung — hero + ô tìm kiếm + lưới t
 | Một điểm đến — địa điểm gom theo nhóm | `/diem-den/:slug` |
 | Danh sách có bộ lọc + phân trang | `/dia-diem?destination=&nhom=` |
 | Chi tiết — ảnh, liên hệ, bản đồ nhỏ, địa điểm lân cận | `/dia-diem/:type/:id` |
+| Tour trọn gói — danh sách và chi tiết | `/tour`, `/tour/:slug` |
+| Tự lên lịch — danh sách chuyến, planner hai cột | `/chuyen-di`, `/chuyen-di/:id` |
+| Trợ lý bản đồ — hỏi đáp tiếng Việt + chỉ đường | `/tro-ly` |
 | Yêu thích | `/yeu-thich` |
-| Bản đồ, hỏi đáp AI, tìm đường, lịch trình (giao diện cũ) | `/map.html` |
-| Quản trị | `/admin.html` |
+| Quản trị | `/quan-tri` |
 
-MapLibre chỉ được nạp khi mở trang chi tiết — trang chủ và danh sách không cần
-bản đồ nên không phải chờ tải thư viện.
+Toàn bộ giao diện là một ứng dụng React duy nhất. Bản `map.html` / `admin.html`
+viết bằng vanilla JS (6.770 dòng HTML/CSS/JS rời) đã bị xoá: nó dùng hệ màu và
+bố cục khác hẳn nên trông như hai sản phẩm ghép lại, và có những nút chỉ hiện
+`alert("đang được phát triển")`.
+
+MapLibre chỉ nạp khi mở trang thật sự có bản đồ (chi tiết địa điểm, planner, trợ
+lý) — trang chủ và danh sách không phải chờ tải thư viện.
 
 ### Trợ lý AI hoạt động thế nào
 

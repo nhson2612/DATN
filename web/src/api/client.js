@@ -72,6 +72,20 @@ export const api = {
 
   // Trợ lý
   chat: (body) => request("/chat", { method: "POST", body: JSON.stringify(body) }),
+  route: (body) => request("/route", { method: "POST", body: JSON.stringify(body) }),
+
+  // Quản trị
+  adminStats: () => request("/admin/stats"),
+  adminBookings: (status) =>
+    request(`/booking-requests${status ? `?status=${status}` : ""}`),
+  adminSetBookingStatus: (id, status) =>
+    request(`/booking-requests/${id}?status=${status}`, { method: "PUT" }),
+  adminTourBookings: () => request("/tours/admin/bookings"),
+  createPlace: (type, body) =>
+    request(`/${type}`, { method: "POST", body: JSON.stringify(body) }),
+  updatePlace: (type, id, body) =>
+    request(`/${type}/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  deletePlace: (type, id) => request(`/${type}/${id}`, { method: "DELETE" }),
 
   // Tài khoản
   login: (email, password) =>

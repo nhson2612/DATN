@@ -129,7 +129,10 @@ def find_anchor(place_part: str, lon: float, lat: float):
                                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)
             FROM poi p JOIN g ON norm_txt(p.name) = g.t
         )
-        SELECT kind, name, ST_AsText(geom) AS wkt, t
+        -- Toạ độ tâm để bản đồ chấm được mốc: người dùng phải NHÌN THẤY hệ
+        -- thống hiểu "gần Mỹ Khê" là gần chỗ nào, mới biết ngay khi nó hiểu sai.
+        SELECT kind, name, ST_AsText(geom) AS wkt, t,
+               ST_X(ST_Centroid(geom)) AS lon, ST_Y(ST_Centroid(geom)) AS lat
         FROM hits
         ORDER BY length(t) DESC, d ASC
         LIMIT 1
@@ -161,7 +164,7 @@ def _tim(kw, anchor, lon, lat, limit):
         f"""
         WITH ref AS (SELECT {center} AS g),
         cand AS (
-            SELECT p.name, p.amenity AS category, p.geom,
+            SELECT p.id, 'poi' AS type, p.name, p.amenity AS category, p.geom,
                    similarity(norm_txt(p.name), norm_txt(%s))            AS s_name,
                    similarity(norm_txt(coalesce(p.amenity,'')), norm_txt(%s)) AS s_cat
             FROM poi p, ref
@@ -169,7 +172,7 @@ def _tim(kw, anchor, lon, lat, limit):
                    OR norm_txt(coalesce(p.amenity,'')) %% norm_txt(%s))
               AND ST_DWithin(p.geom::geography, ref.g::geography, %s)
             UNION ALL
-            SELECT a.name, a.tourism, a.geom,
+            SELECT a.id, 'accommodation', a.name, a.tourism, a.geom,
                    similarity(norm_txt(a.name), norm_txt(%s)),
                    similarity(norm_txt(coalesce(a.tourism,'')), norm_txt(%s))
             FROM accommodation a, ref
@@ -177,11 +180,13 @@ def _tim(kw, anchor, lon, lat, limit):
                    OR norm_txt(coalesce(a.tourism,'')) %% norm_txt(%s))
               AND ST_DWithin(a.geom::geography, ref.g::geography, %s)
         )
-        SELECT name, category,
+        -- id + type để frontend mở được trang chi tiết /dia-diem/{type}/{id};
+        -- thiếu hai cột này thì kết quả hỏi đáp chỉ là chấm trên bản đồ, bấm
+        -- vào không đi đâu được.
+        SELECT id, type, name, category,
                ST_X(geom) AS lon, ST_Y(geom) AS lat,
-               -- Frontend vẽ marker từ item.geom dạng GeoJSON (xem
-               -- renderQueryResultsOnMap trong frontend/js/chat.js); chỉ trả
-               -- lon/lat rời thì nó bỏ qua và bản đồ trống trơn.
+               -- geom dạng GeoJSON cho các điểm không phải Point (ranh giới,
+               -- toà nhà): lon/lat rời chỉ đủ cho marker chấm tròn.
                ST_AsGeoJSON(geom)::json AS geom,
                round(ST_Distance(geom::geography, (SELECT g FROM ref)::geography)) AS met
         FROM cand
@@ -238,6 +243,8 @@ def search(question: str, lon: float, lat: float, limit: int = DEFAULT_LIMIT):
 
     return {
         "results": rows,
-        "anchor": {"kind": anchor["kind"], "name": anchor["name"]} if anchor else None,
+        "anchor": ({"kind": anchor["kind"], "name": anchor["name"],
+                    "lon": anchor["lon"], "lat": anchor["lat"]}
+                   if anchor else None),
         "keywords": kw,
     }

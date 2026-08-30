@@ -49,6 +49,7 @@ for module in (auth, chat, routing, places, itineraries, destinations):
 app.include_router(destinations.places_router)
 app.include_router(engagement.fav_router)
 app.include_router(engagement.booking_router)
+app.include_router(engagement.admin_router)
 app.include_router(tours.router)
 
 

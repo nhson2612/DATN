@@ -32,7 +32,7 @@ export default function Header({ user, onLogin, onLogout }) {
             <i className="fa-solid fa-map-pin" /> Tự lên lịch
           </Link>
           <Link to="/" className="text-zinc-600 dark:text-zinc-400 hover:text-accent-700">Điểm đến</Link>
-          <a href="/map.html" className="text-zinc-600 dark:text-zinc-400 hover:text-accent-700">Bản đồ</a>
+          <Link to="/tro-ly" className="text-zinc-600 dark:text-zinc-400 hover:text-accent-700">Trợ lý bản đồ</Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
@@ -43,9 +43,9 @@ export default function Header({ user, onLogin, onLogout }) {
           {user ? (
             <div className="flex items-center gap-2">
               {user.role === "admin" && (
-                <a href="/admin.html" title="Quản trị" className="text-sm text-zinc-600 hover:text-accent-700">
+                <Link to="/quan-tri" title="Quản trị" className="text-sm text-zinc-600 hover:text-accent-700">
                   <i className="fa-solid fa-screwdriver-wrench" />
-                </a>
+                </Link>
               )}
               <span className="text-sm text-zinc-600 hidden sm:inline">{user.full_name || user.email}</span>
               <button onClick={() => { onLogout(); nav("/"); }}

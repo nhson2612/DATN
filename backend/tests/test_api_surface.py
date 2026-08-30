@@ -43,6 +43,7 @@ EXPECTED_PATHS = {
     "/api/tours/{slug}",
     "/api/tours/book",
     "/api/tours/admin/bookings",
+    "/api/admin/stats",
 }
 
 

@@ -1,8 +1,10 @@
 import { useCallback, useState } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
 
 import AuthModal from "./components/AuthModal";
 import Header from "./components/Header";
+import Admin from "./pages/Admin";
+import Assistant from "./pages/Assistant";
 import Destination from "./pages/Destination";
 import Favorites from "./pages/Favorites";
 import Home from "./pages/Home";
@@ -12,6 +14,19 @@ import TourDetail from "./pages/TourDetail";
 import Tours from "./pages/Tours";
 import TripPlanner from "./pages/TripPlanner";
 import Trips from "./pages/Trips";
+
+function KhongTimThay() {
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-24 text-center">
+      <p className="text-5xl font-bold text-zinc-300 dark:text-zinc-700">404</p>
+      <h1 className="text-xl font-bold mt-4">Không có trang này</h1>
+      <p className="text-zinc-500 mt-2">
+        Đường dẫn bạn mở không tồn tại hoặc đã được thay bằng trang khác.
+      </p>
+      <Link to="/" className="btn-primary inline-block mt-6">Về trang chủ</Link>
+    </div>
+  );
+}
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -47,8 +62,17 @@ export default function App() {
                    element={<Trips user={user} onNeedAuth={canDangNhap} />} />
             <Route path="/chuyen-di/:id"
                    element={<TripPlanner user={user} onNeedAuth={canDangNhap} />} />
+            <Route path="/tro-ly" element={<Assistant />} />
+            <Route path="/quan-tri" element={<Admin user={user} />} />
             <Route path="/yeu-thich"
                    element={<Favorites user={user} onNeedAuth={canDangNhap} />} />
+
+            {/* Hai trang vanilla JS cũ đã bị xoá. Ai còn giữ link cũ trong tab
+                hoặc bookmark sẽ rơi vào vỏ React không khớp route nào và thấy
+                màn hình trắng, nên đưa thẳng sang trang thay thế. */}
+            <Route path="/map.html" element={<Navigate to="/tro-ly" replace />} />
+            <Route path="/admin.html" element={<Navigate to="/quan-tri" replace />} />
+            <Route path="*" element={<KhongTimThay />} />
           </Routes>
         </div>
 

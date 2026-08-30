@@ -35,12 +35,15 @@ def search_places(
     category: str = Query(None, description="Loại chi tiết, vd 'buddhist_temple'"),
     q: str = Query(None, description="Từ khoá trong tên"),
     has_photo: bool = Query(False),
+    place_type: str = Query("poi", description="poi | accommodation"),
     page: int = Query(1, ge=1),
     page_size: int = Query(24, ge=1, le=100),
 ):
+    if place_type not in ("poi", "accommodation"):
+        raise HTTPException(status_code=400, detail="place_type phải là poi hoặc accommodation.")
     return {"success": True, **destination_service.search_places(
         destination=destination, nhom=nhom, category=category, q=q,
-        has_photo=has_photo, page=page, page_size=page_size)}
+        has_photo=has_photo, page=page, page_size=page_size, bang=place_type)}
 
 
 @places_router.get("/{place_type}/{place_id}")

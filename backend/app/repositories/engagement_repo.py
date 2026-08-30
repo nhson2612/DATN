@@ -94,3 +94,28 @@ def update_booking_status(booking_id: int, status: str):
         "UPDATE booking_requests SET status = %s WHERE id = %s RETURNING id",
         (status, booking_id),
     ))
+
+
+# ── Thống kê cho trang quản trị ──────────────────────────────────────────────
+
+def thong_ke():
+    """Số liệu thật cho trang quản trị.
+
+    Đếm bằng `reltuples` của bộ lập kế hoạch chứ không `COUNT(*)`: hai bảng địa
+    điểm có hơn 850 nghìn dòng, đếm chính xác mỗi lần mở trang là quét toàn bảng.
+    Sai số vài phần nghìn không ảnh hưởng gì với một ô hiển thị tổng quan.
+    """
+    rows = execute_query(
+        """
+        SELECT
+          (SELECT reltuples::bigint FROM pg_class WHERE relname = 'poi')           AS poi,
+          (SELECT reltuples::bigint FROM pg_class WHERE relname = 'accommodation') AS luu_tru,
+          (SELECT count(*) FROM users)                                             AS nguoi_dung,
+          (SELECT count(*) FROM itineraries)                                       AS lich_trinh,
+          (SELECT count(*) FROM tours)                                             AS tour,
+          (SELECT count(*) FROM booking_requests WHERE status = 'moi')             AS dat_cho_moi,
+          (SELECT count(*) FROM tour_bookings)                                     AS dat_tour,
+          (SELECT count(*) FROM place_photos)                                      AS anh
+        """
+    )
+    return rows[0] if rows else {}

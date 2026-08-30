@@ -67,7 +67,7 @@ def get_destination(slug: str, limit_moi_nhom: int = 12):
 
 
 def search_places(destination=None, nhom=None, category=None, q=None,
-                  has_photo=False, page=1, page_size=24):
+                  has_photo=False, page=1, page_size=24, bang="poi"):
     """Danh sách địa điểm có lọc, dùng cho view lưới."""
     province_id = None
     if destination:
@@ -81,7 +81,7 @@ def search_places(destination=None, nhom=None, category=None, q=None,
 
     items, tong = destination_repo.search_places(
         province_id=province_id, roots=roots, category=category, q=q,
-        has_photo=has_photo, page=page, page_size=page_size)
+        has_photo=has_photo, page=page, page_size=page_size, bang=bang)
     return {"items": items, "total": tong, "page": page, "page_size": page_size}
 
 

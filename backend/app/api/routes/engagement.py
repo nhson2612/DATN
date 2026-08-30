@@ -11,6 +11,12 @@ logger = get_logger(__name__)
 
 fav_router = APIRouter(prefix="/api/favorites", tags=["favorites"])
 booking_router = APIRouter(prefix="/api/booking-requests", tags=["bookings"])
+admin_router = APIRouter(prefix="/api/admin", tags=["admin"])
+
+
+@admin_router.get("/stats")
+def stats(current_user: dict = Depends(get_current_admin)):
+    return {"success": True, "stats": engagement_repo.thong_ke()}
 
 
 def _kiem_place_type(place_type: str):

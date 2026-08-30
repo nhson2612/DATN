@@ -129,7 +129,7 @@ def accommodations(province_id: int, limit: int = 12):
 
 
 def search_places(province_id=None, roots=None, category=None, q=None,
-                  has_photo=False, page=1, page_size=24):
+                  has_photo=False, page=1, page_size=24, bang="poi"):
     """Danh sách địa điểm có lọc + phân trang, cho view dạng lưới.
 
     Khác place_repo.all_as_geojson (trả GeoJSON cho bản đồ): ở đây trả danh sách
@@ -138,6 +138,13 @@ def search_places(province_id=None, roots=None, category=None, q=None,
     Baymard: 40% trang du lịch thiếu bộ lọc chuyên ngành và đó là lý do hàng đầu
     khiến người dùng bỏ đi giữa chừng.
     """
+    # Chỗ ở nằm ở bảng riêng `accommodation`, cột loại là `tourism` chứ không
+    # phải `amenity`. Trang quản trị cần sửa được cả hai, nên tham số hoá bảng
+    # thay vì viết một hàm gần-giống-hệt thứ hai.
+    if bang not in ("poi", "accommodation"):
+        raise ValueError(f"Bảng không hợp lệ: {bang!r}")
+    cot_loai = "amenity" if bang == "poi" else "tourism"
+
     dieu_kien = ["t.name !~ '^(POI|Accommodation|Road) [0-9]+$'"]
     params = []
 
@@ -148,7 +155,7 @@ def search_places(province_id=None, roots=None, category=None, q=None,
         dieu_kien.append("t.tags->>'category_root' = ANY(%s)")
         params.append(list(roots))
     if category:
-        dieu_kien.append("t.amenity = %s")
+        dieu_kien.append(f"t.{cot_loai} = %s")
         params.append(category)
     if q:
         # norm_txt + chỉ mục trigram đã tạo sẵn cho search_service, dùng lại.
@@ -162,17 +169,17 @@ def search_places(province_id=None, roots=None, category=None, q=None,
 
     rows = execute_query(
         f"""
-        SELECT t.id, t.name, t.amenity AS category, 'poi' AS type,
+        SELECT t.id, t.name, t.{cot_loai} AS category, '{bang}' AS type,
                ST_X(t.geom) AS lon, ST_Y(t.geom) AS lat,
                t.tags->>'addr:street' AS dia_chi,
                t.tags->>'phone'       AS dien_thoai,
                t.tags->>'website'     AS website,
                ph.url                 AS anh,
                count(*) OVER ()       AS tong
-        FROM poi t
-        LEFT JOIN place_photos ph ON ph.place_type = 'poi' AND ph.place_id = t.id
+        FROM {bang} t
+        LEFT JOIN place_photos ph ON ph.place_type = '{bang}' AND ph.place_id = t.id
         WHERE {where}
-        ORDER BY (t.amenity = 'landmark_and_historical_building'),
+        ORDER BY (t.{cot_loai} = 'landmark_and_historical_building'),
                  (ph.url IS NULL),
                  (t.name !~ '^[A-Za-zÀ-ỹ0-9]'),
                  t.name
