@@ -26,8 +26,20 @@ function khoangCach(met) {
   return met < 1000 ? `${Math.round(met)} m` : `${(met / 1000).toFixed(1)} km`;
 }
 
+const KHOA_LUU = "tro-ly-hoi-dap";
+
+/* Đọc lại hội thoại của tab này. sessionStorage chứ không localStorage: mở tab
+ * mới là một phiên tìm mới, không nên thừa hưởng câu hỏi của tab khác. */
+function doc_hoi_thoai() {
+  try {
+    return JSON.parse(sessionStorage.getItem(KHOA_LUU) || "[]");
+  } catch {
+    return [];
+  }
+}
+
 export default function Assistant() {
-  const [luot, setLuot] = useState([]);        // [{hoi, dap, anchor, results}]
+  const [luot, setLuot] = useState(doc_hoi_thoai);  // [{hoi, dap, anchor, results}]
   const [cauHoi, setCauHoi] = useState("");
   const [dangHoi, setDangHoi] = useState(false);
   const [loi, setLoi] = useState("");
@@ -40,6 +52,10 @@ export default function Assistant() {
   const [dangTinh, setDangTinh] = useState(false);
 
   const cuoiRef = useRef(null);
+  // Câu hỏi nào đã tự bắn từ ?q= rồi. StrictMode ở dev gọi effect hai lần, và
+  // effect còn chạy lại mỗi khi router tạo lại đối tượng params — không chốt
+  // thì một lần mở trang bắn 4 request và tốn 4 lượt gọi LLM.
+  const daTuBan = useRef(new Set());
   const moiNhat = luot[luot.length - 1];
   const [params, setParams] = useSearchParams();
 
@@ -55,11 +71,31 @@ export default function Assistant() {
     cuoiRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [luot, dangHoi]);
 
+  // Giữ hội thoại qua lần tải lại trang. Không lưu `results` (mỗi lượt tới 20
+  // địa điểm kèm GeoJSON, vượt hạn mức sessionStorage sau vài câu) — bản đồ vẽ
+  // lại từ lượt mới nhất, còn các lượt cũ chỉ cần phần chữ.
+  useEffect(() => {
+    try {
+      const gon = luot.map((t, i) =>
+        i === luot.length - 1 ? t : { ...t, results: [] });
+      sessionStorage.setItem(KHOA_LUU, JSON.stringify(gon));
+    } catch {
+      /* hết chỗ hoặc trình duyệt chặn — không đáng làm hỏng trang */
+    }
+  }, [luot]);
+
   // ?q=... để câu hỏi thành đường dẫn chia sẻ được, và để chỗ khác trong trang
   // (ô tìm ở trang chủ chẳng hạn) dẫn thẳng sang đây kèm câu hỏi.
+  //
+  // KHÔNG bắn lại nếu câu đó đã có câu trả lời trong hội thoại: tải lại trang
+  // vốn chỉ để xem lại thứ đang có, mà mỗi lượt bắn lại tốn một lượt gọi LLM
+  // và xoá sạch các câu hỏi trước đó.
   const qUrl = params.get("q");
   useEffect(() => {
-    if (qUrl) hoi(qUrl);
+    if (!qUrl || daTuBan.current.has(qUrl)) return;
+    daTuBan.current.add(qUrl);
+    const da_hoi = doc_hoi_thoai().some((t) => (t.goc || t.hoi) === qUrl && t.dap);
+    if (!da_hoi) hoi(qUrl);
     // Chỉ chạy khi đường dẫn đổi, không chạy lại theo state trong trang.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qUrl]);
@@ -101,6 +137,12 @@ export default function Assistant() {
     } finally {
       setDangHoi(false);
     }
+  }
+
+  function xoaHoiThoai() {
+    setLuot([]); setChon(null); setLoi("");
+    try { sessionStorage.removeItem(KHOA_LUU); } catch { /* bỏ qua */ }
+    setParams({}, { replace: true });
   }
 
   // Bấm bản đồ chỉ có tác dụng khi đang ở chế độ chỉ đường — nếu không, mọi cú
@@ -154,11 +196,20 @@ export default function Assistant() {
 
         {/* ── Cột trái: hỏi đáp ─────────────────────────────────────────── */}
         <div className="flex flex-col min-h-0">
-          <div className="mb-3">
-            <h1 className="text-xl font-bold">Trợ lý bản đồ</h1>
-            <p className="text-sm text-zinc-500">
-              Hỏi bằng tiếng Việt, kết quả hiện ngay trên bản đồ bên cạnh.
-            </p>
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-xl font-bold">Trợ lý bản đồ</h1>
+              <p className="text-sm text-zinc-500">
+                Hỏi bằng tiếng Việt, kết quả hiện ngay trên bản đồ bên cạnh.
+              </p>
+            </div>
+            {luot.length > 0 && (
+              <button onClick={xoaHoiThoai}
+                      className="text-sm text-zinc-400 hover:text-zinc-700
+                                 dark:hover:text-zinc-200 shrink-0 mt-1">
+                Xoá hội thoại
+              </button>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-[240px]">
