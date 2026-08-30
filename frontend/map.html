@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoAI Tourism - Bản đồ Du lịch Đà Nẵng</title>
+
+    <!-- MapLibre GL -->
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Modular Component Stylesheets -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/routing.css">
+    <link rel="stylesheet" href="css/itinerary.css">
+    <link rel="stylesheet" href="css/explore.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+
+    <!-- Landing Page (Shown when not logged in) -->
+    <div id="landing-page" style="display: none;">
+        <!-- Dynamically loaded from components/landing.html -->
+    </div>
+
+    <div id="app-container">
+        <!-- Sidebar Placeholder (dynamically loaded) -->
+        <div id="sidebar-container">
+            <div style="text-align: center; padding: 40px 0; color: var(--text-secondary); width: 250px;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 12px; color: var(--accent-glow);"></i>
+                <p>Đang tải giao diện hệ thống...</p>
+            </div>
+        </div>
+
+        <!-- Map View Container & Overlay Widgets -->
+        <div class="map-view-wrapper" style="flex: 1; height: 100vh; position: relative;">
+            <div id="map" style="width: 100%; height: 100%;"></div>
+
+            <!-- Top Left Floating Search Input -->
+            <div class="map-search-bar">
+                <input type="text" id="map-search-input" placeholder="Tìm địa điểm, khách sạn, nhà hàng...">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            </div>
+
+            <!-- Top Right Floating System Status & Map Styles -->
+            <div class="map-top-right-widgets">
+                <!-- Connected status badge -->
+                <div class="system-status-badge">
+                    <span class="pulse-dot"></span>
+                    <div class="status-info">
+                        <strong>Đã kết nối & Hệ thống hoạt động</strong>
+                        <span>PostGIS • pgRouting • VN-2000 UTM Zone 49N</span>
+                    </div>
+                </div>
+
+                <!-- Map Type Selectors -->
+                <div class="map-type-selector">
+                    <button class="style-btn active" onclick="changeMapStyle('streets')"><i class="fa-solid fa-map"></i> Bản đồ</button>
+                    <button class="style-btn" onclick="changeMapStyle('satellite')"><i class="fa-solid fa-satellite"></i> Vệ tinh</button>
+                    <button class="style-btn" onclick="changeMapStyle('3d')"><i class="fa-solid fa-cube"></i> 3D</button>
+                    <button class="style-btn" onclick="changeMapStyle('traffic')"><i class="fa-solid fa-traffic-light"></i> Giao thông</button>
+                </div>
+            </div>
+
+            <!-- Right Floating Layer Filter Panel -->
+            <div class="map-right-filters-card">
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-hotel" checked onchange="toggleFilter('hotel')">
+                    <label for="filter-hotel"><i class="fa-solid fa-hotel icon-hotel"></i> Khách sạn</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-restaurant" checked onchange="toggleFilter('restaurant')">
+                    <label for="filter-restaurant"><i class="fa-solid fa-utensils icon-restaurant"></i> Nhà hàng</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-attraction" checked onchange="toggleFilter('attraction')">
+                    <label for="filter-attraction"><i class="fa-solid fa-tree icon-attraction"></i> Điểm tham quan</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-cafe" checked onchange="toggleFilter('cafe')">
+                    <label for="filter-cafe"><i class="fa-solid fa-mug-hot icon-cafe"></i> Cà phê</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filter-other" checked onchange="toggleFilter('other')">
+                    <label for="filter-other"><i class="fa-solid fa-location-dot icon-other"></i> Khác</label>
+                </div>
+                <button class="btn-advanced-filter" onclick="alert('Bộ lọc nâng cao đang được phát triển!')"><i class="fa-solid fa-sliders"></i> Bộ lọc nâng cao</button>
+            </div>
+
+            <!-- Bottom Left Radius Selector -->
+            <div class="map-radius-selector-card">
+                <h4>Tìm kiếm quanh đây</h4>
+                <div class="radius-options">
+                    <button class="radius-btn" onclick="setSearchRadius(500)">500m</button>
+                    <button class="radius-btn active" onclick="setSearchRadius(1000)">1km</button>
+                    <button class="radius-btn" onclick="setSearchRadius(2000)">2km</button>
+                    <button class="radius-btn" onclick="setSearchRadius(5000)">5km</button>
+                </div>
+            </div>
+
+            <!-- Bottom Right Zoom & Center Controls -->
+            <div class="map-zoom-controls">
+                <button class="zoom-btn target-btn" onclick="locateUser()"><i class="fa-solid fa-location-crosshairs"></i></button>
+                <div class="zoom-btn-group">
+                    <button class="zoom-btn" onclick="mapZoomIn()"><i class="fa-solid fa-plus"></i></button>
+                    <button class="zoom-btn" onclick="mapZoomOut()"><i class="fa-solid fa-minus"></i></button>
+                </div>
+            </div>
+
+            <!-- Bottom Suggestion Slider (Gợi ý cho bạn) -->
+            <div class="map-bottom-suggestions">
+                <div class="suggestions-header">
+                    <h3>Gợi ý cho bạn</h3>
+                    <a href="#" class="see-all-link" onclick="alert('Đang tải toàn bộ danh sách gợi ý!')">Xem tất cả</a>
+                </div>
+                <div class="suggestions-slider-row">
+                    <div class="suggestion-slide-card" onclick="fillChatSuggestion('Tìm khách sạn 4 sao gần vị trí của tôi')">
+                        <div class="slide-icon blue-icon"><i class="fa-solid fa-hotel"></i></div>
+                        <div class="slide-info">
+                            <h4>Khách sạn gần bạn</h4>
+                            <p>Tìm khách sạn chất lượng xung quanh vị trí hiện tại</p>
+                        </div>
+                    </div>
+                    <div class="suggestion-slide-card" onclick="fillChatSuggestion('Tìm nhà hàng hải sản ngon gần đây dưới 1.5km')">
+                        <div class="slide-icon orange-icon"><i class="fa-solid fa-utensils"></i></div>
+                        <div class="slide-info">
+                            <h4>Nhà hàng hải sản</h4>
+                            <p>Khám phá nhà hàng hải sản ngon gần bạn</p>
+                        </div>
+                    </div>
+                    <div class="suggestion-slide-card" onclick="fillChatSuggestion('Gợi ý điểm du lịch tham quan nổi tiếng ở Đà Nẵng')">
+                        <div class="slide-icon green-icon"><i class="fa-solid fa-tree"></i></div>
+                        <div class="slide-info">
+                            <h4>Điểm tham quan</h4>
+                            <p>Top địa điểm không thể bỏ qua khi đến Đà Nẵng</p>
+                        </div>
+                    </div>
+                    <div class="suggestion-slide-card" onclick="switchTab('itinerary-tab')">
+                        <div class="slide-icon purple-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div class="slide-info">
+                            <h4>Lịch trình gợi ý</h4>
+                            <p>AI tạo lịch trình phù hợp với sở thích của bạn</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Auth Modal Overlay Placeholder (dynamically loaded) -->
+    <div id="auth-modal-container"></div>
+
+    <!-- Modular Component Logic Scripts -->
+    <script src="js/config.js" onerror="window.APP_CONFIG={}"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/routing.js"></script>
+    <script src="js/itinerary.js"></script>
+    <script src="js/explore.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>
