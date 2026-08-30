@@ -13,7 +13,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from app.core.logging import get_logger, log_duration
 from app.schemas.requests import ChatRequest
-from app.services import geo_ip_service, search_service
+from app.services import geo_ip_service, search_agent
 
 router = APIRouter(prefix="/api", tags=["chat"])
 logger = get_logger(__name__)
@@ -56,7 +56,16 @@ def chat(request: ChatRequest, raw_req: Request):
     logger.info("Câu hỏi: %r (vị trí %.4f, %.4f)", question[:120], lon, lat)
 
     with log_duration(logger, "Tìm kiếm địa điểm"):
-        res = search_service.search(question, lon, lat)
+        res = search_agent.search(question, lon, lat,
+                                  resolved_admin=request.resolved_admin)
+
+    # Địa danh nhập nhằng: hỏi lại thay vì đoán bừa rồi trả kết quả sai tỉnh.
+    if res.get("hoi_lai"):
+        logger.info("Hỏi lại người dùng: %s", res["hoi_lai"])
+        return {"success": True, "results": [], "anchor": None,
+                "explanation": res["hoi_lai"],
+                "candidates": res.get("candidates", []),
+                "che_do": res.get("che_do")}
 
     results = res["results"]
     anchor = res.get("anchor")
@@ -94,4 +103,7 @@ def chat(request: ChatRequest, raw_req: Request):
         "anchor": anchor,
         "keywords": res.get("keywords"),
         "explanation": explanation,
+        # Cho frontend và luận văn thấy agent đã đi qua những bước nào.
+        "che_do": res.get("che_do"),
+        "cac_buoc": res.get("cac_buoc"),
     }

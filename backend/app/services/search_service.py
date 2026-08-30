@@ -48,7 +48,12 @@ STOPWORDS = {
 
 MAX_NGRAM = 5          # "bãi biển Non Nước Đà Nẵng" = 5 từ
 MIN_ANCHOR_LEN = 5     # tên ngắn hơn dễ khớp bừa ("An", "Hòa")
-DEFAULT_RADIUS_M = 3000
+
+# Bán kính khi KHÔNG có mốc (tìm quanh vị trí người dùng). Chỉ dùng cho đúng
+# trường hợp đó — mốc là vùng thì tìm trong vùng, mốc là điểm thì bán kính suy
+# từ cỡ của chính mốc (xem ban_kinh_quanh_diem).
+RADIUS_QUANH_TOI_M = 3000
+DEFAULT_RADIUS_M = RADIUS_QUANH_TOI_M   # tên cũ, giữ cho mã đang import
 DEFAULT_LIMIT = 20
 # Số lượt thử rút gọn từ khoá và ngưỡng "đã đủ kết quả" — mỗi lượt là một
 # truy vấn nên không thử hết mọi cụm con.
@@ -99,7 +104,8 @@ def _ngrams(text: str):
 def find_anchor(place_part: str, lon: float, lat: float):
     """Cụm nào trong câu hỏi là TÊN một địa điểm/địa giới có thật trong DB?
 
-    Trả về (loại, tên, geom_wkb) hoặc None. Đây là chỗ thay cho việc bắt LLM
+    Trả về dict {kind, id, name, la_vung, lon, lat} hoặc None. Đây là chỗ thay
+    cho việc bắt LLM
     đoán trước "Mỹ Khê" là phường hay là bãi biển: cứ tra DB, cái nào có thì
     dùng cái đó. Trùng tên ở nhiều tỉnh thì lấy cái gần người dùng nhất.
     """
@@ -111,7 +117,7 @@ def find_anchor(place_part: str, lon: float, lat: float):
         """
         WITH g(t) AS (SELECT unnest(%s::text[])),
         hits AS (
-            SELECT 'boundary' AS kind, b.name, b.geom, g.t,
+            SELECT 'boundary' AS kind, b.id, b.name, b.geom, g.t,
                    ST_Distance(ST_Centroid(b.geom)::geography,
                                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography) AS d
             -- Khớp cả khi người dùng gõ TẮT tên địa giới: CSDL lưu "Phường Sơn
@@ -124,14 +130,19 @@ def find_anchor(place_part: str, lon: float, lat: float):
                      '^(phuong|xa|quan|huyen|thi xa|thi tran|thanh pho|tinh) ',
                      '') = g.t
             UNION ALL
-            SELECT 'poi', p.name, p.geom, g.t,
+            SELECT 'poi', p.id, p.name, p.geom, g.t,
                    ST_Distance(p.geom::geography,
                                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)
             FROM poi p JOIN g ON norm_txt(p.name) = g.t
         )
+        -- Trả `id` chứ không trả WKT: đa giác tỉnh dài 91.636 ký tự, mà mỗi
+        -- câu hỏi gọi _tim tới 7 lượt (có vòng rút gọn từ khoá) nên sẽ phải
+        -- đẩy hơn 600 KB toạ độ qua kết nối cho một câu hỏi.
+        --
         -- Toạ độ tâm để bản đồ chấm được mốc: người dùng phải NHÌN THẤY hệ
         -- thống hiểu "gần Mỹ Khê" là gần chỗ nào, mới biết ngay khi nó hiểu sai.
-        SELECT kind, name, ST_AsText(geom) AS wkt, t,
+        SELECT kind, id, name, t,
+               ST_GeometryType(geom) <> 'ST_Point' AS la_vung,
                ST_X(ST_Centroid(geom)) AS lon, ST_Y(ST_Centroid(geom)) AS lat
         FROM hits
         ORDER BY length(t) DESC, d ASC
@@ -142,70 +153,154 @@ def find_anchor(place_part: str, lon: float, lat: float):
     if not rows:
         return None
     r = rows[0]
-    logger.info("Mốc vị trí: %s %r (khớp cụm %r)", r["kind"], r["name"], r["t"])
+    logger.info("Mốc vị trí: %s %r %s (khớp cụm %r)", r["kind"], r["name"],
+                "[vùng]" if r["la_vung"] else "[điểm]", r["t"])
     return r
 
 
-def _tim(kw, anchor, lon, lat, limit):
-    """Chạy một lượt tìm với từ khoá cho trước."""
-    """Câu hỏi tiếng Việt -> danh sách địa điểm, xếp theo độ khớp và khoảng cách."""
-    # Mốc có thì đo từ mốc, không thì đo từ vị trí người dùng.
-    if anchor:
-        ref_sql = "ST_GeomFromText(%s, 4326)"
-        ref_param = anchor["wkt"]
-    else:
-        ref_sql = "ST_SetSRID(ST_MakePoint(%s, %s), 4326)"
-        ref_param = None
+def ban_kinh_quanh_diem(moc):
+    """Bán kính hợp lý quanh MỘT MỐC, suy từ cỡ của chính mốc.
 
-    center = "ST_Centroid(%s)" % ref_sql
-    params = ([ref_param] if ref_param else [lon, lat])
+    Không có mốc thì tìm quanh người dùng — 3km là tầm đi lại trong thành phố.
+    Có mốc là điểm (bãi biển, chợ, một quán) thì cũng 3km.
+    "Gần <một vùng>" thì bán kính phải theo cỡ vùng: gần Hà Nội khác gần một
+    phường. Lấy cạnh hình vuông cùng diện tích chia đôi.
+    """
+    if not moc or not moc.get("la_vung"):
+        return RADIUS_QUANH_TOI_M
+    rows = execute_query(
+        f"""SELECT sqrt(ST_Area(geom::geography)) / 2 AS r
+            FROM {'boundaries' if moc['kind'] == 'boundary' else 'poi'}
+            WHERE id = %s""",
+        (moc["id"],),
+    )
+    return float(rows[0]["r"]) if rows and rows[0]["r"] else RADIUS_QUANH_TOI_M
+
+
+def anchor_candidates(place_part: str, lon: float, lat: float, limit: int = 6):
+    """Mọi địa danh CÓ THẬT khớp tên, gần người dùng trước.
+
+    Agent nhiều bước cần cả danh sách để chọn hoặc hỏi lại người dùng, chứ không
+    chỉ cái đầu tiên như find_anchor. Đây là chỗ chặn LLM bịa địa danh: nó chỉ
+    được chọn trong những dòng thật sự có trong CSDL.
+    """
+    grams = _ngrams(_norm(place_part)) or ([_norm(place_part)] if place_part else [])
+    if not grams:
+        return []
+    return execute_query(
+        """
+        WITH g(t) AS (SELECT unnest(%s::text[])),
+        hits AS (
+            SELECT 'boundary' AS kind, b.id, b.name, b.geom, g.t,
+                   ST_Distance(ST_Centroid(b.geom)::geography,
+                               ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography) AS d
+            FROM boundaries b JOIN g
+              ON norm_txt(b.name) = g.t
+              OR regexp_replace(norm_txt(b.name),
+                     '^(phuong|xa|quan|huyen|thi xa|thi tran|thanh pho|tinh) ',
+                     '') = g.t
+            UNION ALL
+            SELECT 'poi', p.id, p.name, p.geom, g.t,
+                   ST_Distance(p.geom::geography,
+                               ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)
+            FROM poi p JOIN g ON norm_txt(p.name) = g.t
+        )
+        SELECT DISTINCT ON (name) kind, id, name, t, d,
+               ST_GeometryType(geom) <> 'ST_Point' AS la_vung,
+               ST_X(ST_Centroid(geom)) AS lon, ST_Y(ST_Centroid(geom)) AS lat
+        FROM hits
+        ORDER BY name, length(t) DESC, d ASC
+        """,
+        (grams, lon, lat, lon, lat),
+    ) or []
+
+
+def tim_theo_pham_vi(kw, moc, lon, lat, limit, *, trong_vung, ban_kinh):
+    """Tìm với phạm vi do người gọi quyết — dùng bởi agent nhiều bước.
+
+    Tách khỏi _tim để agent điều khiển được phạm vi qua từng vòng, thay vì phạm
+    vi bị chôn trong hằng số.
+    """
+    return _chay_tim(_norm(kw), moc, lon, lat, limit,
+                     trong_vung=trong_vung, ban_kinh=ban_kinh)
+
+
+def _tim(kw, anchor, lon, lat, limit):
+    """Một lượt tìm của đường TẤT ĐỊNH (không LLM).
+
+    Phạm vi suy thẳng từ hình dạng mốc: mốc là vùng thì tìm trong ranh giới, mốc
+    là điểm thì bán kính quanh nó. Bản cũ ép mọi trường hợp về "3km quanh TÂM
+    mốc" — tỉnh Hà Tĩnh cạnh 77km, tâm rơi vào vùng núi, nên trong tỉnh có 101
+    quán cà phê mà truy vấn trả 0.
+    """
+    trong_vung = bool(anchor and anchor["la_vung"])
+    return _chay_tim(kw, anchor, lon, lat, limit,
+                     trong_vung=trong_vung,
+                     ban_kinh=None if trong_vung else ban_kinh_quanh_diem(anchor))
+
+
+def _chay_tim(kw, moc, lon, lat, limit, *, trong_vung, ban_kinh):
+    """Truy vấn thật. Phạm vi do người gọi quyết, hàm này không tự đặt hằng số."""
+    if moc:
+        # Tham chiếu mốc bằng id, không đẩy WKT qua kết nối: đa giác một tỉnh dài
+        # 91.636 ký tự và một câu hỏi có thể chạy hàm này nhiều lượt.
+        bang = "boundaries" if moc["kind"] == "boundary" else "poi"
+        moc_sql = f"(SELECT geom FROM {bang} WHERE id = %s)"
+        moc_params = (moc["id"],)
+    else:
+        moc_sql = "ST_SetSRID(ST_MakePoint(%s, %s), 4326)"
+        moc_params = (lon, lat)
+
+    def dieu_kien(bi_danh):
+        if trong_vung:
+            return f"ST_Intersects({bi_danh}.geom, ref.g)", ()
+        return (f"ST_DWithin({bi_danh}.geom::geography, ref.g::geography, %s)",
+                (float(ban_kinh or RADIUS_QUANH_TOI_M),))
+
+    loc_poi, p_poi = dieu_kien("p")
+    loc_acc, p_acc = dieu_kien("a")
 
     rows = execute_query(
         f"""
-        WITH ref AS (SELECT {center} AS g),
+        -- `g` là hình dạng thật của mốc, dùng để LỌC.
+        -- `tam` chỉ dùng đo khoảng cách hiển thị và xếp thứ tự.
+        WITH ref AS (SELECT {moc_sql} AS g),
         cand AS (
-            SELECT p.id, 'poi' AS type, p.name, p.amenity AS category, p.geom,
-                   similarity(norm_txt(p.name), norm_txt(%s))            AS s_name,
-                   similarity(norm_txt(coalesce(p.amenity,'')), norm_txt(%s)) AS s_cat
+            SELECT p.id, 'poi' AS type, p.name, p.amenity AS category, p.geom
             FROM poi p, ref
             WHERE (norm_txt(p.name) %% norm_txt(%s)
                    OR norm_txt(coalesce(p.amenity,'')) %% norm_txt(%s))
-              AND ST_DWithin(p.geom::geography, ref.g::geography, %s)
+              AND {loc_poi}
             UNION ALL
-            SELECT a.id, 'accommodation', a.name, a.tourism, a.geom,
-                   similarity(norm_txt(a.name), norm_txt(%s)),
-                   similarity(norm_txt(coalesce(a.tourism,'')), norm_txt(%s))
+            SELECT a.id, 'accommodation', a.name, a.tourism, a.geom
             FROM accommodation a, ref
             WHERE (norm_txt(a.name) %% norm_txt(%s)
                    OR norm_txt(coalesce(a.tourism,'')) %% norm_txt(%s))
-              AND ST_DWithin(a.geom::geography, ref.g::geography, %s)
-        )
-        -- id + type để frontend mở được trang chi tiết /dia-diem/{type}/{id};
-        -- thiếu hai cột này thì kết quả hỏi đáp chỉ là chấm trên bản đồ, bấm
-        -- vào không đi đâu được.
+              AND {loc_acc}
+        ),
+        tam AS (SELECT ST_Centroid(g) AS p FROM ref)
+        -- id + type để frontend mở được trang chi tiết; thiếu hai cột này thì kết
+        -- quả hỏi đáp chỉ là chấm trên bản đồ, bấm vào không đi đâu được.
         SELECT id, type, name, category,
                ST_X(geom) AS lon, ST_Y(geom) AS lat,
-               -- geom dạng GeoJSON cho các điểm không phải Point (ranh giới,
-               -- toà nhà): lon/lat rời chỉ đủ cho marker chấm tròn.
+               -- geom GeoJSON cho thứ không phải Point (ranh giới, toà nhà).
                ST_AsGeoJSON(geom)::json AS geom,
-               round(ST_Distance(geom::geography, (SELECT g FROM ref)::geography)) AS met
+               round(ST_Distance(geom::geography,
+                                 (SELECT p FROM tam)::geography)) AS met
         FROM cand
-        -- Sắp THUẦN theo khoảng cách.
+        -- Sắp THUẦN theo khoảng cách tới tâm mốc.
         --
         -- Không đưa độ khớp vào thứ tự: mệnh đề WHERE đã lọc bằng ngưỡng
-        -- similarity rồi, nên mọi dòng còn lại đều khớp đủ tốt — xếp thêm theo
-        -- độ khớp chỉ đẩy quán xa lên trước quán gần. Hỏi "quán cà phê gần đây"
-        -- từng trả về thứ tự 2157m, 2312m, 1761m, 825m vì lý do đó.
+        -- similarity rồi, nên mọi dòng còn lại đều khớp đủ tốt — xếp thêm theo độ
+        -- khớp chỉ đẩy quán xa lên trước quán gần. Hỏi "quán cà phê gần đây" từng
+        -- trả về thứ tự 2157m, 2312m, 1761m, 825m vì lý do đó.
         --
-        -- Cũng không có "điểm đánh giá" trong công thức: cột rating toàn giá trị
-        -- mặc định 4.0 (xem README §4).
-        ORDER BY ST_Distance(geom::geography, (SELECT g FROM ref)::geography) ASC
+        -- Cũng không có "điểm đánh giá": cột rating toàn 4.0 (xem README §4).
+        ORDER BY ST_Distance(geom::geography, (SELECT p FROM tam)::geography) ASC
         LIMIT %s
         """,
-        tuple(params) + (kw, kw, kw, kw, DEFAULT_RADIUS_M,
-                         kw, kw, kw, kw, DEFAULT_RADIUS_M, limit),
+        moc_params + (kw, kw) + p_poi + (kw, kw) + p_acc + (limit,),
     )
-
     return rows or []
 
 
