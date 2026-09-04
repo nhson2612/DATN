@@ -100,6 +100,8 @@ def chat(request: ChatRequest, raw_req: Request):
             ),
         }
 
+    from app.services import photo_service
+    photo_service.ensure_places_photos(results)
     explanation = _tom_tat(results, anchor, res.get("trong_vung", False))
 
     return {

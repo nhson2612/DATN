@@ -114,6 +114,71 @@ def _diem_den_geom(destination: str, lon: float, lat: float):
     return rows[0]["g"]
 
 
+# Mỗi bảng một câu riêng vì cột khác nhau. Chỉ lấy trường thực sự có dữ liệu,
+# đo trên chính CSDL này (gis_vietnam, 805k poi + 52k accommodation):
+#   loại       100%      -> luôn hiện được
+#   addr:street 92%      -> hiện khi có
+#   description 0%       -> cột rỗng hoàn toàn, vẫn trả về để trống chứ không bịa
+#   rating      1 giá trị duy nhất, stars và price_range rỗng -> không lấy
+# Địa chỉ nằm trong tags chứ không phải cột `address` (cột đó rỗng 100%).
+# NULLIF để chuỗi rỗng thành NULL, frontend khỏi phải đoán.
+SQL_CHI_TIET_STOP = {
+    "poi": """
+        SELECT id, name,
+               NULLIF(description, '')          AS mo_ta,
+               COALESCE(amenity, tourism)       AS category,
+               NULLIF(tags->>'addr:street', '') AS dia_chi,
+               NULLIF(tags->>'addr:city', '')   AS thanh_pho,
+               NULLIF(tags->>'phone', '')       AS phone,
+               NULLIF(tags->>'social', '')      AS social,
+               ST_X(geom) AS lon, ST_Y(geom) AS lat
+        FROM poi WHERE id = ANY(%s)
+    """,
+    "accommodation": """
+        SELECT id, name,
+               NULL::text                       AS mo_ta,
+               COALESCE(tourism, amenity)       AS category,
+               COALESCE(NULLIF(address, ''),
+                        NULLIF(tags->>'addr:street', '')) AS dia_chi,
+               NULLIF(tags->>'addr:city', '')   AS thanh_pho,
+               NULLIF(tags->>'phone', '')       AS phone,
+               NULLIF(tags->>'social', '')      AS social,
+               ST_X(geom) AS lon, ST_Y(geom) AS lat
+        FROM accommodation WHERE id = ANY(%s)
+    """,
+}
+
+
+SECTION_MAC_DINH = "muon-di"
+
+
+def chuan_hoa_stop(st):
+    """Đưa một stop về dạng mới.
+
+    Dạng cũ nhồi mọi thứ vào `day`: -1 là khách sạn, 0 là chưa xếp, 1..N là ngày.
+    Dạng mới tách hai khái niệm vốn độc lập: `section` (nằm ở mục nào trong phần
+    Tổng quan) và `day` (đã xếp vào ngày nào). Một địa điểm có thể vừa nằm trong
+    mục "Địa điểm muốn đi" vừa đã được xếp vào ngày 2 — dạng cũ không diễn tả
+    được điều đó. Chuyển đổi làm lúc đọc nên dữ liệu cũ không cần migrate.
+    """
+    day = st.get("day")
+    section = st.get("section")
+    role = st.get("role")
+
+    if role is None and section is None:          # bản ghi kiểu cũ
+        if day == -1:
+            role, section, day = "lodging", "luu-tru", None
+        else:
+            role, section = "place", SECTION_MAC_DINH
+
+    return {
+        **st,
+        "day": day if isinstance(day, int) and day >= 1 else None,
+        "section": section,
+        "role": role or "place",
+    }
+
+
 def hydrate_stops(stops):
     """`stops` chỉ lưu tham chiếu {day, type, id} -> tra ra chi tiết địa điểm.
 
@@ -127,23 +192,16 @@ def hydrate_stops(stops):
     if not stops:
         return []
 
+    stops = [chuan_hoa_stop(st) for st in stops if isinstance(st, dict)]
+
     theo_bang = {}
     for st in stops:
-        if isinstance(st, dict) and st.get("id") and st.get("type") in TABLES_HOP_LE:
+        if st.get("id") and st.get("type") in TABLES_HOP_LE:
             theo_bang.setdefault(st["type"], set()).add(st["id"])
 
     chi_tiet = {}
     for bang, ids in theo_bang.items():
-        # accommodation không có cột description, poi không có address.
-        cot_mo_ta = "description" if bang == "poi" else "address"
-        rows = execute_query(
-            f"""
-            SELECT id, name, {cot_mo_ta} AS mo_ta,
-                   ST_X(geom) AS lon, ST_Y(geom) AS lat
-            FROM {bang} WHERE id = ANY(%s)
-            """,
-            (list(ids),),
-        ) or []
+        rows = execute_query(SQL_CHI_TIET_STOP[bang], (list(ids),)) or []
         for r in rows:
             chi_tiet[(bang, r["id"])] = r
 
@@ -154,15 +212,23 @@ def hydrate_stops(stops):
             continue          # địa điểm đã bị xoá khỏi CSDL
         ket_qua.append({
             "day": st.get("day"),
+            "section": st.get("section"),
+            "role": st.get("role", "place"),
             "id": r["id"],
             "type": st["type"],
             "name": r["name"],
             "lon": r["lon"],
             "lat": r["lat"],
-            "details": {
-                "description": r["mo_ta"] if st["type"] == "poi" else None,
-                "address": r["mo_ta"] if st["type"] == "accommodation" else None,
-            },
+            "mo_ta": r["mo_ta"],
+            "category": r["category"],
+            "dia_chi": r["dia_chi"],
+            # Quận/huyện: cần cho link Google Maps, vì chỉ tên phố thì trùng
+            # khắp cả nước ("Phan Đình Phùng" có ở hàng chục tỉnh).
+            "thanh_pho": r["thanh_pho"],
+            "phone": r.get("phone"),
+            "social": r.get("social"),
+            # Giữ `details` cho chỗ nào còn đọc theo dạng cũ.
+            "details": {"description": r["mo_ta"], "address": r["dia_chi"]},
         })
     return ket_qua
 
@@ -272,8 +338,12 @@ def recommend(duration_days: int, preferences: str, budget: str,
         day["activities"] = kept
 
         features = []
-        for i in range(len(coords) - 1):
-            rows, violates = routing_service.leg_geometry(*coords[i], *coords[i + 1])
+        is_closed = len(kept) >= 2 and kept[0].get("place_type") == "accommodation"
+        legs_count = len(coords) if is_closed else len(coords) - 1
+        for i in range(legs_count):
+            c_start = coords[i]
+            c_end = coords[0] if (is_closed and i == len(coords) - 1) else coords[i + 1]
+            rows, violates = routing_service.leg_geometry(*c_start, *c_end)
             for row in rows:
                 if row.get("geom"):
                     features.append({

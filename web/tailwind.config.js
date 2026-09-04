@@ -4,7 +4,11 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
-      fontFamily: { sans: ['"Be Vietnam Pro"', "system-ui", "sans-serif"] },
+      fontFamily: {
+        sans: ['"Be Vietnam Pro"', "system-ui", "sans-serif"],
+        // Chỉ dùng cho đúng một dòng nhấn ở hero. Không dùng ở chỗ nào khác.
+        script: ['"Dancing Script"', "cursive"],
+      },
 
       // MỘT accent duy nhất cho cả trang. Trước đây có 13 cặp gradient khác nhau
       // (sky, blue, violet, rose, amber, emerald...) — mỗi khối một màu, thương

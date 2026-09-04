@@ -1,16 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-
 import { api } from "../api/client";
-
-/* Trang quản trị. Bốn việc admin thật sự phải làm: xem hệ thống có gì, sửa dữ
- * liệu địa điểm, và trả lời hai loại yêu cầu khách gửi lên (đặt chỗ lẻ và đặt
- * tour).
- *
- * Trang cũ có một panel "Nhật ký hoạt động gần đây" ghi sẵn hai dòng bịa
- * ("Đồng bộ hoá 24 điểm địa danh du lịch Đà Nẵng · 10 phút trước") không đọc từ
- * đâu cả. Bỏ hẳn: một con số sai còn tệ hơn không có con số.
- */
+import "./Admin.css";
 
 const TABS = [
   { id: "tong-quan", nhan: "Tổng quan" },
@@ -31,8 +22,6 @@ function so(n) {
 }
 
 export default function Admin({ user }) {
-  // Tab nằm trong đường dẫn: tải lại trang giữa lúc xử lý một danh sách yêu cầu
-  // đặt chỗ mà bị ném về Tổng quan là mất chỗ đang làm.
   const [params, setParams] = useSearchParams();
   const tab = TABS.some((t) => t.id === params.get("tab"))
     ? params.get("tab") : "tong-quan";
@@ -40,14 +29,14 @@ export default function Admin({ user }) {
 
   if (!user) {
     return (
-      <p className="max-w-6xl mx-auto px-4 py-16 text-center text-zinc-500">
+      <p className="admin-page text-center text-zinc-500 py-16">
         Cần đăng nhập bằng tài khoản quản trị.
       </p>
     );
   }
   if (user.role !== "admin") {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-16 text-center">
+      <div className="admin-page text-center py-16">
         <p className="text-zinc-600 dark:text-zinc-400">
           Tài khoản này không có quyền quản trị.
         </p>
@@ -57,17 +46,16 @@ export default function Admin({ user }) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-1">Quản trị</h1>
-      <p className="text-sm text-zinc-500 mb-6">{user.full_name || user.email}</p>
+    <div className="admin-page">
+      <h1 className="admin-page__title">Quản trị</h1>
+      <p className="admin-page__subtitle">{user.full_name || user.email}</p>
 
-      <div className="flex gap-1 border-b border-zinc-200 dark:border-zinc-800 mb-6 overflow-x-auto">
+      <div className="admin-page__tabs">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-                  className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition
-                    ${tab === t.id
-                      ? "border-accent-600 text-accent-700 dark:text-accent-500"
-                      : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}`}>
+                  className={`admin-page__tab-btn ${
+                    tab === t.id ? "admin-page__tab-btn--active" : ""
+                  }`}>
             {t.nhan}
           </button>
         ))}
@@ -93,7 +81,7 @@ function TongQuan() {
 
   if (loi) return <p className="text-sm text-red-600">{loi}</p>;
   if (!tk) return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="admin-page__stat-grid">
       {Array.from({ length: 8 }, (_, i) => <div key={i} className="skeleton h-24 rounded-card" />)}
     </div>
   );
@@ -110,11 +98,11 @@ function TongQuan() {
   ];
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="admin-page__stat-grid">
       {o.map((x) => (
-        <div key={x.nhan} className="ui-card p-4 bg-white dark:bg-zinc-900">
-          <p className="text-sm text-zinc-500">{x.nhan}</p>
-          <p className="text-2xl font-bold mt-1">{so(x.v)}</p>
+        <div key={x.nhan} className="admin-page__stat-card">
+          <p className="admin-page__stat-label">{x.nhan}</p>
+          <p className="admin-page__stat-val">{so(x.v)}</p>
           {x.chu && <p className="text-xs text-zinc-400 mt-1">{x.chu}</p>}
         </div>
       ))}
@@ -132,7 +120,7 @@ function DiaDiem() {
   const [trang, setTrang] = useState(1);
   const [dangTai, setDangTai] = useState(true);
   const [loi, setLoi] = useState("");
-  const [form, setForm] = useState(null);   // null = đóng; object = đang sửa/thêm
+  const [form, setForm] = useState(null);
 
   const PAGE = 20;
 
@@ -144,8 +132,6 @@ function DiaDiem() {
       .finally(() => setDangTai(false));
   }
 
-  // Gõ tới đâu tìm tới đó, nhưng chờ 400ms — gõ "khách sạn" mà bắn 8 request thì
-  // kết quả về không đúng thứ tự và hiện nhầm.
   useEffect(() => {
     const t = setTimeout(tai, 400);
     return () => clearTimeout(t);
@@ -161,8 +147,7 @@ function DiaDiem() {
 
   return (
     <div>
-      <div className="flex flex-wrap gap-3 items-center mb-4">
-        {/* POI và chỗ ở là hai bảng riêng trong CSDL, không gộp danh sách được. */}
+      <div className="admin-page__filter-bar">
         <select value={bang} onChange={(e) => { setBang(e.target.value); setTrang(1); }}
                 className="ui-field">
           <option value="poi">Địa điểm du lịch</option>
@@ -179,9 +164,9 @@ function DiaDiem() {
 
       {loi && <p className="text-sm text-red-600 mb-3">{loi}</p>}
 
-      <div className="ui-card bg-white dark:bg-zinc-900 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-left text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="admin-page__table-wrapper">
+        <table className="admin-page__table">
+          <thead className="admin-page__table-head">
             <tr>
               <th className="px-4 py-3 font-medium">Tên</th>
               <th className="px-4 py-3 font-medium">Loại</th>
@@ -281,19 +266,16 @@ function FormDiaDiem({ form, setForm, onXong }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-900/50 grid place-items-center p-4"
+    <div className="admin-page__modal"
          onClick={() => setForm(null)}>
       <form onClick={(e) => e.stopPropagation()} onSubmit={luu}
-            className="ui-card bg-white dark:bg-zinc-900 p-6 w-full max-w-lg
-                       max-h-[90vh] overflow-y-auto space-y-4">
+            className="admin-page__modal-form">
         <h2 className="text-lg font-bold">
           {form.id ? "Sửa địa điểm" : "Thêm địa điểm"}
         </h2>
 
         <label className="block">
           <span className="text-sm text-zinc-500">Phân loại</span>
-          {/* Đổi bảng của một bản ghi đã có nghĩa là chuyển dòng giữa hai bảng,
-              backend không làm được — nên khoá lại khi đang sửa. */}
           <select value={form.place_type} disabled={!!form.id}
                   onChange={(e) => dat("place_type", e.target.value)}
                   className="ui-field w-full mt-1 disabled:opacity-60">
@@ -489,9 +471,9 @@ function DatTour() {
   );
 
   return (
-    <div className="ui-card bg-white dark:bg-zinc-900 overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="text-left text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+    <div className="admin-page__table-wrapper">
+      <table className="admin-page__table">
+        <thead className="admin-page__table-head">
           <tr>
             <th className="px-4 py-3 font-medium">Khách</th>
             <th className="px-4 py-3 font-medium">Tour</th>

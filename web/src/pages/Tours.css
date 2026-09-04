@@ -1,0 +1,8 @@
+/* Tours Page Styles - Siêu gọn */
+.tours-page { @apply max-w-7xl mx-auto px-4 md:px-8 py-8; }
+.tours-page__header { @apply flex flex-wrap items-center justify-between gap-4 mb-8; }
+.tours-page__title { @apply text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50; }
+.tours-page__grid { @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6; }
+.tour-card { @apply rounded-2xl border border-slate-200/80 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden hover:border-emerald-600 transition cursor-pointer flex flex-col; }
+.tour-card__thumb { @apply h-48 w-full object-cover; }
+.tour-card__body { @apply p-5 flex-1 flex flex-col justify-between; }

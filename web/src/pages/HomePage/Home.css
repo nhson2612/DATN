@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+
+/* Wanderlust Custom Styling */
+.wanderlust-home {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #faf8ff;
+  color: #131b2e;
+  min-height: 100vh;
+}
+
+/* Headings font */
+.wl-hero__title,
+.wl-section-title,
+.wl-tour-card__title,
+.wl-idea-card__title,
+.wl-dest-card__name,
+.wl-footer__brand {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Hero Section */
+.wl-hero {
+  @apply max-w-7xl mx-auto px-4 md:px-8 py-16 flex flex-col items-center gap-8 text-center;
+}
+
+.wl-hero__header {
+  @apply max-w-3xl space-y-3;
+}
+
+.wl-hero__title {
+  @apply text-4xl md:text-6xl font-bold text-[#003527] leading-tight tracking-tight;
+}
+
+.wl-hero__subtitle {
+  @apply text-lg text-slate-600 font-medium max-w-xl mx-auto;
+}
+
+/* Search Box & Tabs */
+.wl-search-box {
+  @apply w-full max-w-4xl bg-white rounded-2xl shadow-lg p-3 border border-slate-200/60 space-y-4;
+}
+
+.wl-search-box__tabs {
+  @apply flex p-1.5 bg-slate-100 rounded-xl gap-2;
+}
+
+.wl-search-box__tab-btn {
+  @apply flex-1 py-3 text-center text-sm font-semibold rounded-lg text-slate-600 hover:text-[#003527] transition-all duration-200 cursor-pointer;
+}
+
+.wl-search-box__tab-btn--active {
+  @apply text-[#003527] bg-white shadow-sm font-bold;
+}
+
+.wl-search-form {
+  @apply flex flex-col md:flex-row gap-3 p-2;
+}
+
+.wl-input-group {
+  @apply relative flex-1 min-w-0;
+}
+
+.wl-input-icon {
+  @apply absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none;
+}
+
+.wl-input {
+  @apply w-full pl-11 pr-4 py-3.5 border border-slate-200 rounded-xl focus:border-[#003527] focus:ring-2 focus:ring-[#003527]/10 outline-none text-sm text-slate-800 placeholder:text-slate-400 bg-white font-medium transition-all;
+}
+
+.wl-btn-primary {
+  @apply bg-[#003527] text-white font-semibold text-sm px-8 py-3.5 rounded-xl hover:bg-[#064e3b] active:scale-95 transition-all shadow-md shrink-0 cursor-pointer;
+}
+
+/* Titles & Section Headers */
+.wl-section-title {
+  @apply text-2xl md:text-3xl font-bold text-[#003527];
+}
+
+.wl-section-subtitle {
+  @apply text-sm text-slate-500 font-medium mt-1;
+}
+
+.wl-link-more {
+  @apply text-sm font-bold text-[#003527] hover:underline flex items-center gap-2 cursor-pointer;
+}
+
+/* Horizontal Accordion Styling */
+.wl-accordion-container {
+  @apply min-h-[420px];
+}
+
+.wl-accordion-item {
+  will-change: flex, transform;
+}
+
+/* Tour Cards (Legacy Fallback) */
+.wl-tour-card {
+  @apply bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between;
+}
+
+.wl-tour-card__img-box {
+  @apply h-48 overflow-hidden relative bg-slate-100;
+}
+
+.wl-tour-card__img {
+  @apply w-full h-full object-cover group-hover:scale-105 transition-transform duration-500;
+}
+
+.wl-tour-card__rating {
+  @apply absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-slate-800 flex items-center gap-1 shadow-sm;
+}
+
+.wl-tour-card__body {
+  @apply p-5 space-y-2;
+}
+
+.wl-tour-card__title {
+  @apply text-lg font-bold text-[#003527] line-clamp-1 group-hover:text-emerald-700 transition-colors;
+}
+
+.wl-tour-card__duration {
+  @apply flex items-center gap-1.5 text-xs text-slate-500 font-medium;
+}
+
+.wl-tour-card__price {
+  @apply text-sm font-bold text-[#003527] pt-2 border-t border-slate-100 mt-2;
+}
+
+/* Itinerary Idea Cards */
+.wl-idea-card {
+  @apply bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col md:flex-row cursor-pointer;
+}
+
+.wl-idea-card__img {
+  @apply w-full h-full object-cover group-hover:scale-105 transition-transform duration-700;
+}
+
+.wl-idea-card__title {
+  @apply text-xl font-bold text-[#003527];
+}
+
+/* Timeline */
+.wl-timeline {
+  @apply flex flex-col gap-3 relative pl-6 border-l-2 border-slate-200 py-1;
+}
+
+.wl-timeline__item {
+  @apply flex items-start gap-3 relative;
+}
+
+.wl-timeline__dot {
+  @apply w-3 h-3 rounded-full bg-slate-300 absolute -left-[31px] top-1.5 border-2 border-white ring-2 ring-slate-100;
+}
+
+.wl-timeline__dot--active {
+  @apply bg-[#003527] ring-[#003527]/20;
+}
+
+.wl-timeline__days {
+  @apply text-xs font-bold text-[#003527];
+}
+
+.wl-timeline__loc {
+  @apply text-xs text-slate-600 font-medium;
+}
+
+/* Destination Cards */
+.wl-dest-card {
+  @apply relative isolate overflow-hidden rounded-2xl aspect-[4/3] bg-slate-200 border border-slate-200/80 shadow-sm hover:shadow-md cursor-pointer transition-all;
+}
+
+.wl-dest-card__img {
+  @apply absolute inset-0 -z-10 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110;
+}
+
+.wl-dest-card__scrim {
+  @apply absolute inset-0 -z-10 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent;
+}
+
+.wl-dest-card__body {
+  @apply absolute inset-x-0 bottom-0 p-5 text-white;
+}
+
+.wl-dest-card__name {
+  @apply text-xl font-bold drop-shadow-sm;
+}
+
+.wl-dest-card__meta {
+  @apply text-xs text-slate-200 font-medium mt-1 flex items-center gap-1.5;
+}
+
+/* Footer */
+.wl-footer {
+  @apply bg-[#eaedff]/50 border-t border-slate-200/80 py-12 mt-20;
+}
+
+.wl-footer__brand {
+  @apply text-2xl font-bold text-[#003527];
+}

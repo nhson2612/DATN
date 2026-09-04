@@ -1,0 +1,148 @@
+.place-detail-page {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-[#faf8ff] transition-colors duration-200 min-h-screen text-slate-800 font-sans;
+}
+
+.place-detail-page__back-btn {
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 shadow-sm hover:bg-slate-50 hover:text-[#003527] transition-all mb-6 cursor-pointer;
+}
+
+/* Hero Image & Banner */
+.place-detail-page__hero {
+  @apply relative w-full h-[320px] sm:h-[420px] md:h-[460px] rounded-3xl overflow-hidden mb-8 shadow-md border border-slate-200/80 bg-slate-100;
+}
+
+.place-detail-page__hero-img {
+  @apply w-full h-full object-cover transition-transform duration-700 hover:scale-105;
+}
+
+.place-detail-page__hero-overlay {
+  @apply absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent;
+}
+
+.place-detail-page__hero-content {
+  @apply absolute bottom-0 inset-x-0 p-6 sm:p-10 text-white z-10 space-y-3;
+}
+
+.place-detail-page__badges {
+  @apply flex flex-wrap items-center gap-2 mb-2;
+}
+
+.place-detail-page__badge {
+  @apply px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-600/90 text-white backdrop-blur-md shadow-sm;
+}
+
+.place-detail-page__rating-badge {
+  @apply px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white backdrop-blur-md flex items-center gap-1 shadow-sm;
+}
+
+.place-detail-page__hero-title {
+  @apply text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-md font-sans;
+}
+
+.place-detail-page__hero-credit {
+  @apply text-xs text-slate-200/90 font-normal italic mt-1;
+}
+
+.place-detail-page__hero-placeholder {
+  @apply w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 gap-3;
+}
+
+/* Layout Grid */
+.place-detail-page__grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mb-12;
+}
+
+.place-detail-page__main {
+  @apply lg:col-span-2 space-y-8;
+}
+
+/* Info Section (Light Card) */
+.place-detail-page__section-card {
+  @apply bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6;
+}
+
+.place-detail-page__section-title {
+  @apply text-xl font-bold text-[#003527] flex items-center gap-2.5 border-b border-slate-100 pb-4 font-sans;
+}
+
+.place-detail-page__desc {
+  @apply text-sm sm:text-base text-slate-600 leading-relaxed font-normal;
+}
+
+.place-detail-page__info-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm;
+}
+
+.place-detail-page__info-item {
+  @apply flex items-start gap-3.5 p-4 rounded-2xl bg-[#f8f7f2] border border-slate-200/60;
+}
+
+.place-detail-page__info-icon {
+  @apply text-emerald-700 text-base mt-0.5 shrink-0;
+}
+
+.place-detail-page__info-text {
+  @apply text-slate-800 font-semibold break-words;
+}
+
+/* Sidebar & Action Card (Light Card) */
+.place-detail-page__sidebar {
+  @apply lg:col-span-1 sticky top-6 space-y-6;
+}
+
+.place-detail-page__action-card {
+  @apply bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-md space-y-4;
+}
+
+.place-detail-page__action-title {
+  @apply text-lg font-bold text-[#003527] mb-2 font-sans;
+}
+
+.place-detail-page__fav-btn {
+  @apply w-full py-3.5 px-4 rounded-2xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 border shadow-sm cursor-pointer;
+}
+
+.place-detail-page__fav-btn--active {
+  @apply bg-rose-50 text-rose-600 border-rose-200;
+}
+
+.place-detail-page__fav-btn--inactive {
+  @apply bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900;
+}
+
+.place-detail-page__book-btn {
+  @apply w-full py-3.5 px-4 rounded-2xl font-bold text-sm bg-[#003527] text-white hover:bg-emerald-900 transition-all duration-200 flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-95;
+}
+
+.place-detail-page__website-btn {
+  @apply w-full py-3 px-4 rounded-2xl font-semibold text-xs text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all flex items-center justify-center gap-2 border border-slate-200 text-center block;
+}
+
+.place-detail-page__disclaimer {
+  @apply text-xs text-slate-400 text-center leading-normal pt-2;
+}
+
+/* Nearby Section */
+.place-detail-page__nearby-section {
+  @apply bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm mt-8;
+}
+
+.place-detail-page__nearby-title {
+  @apply text-xl font-bold text-[#003527] mb-6 flex items-center gap-2.5 font-sans;
+}
+
+.place-detail-page__nearby-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4;
+}
+
+.place-detail-page__nearby-card {
+  @apply p-4 rounded-2xl bg-[#f8f7f2] border border-slate-200/60 hover:border-emerald-600 hover:shadow-md hover:bg-white transition-all cursor-pointer space-y-2;
+}
+
+.place-detail-page__nearby-name {
+  @apply font-bold text-sm text-slate-800 group-hover:text-[#003527] line-clamp-2 transition-colors;
+}
+
+.place-detail-page__nearby-dist {
+  @apply text-xs font-semibold text-slate-500 flex items-center gap-1.5;
+}

@@ -1,0 +1,163 @@
+/* Material 3 Trips Page Styles */
+.trips-page {
+  @apply max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8;
+}
+
+.trips-page__header {
+  @apply flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm;
+}
+
+.trips-page__title {
+  @apply text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900;
+}
+
+.trips-page__subtitle {
+  @apply text-sm text-slate-500 mt-1 font-medium;
+}
+
+.trips-page__create-btn {
+  @apply btn-primary;
+}
+
+.trips-page__grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+/* Modal tạo chuyến M3 */
+.trips-modal-overlay {
+  @apply fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200;
+}
+
+.trips-modal-card {
+  @apply bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 border border-slate-100;
+}
+
+.trips-modal-header {
+  @apply flex items-center justify-between border-b border-slate-100 pb-3;
+}
+
+.trips-modal-heading {
+  @apply text-lg font-bold text-slate-900;
+}
+
+.trips-modal-close {
+  @apply w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition-colors;
+}
+
+.trips-form-label {
+  @apply block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider;
+}
+
+.trips-modal-input {
+  @apply ui-field w-full;
+}
+
+.trips-modal-input--with-icon {
+  @apply pl-10;
+}
+
+.trips-modal-icon {
+  @apply absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs;
+}
+
+.trips-modal-dates {
+  @apply grid grid-cols-2 gap-3;
+}
+
+.trips-modal-hint {
+  @apply text-xs text-emerald-700 font-semibold bg-emerald-50 px-3 py-1.5 rounded-xl inline-block;
+}
+
+.trips-modal-footer {
+  @apply flex items-center justify-end gap-3 pt-3 border-t border-slate-100;
+}
+
+.trips-dropdown-list {
+  @apply absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200/80 rounded-2xl shadow-xl z-20 max-h-52 overflow-y-auto divide-y divide-slate-100 p-1;
+}
+
+.trips-dropdown-item {
+  @apply w-full px-3.5 py-2.5 text-left text-xs font-medium text-slate-700 hover:bg-emerald-50/70 hover:text-emerald-900 rounded-xl flex items-center gap-2.5 transition-colors;
+}
+
+/* Thẻ Chuyến đi M3 */
+.trips-card {
+  @apply ui-card p-6 flex flex-col justify-between space-y-4 relative cursor-pointer border border-slate-200/80 hover:border-emerald-500/50 hover:shadow-md transition-all;
+}
+
+.trips-card__header {
+  @apply flex items-start justify-between gap-3;
+}
+
+.trips-card__title {
+  @apply text-lg font-bold text-slate-900 hover:text-emerald-700 transition-colors line-clamp-1;
+}
+
+.trips-card__delete-btn {
+  @apply w-8 h-8 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors shrink-0;
+}
+
+.trips-card__dest {
+  @apply rounded-full px-3 py-1 text-xs font-semibold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200/50 inline-flex items-center gap-1.5 w-fit;
+}
+
+.trips-card__preview {
+  @apply space-y-2 py-1 text-xs text-slate-600 bg-slate-50/80 p-3 rounded-2xl border border-slate-100;
+}
+
+.trips-card__preview-item {
+  @apply flex items-center gap-2 truncate;
+}
+
+.trips-card__preview-icon {
+  @apply text-[10px] text-emerald-600 shrink-0;
+}
+
+.trips-card__preview-name {
+  @apply truncate font-medium;
+}
+
+.trips-card__preview-more {
+  @apply text-[11px] text-slate-400 font-medium pt-0.5;
+}
+
+.trips-card__empty {
+  @apply text-xs text-slate-400 italic py-2 bg-slate-50 p-3 rounded-2xl text-center;
+}
+
+.trips-card__footer {
+  @apply flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500 font-medium;
+}
+
+.trips-card__stat {
+  @apply flex items-center gap-1.5;
+}
+
+.trips-card__stat-icon {
+  @apply text-[11px] text-slate-400;
+}
+
+.trips-card__progress {
+  @apply rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200/50 inline-flex items-center gap-1;
+}
+
+/* Empty State M3 */
+.trips-empty {
+  @apply text-center py-16 ui-card bg-white p-8 space-y-4 max-w-md mx-auto;
+}
+
+.trips-empty__icon {
+  @apply w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mx-auto shadow-sm;
+}
+
+.trips-empty__title {
+  @apply text-xl font-bold text-slate-900;
+}
+
+.trips-empty__desc {
+  @apply text-sm text-slate-500 leading-relaxed;
+}
+
+.trips-empty__btn {
+  @apply btn-primary text-xs mt-2;
+}

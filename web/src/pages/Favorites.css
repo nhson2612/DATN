@@ -1,0 +1,23 @@
+.favorites-page {
+  @apply max-w-6xl mx-auto px-4 py-10;
+}
+
+.favorites-page__title {
+  @apply text-2xl font-bold tracking-tight mb-5 text-zinc-900 dark:text-zinc-50;
+}
+
+.favorites-page__message {
+  @apply text-zinc-500 text-sm;
+}
+
+.favorites-page__explore-btn {
+  @apply text-accent-700 dark:text-accent-500 font-medium hover:underline ml-1;
+}
+
+.favorites-page__grid {
+  @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-4;
+}
+
+.favorites-page__remove-btn {
+  @apply w-full py-2 text-xs text-zinc-400 hover:text-red-500 dark:hover:text-red-400 border-t border-zinc-100 dark:border-zinc-800 transition-colors;
+}

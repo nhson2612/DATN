@@ -10,6 +10,7 @@ import unicodedata
 
 from app.core.logging import get_logger
 from app.repositories import destination_repo
+from app.services import meta_service, photo_service
 
 logger = get_logger(__name__)
 
@@ -48,10 +49,12 @@ def get_destination(slug: str, limit_moi_nhom: int = 12):
         items = destination_repo.places_by_group(
             tinh["id"], cfg["roots"], limit_moi_nhom)
         if items:
+            photo_service.ensure_places_photos(items)
             nhom.append({"key": key, "ten": cfg["ten"], "items": items})
 
     luu_tru = destination_repo.accommodations(tinh["id"], limit_moi_nhom)
     if luu_tru:
+        photo_service.ensure_places_photos(luu_tru)
         nhom.append({"key": "luu_tru", "ten": "Nơi lưu trú", "items": luu_tru})
 
     logger.info("Điểm đến %r: %d nhóm, %d địa điểm",
@@ -82,20 +85,22 @@ def search_places(destination=None, nhom=None, category=None, q=None,
     items, tong = destination_repo.search_places(
         province_id=province_id, roots=roots, category=category, q=q,
         has_photo=has_photo, page=page, page_size=page_size, bang=bang)
+    photo_service.ensure_places_photos(items)
     return {"items": items, "total": tong, "page": page, "page_size": page_size}
 
 
 def place_detail(place_type: str, place_id: int):
-    """Chi tiết địa điểm + địa điểm lân cận.
-
-    Baymard: 57% trang du lịch thiếu bản đồ ở trang chi tiết, và 85% không link
-    ra nguồn đánh giá bên ngoài — người dùng không tin review nội bộ. Ở đây trả
-    kèm toạ độ (để vẽ bản đồ) và `website` (289.182 địa điểm có) thay vì tự dựng
-    hệ thống review.
-    """
+    """Chi tiết địa điểm + địa điểm lân cận."""
     place = destination_repo.get_place_detail(place_type, place_id)
     if not place:
         return None
+    # Đọc thẻ OpenGraph của website địa điểm tự khai: lấy mô tả, và lấy ảnh nếu
+    # các nguồn trước chưa có. Gọi ở đây chứ không lồng trong ensure_place_photo
+    # vì hàm đó return sớm ở nhánh ảnh Facebook — mô tả sẽ không bao giờ tới.
+    meta_service.bo_sung(place)
+    photo_service.ensure_place_photo(place)
     place["nearby"] = destination_repo.nearby(
         place["lon"], place["lat"], place_id if place_type == "poi" else -1)
+    photo_service.ensure_places_photos(place.get("nearby", []))
     return place
+

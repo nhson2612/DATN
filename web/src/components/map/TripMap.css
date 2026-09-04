@@ -1,0 +1,39 @@
+.trip-map {
+  @apply relative w-full h-full min-h-[400px] overflow-hidden rounded-3xl border border-slate-200/80 shadow-sm bg-slate-100;
+}
+
+.trip-map__canvas {
+  @apply w-full h-full;
+}
+
+.trip-map__empty-notice {
+  @apply absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200/80 shadow-md text-xs font-semibold text-slate-600 pointer-events-none;
+}
+
+.trip-map__overlay {
+  @apply absolute bottom-4 left-4 z-20 w-80 bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-4 space-y-3 transition-all duration-200;
+}
+
+.trip-map__header {
+  @apply flex items-center justify-between gap-2 pb-2 border-b border-slate-100;
+}
+
+.trip-map__add-btn {
+  @apply btn-primary text-[11px] !py-1 !px-2.5 flex items-center gap-1 shadow-sm;
+}
+
+.trip-map__close-btn {
+  @apply w-7 h-7 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors;
+}
+
+.trip-map__title {
+  @apply text-sm font-bold text-slate-900 line-clamp-1;
+}
+
+.trip-map__tags {
+  @apply flex flex-wrap gap-1.5 mt-1;
+}
+
+.trip-map__tag {
+  @apply text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600;
+}

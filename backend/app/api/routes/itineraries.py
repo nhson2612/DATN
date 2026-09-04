@@ -30,7 +30,8 @@ def create_itinerary(
     data: ItineraryCreateUpdate, current_user: dict = Depends(get_current_user)
 ):
     new_id = itinerary_repo.create(
-        current_user["id"], data.name, data.description, data.duration_days, data.stops
+        current_user["id"], data.name, data.description, data.duration_days,
+        data.stops, data.start_date, data.destination, data.sections,
     )
     return {"success": True, "id": new_id}
 
@@ -40,7 +41,10 @@ def update_itinerary(
     id: int, data: ItineraryCreateUpdate, current_user: dict = Depends(get_current_user)
 ):
     _require_owned(id, current_user["id"])
-    itinerary_repo.update(id, data.name, data.description, data.duration_days, data.stops)
+    itinerary_repo.update(
+        id, data.name, data.description, data.duration_days, data.stops,
+        data.start_date, data.destination, data.sections,
+    )
     return {"success": True, "id": id}
 
 
@@ -69,9 +73,13 @@ def optimize(id: int, day: int = Query(None, ge=1, description="Bỏ trống = t
     # Tối ưu trên bản ĐÃ TRA toạ độ, rồi lưu lại dạng tham chiếu {day,type,id}.
     chi_tiet = itinerary_service.hydrate_stops(lt.get("stops") or [])
     moi, thong_ke = route_optimizer.toi_uu_lich_trinh(chi_tiet, day)
+    # Ghi lại phải giữ nguyên section và role: chỉ lưu {day,type,id} như trước
+    # là xoá sạch việc địa điểm thuộc mục nào và đâu là chỗ ngủ.
     itinerary_repo.update(
         id, lt["name"], lt.get("description"), lt["duration_days"],
-        [{"day": s["day"], "type": s["type"], "id": s["id"]} for s in moi],
+        [{"day": s["day"], "type": s["type"], "id": s["id"],
+          "section": s.get("section"), "role": s.get("role", "place")} for s in moi],
+        lt.get("start_date"), lt.get("destination"), lt.get("sections") or [],
     )
     return {"success": True, "stops_details": moi, "thong_ke": thong_ke}
 

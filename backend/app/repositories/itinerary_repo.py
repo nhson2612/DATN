@@ -4,7 +4,8 @@ import json
 
 from app.core.database import execute_query
 
-_COLS = "id, user_id, name, description, duration_days, stops, created_at"
+_COLS = ("id, user_id, name, description, duration_days, stops, created_at, "
+         "start_date, destination, sections")
 
 
 def list_for_user(user_id: int):
@@ -24,26 +25,33 @@ def owned_by(itinerary_id: int, user_id: int) -> bool:
     )
 
 
-def create(user_id: int, name: str, description, duration_days: int, stops):
+def create(user_id: int, name: str, description, duration_days: int, stops,
+           start_date=None, destination=None, sections=None):
     rows = execute_query(
         """
-        INSERT INTO itineraries (user_id, name, description, duration_days, stops)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO itineraries
+            (user_id, name, description, duration_days, stops,
+             start_date, destination, sections)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """,
-        (user_id, name, description, duration_days, json.dumps(stops)),
+        (user_id, name, description, duration_days, json.dumps(stops),
+         start_date, destination, json.dumps(sections or [])),
     )
     return rows[0]["id"] if rows else None
 
 
-def update(itinerary_id: int, name: str, description, duration_days: int, stops):
+def update(itinerary_id: int, name: str, description, duration_days: int, stops,
+           start_date=None, destination=None, sections=None):
     execute_query(
         """
         UPDATE itineraries
-        SET name = %s, description = %s, duration_days = %s, stops = %s
+        SET name = %s, description = %s, duration_days = %s, stops = %s,
+            start_date = %s, destination = %s, sections = %s
         WHERE id = %s
         """,
-        (name, description, duration_days, json.dumps(stops), itinerary_id),
+        (name, description, duration_days, json.dumps(stops),
+         start_date, destination, json.dumps(sections or []), itinerary_id),
     )
 
 

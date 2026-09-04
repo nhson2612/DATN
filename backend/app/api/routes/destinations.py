@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, HTTPException, Query
 
+from app.repositories import destination_repo
 from app.services import destination_service
 
 router = APIRouter(prefix="/api/destinations", tags=["destinations"])
@@ -44,6 +45,21 @@ def search_places(
     return {"success": True, **destination_service.search_places(
         destination=destination, nhom=nhom, category=category, q=q,
         has_photo=has_photo, page=page, page_size=page_size, bang=place_type)}
+
+
+@places_router.get("/nearby")
+def nearby_places(
+    lon: float = Query(..., description="Kinh độ tâm"),
+    lat: float = Query(..., description="Vĩ độ tâm"),
+    place_type: str = Query("accommodation", description="poi | accommodation"),
+    meters: int = Query(3000, ge=100, le=20000),
+    limit: int = Query(12, ge=1, le=50),
+):
+    """Địa điểm gần một toạ độ. Dùng để gợi ý chỗ ngủ quanh lịch trình trong ngày."""
+    if place_type not in ("poi", "accommodation"):
+        raise HTTPException(status_code=400, detail="place_type phải là poi hoặc accommodation.")
+    return {"success": True,
+            "items": destination_repo.nearby_of_type(place_type, lon, lat, meters, limit)}
 
 
 @places_router.get("/{place_type}/{place_id}")

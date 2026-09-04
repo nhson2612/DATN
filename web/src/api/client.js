@@ -39,6 +39,14 @@ export const api = {
     return request(`/places/search?${qs}`);
   },
   place: (type, id) => request(`/places/${type}/${id}`),
+  nearbyPlaces: (params) => {
+    const qs = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v != null && v !== "")
+    );
+    return request(`/places/nearby?${qs}`);
+  },
+  cachePlaceDetails: (body) =>
+    request("/places/cache-details", { method: "POST", body: JSON.stringify(body) }),
 
   // Tour trọn gói
   tours: (params = {}) => {
@@ -90,11 +98,15 @@ export const api = {
   deletePlace: (type, id) => request(`/${type}/${id}`, { method: "DELETE" }),
 
   // Tài khoản
-  login: (email, password) =>
-    request("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
-  register: (email, password, full_name) =>
-    request("/auth/register", {
+  login: (email, password) => {
+    const payload = typeof email === "object" ? email : { email, password };
+    return request("/auth/login", { method: "POST", body: JSON.stringify(payload) });
+  },
+  register: (email, password, full_name) => {
+    const payload = typeof email === "object" ? email : { email, password, full_name };
+    return request("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password, full_name }),
-    }),
+      body: JSON.stringify(payload),
+    });
+  },
 };

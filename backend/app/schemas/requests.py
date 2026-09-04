@@ -58,6 +58,11 @@ class ItineraryCreateUpdate(BaseModel):
     description: Optional[str] = None
     duration_days: int = 1
     stops: List[dict]
+    # Ngày kết thúc không lưu: nó luôn bằng start_date + duration_days - 1, lưu
+    # cả hai là mở đường cho hai giá trị đá nhau.
+    start_date: Optional[date] = None
+    destination: Optional[str] = None
+    sections: List[dict] = []
 
 
 class RecommendRequest(BaseModel):

@@ -20,3 +20,6 @@ env/
 .env
 frontend/js/config.js
 backend/logs/
+
+# IDE files
+.idea/

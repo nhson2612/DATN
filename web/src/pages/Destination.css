@@ -1,0 +1,51 @@
+.destination-page {
+  @apply max-w-6xl mx-auto px-4 py-10;
+}
+
+.destination-page__back-btn {
+  @apply text-sm text-zinc-500 hover:text-accent-700 mb-4 transition-colors flex items-center gap-1.5;
+}
+
+.destination-page__title {
+  @apply text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50;
+}
+
+.destination-page__subtitle {
+  @apply text-sm text-zinc-500 mb-8;
+}
+
+.destination-page__section {
+  @apply mb-10;
+}
+
+.destination-page__section-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.destination-page__section-title {
+  @apply text-lg font-bold text-zinc-900 dark:text-zinc-50 flex items-center gap-2;
+}
+
+.destination-page__section-icon {
+  @apply text-accent-600 dark:text-accent-500;
+}
+
+.destination-page__see-all-btn {
+  @apply text-sm text-accent-700 dark:text-accent-500 font-medium hover:underline;
+}
+
+.destination-page__grid {
+  @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-4;
+}
+
+.destination-page__error-title {
+  @apply text-xl font-bold mb-2 text-zinc-900 dark:text-zinc-50;
+}
+
+.destination-page__error-msg {
+  @apply text-zinc-500 text-sm;
+}
+
+.destination-page__home-link {
+  @apply mt-4 text-accent-700 dark:text-accent-500 text-sm font-medium hover:underline inline-block;
+}

@@ -2,39 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Nền và chữ không dùng đen/trắng tuyệt đối — mất hết chiều sâu. */
+/* Apply Be Vietnam Pro font globally for the entire application */
 @layer base {
-  html { color-scheme: light dark; }
-  body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100; }
+  html, body {
+    color-scheme: light;
+    font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6, input, button, select, textarea {
+    font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  body {
+    @apply bg-[#f4f6f8] text-slate-900 min-h-screen antialiased selection:bg-emerald-500/20 selection:text-emerald-900;
+  }
 }
 
 @layer components {
-  /* Ảnh chưa tải xong không được làm nhảy bố cục lưới. */
-  .card-img { @apply w-full object-cover; aspect-ratio: 4/3; }
+  /* Dynamic utilities */
   .line-2 {
-    display: -webkit-box; -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical; overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  /* SHAPE LOCK — ba bậc bo góc, không dùng giá trị nào khác. */
-  .ui-card  { @apply rounded-card border border-zinc-200 dark:border-zinc-800; }
-  .ui-field { @apply rounded-field border border-zinc-300 dark:border-zinc-700
-                     bg-white dark:bg-zinc-900 px-3 py-2 text-sm
-                     outline-none focus:border-accent-600; }
+  /* Material 3 Card (Double-bezel / 24px Squircle) */
+  .ui-card {
+    @apply bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200;
+  }
 
-  /* Nút: pill, và :active lún xuống để bấm có cảm giác thật. */
+  /* Material 3 Input Field */
+  .ui-field {
+    @apply rounded-2xl bg-white border border-slate-300/80 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all;
+  }
+
+  /* Material 3 Buttons */
   .btn {
-    @apply rounded-full px-5 py-2.5 text-sm font-semibold transition
-           active:translate-y-px disabled:opacity-50;
+    @apply rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center gap-2;
   }
-  .btn-primary { @apply btn bg-accent-600 text-white hover:bg-accent-700; }
-  .btn-ghost {
-    @apply btn border border-zinc-300 dark:border-zinc-700
-           hover:border-accent-600 hover:text-accent-700
-           dark:hover:text-accent-500;
+  
+  .btn-primary {
+    @apply btn bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-md hover:shadow-emerald-600/20;
   }
 
-  /* Khung xương lúc tải, dựng theo đúng hình dạng nội dung thật thay vì
-     spinner tròn hay dòng chữ "Đang tải...". */
-  .skeleton { @apply animate-pulse bg-zinc-200 dark:bg-zinc-800; }
+  .btn-ghost {
+    @apply btn border border-slate-300/80 text-slate-700 bg-white hover:bg-slate-100 hover:border-slate-400;
+  }
+
+  .btn-secondary {
+    @apply btn bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
+  }
+
+  /* Material 3 Eyebrow & Badges */
+  .ui-badge {
+    @apply rounded-full px-3 py-1 text-xs font-semibold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200/50 inline-flex items-center gap-1.5;
+  }
+
+  /* Skeleton Loading */
+  .skeleton {
+    @apply animate-pulse bg-slate-200/70 rounded-2xl;
+  }
 }

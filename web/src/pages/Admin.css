@@ -1,0 +1,63 @@
+.admin-page {
+  @apply max-w-6xl mx-auto px-4 py-8;
+}
+
+.admin-page__title {
+  @apply text-2xl font-bold mb-1 text-zinc-900 dark:text-zinc-50;
+}
+
+.admin-page__subtitle {
+  @apply text-sm text-zinc-500 mb-6;
+}
+
+.admin-page__tabs {
+  @apply flex gap-1 border-b border-zinc-200 dark:border-zinc-800 mb-6 overflow-x-auto;
+}
+
+.admin-page__tab-btn {
+  @apply px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 border-transparent;
+}
+
+.admin-page__tab-btn--active {
+  @apply border-accent-600 text-accent-700 dark:text-accent-500;
+}
+
+.admin-page__stat-grid {
+  @apply grid sm:grid-cols-2 lg:grid-cols-4 gap-4;
+}
+
+.admin-page__stat-card {
+  @apply rounded-card border border-zinc-200 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900;
+}
+
+.admin-page__stat-label {
+  @apply text-sm text-zinc-500;
+}
+
+.admin-page__stat-val {
+  @apply text-2xl font-bold mt-1 text-zinc-900 dark:text-zinc-100;
+}
+
+.admin-page__filter-bar {
+  @apply flex flex-wrap gap-3 items-center mb-4;
+}
+
+.admin-page__table-wrapper {
+  @apply rounded-card border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-x-auto;
+}
+
+.admin-page__table {
+  @apply w-full text-sm;
+}
+
+.admin-page__table-head {
+  @apply text-left text-zinc-500 border-b border-zinc-200 dark:border-zinc-800;
+}
+
+.admin-page__modal {
+  @apply fixed inset-0 z-50 bg-zinc-900/50 grid place-items-center p-4;
+}
+
+.admin-page__modal-form {
+  @apply rounded-card border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-4 shadow-xl;
+}

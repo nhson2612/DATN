@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
-import DetailSkeleton from "../components/DetailSkeleton";
-import PlaceCard from "../components/PlaceCard";
+import DetailSkeleton from "../components/skeletons/DetailSkeleton";
+import PlaceCard from "../components/cards/PlaceCard";
+import "./Destination.css";
 
 const ICON = {
   tham_quan: "fa-landmark", an_uong: "fa-utensils", vui_choi: "fa-masks-theater",
@@ -21,36 +22,36 @@ export default function Destination() {
   }, [slug]);
 
   if (loi) return (
-    <main className="max-w-6xl mx-auto px-4 py-10">
-      <h2 className="text-xl font-bold mb-2">Không tìm thấy điểm đến</h2>
-      <p className="text-zinc-500 text-sm">Thử gõ tên tỉnh/thành, ví dụ "Đà Nẵng".</p>
-      <button onClick={() => nav("/")} className="mt-4 text-accent-700 text-sm">← Trang chủ</button>
+    <main className="destination-page">
+      <h2 className="destination-page__error-title">Không tìm thấy điểm đến</h2>
+      <p className="destination-page__error-msg">Thử gõ tên tỉnh/thành, ví dụ "Đà Nẵng".</p>
+      <button onClick={() => nav("/")} className="destination-page__home-link">← Trang chủ</button>
     </main>
   );
   if (!d) return <DetailSkeleton />;
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-10">
-      <button onClick={() => nav("/")} className="text-sm text-zinc-500 hover:text-accent-700 mb-4">
+    <main className="destination-page">
+      <button onClick={() => nav("/")} className="destination-page__back-btn">
         <i className="fa-solid fa-arrow-left" /> Tất cả điểm đến
       </button>
-      <h1 className="text-2xl font-bold tracking-tight">{d.name}</h1>
-      <p className="text-sm text-zinc-500 mb-8">
+      <h1 className="destination-page__title">{d.name}</h1>
+      <p className="destination-page__subtitle">
         {d.groups.reduce((s, g) => s + g.items.length, 0)} địa điểm nổi bật
       </p>
 
       {d.groups.map((g) => (
-        <section key={g.key} className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold">
-              <i className={`fa-solid ${ICON[g.key] || "fa-location-dot"} text-accent-600`} /> {g.ten}
+        <section key={g.key} className="destination-page__section">
+          <div className="destination-page__section-header">
+            <h2 className="destination-page__section-title">
+              <i className={`fa-solid ${ICON[g.key] || "fa-location-dot"} destination-page__section-icon`} /> {g.ten}
             </h2>
             <button onClick={() => nav(`/dia-diem?destination=${d.slug}&nhom=${g.key}`)}
-                    className="text-sm text-accent-700 font-medium hover:underline">
+                    className="destination-page__see-all-btn">
               Xem tất cả
             </button>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="destination-page__grid">
             {g.items.slice(0, 8).map((p) => (
               <PlaceCard key={`${p.type}-${p.id}`} place={p} group={g.key}
                          onClick={() => nav(`/dia-diem/${p.type}/${p.id}`)} />

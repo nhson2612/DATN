@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS accommodation (
     price_range VARCHAR(100),
     stars INT,
     address TEXT,
+    confidence REAL,                       -- xem ghi chu o bang poi
     geom GEOMETRY(Point, 4326)
 );
 CREATE INDEX IF NOT EXISTS accommodation_geom_idx ON accommodation USING GIST (geom);
@@ -38,9 +39,15 @@ CREATE TABLE IF NOT EXISTS poi (
     amenity VARCHAR(100),
     tourism VARCHAR(100),
     description TEXT,
+    -- Overture: diem 0..1 cho biet ho tin dia diem nay con ton tai den dau.
+    -- 27% ban ghi o VN duoi 0,5 (thuong la page Facebook chua xac minh). Day la
+    -- tin hieu duy nhat dung de xep hang va loc rac: `rating` va `review_count`
+    -- trong CSDL nay deu chi co MOT gia tri, khong dung duoc.
+    confidence REAL,
     geom GEOMETRY(Point, 4326)
 );
 CREATE INDEX IF NOT EXISTS poi_geom_idx ON poi USING GIST (geom);
+CREATE INDEX IF NOT EXISTS poi_confidence_idx ON poi(confidence);
 
 -- 4. Table for Roads (Routing network)
 CREATE TABLE IF NOT EXISTS roads (
@@ -105,6 +112,11 @@ CREATE TABLE IF NOT EXISTS itineraries (
     duration_days INTEGER DEFAULT 1,
     -- Ngày khởi hành thật, để hiện "Thứ 7, 12/09" thay vì "Ngày 1".
     start_date    DATE,
+    -- Điểm đến chính, trước đây nhét vào description dạng "Điểm đến: X".
+    destination   VARCHAR(255),
+    -- Các mục người dùng tự tạo trong phần Tổng quan, dạng [{key, name}].
+    -- Mặc định có sẵn "Địa điểm muốn đi"; người dùng thêm "Nhà hàng", "Cà phê"...
+    sections      JSONB NOT NULL DEFAULT '[]'::jsonb,
     -- Mảng {day, type, id} — chỉ tham chiếu, không lưu tên/toạ độ, để địa điểm
     -- đổi tên hay dời vị trí thì lịch trình cũ vẫn đúng. Chi tiết được tra lại
     -- lúc đọc (itinerary_service.hydrate_stops).
@@ -125,6 +137,7 @@ CREATE TABLE IF NOT EXISTS place_photos (
     place_id    INTEGER NOT NULL,
     url         TEXT NOT NULL,
     attribution TEXT,
+    details     JSONB,                     -- Cached metadata (rating, review count, open status, address)
     fetched_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (place_type, place_id)
 );

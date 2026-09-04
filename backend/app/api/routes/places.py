@@ -1,12 +1,35 @@
-"""Endpoint địa điểm: GeoJSON cho bản đồ + CRUD cho trang quản trị."""
-
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 
 from app.core.security import get_current_admin
+from app.repositories import destination_repo
 from app.schemas.requests import AccommodationCreateUpdate, POICreateUpdate
 from app.services import places_service
 
 router = APIRouter(prefix="/api", tags=["places"])
+
+
+class CachePlaceDetailsRequest(BaseModel):
+    place_type: str
+    place_id: int
+    url: Optional[str] = None
+    attribution: Optional[str] = "Google Maps"
+    details: Optional[dict] = None
+
+
+@router.post("/places/cache-details")
+def cache_place_details(data: CachePlaceDetailsRequest):
+    if data.place_type not in ("poi", "accommodation"):
+        raise HTTPException(status_code=400, detail="place_type phải là poi hoặc accommodation")
+    destination_repo.save_place_photo_details(
+        place_type=data.place_type,
+        place_id=data.place_id,
+        url=data.url,
+        attribution=data.attribution,
+        details=data.details,
+    )
+    return {"success": True}
 
 
 @router.get("/places")
@@ -43,3 +66,4 @@ def _crud_routes(table: str, path: str, schema):
 
 _crud_routes("poi", "/poi", POICreateUpdate)
 _crud_routes("accommodation", "/accommodation", AccommodationCreateUpdate)
+

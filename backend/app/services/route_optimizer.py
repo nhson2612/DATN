@@ -35,8 +35,13 @@ def khoang_cach_m(a, b):
     return 2 * BAN_KINH_TRAI_DAT_M * math.asin(math.sqrt(h))
 
 
-def tong_quang_duong(diem):
-    return sum(khoang_cach_m(diem[i], diem[i + 1]) for i in range(len(diem) - 1))
+def tong_quang_duong(diem, is_closed=False):
+    if len(diem) < 2:
+        return 0.0
+    d = sum(khoang_cach_m(diem[i], diem[i + 1]) for i in range(len(diem) - 1))
+    if is_closed:
+        d += khoang_cach_m(diem[-1], diem[0])
+    return d
 
 
 def _lang_gieng_gan_nhat(diem, bat_dau=0):
@@ -51,11 +56,10 @@ def _lang_gieng_gan_nhat(diem, bat_dau=0):
     return thu_tu
 
 
-def _hai_opt(thu_tu, diem):
+def _hai_opt(thu_tu, diem, is_closed=False):
     """Đảo ngược từng đoạn con cho tới khi không rút ngắn được nữa."""
     def dai(tt):
-        return sum(khoang_cach_m(diem[tt[i]], diem[tt[i + 1]])
-                   for i in range(len(tt) - 1))
+        return tong_quang_duong([diem[idx] for idx in tt], is_closed=is_closed)
 
     tot = dai(thu_tu)
     for _ in range(MAX_2OPT_VONG):
@@ -75,6 +79,8 @@ def toi_uu_mot_ngay(stops):
     """stops: [{lon, lat, ...}] của MỘT ngày -> (danh sách đã sắp, trước_m, sau_m).
 
     Giữ nguyên điểm đầu: đó thường là chỗ ở hoặc điểm người dùng cố ý xuất phát.
+    Nếu điểm đầu tiên có type='accommodation', ta sẽ chạy tối ưu vòng khép kín (closed-loop TSP),
+    nghĩa là chặng cuối cùng sẽ từ điểm cuối quay về điểm đầu tiên (khách sạn).
     Bỏ qua nếu dưới 3 điểm — 2 điểm thì đảo thứ tự không đổi quãng đường.
     """
     hop_le = [s for s in stops if s.get("lon") is not None and s.get("lat") is not None]
@@ -82,16 +88,20 @@ def toi_uu_mot_ngay(stops):
         return stops, 0.0, 0.0
 
     diem = [(float(s["lon"]), float(s["lat"])) for s in hop_le]
-    truoc = tong_quang_duong(diem)
+    
+    # Kiểm tra xem điểm xuất phát đầu tiên có phải là khách sạn không
+    is_closed = hop_le[0].get("type") == "accommodation"
+    
+    truoc = tong_quang_duong(diem, is_closed=is_closed)
 
     thu_tu = _lang_gieng_gan_nhat(diem, bat_dau=0)
-    thu_tu, sau = _hai_opt(thu_tu, diem)
+    thu_tu, sau = _hai_opt(thu_tu, diem, is_closed=is_closed)
 
     da_sap = [hop_le[i] for i in thu_tu]
     # Điểm thiếu toạ độ không xếp được thì để cuối, không được làm mất chúng.
     thieu = [s for s in stops if s.get("lon") is None or s.get("lat") is None]
-    logger.info("Tối ưu %d điểm: %.0fm -> %.0fm (giảm %.0f%%)",
-                len(diem), truoc, sau,
+    logger.info("Tối ưu %d điểm (closed=%s): %.0fm -> %.0fm (giảm %.0f%%)",
+                len(diem), is_closed, truoc, sau,
                 (truoc - sau) / truoc * 100 if truoc else 0)
     return da_sap + thieu, truoc, sau
 

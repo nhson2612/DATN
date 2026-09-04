@@ -1,0 +1,12 @@
+/* TourDetail Page Styles - Siêu gọn */
+.tour-detail { @apply max-w-7xl mx-auto px-4 md:px-8 py-8; }
+.tour-detail__gallery { @apply grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 rounded-card overflow-hidden; }
+.tour-detail__main-img { @apply md:col-span-2 h-[380px] w-full object-cover rounded-card; }
+.tour-detail__sub-imgs { @apply grid grid-rows-2 gap-4 h-[380px]; }
+.tour-detail__sub-img { @apply w-full h-full object-cover rounded-card; }
+
+.tour-detail__grid { @apply grid grid-cols-1 lg:grid-cols-3 gap-8 items-start; }
+.tour-detail__content { @apply lg:col-span-2 space-y-8; }
+.tour-detail__title { @apply text-2xl md:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50; }
+.tour-detail__quick-info { @apply grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 ui-card bg-white dark:bg-zinc-900; }
+.tour-detail__sidebar { @apply lg:col-span-1 sticky top-24; }

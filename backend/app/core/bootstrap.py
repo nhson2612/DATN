@@ -9,12 +9,21 @@ from app.repositories import user_repo
 logger = get_logger(__name__)
 
 
+def ensure_db_schema():
+    """Đảm bảo bảng place_photos có đủ cột details JSONB để lưu cache từ Google Maps."""
+    try:
+        execute_query("ALTER TABLE place_photos ADD COLUMN IF NOT EXISTS details JSONB;")
+    except Exception as e:
+        logger.warning("Không thể nâng cấp schema place_photos: %s", e)
+
+
 def create_default_users():
     """Tạo admin và user mẫu, CHỈ khi bảng users còn trống.
 
     Mật khẩu lấy từ cấu hình. Đây là tài khoản tiện cho phát triển — đổi
     SEED_ADMIN_PASSWORD trong .env trước khi chạy ở môi trường thật.
     """
+    ensure_db_schema()
     try:
         res = execute_query("SELECT COUNT(*) FROM users")
         if not res or res[0]["count"] != 0:

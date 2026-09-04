@@ -109,7 +109,7 @@ def find_anchor(place_part: str, lon: float, lat: float):
     đoán trước "Mỹ Khê" là phường hay là bãi biển: cứ tra DB, cái nào có thì
     dùng cái đó. Trùng tên ở nhiều tỉnh thì lấy cái gần người dùng nhất.
     """
-    grams = _ngrams(place_part)
+    grams = _ngrams(_norm(place_part))
     if not grams:
         return None
 
@@ -281,22 +281,16 @@ def _chay_tim(kw, moc, lon, lat, limit, *, trong_vung, ban_kinh):
         tam AS (SELECT ST_Centroid(g) AS p FROM ref)
         -- id + type để frontend mở được trang chi tiết; thiếu hai cột này thì kết
         -- quả hỏi đáp chỉ là chấm trên bản đồ, bấm vào không đi đâu được.
-        SELECT id, type, name, category,
-               ST_X(geom) AS lon, ST_Y(geom) AS lat,
-               -- geom GeoJSON cho thứ không phải Point (ranh giới, toà nhà).
-               ST_AsGeoJSON(geom)::json AS geom,
-               round(ST_Distance(geom::geography,
-                                 (SELECT p FROM tam)::geography)) AS met
-        FROM cand
-        -- Sắp THUẦN theo khoảng cách tới tâm mốc.
-        --
-        -- Không đưa độ khớp vào thứ tự: mệnh đề WHERE đã lọc bằng ngưỡng
-        -- similarity rồi, nên mọi dòng còn lại đều khớp đủ tốt — xếp thêm theo độ
-        -- khớp chỉ đẩy quán xa lên trước quán gần. Hỏi "quán cà phê gần đây" từng
-        -- trả về thứ tự 2157m, 2312m, 1761m, 825m vì lý do đó.
-        --
-        -- Cũng không có "điểm đánh giá": cột rating toàn 4.0 (xem README §4).
-        ORDER BY ST_Distance(geom::geography, (SELECT p FROM tam)::geography) ASC
+        SELECT c.id, c.type, c.name, c.category,
+               ST_X(c.geom) AS lon, ST_Y(c.geom) AS lat,
+               ST_AsGeoJSON(c.geom)::json AS geom,
+               round(ST_Distance(c.geom::geography,
+                                 (SELECT p FROM tam)::geography)) AS met,
+               ph.url AS anh,
+               ph.details AS cached_details
+        FROM cand c
+        LEFT JOIN place_photos ph ON ph.place_type = c.type AND ph.place_id = c.id
+        ORDER BY ST_Distance(c.geom::geography, (SELECT p FROM tam)::geography) ASC
         LIMIT %s
         """,
         moc_params + (kw, kw) + p_poi + (kw, kw) + p_acc + (limit,),
@@ -307,10 +301,14 @@ def _chay_tim(kw, moc, lon, lat, limit, *, trong_vung, ban_kinh):
 def search(question: str, lon: float, lat: float, limit: int = DEFAULT_LIMIT):
     """Câu hỏi tiếng Việt -> danh sách địa điểm, xếp theo khoảng cách."""
     what, where = split_question(question)
-    # Chỉ dò mốc trong VẾ SAU giới từ. Dò cả câu thì "quán bún đậu" bị nhận là
-    # mốc (CSDL có POI tên đúng vậy) và từ khoá tìm kiếm mất sạch.
-    anchor = find_anchor(where, lon, lat) if where else None
+    # 1. Tìm mốc từ vế sau giới từ, hoặc từ toàn câu hỏi nếu không có giới từ (vd: "biển thiên cầm")
+    anchor = find_anchor(where, lon, lat) if where else find_anchor(question, lon, lat)
     kw = " ".join(w for w in what.split() if w not in STOPWORDS and len(w) >= 2)
+    
+    # Nếu bản thân từ khóa khớp đúng mốc vừa tìm được, dùng từ khóa đã được chuẩn hóa của mốc
+    if anchor and (not kw or kw in _norm(anchor["name"]) or _norm(anchor["name"]) in kw):
+        kw = _norm(anchor["name"])
+
     logger.info("Cần tìm: %r | Ở đâu: %r -> mốc %s",
                 kw, where, anchor["name"] if anchor else None)
 

@@ -39,7 +39,7 @@ from app.services import search_service as ts
 logger = get_logger(__name__)
 
 MAX_VONG = 3          # số vòng B4-B5 tối đa; mỗi vòng là một truy vấn + một lượt LLM
-TIMEOUT_BUOC = 25     # mỗi bước là một câu JSON ngắn, quá số này thì không đáng chờ
+TIMEOUT_BUOC = 5     # mỗi bước là một câu JSON ngắn, quá số này thì không đáng chờ
 MAU_TEN = 8           # số tên thật đưa cho LLM xem ở B5
 BAN_KINH_TOI_DA = 50_000
 
