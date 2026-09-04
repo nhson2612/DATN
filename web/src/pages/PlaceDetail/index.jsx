@@ -1,20 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
 import DetailSkeleton from "../../components/skeletons/DetailSkeleton";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
 import MiniMap from "../../components/map/MiniMap";
 import BookingForm from "../../components/modals/BookingForm";
+import PlaceGallery from "./PlaceGallery";
+import EnrichmentContent from "./EnrichmentContent";
+import { tenLoai } from "../../lib/loaiDiaDiem";
 import "./PlaceDetail.css";
-
-const CATEGORY_FALLBACK_IMAGES = {
-  tham_quan: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1200&q=80",
-  an_uong: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
-  vui_choi: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
-  mua_sam: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80",
-  luu_tru: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
-  default: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80",
-};
 
 export default function PlaceDetail({ user, onNeedAuth }) {
   const { type, id } = useParams();
@@ -97,7 +91,7 @@ export default function PlaceDetail({ user, onNeedAuth }) {
 
   if (loi) {
     return (
-      <main className="place-detail-page py-16 text-center">
+      <main className="place-field-guide py-16 text-center">
         <div className="max-w-md mx-auto bg-rose-50 dark:bg-rose-950/40 p-6 rounded-3xl border border-rose-200 dark:border-rose-900">
           <i className="fa-solid fa-circle-exclamation text-3xl text-rose-500 mb-3 block" />
           <h2 className="text-lg font-bold text-rose-800 dark:text-rose-200 mb-2">Đã xảy ra lỗi</h2>
@@ -116,234 +110,178 @@ export default function PlaceDetail({ user, onNeedAuth }) {
 
   if (!p) return <DetailSkeleton />;
 
-  const categoryName = (p.category || type || "").replace(/_/g, " ");
-  const heroImage = p.anh || CATEGORY_FALLBACK_IMAGES[type] || CATEGORY_FALLBACK_IMAGES.default;
+  const categoryName = tenLoai(p.nhom) || tenLoai(p.category) || tenLoai(type);
+  const diaChiDayDu = [p.dia_chi, p.thanh_pho].filter(Boolean).join(", ");
 
   const socialUrl = p.social || p.tags?.social;
   const emailVal = p.email || p.tags?.email;
 
+  // Chỉ nhận http(s) ở href; thêm giao thức cho giá trị trần "sunworld.vn/…".
+  const laHttp = (u) => /^https?:\/\//i.test(u);
+  const webUrl = p.website ? (laHttp(p.website) ? p.website : `https://${p.website}`) : null;
+
   return (
-    <main className="place-detail-page">
-      {/* Top Back Navigation Button */}
-      <button type="button" onClick={() => nav(-1)} className="place-detail-page__back-btn">
-        <i className="fa-solid fa-arrow-left" /> Quay lại
-      </button>
+    <main className="place-field-guide">
+      <nav className="place-field-guide__nav" aria-label="Điều hướng địa điểm">
+        <button type="button" onClick={() => nav(-1)} className="place-field-guide__quay-lai">
+          <i className="fa-solid fa-arrow-left" aria-hidden="true" /> Quay lại
+        </button>
+        <Link to="/dia-diem" className="place-field-guide__crumb">Địa điểm</Link>
+        <span aria-hidden="true">/</span>
+        <span className="place-field-guide__crumb-here">{p.name}</span>
+        <button
+          type="button"
+          onClick={luuYeuThich}
+          disabled={daLuu}
+          className={`place-field-guide__luu-btn ${daLuu ? "place-field-guide__luu-btn--saved" : ""}`}
+        >
+          <i className={`fa-${daLuu ? "solid" : "regular"} fa-heart`} aria-hidden="true" />
+          {daLuu ? "Đã lưu" : "Lưu địa điểm"}
+        </button>
+      </nav>
 
-      {/* Hero Header Banner */}
-      <section className="place-detail-page__hero">
-        {heroImage ? (
-          <>
-            <img
-              src={heroImage}
-              alt={p.name}
-              className="place-detail-page__hero-img"
-              onError={(e) => {
-                e.target.src = CATEGORY_FALLBACK_IMAGES.default;
-              }}
-            />
-            <div className="place-detail-page__hero-overlay" />
-          </>
-        ) : (
-          <div className="place-detail-page__hero-placeholder">
-            <i className="fa-solid fa-image text-4xl" />
-            <span>Không có hình ảnh</span>
-          </div>
+      <header className="place-field-guide__header">
+        <p className="place-field-guide__eyebrow">{categoryName}</p>
+        <h1 className="place-field-guide__ten">{p.name}</h1>
+        {diaChiDayDu && (
+          <p className="place-field-guide__dia-chi">
+            <i className="fa-solid fa-location-dot" aria-hidden="true" /> {diaChiDayDu}
+          </p>
         )}
+      </header>
 
-        <div className="place-detail-page__hero-content">
-          <div className="place-detail-page__badges">
-            <span className="place-detail-page__badge">
-              <i className="fa-solid fa-layer-group text-xs mr-1" />
-              {categoryName}
-            </span>
-            {p.rating && (
-              <span className="place-detail-page__rating-badge">
-                <i className="fa-solid fa-star text-xs" />
-                <span>{p.rating}</span>
-              </span>
-            )}
-          </div>
+      <PlaceGallery
+        name={p.name}
+        baseImage={p.anh}
+        credit={p.anh_nguon}
+        images={enrichment?.images}
+        loading={enrichmentState === "loading"}
+      />
 
-          <h1 className="place-detail-page__hero-title">{p.name}</h1>
+      <EnrichmentContent
+        enrichment={enrichment}
+        state={enrichmentState}
+        error={enrichmentError}
+        mode="facts"
+      />
 
-          {p.anh_nguon && (
-            <p className="place-detail-page__hero-credit">
-              <i className="fa-solid fa-camera mr-1" /> Nguồn ảnh: {p.anh_nguon}
-            </p>
-          )}
-        </div>
-      </section>
+      <div className="place-field-guide__columns">
+        <article className="place-field-guide__article">
+          {p.description && <p className="place-field-guide__mo-ta">{p.description}</p>}
+          <EnrichmentContent
+            enrichment={enrichment}
+            state={enrichmentState}
+            error={enrichmentError}
+            mode="details"
+          />
+        </article>
 
-      {/* Main Details & Sidebar Grid */}
-      <div className="place-detail-page__grid">
-        {/* Left Column: Info & Map */}
-        <div className="place-detail-page__main">
-          {/* Main Info Card */}
-          <div className="place-detail-page__section-card">
-            <h2 className="place-detail-page__section-title">
-              <i className="fa-solid fa-circle-info text-emerald-600" />
-              Thông tin chi tiết
-            </h2>
-
-            {p.description && <p className="place-detail-page__desc">{p.description}</p>}
-
-            <div className="place-detail-page__info-grid">
-              {p.dia_chi && (
-                <div className="place-detail-page__info-item">
-                  <i className="fa-solid fa-location-dot place-detail-page__info-icon" />
-                  <div>
-                    <span className="text-xs text-slate-400 block font-normal">Địa chỉ</span>
-                    <span className="place-detail-page__info-text">{p.dia_chi}</span>
-                  </div>
-                </div>
-              )}
-
-              {p.dien_thoai && (
-                <div className="place-detail-page__info-item">
-                  <i className="fa-solid fa-phone place-detail-page__info-icon" />
-                  <div>
-                    <span className="text-xs text-slate-400 block font-normal">Điện thoại</span>
-                    <a
-                      href={`tel:${p.dien_thoai}`}
-                      className="place-detail-page__info-text text-emerald-700 hover:underline"
-                    >
-                      {p.dien_thoai}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {emailVal && (
-                <div className="place-detail-page__info-item">
-                  <i className="fa-solid fa-envelope place-detail-page__info-icon" />
-                  <div>
-                    <span className="text-xs text-slate-400 block font-normal">Email liên hệ</span>
-                    <a
-                      href={`mailto:${emailVal}`}
-                      className="place-detail-page__info-text text-emerald-700 hover:underline"
-                    >
-                      {emailVal}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {p.stars && (
-                <div className="place-detail-page__info-item">
-                  <i className="fa-solid fa-hotel place-detail-page__info-icon" />
-                  <div>
-                    <span className="text-xs text-slate-400 block font-normal">Hạng sao</span>
-                    <span className="place-detail-page__info-text">{p.stars} sao</span>
-                  </div>
-                </div>
-              )}
-
-              {p.price_range && (
-                <div className="place-detail-page__info-item">
-                  <i className="fa-solid fa-tag place-detail-page__info-icon" />
-                  <div>
-                    <span className="text-xs text-slate-400 block font-normal">Mức giá</span>
-                    <span className="place-detail-page__info-text">{p.price_range}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Interactive Map Section */}
-          {p.lon && p.lat && (
-            <div className="place-detail-page__section-card">
-              <h2 className="place-detail-page__section-title">
-                <i className="fa-solid fa-map-location-dot text-emerald-600" />
-                Vị trí trên bản đồ
+        <aside className="place-field-guide__aside">
+          {p.lon != null && p.lat != null && (
+            <section className="place-field-guide__card" aria-labelledby="bd-title">
+              <h2 className="place-field-guide__card-title" id="bd-title">
+                <i className="fa-solid fa-map-location-dot" aria-hidden="true" /> Bản đồ
               </h2>
-              <div className="rounded-2xl overflow-hidden border border-slate-200">
+              <div className="place-field-guide__map">
                 <ErrorBoundary ten="Bản đồ">
                   <MiniMap lon={p.lon} lat={p.lat} />
                 </ErrorBoundary>
               </div>
-            </div>
+            </section>
           )}
-        </div>
 
-        {/* Right Column: Actions Sidebar */}
-        <aside className="place-detail-page__sidebar">
-          <div className="place-detail-page__action-card">
-            <h3 className="place-detail-page__action-title">Hành động nhanh</h3>
+          <section className="place-field-guide__card" aria-labelledby="lh-title">
+            <h2 className="place-field-guide__card-title" id="lh-title">
+              <i className="fa-solid fa-address-book" aria-hidden="true" /> Liên hệ
+            </h2>
+            <dl className="place-field-guide__lien-he">
+              {p.dien_thoai && (
+                <div className="place-field-guide__lh-item">
+                  <dt><i className="fa-solid fa-phone" aria-hidden="true" />Điện thoại</dt>
+                  <dd>
+                    <a href={`tel:${p.dien_thoai}`} className="place-field-guide__link">{p.dien_thoai}</a>
+                  </dd>
+                </div>
+              )}
+              {emailVal && (
+                <div className="place-field-guide__lh-item">
+                  <dt><i className="fa-solid fa-envelope" aria-hidden="true" />Email</dt>
+                  <dd>
+                    <a href={`mailto:${emailVal}`} className="place-field-guide__link">{emailVal}</a>
+                  </dd>
+                </div>
+              )}
+              {webUrl && (
+                <div className="place-field-guide__lh-item">
+                  <dt><i className="fa-solid fa-globe" aria-hidden="true" />Website</dt>
+                  <dd>
+                    <a href={webUrl} target="_blank" rel="noopener noreferrer" className="place-field-guide__link">
+                      {p.website}
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {socialUrl && (
+                <div className="place-field-guide__lh-item">
+                  <dt><i className="fa-brands fa-facebook" aria-hidden="true" />Mạng xã hội</dt>
+                  <dd>
+                    <a
+                      href={laHttp(socialUrl) ? socialUrl : `https://${socialUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="place-field-guide__link"
+                    >
+                      Trang Fanpage
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {p.stars && (
+                <div className="place-field-guide__lh-item">
+                  <dt><i className="fa-solid fa-hotel" aria-hidden="true" />Hạng sao</dt>
+                  <dd>{p.stars} sao</dd>
+                </div>
+              )}
+              {p.price_range && (
+                <div className="place-field-guide__lh-item">
+                  <dt><i className="fa-solid fa-tag" aria-hidden="true" />Mức giá</dt>
+                  <dd>{p.price_range}</dd>
+                </div>
+              )}
+            </dl>
+          </section>
 
-            <button
-              type="button"
-              onClick={luuYeuThich}
-              disabled={daLuu}
-              className={`place-detail-page__fav-btn ${daLuu ? "place-detail-page__fav-btn--active" : "place-detail-page__fav-btn--inactive"
-                }`}
-            >
-              <i className={`fa-${daLuu ? "solid" : "regular"} fa-heart ${daLuu ? "text-rose-600" : ""}`} />
-              <span>{daLuu ? "Đã lưu yêu thích" : "Lưu vào yêu thích"}</span>
-            </button>
-
+          <section className="place-field-guide__card place-field-guide__hanh-dong" aria-labelledby="hd-title">
+            <h2 className="place-field-guide__card-title" id="hd-title">
+              <i className="fa-solid fa-bolt" aria-hidden="true" /> Hành động
+            </h2>
+            {/* Website/Fanpage nằm ở thẻ Liên hệ bên trên — không lặp link. */}
             <button
               type="button"
               onClick={() => (user ? setMoForm(true) : onNeedAuth())}
-              className="place-detail-page__book-btn"
+              className="place-field-guide__btn-chinh"
             >
-              <i className="fa-solid fa-paper-plane" />
-              <span>Gửi yêu cầu đặt chỗ</span>
+              <i className="fa-solid fa-paper-plane" aria-hidden="true" /> Gửi yêu cầu đặt chỗ
             </button>
-
-            {socialUrl && (
-              <a
-                href={socialUrl.startsWith("http") ? socialUrl : `https://${socialUrl}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="place-detail-page__website-btn !bg-blue-50 !text-blue-700 !border-blue-200 hover:!bg-blue-100"
-              >
-                <i className="fa-brands fa-facebook text-blue-600 text-base" />
-                <span>Trang Fanpage / Mạng xã hội</span>
-              </a>
-            )}
-
-            {p.website && (
-              <a
-                href={
-                  p.website.startsWith("http://") || p.website.startsWith("https://")
-                    ? p.website.replace("http:/", "http://").replace("http:///", "http://")
-                    : `https://${p.website}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="place-detail-page__website-btn"
-              >
-                <i className="fa-solid fa-arrow-up-right-from-square" />
-                <span>Trang web chính thức</span>
-              </a>
-            )}
-
-            <p className="place-detail-page__disclaimer">
-              <i className="fa-solid fa-shield-halved mr-1" />
-              Thông tin địa điểm được xác thực trực tiếp từ nhà cung cấp dịch vụ.
-            </p>
-          </div>
+          </section>
         </aside>
       </div>
 
-      {/* Nearby Places Section */}
       {p.nearby?.length > 0 && (
-        <section className="place-detail-page__nearby-section">
-          <h2 className="place-detail-page__nearby-title">
-            <i className="fa-solid fa-location-crosshairs text-emerald-600" />
-            Địa điểm lân cận hấp dẫn
+        <section className="place-field-guide__nearby" aria-labelledby="nearby-title">
+          <h2 id="nearby-title" className="place-field-guide__card-title place-field-guide__nearby-title">
+            <i className="fa-solid fa-location-crosshairs" aria-hidden="true" /> Gần đây
           </h2>
-          <div className="place-detail-page__nearby-grid">
+          <div className="place-field-guide__nearby-grid">
             {p.nearby.map((n) => (
               <article
                 key={n.id}
                 onClick={() => nav(`/dia-diem/poi/${n.id}`)}
-                className="place-detail-page__nearby-card"
+                className="place-field-guide__nearby-card"
               >
-                <h3 className="place-detail-page__nearby-name">{n.name}</h3>
-                <p className="place-detail-page__nearby-dist">
-                  <i className="fa-solid fa-route text-emerald-600 text-xs" />
+                <h3 className="place-field-guide__nearby-name">{n.name}</h3>
+                <p className="place-field-guide__nearby-dist">
+                  <i className="fa-solid fa-route" aria-hidden="true" />
                   cách {n.met < 1000 ? `${n.met} m` : `${(n.met / 1000).toFixed(1)} km`}
                 </p>
               </article>
@@ -352,7 +290,6 @@ export default function PlaceDetail({ user, onNeedAuth }) {
         </section>
       )}
 
-      {/* Booking Form Modal */}
       <BookingForm
         open={moForm}
         onClose={() => setMoForm(false)}

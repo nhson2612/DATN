@@ -13,8 +13,10 @@ import { useEffect, useMemo, useState } from "react";
 export default function PlaceGallery({
   name,
   baseImage,
+  credit,
   fallbackImage,
   images = [],
+  loading = false,
 }) {
   const [hong, setHong] = useState(() => new Set());
   const [chon, setChon] = useState(0);
@@ -23,15 +25,15 @@ export default function PlaceGallery({
   const items = useMemo(() => {
     const list = [];
     const daThay = new Set();
-    const them = (url, host) => {
+    const them = (url, host, creditNguon) => {
       if (!url || daThay.has(url)) return;
       daThay.add(url);
-      list.push({ url, host });
+      list.push({ url, host, credit: creditNguon || null });
     };
-    them(baseImage, null);
+    them(baseImage, null, credit);
     (images || []).forEach((img) => them(img?.url, img?.host || null));
     return list;
-  }, [baseImage, images]);
+  }, [baseImage, credit, images]);
 
   const conSong = items.filter((it) => !hong.has(it.url));
   const hero = conSong[chon] || conSong[0] || null;
@@ -43,6 +45,17 @@ export default function PlaceGallery({
   }, [chon, conSong.length]);
 
   const danhDauHong = (url) => setHong((truoc) => new Set([...truoc, url]));
+
+  // Chưa có ảnh thật nào (base rỗng, web đang tải): skeleton gallery riêng.
+  if (loading && !hero) {
+    return (
+      <figure className="place-field-guide__gallery" aria-busy="true">
+        <div className="place-field-guide__gallery-skeleton place-field-guide__gallery-skeleton--chinh" />
+        <div className="place-field-guide__gallery-skeleton" />
+        <div className="place-field-guide__gallery-skeleton" />
+      </figure>
+    );
+  }
 
   // Mọi ảnh hỏng — kể cả ảnh chính — thì dùng fallback thể loại.
   if (!hero) {
@@ -68,9 +81,14 @@ export default function PlaceGallery({
     );
   }
 
+  // Lưới desktop bất đối xứng cần 3 ảnh (chính + 2 phụ). Ít ảnh hơn thì
+  // chuyển dạng để không để lại ô trống bên phải: 1 ảnh = tràn cả bề ngang,
+  // 2 ảnh = một phụ duy nhất chiếm trọn cột phải.
+  const dang = conSong.length === 1 ? "toan" : conSong.length === 2 ? "doc" : "nhieu";
+
   return (
     <figure
-      className="place-field-guide__gallery"
+      className={`place-field-guide__gallery place-field-guide__gallery--${dang}`}
       aria-label={`Hình ảnh ${name}`}
     >
       <div className="place-field-guide__gallery-hero">
@@ -80,10 +98,16 @@ export default function PlaceGallery({
           className="place-field-guide__gallery-hero-img"
           onError={() => danhDauHong(hero.url)}
         />
-        {hero.host && (
-          <figcaption className="place-field-guide__gallery-caption">
+        {hero.host ? (
+          <p className="place-field-guide__gallery-caption">
             <i className="fa-solid fa-camera" aria-hidden="true" /> Nguồn: {hero.host}
-          </figcaption>
+          </p>
+        ) : (
+          hero.credit && (
+            <p className="place-field-guide__gallery-caption">
+              <i className="fa-solid fa-camera" aria-hidden="true" /> Nguồn ảnh: {hero.credit}
+            </p>
+          )
         )}
       </div>
 

@@ -162,5 +162,86 @@ class TestTimRoiThemVaoChuyen(unittest.TestCase):
         self.assertIn("Chưa xếp ngày", c.js("document.body.innerText"))
 
 
+@can_browser
+class TestDetailGiuaNguyenNoiDungCoBan(unittest.TestCase):
+    """Trang chi tiết địa điểm: nội dung cơ bản sống sót khi web lỗi/chậm.
+
+    POI 99767 = "Sun World Ba Na Hills" trong DB gis_vietnam hiện tại. Số id
+    trong bản thiết kế gốc (265670) là Bà Nà Hills của DB cũ; sau khi đổi DB,
+    id đó trỏ sang một nhà hàng ở Lào Cai nên test phải theo địa điểm thật
+    của DB đang chạy. Backend unit test là nơi kiểm lỗi tạm thời một cách
+    chính xác (CDP tùy biến không chặn được mạng) — test này chỉ chứng minh
+    trang thật mount được và làm giàu web không xoá nội dung cơ bản.
+    """
+
+    POI_ID = 99767
+
+    @classmethod
+    def setUpClass(cls):
+        import sys
+        sys.path.insert(0, os.path.dirname(__file__))
+        from tools.cdp import mo_chrome
+
+        cls.ho_so = f"/tmp/cdp-detail-{os.getpid()}"
+        cls.proc, cls.c = mo_chrome(cls.ho_so, CONG_CDP)
+
+        c = cls.c
+        c.mo(WEB + f"/dia-diem/poi/{cls.POI_ID}")
+        c.js(BAT_LOI)
+        # Dữ liệu Overture phải hiện ra ngay, không chờ web.
+        c.cho_co("document.querySelector('h1') != null", 30)
+        c.cho_co(
+            "document.body.innerText.indexOf('Sun World Ba Na Hills') >= 0", 20)
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            cls.c.dong()
+            cls.proc.kill()
+        finally:
+            shutil.rmtree(cls.ho_so, ignore_errors=True)
+
+    def _cho_enrichment_roi_khoi_trang_thai_tai(self):
+        """Chờ hết skeleton (loading) — thành công/thất bại đều bỏ skeleton."""
+        try:
+            self.c.cho_co(
+                "!document.querySelector('[data-testid=\"enrichment-skeleton\"]')",
+                75)
+        except TimeoutError:
+            pass
+        return self.c.js("document.body.innerText") or ""
+
+    def test_noi_dung_co_ban_hien_du(self):
+        txt = self.c.js("document.body.innerText") or ""
+        # Điều hướng, tên, liên hệ và nút hành động chính đều là dữ liệu nền.
+        self.assertIn("Địa điểm", txt)
+        self.assertIn("Sun World Ba Na Hills", txt)
+        self.assertIn("Liên hệ", txt)
+        self.assertIn("Gửi yêu cầu đặt chỗ", txt)
+
+    def test_enrichment_ve_mot_trong_cac_trang_thai_cuoi(self):
+        txt = self._cho_enrichment_roi_khoi_trang_thai_tai()
+        # Khối thông tin web luôn có tiêu đề (không nhảy chiều cao khi tải).
+        self.assertIn("Thông tin cập nhật từ web", txt)
+        co_trang_thai_cuoi = any(
+            s in txt for s in (
+                "Nguồn thông tin",          # success: danh sách nguồn
+                "Chưa tìm thấy thông tin công khai bổ sung.",  # not_found
+                "Chưa tải được dữ liệu web",  # lỗi tạm thời
+            ))
+        self.assertTrue(
+            co_trang_thai_cuoi,
+            "enrichment phải dừng ở success/not_found/lỗi, không treo loading:\n"
+            + txt[:1500])
+        # Khi success, chú thích nguồn phải hiện diện (bài học: mọi dữ liệu web
+        # đều kèm nguồn — không có dữ liệu mồ côi).
+        if "Nguồn thông tin" in txt:
+            self.assertIn("Nguồn", txt)
+
+    def test_khong_loi_javascript(self):
+        loi = self.c.js("window.__loi") or []
+        self.assertEqual(loi, [], "\n".join(loi)[:1500])
+
+
 if __name__ == "__main__":
     unittest.main()

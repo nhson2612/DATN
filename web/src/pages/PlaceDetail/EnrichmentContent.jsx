@@ -59,7 +59,7 @@ function SaoXep(rating) {
   if (!rating) return null;
   const dem = rating.review_count
     ? `${rating.review_count.toLocaleString("vi-VN")} đánh giá`
-    : "có rating";
+    : "điểm";
   return (
     <div className="place-field-guide__fact">
       <i className="fa-solid fa-star place-field-guide__fact-icon" aria-hidden="true" />
@@ -74,7 +74,7 @@ function SaoXep(rating) {
 function GioFact(hours) {
   if (!hours?.display) return null;
   return (
-    <div className="place-field-guide__fact">
+    <div className="place-field-guide__fact place-field-guide__fact--gio">
       <i className="fa-solid fa-clock place-field-guide__fact-icon" aria-hidden="true" />
       <span className="place-field-guide__fact-value">{hours.display}</span>
     </div>
