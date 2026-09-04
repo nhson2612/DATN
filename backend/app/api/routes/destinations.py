@@ -1,9 +1,9 @@
 """Endpoint điểm đến — trang trung tâm của website du lịch."""
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response
 
 from app.repositories import destination_repo
-from app.services import destination_service
+from app.services import destination_service, enrichment_service
 
 router = APIRouter(prefix="/api/destinations", tags=["destinations"])
 
@@ -70,3 +70,18 @@ def place_detail(place_type: str, place_id: int):
     if not data:
         raise HTTPException(status_code=404, detail="Không tìm thấy địa điểm.")
     return {"success": True, "place": data}
+
+
+@places_router.post("/{place_type}/{place_id}/enrichment")
+def enrich_place(place_type: str, place_id: int, response: Response):
+    """Cache-first làm giàu: 200 cache/hoàn tất, 202 đang fetch, 404/503 lỗi.
+
+    Client gọi lại khi gặp 202 (tối đa vài lần, cách nhau 2 giây).
+    """
+    if place_type not in ("poi", "accommodation"):
+        raise HTTPException(status_code=400, detail="place_type phải là poi hoặc accommodation.")
+    status_code, body = enrichment_service.enrich(place_type, place_id)
+    if status_code in (404, 503):
+        raise HTTPException(status_code=status_code, detail=body["detail"])
+    response.status_code = status_code
+    return body

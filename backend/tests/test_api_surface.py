@@ -38,6 +38,7 @@ EXPECTED_PATHS = {
     "/api/places/nearby",
     "/api/places/cache-details",
     "/api/places/{place_type}/{place_id}",
+    "/api/places/{place_type}/{place_id}/enrichment",
     "/api/favorites",
     "/api/favorites/{place_type}/{place_id}",
     "/api/booking-requests",

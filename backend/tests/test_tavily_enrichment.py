@@ -369,5 +369,183 @@ class TavilySettingsModelTests(unittest.TestCase):
         self.assertIsNone(Settings().tavily_api_key)
 
 
+_ROW_NOT_FOUND = {
+    "id": 9, "provider": "tavily", "status": "not_found",
+    "summary": None, "opening_hours": None, "rating": None,
+    "review_highlights": [], "images": [], "sources": [],
+    "raw_response": {"answer": ""}, "started_at": "2026-09-04T00:00:00+00:00",
+    "fetched_at": "2026-09-04T00:00:00+00:00",
+}
+
+
+class EnrichmentServiceTests(unittest.TestCase):
+    """Điều phối cache-first: patch repository và provider, không gọi DB/HTTP."""
+
+    @classmethod
+    def setUpClass(cls):
+        from app.services import enrichment_service, tavily_service
+        cls.svc = enrichment_service
+        cls.tv = tavily_service
+
+    def test_success_cache_never_calls_tavily(self):
+        # Service tra địa điểm TRƯỚC rồi mới đọc cache (thứ tự trong plan) —
+        # nhưng cache hit thì không bao giờ đụng tới provider.
+        with patch("app.services.enrichment_service.enrichment_repo.get",
+                   return_value={**_ROW_NOT_FOUND, "status": "success",
+                                 "summary": "cached",
+                                 "fetched_at": "2026-09-04T00:00:00+00:00"}) as get, \
+             patch("app.services.enrichment_service.tavily_service.search") as search, \
+             patch("app.services.enrichment_service.destination_repo.get_place_detail",
+                   return_value=PLACE):
+            code, body = self.svc.enrich("poi", 265670)
+        self.assertEqual(code, 200)
+        self.assertTrue(body["cached"])
+        self.assertEqual(body["status"], "success")
+        self.assertEqual(body["enrichment"]["summary"], "cached")
+        search.assert_not_called()
+        get.assert_called_once_with("poi", 265670)
+
+    def test_not_found_cache_duoc_doc_lai_ma_khong_goi_tavily(self):
+        with patch("app.services.enrichment_service.enrichment_repo.get",
+                   return_value=dict(_ROW_NOT_FOUND)) as get, \
+             patch("app.services.enrichment_service.tavily_service.search") as search:
+            code, body = self.svc.enrich("poi", 265670)
+        self.assertEqual((code, body["status"], body["cached"]), (200, "not_found", True))
+        self.assertIsNone(body["enrichment"]["summary"])
+        self.assertEqual(body["enrichment"]["sources"], [])
+        search.assert_not_called()
+
+    def test_public_shape_gom_du_7_field_va_bo_cot_noi_bo(self):
+        with patch("app.services.enrichment_service.enrichment_repo.get",
+                   return_value={**_ROW_NOT_FOUND, "status": "success",
+                                 "summary": "cached",
+                                 "fetched_at": "2026-09-04T00:00:00+00:00"}):
+            code, body = self.svc.enrich("poi", 265670)
+        khong_gom = ("raw_response", "started_at", "provider", "id")
+        for cot in khong_gom:
+            self.assertNotIn(cot, body["enrichment"])
+        for cot in ("summary", "opening_hours", "rating", "review_highlights",
+                    "images", "sources", "fetched_at"):
+            self.assertIn(cot, body["enrichment"])
+
+    def test_fetching_fresh_202(self):
+        with patch("app.services.enrichment_service.enrichment_repo.get",
+                   return_value=None), \
+             patch("app.services.enrichment_service.enrichment_repo.claim",
+                   return_value=False), \
+             patch("app.services.enrichment_service.destination_repo.get_place_detail",
+                   return_value=PLACE), \
+             patch("app.services.enrichment_service.tavily_service.search") as search:
+            code, body = self.svc.enrich("poi", 265670)
+        self.assertEqual(code, 202)
+        self.assertEqual(body, {"status": "fetching", "cached": False})
+        search.assert_not_called()
+
+    def test_missing_place_404(self):
+        with patch("app.services.enrichment_service.enrichment_repo.get") as get, \
+             patch("app.services.enrichment_service.enrichment_repo.claim") as claim, \
+             patch("app.services.enrichment_service.destination_repo.get_place_detail",
+                   return_value=None):
+            code, body = self.svc.enrich("poi", 265670)
+        self.assertEqual(code, 404)
+        self.assertIn("Không tìm thấy", body["detail"])
+        get.assert_not_called()
+        claim.assert_not_called()
+
+    def test_first_success_tra_cached_false(self):
+        row_success = {**_ROW_NOT_FOUND, "status": "success",
+                       "summary": "Khu du lịch trên núi.",
+                       "fetched_at": "2026-09-04T00:00:00+00:00"}
+        with patch("app.services.enrichment_service.enrichment_repo.get",
+                   side_effect=[None, row_success]) as get, \
+             patch("app.services.enrichment_service.enrichment_repo.claim",
+                   return_value=True), \
+             patch("app.services.enrichment_service.destination_repo.get_place_detail",
+                   return_value=PLACE), \
+             patch("app.services.enrichment_service.tavily_service.search",
+                   return_value={"answer": "Khu du lịch.", "results": [], "images": []}), \
+             patch("app.services.enrichment_service.tavily_service.normalize",
+                   return_value={"summary": "Khu du lịch trên núi.",
+                                 "opening_hours": None, "rating": None,
+                                 "review_highlights": [], "images": [], "sources": []}), \
+             patch("app.services.enrichment_service.enrichment_repo.save_success") as luu:
+            code, body = self.svc.enrich("poi", 265670)
+        self.assertEqual(code, 200)
+        self.assertFalse(body["cached"])
+        self.assertEqual(body["enrichment"]["summary"], "Khu du lịch trên núi.")
+        luu.assert_called_once()
+
+    def test_transient_failure_releases_claim_for_next_visit(self):
+        with patch.multiple(
+            "app.services.enrichment_service.enrichment_repo",
+            get=DEFAULT, claim=DEFAULT, release_transient=DEFAULT,
+        ) as repo, patch(
+            "app.services.enrichment_service.destination_repo.get_place_detail",
+            return_value=PLACE,
+        ), patch(
+            "app.services.enrichment_service.tavily_service.search",
+            side_effect=self.tv.TavilyTransientError("timeout"),
+        ):
+            repo["get"].return_value = None
+            repo["claim"].return_value = True
+            code, body = self.svc.enrich("poi", 265670)
+        self.assertEqual(code, 503)
+        self.assertIn("thử lại", body["detail"])
+        repo["release_transient"].assert_called_once_with("poi", 265670)
+
+    def test_configuration_error_503_khong_luu_terminal(self):
+        with patch.multiple(
+            "app.services.enrichment_service.enrichment_repo",
+            get=DEFAULT, claim=DEFAULT, release_transient=DEFAULT,
+            save_not_found=DEFAULT, save_success=DEFAULT,
+        ) as repo, patch(
+            "app.services.enrichment_service.destination_repo.get_place_detail",
+            return_value=PLACE,
+        ), patch(
+            "app.services.enrichment_service.tavily_service.search",
+            side_effect=self.tv.TavilyConfigurationError("no key"),
+        ):
+            repo["get"].return_value = None
+            repo["claim"].return_value = True
+            code, body = self.svc.enrich("poi", 265670)
+        self.assertEqual(code, 503)
+        self.assertIn("chưa được cấu hình", body["detail"])
+        repo["release_transient"].assert_called_once_with("poi", 265670)
+        repo["save_not_found"].assert_not_called()
+        repo["save_success"].assert_not_called()
+
+    def test_empty_normalized_result_saves_not_found(self):
+        with patch.multiple(
+            "app.services.enrichment_service.enrichment_repo",
+            get=DEFAULT, claim=DEFAULT, save_not_found=DEFAULT,
+        ) as repo, patch(
+            "app.services.enrichment_service.destination_repo.get_place_detail",
+            return_value=PLACE,
+        ), patch(
+            "app.services.enrichment_service.tavily_service.search",
+            return_value={"answer": "", "results": [], "images": []},
+        ), patch(
+            "app.services.enrichment_service.tavily_service.normalize",
+            return_value={"summary": None, "opening_hours": None,
+                          "rating": None, "review_highlights": [],
+                          "images": [], "sources": []},
+        ):
+            repo["get"].side_effect = [None, _ROW_NOT_FOUND]
+            repo["claim"].return_value = True
+            code, body = self.svc.enrich("poi", 265670)
+        self.assertEqual((code, body["status"]), (200, "not_found"))
+        self.assertFalse(body["cached"])
+        repo["save_not_found"].assert_called_once()
+
+    def test_has_value_khong_tinh_sources(self):
+        from app.services import enrichment_service
+        self.assertFalse(enrichment_service._has_value(
+            {"sources": [{"title": "A", "url": "https://a.example/"}]}))
+        self.assertTrue(enrichment_service._has_value(
+            {"rating": {"value": 4.7, "review_count": 7813}}))
+        self.assertTrue(enrichment_service._has_value(
+            {"opening_hours": {"display": "08:00–22:00 hằng ngày"}}))
+
+
 if __name__ == "__main__":
     unittest.main()
