@@ -9,7 +9,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -38,6 +38,17 @@ class Settings(BaseSettings):
     deepseek_url: str = "https://api.deepseek.com/chat/completions"
     deepseek_model: str = "deepseek-v4-pro"
     deepseek_api_key: str | None = None
+
+    # ---- Tavily (làm giàu trang chi tiết địa điểm) ----
+    # Đọc TAVILY_API_KEY (tên chuẩn) trước; TAVILI_API_KEY là tên viết sai có
+    # sẵn trong ~/.zshrc của máy dev, chấp nhận tạm để không phải sửa mọi nơi.
+    # Key chỉ tồn tại ở backend — không bao giờ ra frontend/log/API response.
+    tavily_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("TAVILY_API_KEY", "TAVILI_API_KEY"),
+    )
+    tavily_url: str = "https://api.tavily.com/search"
+    tavily_timeout: int = Field(default=20, ge=1, le=60)
 
     # Phạm vi địa lý của DB đang dùng, chèn vào IR_SYSTEM_PROMPT. Mặc định là
     # "Đà Nẵng" để giữ nguyên prompt mà mọi số benchmark đo trên đó; đổi sang

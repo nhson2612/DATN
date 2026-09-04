@@ -132,5 +132,242 @@ class EnrichmentRepositoryTests(unittest.TestCase):
                 enrichment_repo.release_transient("hotel", 1)
 
 
+class TavilyServiceTests(unittest.TestCase):
+    """Parser/client test với payload giả — không tiêu Tavily credit."""
+
+    @classmethod
+    def setUpClass(cls):
+        from app.services import tavily_service
+        cls.tv = tavily_service
+
+    def test_build_query_includes_identity_signals(self):
+        q = self.tv.build_query(PLACE)
+        for value in ("Sun World", "Hòa Vang", "Đà Nẵng",
+                      "+842363749888", "sunworld.vn"):
+            self.assertIn(value, q)
+
+    def test_rating_and_count_come_from_same_result(self):
+        data = self.tv.normalize(PLACE, {
+            "answer": "It has 4.7 from 7,813 reviews.",
+            "results": [
+                {"title": "Ba Na Hills", "url": "https://a.example/place",
+                 "content": "4.7 (7,813 reviews) Ba Na, Da Nang", "score": .8},
+                {"title": "Wrong branch", "url": "https://b.example/place",
+                 "content": "4.9 (66K reviews) Hanoi", "score": .9},
+            ], "images": []})
+        self.assertEqual(data["rating"]["value"], 4.7)
+        self.assertEqual(data["rating"]["review_count"], 7813)
+        self.assertEqual(data["rating"]["source_url"], "https://a.example/place")
+
+    def test_close_only_does_not_invent_opening_time(self):
+        import json
+        data = self.tv.normalize(PLACE, {
+            "answer": "Open now.",
+            "results": [{"title": "Official", "url": PLACE["website"],
+                         "content": "Open. Closes at 22:00", "score": .9}],
+            "images": []})
+        self.assertEqual(data["opening_hours"]["display"], "Đóng cửa lúc 22:00")
+        self.assertNotIn("08:00", json.dumps(data, ensure_ascii=False))
+
+    def test_full_range_gets_display_and_evidence(self):
+        data = self.tv.normalize(PLACE, {
+            "answer": "",
+            "results": [{"title": "Official", "url": PLACE["website"],
+                         "content": "Opening Hours: 8:00 AM – 10:00 PM daily",
+                         "score": .9}],
+            "images": []})
+        self.assertEqual(data["opening_hours"]["display"], "08:00–22:00 hằng ngày")
+        self.assertEqual(data["opening_hours"]["source_url"], PLACE["website"])
+        self.assertIn("Opening Hours: 8:00 AM", data["opening_hours"]["evidence"])
+
+    def test_sai_locality_bi_loai_khoi_moi_field(self):
+        data = self.tv.normalize(PLACE, {
+            "answer": "",
+            "results": [{"title": "Ba Na Hills", "url": "https://c.example/x",
+                         "content": ("Sun World Ba Na Hills Saigon branch "
+                                     "4.8 (200 reviews) Ho Chi Minh"),
+                         "score": .9}],
+            "images": []})
+        self.assertIsNone(data["rating"])
+        self.assertEqual(data["sources"], [])
+
+    def test_javascript_url_bi_loai(self):
+        data = self.tv.normalize(PLACE, {
+            "answer": "",
+            "results": [{"title": "Ba Na Hills", "url": "javascript:alert(1)",
+                         "content": "Ba Na Hills, Da Nang. Open 08:00-22:00",
+                         "score": .9}],
+            "images": [{"url": "javascript:alert(1)", "title": "Ba Na",
+                        "description": "Ba Na Hills Da Nang"}]})
+        self.assertEqual(data["sources"], [])
+        self.assertEqual(data["images"], [])
+
+    def test_image_title_identity_matching(self):
+        data = self.tv.normalize(PLACE, {
+            "answer": "",
+            "results": [],
+            "images": [
+                {"url": "https://img.example/banahills.jpg",
+                 "title": "Sun World Ba Na Hills cable car",
+                 "description": "Golden Bridge Bà Nà Hills Đà Nẵng"},
+                {"url": "https://img.example/hanoi.jpg",
+                 "title": "Hanoi street food tour",
+                 "description": "Pho in Hanoi old quarter"},
+            ]})
+        urls = [i["url"] for i in data["images"]]
+        self.assertIn("https://img.example/banahills.jpg", urls)
+        self.assertNotIn("https://img.example/hanoi.jpg", urls)
+        self.assertTrue(all(i["host"] for i in data["images"]))
+
+    def test_parse_review_count_k_va_k_plus(self):
+        from app.services import tavily_service
+        self.assertEqual(tavily_service._parse_review_count("66K reviews"), 66000)
+        self.assertEqual(tavily_service._parse_review_count("66K+"), 66000)
+        self.assertEqual(tavily_service._parse_review_count("7,813"), 7813)
+        self.assertEqual(tavily_service._parse_review_count("1.2k"), 1200)
+        self.assertIsNone(tavily_service._parse_review_count("abc"))
+
+    def test_khong_suy_dien_phan_phoi_diem_sao(self):
+        data = self.tv.normalize(PLACE, {
+            "answer": "",
+            "results": [{"title": "Ba Na", "url": "https://a.example/x",
+                         "content": ("4.7 (7,813 reviews) Ba Na, Da Nang "
+                                     "40% five stars"), "score": .8}],
+            "images": []})
+        self.assertEqual(data["rating"]["value"], 4.7)
+        self.assertNotIn("distribution", data["rating"])
+        self.assertNotIn("40%", data["rating"].get("evidence", ""))
+
+    def test_khong_trich_review_tu_noi_dung_quang_cao(self):
+        data = self.tv.normalize(PLACE, {
+            "answer": "",
+            "results": [{"title": "Ba Na", "url": "https://a.example/x",
+                         "content": ("Book now for Golden Bridge day tour from "
+                                     "$45. The views are amazing, staff friendly. "
+                                     "Ba Na, Da Nang"), "score": .8}],
+            "images": []})
+        texts = [h["text"] for h in data["review_highlights"]]
+        self.assertFalse(any("Book now" in t or "$45" in t for t in texts))
+        self.assertTrue(any("amazing" in t for t in texts))
+
+    def test_summary_loai_cau_rating_khong_bang_chung(self):
+        data = self.tv.normalize(PLACE, {
+            "answer": ("Ba Na Hills is a hill station near Da Nang. "
+                       "It has 4.7 stars from 7,813 reviews. "
+                       "Visitors enjoy the mountain air."),
+            "results": [{"title": "Ba Na", "url": "https://a.example/x",
+                         "content": "Ba Na Hills Da Nang cable car", "score": .8}],
+            "images": []})
+        self.assertIn("hill station", data["summary"])
+        self.assertNotIn("4.7", data["summary"])
+        self.assertNotIn("7,813", data["summary"])
+
+    def test_summary_khong_qua_600_ky_tu(self):
+        from app.services import tavily_service
+        dai = ("Câu mô tả rất dài. " * 100).strip()
+        self.assertLessEqual(len(tavily_service._safe_summary(
+            PLACE, {"answer": dai, "results": [], "images": []}, [])), 600)
+
+    def test_response_tren_1_mib_bi_tu_choi(self):
+        class Du:
+            status_code = 200
+            content = b"x" * (1_048_576 + 1)
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"results": [], "images": []}
+
+        with patch.object(self.tv.settings, "tavily_api_key", "tvly-test"):
+            with self.assertRaises(self.tv.TavilyTransientError):
+                self.tv.search(PLACE, post=lambda *a, **k: Du())
+
+    def test_429_va_5xx_la_loi_tam_thoi(self):
+        class Du:
+            def __init__(self, code):
+                self.status_code = code
+                self.content = b"{}"
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"results": [], "images": []}
+
+        for code in (429, 500, 502, 503):
+            with self.subTest(code=code):
+                with patch.object(self.tv.settings, "tavily_api_key", "tvly-test"):
+                    with self.assertRaises(self.tv.TavilyTransientError):
+                        self.tv.search(PLACE, post=lambda *a, **k: Du(code))
+
+    def test_http_4xx_khac_khong_phai_loi_tam_thoi(self):
+        import requests
+
+        class Du:
+            status_code = 400
+            content = b"{}"
+
+            def raise_for_status(self):
+                raise requests.HTTPError("400 Client Error")
+
+            def json(self):
+                return {"results": [], "images": []}
+
+        with patch.object(self.tv.settings, "tavily_api_key", "tvly-test"):
+            with self.assertRaises(requests.HTTPError):
+                self.tv.search(PLACE, post=lambda *a, **k: Du())
+
+    def test_timeout_la_loi_tam_thoi(self):
+        import requests
+
+        def treo(*a, **k):
+            raise requests.exceptions.Timeout("timeout")
+
+        with patch.object(self.tv.settings, "tavily_api_key", "tvly-test"):
+            with self.assertRaises(self.tv.TavilyTransientError):
+                self.tv.search(PLACE, post=treo)
+
+    def test_thieu_api_key_la_loi_cau_hinh(self):
+        def khong_goi(*a, **k):
+            self.fail("không được gọi HTTP khi thiếu key")
+
+        with patch.object(self.tv.settings, "tavily_api_key", None):
+            with self.assertRaises(self.tv.TavilyConfigurationError):
+                self.tv.search(PLACE, post=khong_goi)
+
+    def test_settings_doc_ten_key_cu_viet_sai(self):
+        from app.core.config import Settings
+
+        class Du:
+            def __init__(self, **kw):
+                self.__dict__.update(kw)
+
+        with patch.dict(os.environ, {"TAVILI_API_KEY": "tvly-legacy"},
+                        clear=False):
+            s = Settings()
+        self.assertEqual(s.tavily_api_key, "tvly-legacy")
+
+    def test_settings_uu_tien_ten_chuan(self):
+        from app.core.config import Settings
+
+        with patch.dict(os.environ,
+                        {"TAVILY_API_KEY": "tvly-chuan",
+                         "TAVILI_API_KEY": "tvly-sai"},
+                        clear=False):
+            s = Settings()
+        self.assertEqual(s.tavily_api_key, "tvly-chuan")
+
+
+class TavilySettingsModelTests(unittest.TestCase):
+    """Settings đọc từ env — không đụng settings toàn cục đã nạp."""
+
+    def test_thieu_ca_hai_ten_thi_khong_co_key(self):
+        from app.core.config import Settings
+        for ten in ("TAVILY_API_KEY", "TAVILI_API_KEY"):
+            os.environ.pop(ten, None)
+        self.assertIsNone(Settings().tavily_api_key)
+
+
 if __name__ == "__main__":
     unittest.main()
