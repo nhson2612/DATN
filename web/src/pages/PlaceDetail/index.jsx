@@ -25,6 +25,12 @@ export default function PlaceDetail({ user, onNeedAuth }) {
   const [daLuu, setDaLuu] = useState(false);
   const [moForm, setMoForm] = useState(false);
 
+  // Làm giàu web (Tavily) — tách khỏi fetch địa điểm để lỗi/thời gian chờ của
+  // nó KHÔNG bao giờ làm chậm hay xoá nội dung cơ bản của trang.
+  const [enrichment, setEnrichment] = useState(null);
+  const [enrichmentState, setEnrichmentState] = useState("loading");
+  const [enrichmentError, setEnrichmentError] = useState("");
+
   useEffect(() => {
     setP(null);
     setDaLuu(false);
@@ -40,6 +46,43 @@ export default function PlaceDetail({ user, onNeedAuth }) {
         }
       })
       .catch((e) => setLoi(e.message || "Lỗi khi tải thông tin địa điểm."));
+  }, [type, id]);
+
+  // Effect riêng, có thể huỷ: gọi POST /enrichment; 202 "fetching" thì poll
+  // lại tối đa 3 lần × 2 giây. Lần thứ 4 vẫn fetching -> báo lỗi tạm thời,
+  // lần mở sau tự thử lại (không đánh dấu thành công sai).
+  useEffect(() => {
+    let cancelled = false;
+    const timers = [];
+
+    async function load(attempt = 0) {
+      try {
+        const data = await api.enrichPlace(type, id);
+        if (cancelled) return;
+        if (data.status === "fetching" && attempt < 3) {
+          timers.push(setTimeout(() => load(attempt + 1), 2000));
+          return;
+        }
+        setEnrichment(data.enrichment || null);
+        setEnrichmentState(
+          data.status === "not_found" ? "not_found" : "success"
+        );
+      } catch (e) {
+        if (!cancelled) {
+          setEnrichmentState("error");
+          setEnrichmentError(e.message || "");
+        }
+      }
+    }
+
+    setEnrichment(null);
+    setEnrichmentState("loading");
+    setEnrichmentError("");
+    load();
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
   }, [type, id]);
 
   async function luuYeuThich() {

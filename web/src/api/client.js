@@ -47,6 +47,11 @@ export const api = {
   },
   cachePlaceDetails: (body) =>
     request("/places/cache-details", { method: "POST", body: JSON.stringify(body) }),
+  // Làm giàu (Tavily, cache-first): 200 kết quả/cache, 202 đang fetch, 503 chưa sẵn sàng.
+  enrichPlace: (type, id) =>
+    request(`/places/${encodeURIComponent(type)}/${Number(id)}/enrichment`, {
+      method: "POST",
+    }),
 
   // Tour trọn gói
   tours: (params = {}) => {
