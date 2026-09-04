@@ -233,3 +233,29 @@ CREATE TABLE IF NOT EXISTS tour_bookings (
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS tour_bookings_status_idx ON tour_bookings(status);
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Làm giàu địa điểm (Tavily)
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Một dòng cho mỗi (place_type, place_id). `fetching` là job đang chạy (cũ quá
+-- 90 giây thì request khác được chiếm lại); `success`/`not_found` là kết quả
+-- cuối, đọc lại mãi mãi. `raw_response` chỉ để debug, không bao giờ ra API.
+CREATE TABLE IF NOT EXISTS place_enrichments (
+    id           BIGSERIAL PRIMARY KEY,
+    place_type   VARCHAR(20) NOT NULL,
+    place_id     INTEGER NOT NULL,
+    provider     VARCHAR(30) NOT NULL DEFAULT 'tavily',
+    status       VARCHAR(20) NOT NULL,
+    summary      TEXT,
+    opening_hours JSONB,
+    rating       JSONB,
+    review_highlights JSONB NOT NULL DEFAULT '[]'::jsonb,
+    images       JSONB NOT NULL DEFAULT '[]'::jsonb,
+    sources      JSONB NOT NULL DEFAULT '[]'::jsonb,
+    raw_response JSONB,
+    fetched_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (place_type, place_id),
+    CHECK (place_type IN ('poi', 'accommodation')),
+    CHECK (status IN ('fetching', 'success', 'not_found'))
+);

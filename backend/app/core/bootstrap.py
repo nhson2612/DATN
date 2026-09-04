@@ -4,17 +4,18 @@ from app.core.config import settings
 from app.core.database import execute_query
 from app.core.logging import get_logger
 from app.core.security import hash_password
-from app.repositories import user_repo
+from app.repositories import enrichment_repo, user_repo
 
 logger = get_logger(__name__)
 
 
 def ensure_db_schema():
-    """Đảm bảo bảng place_photos có đủ cột details JSONB để lưu cache từ Google Maps."""
+    """Nâng cấp schema nhẹ trên DB cũ khi khởi động (idempotent)."""
     try:
         execute_query("ALTER TABLE place_photos ADD COLUMN IF NOT EXISTS details JSONB;")
+        enrichment_repo.ensure_schema()
     except Exception as e:
-        logger.warning("Không thể nâng cấp schema place_photos: %s", e)
+        logger.warning("Không thể nâng cấp schema: %s", e)
 
 
 def create_default_users():
