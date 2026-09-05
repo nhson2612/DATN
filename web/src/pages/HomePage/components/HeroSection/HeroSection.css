@@ -1,0 +1,319 @@
+/* ==========================================================================
+   BLOCK: .wl-hero (Hero Section)
+   ========================================================================== */
+.wl-hero {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 5rem;
+  padding-bottom: 3.5rem;
+  overflow: hidden;
+  background-color: #0f172a;
+}
+
+.wl-hero__carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.wl-hero__slide {
+  position: absolute;
+  inset: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.wl-hero__slide--active {
+  opacity: 1;
+  z-index: 10;
+}
+
+.wl-hero__slide--inactive {
+  opacity: 0;
+  z-index: 0;
+}
+
+.wl-hero__slide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.wl-hero__slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.25) 45%, rgba(15, 23, 42, 0.75) 100%);
+}
+
+.wl-hero__content {
+  position: relative;
+  z-index: 10;
+  max-width: 80rem;
+  margin: auto auto;
+  padding: 1rem 1.5rem 0 1.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.wl-hero__title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  max-width: 56rem;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+@media (min-width: 768px) {
+  .wl-hero__title {
+    font-size: 3.75rem;
+  }
+}
+
+.wl-hero__title-highlight {
+  background: linear-gradient(to right, #fde047, #fb923c, #fde047);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.wl-hero__subtitle {
+  margin-top: 0.75rem;
+  font-size: 1rem;
+  color: #f1f5f9;
+  max-width: 36rem;
+  line-height: 1.6;
+}
+
+.wl-hero__actions {
+  margin-top: 1.25rem;
+  display: flex;
+  gap: 1.25rem;
+}
+
+.wl-hero__link {
+  color: #fb923c;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: left center;
+}
+
+.wl-hero__link:hover {
+  color: #fdba74;
+  transform: scale(1.12);
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.wl-hero__dots {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.wl-hero__dot {
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wl-hero__dot--active {
+  width: 2.5rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background-color: #f97316;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
+.wl-hero__dot--inactive {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.wl-hero__dot--inactive:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* ==========================================================================
+   BLOCK: .wl-search (Search Engine Bar)
+   ========================================================================== */
+.wl-search {
+  position: relative;
+  z-index: 20;
+  max-width: 64rem;
+  margin: 0 auto 3rem auto;
+  padding: 0 1rem;
+  width: 100%;
+}
+
+.wl-search__card {
+  background-color: rgba(255, 255, 255, 0.96);
+  color: #0f172a;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 0 !important;
+  border-radius: 36px 14px 36px 14px !important;
+  overflow: hidden !important;
+}
+
+.wl-search__row {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  min-height: 5rem;
+}
+
+@media (min-width: 768px) {
+  .wl-search__row {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+  }
+}
+
+.wl-search__field {
+  padding: 0.875rem 1.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.wl-search__field:hover {
+  background-color: #f8fafc;
+}
+
+.wl-search__field--main {
+  flex: 1;
+  padding-left: 1.5rem;
+}
+
+.wl-search__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f97316;
+}
+
+.wl-search__value {
+  margin-top: 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 900;
+  color: #0f172a;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.wl-search__input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.wl-search__input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.wl-search__date-hidden {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.wl-search__subtext {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.wl-search__divider {
+  display: none;
+  width: 1px;
+  align-self: center;
+  height: 2.5rem;
+  background-color: #e2e8f0;
+}
+
+@media (min-width: 768px) {
+  .wl-search__divider {
+    display: block;
+  }
+}
+
+.wl-search__btn-wrapper {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+}
+
+.wl-search__btn {
+  width: 100%;
+  min-height: 3.5rem;
+  background: linear-gradient(to right, #f97316, #f59e0b);
+  color: #ffffff;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3);
+  transition: all 0.3s ease;
+  margin: 0;
+  border-radius: 28px 14px 14px 28px;
+}
+
+@media (min-width: 768px) {
+  .wl-search__btn-wrapper {
+    width: auto;
+  }
+
+  .wl-search__btn {
+    width: 8rem;
+    height: 100%;
+    align-self: stretch;
+    border-radius: 36px 14px 36px 14px;
+  }
+
+  .wl-search__btn:hover {
+    width: 11rem;
+  }
+}

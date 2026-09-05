@@ -1,0 +1,225 @@
+/* ==========================================
+   VIETNAM MAP FILTER (.wl-vmap) BEM BLOCK
+   ========================================== */
+.wl-vmap {
+  background: transparent;
+  height: 550px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.wl-vmap__tabs-container {
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.wl-vmap__tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.375rem;
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.wl-vmap__tab {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  border-radius: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.wl-vmap__tab--active {
+  background-color: #f97316;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+}
+
+.wl-vmap__body {
+  position: relative;
+  background: transparent;
+  padding: 0.25rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-height: 0;
+}
+
+.wl-vmap__banner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.wl-vmap__hint {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.wl-vmap__ping {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: #f97316;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.wl-vmap__count {
+  color: #d97706;
+  font-weight: 700;
+}
+
+.wl-vmap__map-box {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.wl-vmap__svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 12px rgba(13, 148, 136, 0.15));
+}
+
+.wl-vmap__territory {
+  transition: fill 0.2s ease;
+}
+
+.wl-vmap__territory:hover {
+  fill: #dbeafe;
+}
+
+.wl-vmap__spot {
+  position: absolute;
+  cursor: pointer;
+  transform: translate(-50%, -100%);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
+}
+
+.wl-vmap__spot:hover {
+  transform: translate(-50%, -108%) scale(1.25);
+  z-index: 40;
+}
+
+.wl-vmap__spot-ping {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1.3rem;
+}
+
+.wl-vmap__spot-wave {
+  position: absolute;
+  display: inline-flex;
+  height: 100%;
+  width: 100%;
+  border-radius: 9999px;
+  opacity: 0.75;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.wl-vmap__spot-wave--orange {
+  background-color: #f97316;
+}
+
+.wl-vmap__spot-wave--emerald {
+  background-color: #34d399;
+}
+
+.wl-vmap__pin-icon {
+  position: relative;
+  width: 1rem;
+  height: 1.3rem;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s ease;
+}
+
+.wl-vmap__pin-icon--orange {
+  color: #ea580c;
+}
+
+.wl-vmap__pin-icon--emerald {
+  color: #059669;
+}
+
+.wl-vmap__pin-icon--amber {
+  color: #d97706;
+}
+
+.wl-vmap__pin-icon--sky {
+  color: #0284c7;
+}
+
+.wl-vmap__pin-icon--purple {
+  color: #9333ea;
+}
+
+.wl-vmap__tooltip {
+  position: absolute;
+  left: 1.25rem;
+  top: -0.5rem;
+  display: none;
+  flex-direction: column;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  border-radius: 0.75rem;
+  padding: 0.625rem;
+  font-size: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  z-index: 30;
+  white-space: nowrap;
+}
+
+.wl-vmap__tooltip-title {
+  font-weight: 800;
+}
+
+.wl-vmap__tooltip-title--amber {
+  color: #b45309;
+}
+
+.wl-vmap__tooltip-title--emerald {
+  color: #059669;
+}
+
+.wl-vmap__tooltip-title--sky {
+  color: #0284c7;
+}
+
+.wl-vmap__tooltip-title--purple {
+  color: #9333ea;
+}
+
+.wl-vmap__tooltip-desc {
+  color: #64748b;
+  font-size: 11px;
+}

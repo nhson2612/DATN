@@ -1,16 +1,18 @@
-import { useState } from "react";
-import Footer from "../../components/layout/Footer";
-import HeroSearch from "./HeroSearch";
-import HomeSections from "./HomeSections";
+import React from "react";
+import Navbar from "./components/Navbar/Navbar";
+import HeroSection from "./components/HeroSection/HeroSection";
+import ExploreToursSection from "./components/ExploreToursSection/ExploreToursSection";
+import CustomItinerarySection from "./components/CustomItinerarySection/CustomItinerarySection";
+import Footer from "./components/Footer/Footer";
 import "./Home.css";
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState("tour");
-
   return (
-    <div className="wanderlust-home">
-      <HeroSearch activeTab={activeTab} setActiveTab={setActiveTab} />
-      <HomeSections activeTab={activeTab} />
+    <div className="wanderlust-home snap-container antialiased selection:bg-orange-500 selection:text-white">
+      <Navbar />
+      <HeroSection />
+      <ExploreToursSection />
+      <CustomItinerarySection />
       <Footer />
     </div>
   );

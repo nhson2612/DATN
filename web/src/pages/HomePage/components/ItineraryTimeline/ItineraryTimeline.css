@@ -1,0 +1,271 @@
+/* ==========================================================================
+   BLOCK: .wl-timeline (Itinerary Stepper Timeline Component)
+   ========================================================================== */
+.wl-timeline {
+  background-color: #ffffff;
+  border-radius: 36px 12px 36px 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  height: 550px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .wl-timeline {
+    padding: 1.5rem;
+  }
+}
+
+.wl-timeline__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.75rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.wl-timeline__stat {
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.wl-timeline__stat--budget {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.wl-timeline__stat--duration {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.wl-timeline__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.wl-timeline__value {
+  font-size: 1.125rem;
+  font-weight: 900;
+  margin-top: 0.125rem;
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .wl-timeline__value {
+    font-size: 1.25rem;
+  }
+}
+
+.wl-timeline__value--emerald {
+  color: #047857;
+}
+
+.wl-timeline__value--dark {
+  color: #0f172a;
+}
+
+.wl-timeline__unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.wl-timeline__unit--muted {
+  font-weight: 400;
+  color: #64748b;
+}
+
+.wl-timeline__bold {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.wl-timeline__highlight-orange {
+  color: #f97316;
+  font-weight: 600;
+}
+
+.wl-timeline__highlight-emerald {
+  color: #047857;
+  font-weight: 600;
+}
+
+.wl-timeline__stepper {
+  --stepper-pl: 1.75rem;
+  margin-top: 0.75rem;
+  position: relative;
+  padding-left: var(--stepper-pl);
+  border-left: 2px dashed #f97316;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (min-width: 640px) {
+  .wl-timeline__stepper {
+    --stepper-pl: 2.25rem;
+  }
+}
+
+.wl-timeline__step {
+  position: relative;
+}
+
+.wl-timeline__badge {
+  position: absolute;
+  left: calc(-1 * var(--stepper-pl) - 0.875rem + 1px);
+  top: -2px;
+  width: 1.75rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.2));
+}
+
+@media (min-width: 640px) {
+  .wl-timeline__badge {
+    left: calc(-1 * var(--stepper-pl) - 1rem + 1px);
+    width: 2rem;
+    height: 2.5rem;
+  }
+}
+
+.wl-timeline__pin-icon {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.wl-timeline__badge--orange .wl-timeline__pin-icon {
+  color: #f97316;
+}
+
+.wl-timeline__badge--amber .wl-timeline__pin-icon {
+  color: #f59e0b;
+}
+
+.wl-timeline__badge--teal .wl-timeline__pin-icon {
+  color: #0d9488;
+}
+
+.wl-timeline__badge-num {
+  position: relative;
+  z-index: 3;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 10px;
+  margin-top: -6px;
+}
+
+.wl-timeline__card {
+  background-color: #f8fafc;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.wl-timeline__card:hover {
+  background-color: #ffffff;
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.wl-timeline__title {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #0f172a;
+  transition: color 0.2s ease;
+}
+
+.wl-timeline__card:hover .wl-timeline__title {
+  color: #f97316;
+}
+
+.wl-timeline__desc {
+  font-size: 0.75rem;
+  color: #475569;
+  line-height: 1.6;
+  margin-top: 0.125rem;
+}
+
+.wl-timeline__tags {
+  margin-top: 0.375rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  font-size: 11px;
+}
+
+.wl-timeline__tag {
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  font-weight: 500;
+}
+
+.wl-timeline__footer {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.wl-timeline__btn {
+  width: 100%;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(to right, #f97316, #f59e0b);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+  box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .wl-timeline__btn {
+    width: auto;
+  }
+}
+
+.wl-timeline__btn:hover {
+  background: linear-gradient(to right, #ea580c, #d97706);
+  box-shadow: 0 6px 12px -2px rgba(249, 115, 22, 0.3);
+}

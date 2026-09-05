@@ -1,8 +1,8 @@
 export const ANH_NEN = [
-  "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=800&q=80",
+  "/assets/images/vietnam-1.jpg",
+  "/assets/images/vietnam-2.jpg",
+  "/assets/images/vietnam-3.jpg",
+  "/assets/images/vietnam-4.jpg",
 ];
 
 export const TOUR_NOI_BAT = [
@@ -16,7 +16,7 @@ export const TOUR_NOI_BAT = [
     rating: 4.8,
     reviewsCount: 210,
     departures: "Thứ 3, 5, 7 hàng tuần",
-    image: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80",
+    image: "/assets/images/tour-halong.jpg",
     stops: ["Đảo Ti Tốp", "Hang Sửng Sốt", "Làng chài Cửa Vạn", "Động Thiên Cung"],
   },
   {
@@ -29,7 +29,7 @@ export const TOUR_NOI_BAT = [
     rating: 4.9,
     reviewsCount: 340,
     departures: "Thứ 5 & Chủ Nhật",
-    image: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=800&q=80",
+    image: "/assets/images/tour-sapa.jpg",
     stops: ["Đỉnh Fansipan", "Bản Cát Cát", "Thung lũng Mường Hoa", "Chợ tình Sapa"],
   },
   {
@@ -42,7 +42,7 @@ export const TOUR_NOI_BAT = [
     rating: 4.9,
     reviewsCount: 195,
     departures: "Hàng ngày",
-    image: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=800&q=80",
+    image: "/assets/images/tour-danang.jpg",
     stops: ["Bà Nà Hills", "Chùa Cầu", "Phố cổ Hội An", "Rừng dừa Bảy Mẫu"],
   },
   {
@@ -55,7 +55,7 @@ export const TOUR_NOI_BAT = [
     rating: 4.9,
     reviewsCount: 280,
     departures: "Thứ 6 hàng tuần",
-    image: "https://images.unsplash.com/photo-1540611025311-01df3cef54b5?auto=format&fit=crop&w=800&q=80",
+    image: "/assets/images/tour-phuquoc.jpg",
     stops: ["Cáp treo Hòn Thơm", "Grand World", "Bãi Sao", "Chợ đêm Phú Quốc"],
   },
 ];
@@ -63,12 +63,12 @@ export const TOUR_NOI_BAT = [
 export const GOI_Y_LICH_TRINH = [
   {
     id: 1,
-    title: "Di sản Miền Trung: Đà Nẵng • Hội An • Cố đô Huế",
+    title: "Di sản Miền Trung: Đà Nẵng • Hội An • Cố đồ Huế",
     tag: "Văn hoá & Di sản",
     duration: "6 Ngày 5 Đêm",
     totalPlaces: 14,
     likes: "2.4k",
-    image: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=800&q=80",
+    image: "/assets/images/vietnam-4.jpg",
     steps: [
       { day: "Ngày 1 - 2", title: "Khám phá Đà Nẵng & Bà Nà Hills", icon: "fa-umbrella-beach" },
       { day: "Ngày 3 - 4", title: "Phố cổ Hội An & Rừng dừa Bảy Mẫu", icon: "fa-torii-gate" },
@@ -82,7 +82,7 @@ export const GOI_Y_LICH_TRINH = [
     duration: "5 Ngày 4 Đêm",
     totalPlaces: 11,
     likes: "1.8k",
-    image: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=800&q=80",
+    image: "/assets/images/tour-sapa.jpg",
     steps: [
       { day: "Ngày 1 - 2", title: "Đèo Thung Khe & Cao nguyên Mộc Châu", icon: "fa-mountain" },
       { day: "Ngày 3 - 5", title: "Chinh phục Đỉnh Fansipan & Bản Cát Cát", icon: "fa-cloud-sun" },
@@ -95,7 +95,7 @@ export const GOI_Y_LICH_TRINH = [
     duration: "4 Ngày 3 Đêm",
     totalPlaces: 9,
     likes: "3.1k",
-    image: "https://images.unsplash.com/photo-1540611025311-01df3cef54b5?auto=format&fit=crop&w=800&q=80",
+    image: "/assets/images/tour-phuquoc.jpg",
     steps: [
       { day: "Ngày 1 - 2", title: "Cáp treo Hòn Thơm & Bãi Sao", icon: "fa-water" },
       { day: "Ngày 3 - 4", title: "Grand World & Chợ đêm Phú Quốc", icon: "fa-icons" },

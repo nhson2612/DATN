@@ -1,200 +1,267 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
 
-/* Wanderlust Custom Styling */
+/* ==========================================================================
+   WANDERLUST GLOBAL LAYOUT & ANIMATION SYSTEM
+   ========================================================================== */
+
+/* Main Container */
+.wl-home,
 .wanderlust-home {
-  font-family: 'Montserrat', sans-serif;
-  background-color: #faf8ff;
-  color: #131b2e;
-  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #ffffff;
+  color: #1e293b;
+  width: 100%;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-y: none;
 }
 
-/* Headings font */
-.wl-hero__title,
-.wl-section-title,
-.wl-tour-card__title,
-.wl-idea-card__title,
-.wl-dest-card__name,
-.wl-footer__brand {
+.wl-home::-webkit-scrollbar,
+.wanderlust-home::-webkit-scrollbar {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   FULL-PAGE SCROLL SNAP: 1 section / 1 viewport
+   -------------------------------------------------------------------------- */
+.wanderlust-home > .wl-hero,
+.wanderlust-home > .wl-section,
+.wanderlust-home > .wl-footer {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .wl-home,
+  .wanderlust-home {
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+  }
+
+  .wl-slide-left,
+  .wl-slide-right {
+    transition: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+.wl-home__heading {
   font-family: 'Playfair Display', serif;
 }
 
-/* Hero Section */
-.wl-hero {
-  @apply max-w-7xl mx-auto px-4 md:px-8 py-16 flex flex-col items-center gap-8 text-center;
+/* Animations */
+@keyframes wlDash {
+  to {
+    stroke-dashoffset: -24;
+  }
 }
 
-.wl-hero__header {
-  @apply max-w-3xl space-y-3;
+@keyframes wlPulseSlow {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
 }
 
-.wl-hero__title {
-  @apply text-4xl md:text-6xl font-bold text-[#003527] leading-tight tracking-tight;
+.wl-animate-dash {
+  animation: wlDash 1.6s linear infinite;
 }
 
-.wl-hero__subtitle {
-  @apply text-lg text-slate-600 font-medium max-w-xl mx-auto;
+.wl-animate-pulse {
+  animation: wlPulseSlow 2.5s ease-in-out infinite;
 }
 
-/* Search Box & Tabs */
-.wl-search-box {
-  @apply w-full max-w-4xl bg-white rounded-2xl shadow-lg p-3 border border-slate-200/60 space-y-4;
+.wl-slide-left,
+.wl-slide-right {
+  opacity: 0;
+  filter: blur(6px);
+  will-change: transform, opacity;
+  transition:
+    transform 1.05s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.75s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.wl-search-box__tabs {
-  @apply flex p-1.5 bg-slate-100 rounded-xl gap-2;
+.wl-slide-left {
+  transform: translate3d(-72px, 0, 0) scale(0.97);
 }
 
-.wl-search-box__tab-btn {
-  @apply flex-1 py-3 text-center text-sm font-semibold rounded-lg text-slate-600 hover:text-[#003527] transition-all duration-200 cursor-pointer;
+.wl-slide-right {
+  transform: translate3d(72px, 0, 0) scale(0.97);
 }
 
-.wl-search-box__tab-btn--active {
-  @apply text-[#003527] bg-white shadow-sm font-bold;
+.in-view .wl-slide-left,
+.in-view.wl-slide-left,
+.in-view .wl-slide-right,
+.in-view.wl-slide-right {
+  opacity: 1;
+  filter: blur(0);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
-.wl-search-form {
-  @apply flex flex-col md:flex-row gap-3 p-2;
+/* Stagger: các khối morph vào lần lượt thay vì cùng lúc */
+.in-view .wl-slide-left,
+.in-view .wl-slide-right {
+  transition-delay: 0.08s;
 }
 
-.wl-input-group {
-  @apply relative flex-1 min-w-0;
+.in-view .wl-section__header .wl-slide-left,
+.in-view .wl-section__header .wl-slide-right {
+  transition-delay: 0.02s;
 }
 
-.wl-input-icon {
-  @apply absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none;
+.in-view .wl-section__grid-sidebar,
+.in-view .wl-hero__actions {
+  transition-delay: 0.18s;
 }
 
-.wl-input {
-  @apply w-full pl-11 pr-4 py-3.5 border border-slate-200 rounded-xl focus:border-[#003527] focus:ring-2 focus:ring-[#003527]/10 outline-none text-sm text-slate-800 placeholder:text-slate-400 bg-white font-medium transition-all;
+.in-view .wl-section__grid-main,
+.in-view .wl-search {
+  transition-delay: 0.28s;
 }
 
-.wl-btn-primary {
-  @apply bg-[#003527] text-white font-semibold text-sm px-8 py-3.5 rounded-xl hover:bg-[#064e3b] active:scale-95 transition-all shadow-md shrink-0 cursor-pointer;
+/* --------------------------------------------------------------------------
+   SECTIONS WRAPPER & GRID LAYOUT
+   -------------------------------------------------------------------------- */
+/* Section 2: Explore Tours - Beach/Sea Image Background */
+#tour-packages {
+  position: relative;
+  background-image: url('/assets/images/phu_quoc_beach_new.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 
-/* Titles & Section Headers */
-.wl-section-title {
-  @apply text-2xl md:text-3xl font-bold text-[#003527];
+/* Section 3: Bespoke Itinerary - Adventure/Exploration Mountain Background */
+#custom-itinerary {
+  position: relative;
+  background-image: url('/assets/images/vietnam_explore_new.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 
-.wl-section-subtitle {
-  @apply text-sm text-slate-500 font-medium mt-1;
+.wl-section {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 1.5rem;
+  border-top: none !important;
 }
 
-.wl-link-more {
-  @apply text-sm font-bold text-[#003527] hover:underline flex items-center gap-2 cursor-pointer;
+.wl-section__container {
+  max-width: 80rem;
+  margin: auto auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Horizontal Accordion Styling */
-.wl-accordion-container {
-  @apply min-h-[420px];
+.wl-section__header {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.wl-accordion-item {
-  will-change: flex, transform;
+@media (min-width: 768px) {
+  .wl-section__header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
 }
 
-/* Tour Cards (Legacy Fallback) */
-.wl-tour-card {
-  @apply bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between;
+.wl-section__title {
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 
-.wl-tour-card__img-box {
-  @apply h-48 overflow-hidden relative bg-slate-100;
+@media (min-width: 768px) {
+  .wl-section__title {
+    font-size: 2.25rem;
+  }
 }
 
-.wl-tour-card__img {
-  @apply w-full h-full object-cover group-hover:scale-105 transition-transform duration-500;
+.wl-section__subtitle {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 0.375rem;
+  max-width: 42rem;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
 }
 
-.wl-tour-card__rating {
-  @apply absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-slate-800 flex items-center gap-1 shadow-sm;
+.wl-section__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.wl-tour-card__body {
-  @apply p-5 space-y-2;
+.wl-section__control-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.wl-tour-card__title {
-  @apply text-lg font-bold text-[#003527] line-clamp-1 group-hover:text-emerald-700 transition-colors;
+.wl-section__control-btn:hover {
+  background-color: #f97316;
+  border-color: #f97316;
+  color: #ffffff;
 }
 
-.wl-tour-card__duration {
-  @apply flex items-center gap-1.5 text-xs text-slate-500 font-medium;
+.wl-section__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin-top: 0.5rem;
 }
 
-.wl-tour-card__price {
-  @apply text-sm font-bold text-[#003527] pt-2 border-t border-slate-100 mt-2;
-}
+@media (min-width: 1024px) {
+  .wl-section__grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
 
-/* Itinerary Idea Cards */
-.wl-idea-card {
-  @apply bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col md:flex-row cursor-pointer;
-}
+  .wl-section__grid-sidebar {
+    grid-column: span 3 / span 3;
+    background: transparent !important;
+  }
 
-.wl-idea-card__img {
-  @apply w-full h-full object-cover group-hover:scale-105 transition-transform duration-700;
-}
-
-.wl-idea-card__title {
-  @apply text-xl font-bold text-[#003527];
-}
-
-/* Timeline */
-.wl-timeline {
-  @apply flex flex-col gap-3 relative pl-6 border-l-2 border-slate-200 py-1;
-}
-
-.wl-timeline__item {
-  @apply flex items-start gap-3 relative;
-}
-
-.wl-timeline__dot {
-  @apply w-3 h-3 rounded-full bg-slate-300 absolute -left-[31px] top-1.5 border-2 border-white ring-2 ring-slate-100;
-}
-
-.wl-timeline__dot--active {
-  @apply bg-[#003527] ring-[#003527]/20;
-}
-
-.wl-timeline__days {
-  @apply text-xs font-bold text-[#003527];
-}
-
-.wl-timeline__loc {
-  @apply text-xs text-slate-600 font-medium;
-}
-
-/* Destination Cards */
-.wl-dest-card {
-  @apply relative isolate overflow-hidden rounded-2xl aspect-[4/3] bg-slate-200 border border-slate-200/80 shadow-sm hover:shadow-md cursor-pointer transition-all;
-}
-
-.wl-dest-card__img {
-  @apply absolute inset-0 -z-10 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110;
-}
-
-.wl-dest-card__scrim {
-  @apply absolute inset-0 -z-10 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent;
-}
-
-.wl-dest-card__body {
-  @apply absolute inset-x-0 bottom-0 p-5 text-white;
-}
-
-.wl-dest-card__name {
-  @apply text-xl font-bold drop-shadow-sm;
-}
-
-.wl-dest-card__meta {
-  @apply text-xs text-slate-200 font-medium mt-1 flex items-center gap-1.5;
-}
-
-/* Footer */
-.wl-footer {
-  @apply bg-[#eaedff]/50 border-t border-slate-200/80 py-12 mt-20;
-}
-
-.wl-footer__brand {
-  @apply text-2xl font-bold text-[#003527];
+  .wl-section__grid-main {
+    grid-column: span 7 / span 7;
+  }
 }

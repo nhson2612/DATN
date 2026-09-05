@@ -1,0 +1,171 @@
+/* ==========================================================================
+   BLOCK: .wl-nav (Navbar with Centered Circle Logo & Asymmetric Floating Bar)
+   ========================================================================== */
+.wl-nav {
+  position: fixed;
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: calc(100% - 2.5rem);
+  max-width: 54rem;
+  padding: 0;
+  pointer-events: auto;
+  transition: max-width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wl-nav--collapsed {
+  max-width: 5.25rem;
+}
+
+.wl-nav__container {
+  position: relative;
+  width: 100%;
+  height: 4.25rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(226, 232, 240, 0.9);
+  border-radius: 36px 14px 36px 14px !important;
+  box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  overflow: visible !important;
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wl-nav--collapsed .wl-nav__container {
+  border-radius: 50% !important;
+  padding: 0;
+  height: 5.25rem;
+  border-color: rgba(249, 115, 22, 0.35);
+  box-shadow: 0 12px 30px -5px rgba(249, 115, 22, 0.4), 0 4px 15px rgba(15, 23, 42, 0.1);
+}
+
+.wl-nav__wing {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.35s ease;
+  max-width: 50%;
+  white-space: nowrap;
+}
+
+.wl-nav--collapsed .wl-nav__wing {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7);
+  max-width: 0px;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.wl-nav__wing--left {
+  justify-content: center;
+  gap: 2.25rem;
+  padding-right: 3.5rem;
+  padding-left: 1rem;
+}
+
+.wl-nav__wing--right {
+  justify-content: center;
+  gap: 2.25rem;
+  padding-left: 3.5rem;
+  padding-right: 1rem;
+}
+
+.wl-nav__item {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.wl-nav__item:hover {
+  color: #f97316;
+  transform: translateY(-1px);
+}
+
+/* Center Circular Logo Badge */
+.wl-nav__center-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  text-decoration: none;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.wl-nav__center-logo:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.wl-nav__logo-circle {
+  width: 5.25rem;
+  height: 5.25rem;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #ffffff;
+  box-shadow: 0 12px 30px -5px rgba(249, 115, 22, 0.35), 0 4px 15px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.wl-nav__logo-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f97316, #f59e0b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+}
+
+.wl-nav__logo-text {
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+.wl-nav__logo-text--dot {
+  color: #f97316;
+}
+
+.wl-nav__btn {
+  padding: 0.55rem 1.35rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  white-space: nowrap;
+}
+
+.wl-nav__btn--primary {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+}
+
+.wl-nav__btn--primary:hover {
+  box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45);
+  transform: translateY(-1px);
+}

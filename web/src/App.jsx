@@ -30,10 +30,11 @@ function KhongTimThay() {
 function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap }) {
   const location = useLocation();
   const isPlanner = location.pathname.startsWith("/chuyen-di/") && location.pathname !== "/chuyen-di";
+  const isHome = location.pathname === "/";
 
   return (
     <div className="font-sans min-h-screen flex flex-col">
-      <Header user={user} onLogin={() => setMoAuth(true)} onLogout={dangXuat} />
+      {!isHome && <Header user={user} onLogin={() => setMoAuth(true)} onLogout={dangXuat} />}
 
       <div className="flex-1">
         <Routes>
@@ -60,7 +61,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
         </Routes>
       </div>
 
-      {!isPlanner && (
+      {!isHome && !isPlanner && (
         <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-16">
           <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-zinc-500">
             <p className="font-semibold text-zinc-700 mb-1">Đi Đâu · Khoá luận tốt nghiệp</p>

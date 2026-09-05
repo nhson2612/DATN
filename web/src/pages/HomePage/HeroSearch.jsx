@@ -94,7 +94,7 @@ export default function HeroSearch({ activeTab, setActiveTab }) {
           {/* Inner Map Graphic Background */}
           <div className="absolute inset-0 z-0">
             <img
-              src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1600&q=85"
+              src="/assets/images/hero-search-bg.jpg"
               alt="Background Map Graphic"
               className="w-full h-full object-cover object-center"
             />
