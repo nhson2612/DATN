@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import CardSkeleton from "../components/skeletons/CardSkeleton";
 import "./Tours.css";
@@ -8,7 +8,6 @@ const tien = (v) => (v ? `${(v / 1_000_000).toFixed(1).replace(".0", "")} triệ
 
 export default function Tours() {
   const [sp, setSp] = useSearchParams();
-  const nav = useNavigate();
   const [d, setD] = useState(null);
   const maxDays = sp.get("max_days") || "";
   const maxPrice = sp.get("max_price") || "";
@@ -52,8 +51,7 @@ export default function Tours() {
       <div className="tours-page__grid">
         {!d && <CardSkeleton count={6} />}
         {d?.items?.map((t) => (
-          <article key={t.id} onClick={() => nav(`/tour/${t.slug}`)}
-                   className="tours-page__card">
+          <Link key={t.id} to={`/tour/${t.slug}`} className="tours-page__card group">
             <div className="tours-page__card-banner">
               <i className="fa-solid fa-route tours-page__card-icon" />
               <span className="tours-page__card-province">{t.province_name?.replace(/^(Thành phố|Tỉnh)\s+/, "")}</span>
@@ -77,7 +75,7 @@ export default function Tours() {
                 )}
               </div>
             </div>
-          </article>
+          </Link>
         ))}
       </div>
     </main>
