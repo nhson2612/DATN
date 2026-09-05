@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Logo from "../../../../components/common/Logo";
 import "./Navbar.css";
 
-export default function Navbar() {
+export default function Navbar({ user, onNeedAuth, onLogout }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
@@ -57,10 +57,31 @@ export default function Navbar() {
             <span className="material-symbols-outlined text-base text-orange-500">menu_book</span>
             <span>Guide</span>
           </a>
-          <button className="wl-nav__btn wl-nav__btn--primary">
-            <span className="material-symbols-outlined text-sm">account_circle</span>
-            <span>Sign In</span>
-          </button>
+          {user ? (
+            <div className="wl-nav__user">
+              <span className="wl-nav__user-name">
+                {user.full_name || user.email}
+              </span>
+              <button
+                className="wl-nav__btn wl-nav__btn--ghost"
+                onClick={onLogout}
+                title="Đăng xuất"
+              >
+                <span className="material-symbols-outlined text-sm">logout</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              className="wl-nav__btn wl-nav__btn--primary"
+              onClick={onNeedAuth}
+            >
+              <span className="material-symbols-outlined text-sm">
+                account_circle
+              </span>
+              <span>Sign In</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

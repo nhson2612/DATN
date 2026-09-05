@@ -19,7 +19,7 @@
 }
 
 .trip-map__add-btn {
-  @apply btn-primary text-[11px] !py-1 !px-2.5 flex items-center gap-1 shadow-sm;
+  @apply inline-flex items-center justify-center gap-2 rounded-full text-[11px] font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm !py-1 !px-2.5;
 }
 
 .trip-map__close-btn {

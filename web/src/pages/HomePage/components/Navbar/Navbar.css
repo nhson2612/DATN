@@ -169,3 +169,29 @@
   box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45);
   transform: translateY(-1px);
 }
+
+.wl-nav__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wl-nav__user-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wl-nav__btn--ghost {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
+}
+
+.wl-nav__btn--ghost:hover {
+  background: #f1f5f9;
+}

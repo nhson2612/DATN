@@ -38,7 +38,7 @@
 
 /* Day Card M3 */
 .planner-day-card {
-  @apply ui-card p-5 space-y-3 border border-slate-200/80 hover:border-emerald-500/40 transition-all;
+  @apply bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200 p-5 space-y-3 hover:border-emerald-500/40;
 }
 
 .planner-day-card__header {

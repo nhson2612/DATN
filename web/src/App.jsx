@@ -38,7 +38,16 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
 
       <div className="flex-1">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route
+            path="/"
+            element={
+              <HomePage
+                user={user}
+                onNeedAuth={canDangNhap}
+                onLogout={dangXuat}
+              />
+            }
+          />
           <Route path="/diem-den/:slug" element={<Destination />} />
           <Route path="/dia-diem" element={<PlaceList />} />
           <Route path="/dia-diem/:type/:id"

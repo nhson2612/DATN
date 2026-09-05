@@ -31,11 +31,11 @@
 }
 
 .auth-input {
-  @apply ui-field w-full text-sm;
+  @apply rounded-2xl bg-white border border-slate-300/80 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all w-full;
 }
 
 .auth-submit {
-  @apply btn-primary w-full py-3 text-sm mt-4 shadow-md;
+  @apply inline-flex items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none bg-emerald-600 text-white hover:bg-emerald-700 shadow-md w-full py-3 mt-4;
 }
 
 .auth-switch {
