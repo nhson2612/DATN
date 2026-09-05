@@ -184,55 +184,128 @@ CREATE INDEX IF NOT EXISTS booking_requests_status_idx ON booking_requests(statu
 --   2. ĐI TỰ TÚC      — khách tự tìm địa điểm, tự lập lịch trình (phần còn lại
 --                       của hệ thống: /destinations, /places, /itineraries).
 
+CREATE TABLE IF NOT EXISTS operators (
+    id              SERIAL PRIMARY KEY,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    company_name    VARCHAR(255) NOT NULL,
+    tax_code        VARCHAR(50),
+    commission_rate NUMERIC(4, 2) DEFAULT 0.10,
+    status          VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    created_at      TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CHECK (status IN ('PENDING', 'ACTIVE', 'SUSPENDED', 'REJECTED'))
+);
+CREATE INDEX IF NOT EXISTS operators_user_id_idx ON operators(user_id);
+
 CREATE TABLE IF NOT EXISTS tours (
-    id            SERIAL PRIMARY KEY,
-    slug          VARCHAR(160) NOT NULL UNIQUE,
-    name          VARCHAR(255) NOT NULL,
-    summary       TEXT,                    -- mô tả ngắn hiện trên thẻ
-    description   TEXT,
-    province_id   INTEGER,                 -- điểm đến chính, trỏ tới provinces_clean
-    duration_days INTEGER NOT NULL DEFAULT 1,
-    price_from    BIGINT,                  -- VND, giá thấp nhất trong các ngày khởi hành
-    cover_url     TEXT,
-    highlights    JSONB,                   -- ["Bà Nà Hills", "Cầu Vàng", ...]
+    id                  SERIAL PRIMARY KEY,
+    slug                VARCHAR(160) NOT NULL UNIQUE,
+    name                VARCHAR(255) NOT NULL,
+    operator_id         INTEGER REFERENCES operators(id) ON DELETE SET NULL, -- nhà cung cấp tour
+    summary             TEXT,                    -- mô tả ngắn hiện trên thẻ
+    description         TEXT,
+    province_id         INTEGER,                 -- điểm đến chính, trỏ tới provinces_clean
+    duration_days       INTEGER NOT NULL DEFAULT 1,
+    price_from          BIGINT,                  -- VND, giá bán hiệu lực thấp nhất trong các ngày khởi hành còn mở
+    cover_url           TEXT,
+    highlights          JSONB,                   -- ["Bà Nà Hills", "Cầu Vàng", ...]
     -- [{day, title, description, place_ids: [int]}] — nối được sang bảng poi để
     -- vẽ lịch trình lên bản đồ.
-    itinerary     JSONB,
-    included      TEXT,                    -- giá đã bao gồm những gì
-    excluded      TEXT,
-    active        BOOLEAN DEFAULT TRUE,
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    itinerary           JSONB,
+    included            TEXT,                    -- giá đã bao gồm những gì
+    excluded            TEXT,
+    cancellation_policy JSONB,                   -- bậc thang hoàn tiền theo số ngày trước khởi hành
+    status              VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    active              BOOLEAN DEFAULT TRUE,    -- giữ để tương thích với các bộ lọc WHERE t.active
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CHECK (status IN ('DRAFT', 'PENDING_APPROVAL', 'ACTIVE', 'REJECTED', 'INACTIVE'))
 );
 CREATE INDEX IF NOT EXISTS tours_province_idx ON tours(province_id);
 CREATE INDEX IF NOT EXISTS tours_active_idx   ON tours(active);
+CREATE INDEX IF NOT EXISTS tours_status_idx   ON tours(status);
 
 -- Một tour chạy nhiều đợt, mỗi đợt giá và chỗ trống khác nhau.
 CREATE TABLE IF NOT EXISTS tour_departures (
-    id          SERIAL PRIMARY KEY,
-    tour_id     INTEGER NOT NULL REFERENCES tours(id) ON DELETE CASCADE,
-    depart_date DATE NOT NULL,
-    price       BIGINT,
-    seats_total INTEGER DEFAULT 20,
-    seats_left  INTEGER DEFAULT 20,
-    UNIQUE (tour_id, depart_date)
+    id             SERIAL PRIMARY KEY,
+    tour_id        INTEGER NOT NULL REFERENCES tours(id) ON DELETE CASCADE,
+    depart_date    DATE NOT NULL,
+    list_price     BIGINT NOT NULL,          -- VND, giá niêm yết (giá gốc)
+    sale_price     BIGINT,                   -- VND, giá bán khuyến mãi (NULL = không khuyến mãi)
+    sale_starts_at TIMESTAMPTZ,              -- thời điểm bắt đầu khuyến mãi (NULL = áp dụng ngay)
+    sale_ends_at   TIMESTAMPTZ,              -- thời điểm kết thúc khuyến mãi (NULL = không giới hạn)
+    status         VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    min_pax        INTEGER DEFAULT 1,        -- số khách tối thiểu để tour chạy
+    seats_total    INTEGER DEFAULT 20,
+    seats_left     INTEGER DEFAULT 20,
+    UNIQUE (tour_id, depart_date),
+    CHECK (seats_left BETWEEN 0 AND seats_total),
+    CHECK (sale_price IS NULL OR (sale_price > 0 AND sale_price < list_price)),
+    CHECK (status IN ('OPEN', 'FULL', 'CLOSED', 'DEPARTED', 'COMPLETED', 'CANCELLED'))
 );
-CREATE INDEX IF NOT EXISTS tour_departures_date_idx ON tour_departures(depart_date);
+CREATE INDEX IF NOT EXISTS tour_departures_date_idx   ON tour_departures(depart_date);
+CREATE INDEX IF NOT EXISTS tour_departures_status_idx ON tour_departures(status);
 
 CREATE TABLE IF NOT EXISTS tour_bookings (
-    id           SERIAL PRIMARY KEY,
-    tour_id      INTEGER NOT NULL REFERENCES tours(id) ON DELETE CASCADE,
-    departure_id INTEGER REFERENCES tour_departures(id) ON DELETE SET NULL,
-    user_id      INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    full_name    VARCHAR(255) NOT NULL,
-    phone        VARCHAR(50)  NOT NULL,
-    email        VARCHAR(255),
-    guests       INTEGER DEFAULT 1,
-    note         TEXT,
-    total_price  BIGINT,
-    status       VARCHAR(20) DEFAULT 'moi',   -- moi | da_lien_he | da_coc | huy
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id              SERIAL PRIMARY KEY,
+    code            VARCHAR(50) UNIQUE,          -- mã đơn cho khách tra cứu (VD TB-20260905-XXXX)
+    tour_id         INTEGER NOT NULL REFERENCES tours(id) ON DELETE CASCADE,
+    departure_id    INTEGER REFERENCES tour_departures(id) ON DELETE SET NULL,
+    user_id         INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    full_name       VARCHAR(255) NOT NULL,
+    phone           VARCHAR(50)  NOT NULL,
+    email           VARCHAR(255),
+    guests          INTEGER DEFAULT 1,
+    note            TEXT,
+    unit_list_price BIGINT,                      -- snapshot giá gốc tại thời điểm đặt
+    unit_sale_price BIGINT,                      -- snapshot giá khuyến mãi tại thời điểm đặt
+    total_price     BIGINT,                      -- tổng tiền thực trả (unit_effective_price * guests)
+    hold_expires_at TIMESTAMPTZ,                 -- hạn giữ chỗ (mặc định nghiệp vụ 30 phút)
+    seats_released  BOOLEAN DEFAULT FALSE,       -- cờ chống nhả chỗ 2 lần khi hủy/hết hạn
+    status          VARCHAR(30) NOT NULL DEFAULT 'PENDING_PAYMENT',
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CHECK (status IN (
+        'PENDING_PAYMENT', 'PAID', 'PARTIALLY_PAID', 'CONFIRMED',
+        'EXPIRED', 'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_OPERATOR',
+        'COMPLETED', 'REFUNDED', 'NO_SHOW'
+    ))
 );
 CREATE INDEX IF NOT EXISTS tour_bookings_status_idx ON tour_bookings(status);
+CREATE INDEX IF NOT EXISTS tour_bookings_code_idx   ON tour_bookings(code);
+
+-- Nhật ký chuyển trạng thái booking (BR-L2): lưu vết mọi lần đổi trạng thái.
+CREATE TABLE IF NOT EXISTS booking_status_history (
+    id          BIGSERIAL PRIMARY KEY,
+    booking_id  INTEGER NOT NULL REFERENCES tour_bookings(id) ON DELETE CASCADE,
+    from_status VARCHAR(30),
+    to_status   VARCHAR(30) NOT NULL,
+    actor_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    reason      TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS booking_status_history_booking_idx    ON booking_status_history(booking_id);
+CREATE INDEX IF NOT EXISTS booking_status_history_created_at_idx ON booking_status_history(created_at);
+
+-- Giao dịch thanh toán (Phase 3-lite: thanh toán thủ công / chuyển khoản).
+-- BR-P1: Mỗi booking có thể có nhiều payment (thử lại), nhưng chỉ đúng 1 payment SUCCESS.
+CREATE TABLE IF NOT EXISTS payments (
+    id           BIGSERIAL PRIMARY KEY,
+    booking_id   INTEGER NOT NULL REFERENCES tour_bookings(id) ON DELETE CASCADE,
+    method       VARCHAR(30) NOT NULL, -- CHUYEN_KHOAN | TAI_VAN_PHONG | KHAC
+    amount       BIGINT NOT NULL,      -- VND
+    status       VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    txn_ref      VARCHAR(100) UNIQUE,  -- PM-YYYYMMDD-NNNN
+    note         TEXT,
+    confirmed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    confirmed_at TIMESTAMPTZ,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED', 'MISMATCH')),
+    CHECK (amount >= 0)
+);
+CREATE INDEX IF NOT EXISTS payments_booking_id_idx ON payments(booking_id);
+CREATE INDEX IF NOT EXISTS payments_status_idx     ON payments(status);
+CREATE UNIQUE INDEX IF NOT EXISTS payments_booking_success_unique_idx
+    ON payments(booking_id)
+    WHERE status = 'SUCCESS';
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Làm giàu địa điểm (Tavily)

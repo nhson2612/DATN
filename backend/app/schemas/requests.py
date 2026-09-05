@@ -113,3 +113,15 @@ class TourBookingRequest(BaseModel):
     email: Optional[str] = None
     guests: int = 1
     note: Optional[str] = None
+
+
+class CreatePaymentRequest(BaseModel):
+    """Yêu cầu tạo giao dịch thanh toán (thủ công / chuyển khoản)."""
+    method: str = "CHUYEN_KHOAN"  # CHUYEN_KHOAN | TAI_VAN_PHONG | KHAC
+    amount: Optional[int] = None   # None = lấy mặc định total_price của booking
+    note: Optional[str] = None
+
+
+class AdminConfirmPaymentRequest(BaseModel):
+    """Admin xác nhận giao dịch thanh toán đã nhận tiền."""
+    note: Optional[str] = None

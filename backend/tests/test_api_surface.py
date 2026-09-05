@@ -46,7 +46,12 @@ EXPECTED_PATHS = {
     "/api/tours",
     "/api/tours/{slug}",
     "/api/tours/book",
+    "/api/tours/bookings/me",
+    "/api/tours/bookings/{booking_id}/pay",
     "/api/tours/admin/bookings",
+    "/api/tours/admin/cleanup-expired",
+    "/api/tours/admin/payments",
+    "/api/tours/admin/payments/{payment_id}/confirm",
     "/api/admin/stats",
 }
 

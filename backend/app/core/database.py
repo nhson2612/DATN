@@ -72,3 +72,63 @@ def execute_query(query, params=None):
             extra={"ctx_duration_ms": round(ms, 1), "ctx_rows": n},
         )
     return rows
+
+
+class Transaction:
+    """Đối tượng thực thi SQL trong một transaction mở.
+
+    Lý do có class này thay vì gọi execute_query nhiều lần:
+    execute_query mỗi lần gọi đều lấy một connection mới từ pool và tự commit/đóng.
+    Đối tượng Transaction giữ chặt một connection duy nhất trong suốt chuỗi câu lệnh
+    và không tự commit giữa chừng — commit hay rollback do context manager transaction()
+    quyết định khi toàn bộ khối lệnh hoàn tất hoặc gặp lỗi.
+    """
+
+    def __init__(self, conn):
+        self.conn = conn
+
+    def execute(self, query, params=None):
+        t0 = time.perf_counter()
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute(query, params)
+                if cur.description:
+                    columns = [desc[0] for desc in cur.description]
+                    rows = [dict(zip(columns, row)) for row in cur.fetchall()]
+                else:
+                    rows = None
+        except Exception:
+            ms = (time.perf_counter() - t0) * 1000
+            logger.error(
+                "SQL transaction lỗi sau %.0fms: %s", ms, _short(query),
+                extra={"ctx_duration_ms": round(ms, 1)},
+                exc_info=True,
+            )
+            raise
+
+        ms = (time.perf_counter() - t0) * 1000
+        n = len(rows) if rows is not None else 0
+        if ms >= settings.log_slow_query_ms:
+            logger.warning(
+                "SQL transaction chậm %.0fms (%d dòng): %s", ms, n, _short(query),
+                extra={"ctx_duration_ms": round(ms, 1), "ctx_rows": n},
+            )
+        elif settings.log_sql:
+            logger.debug(
+                "SQL transaction %.0fms (%d dòng): %s", ms, n, _short(query),
+                extra={"ctx_duration_ms": round(ms, 1), "ctx_rows": n},
+            )
+        return rows
+
+
+@contextmanager
+def transaction():
+    """Chạy nhiều câu SQL trong CÙNG một transaction.
+
+    Dùng lại get_db_connection() đã có. Sử dụng context manager `conn.transaction()`
+    của psycopg: commit khi thoát khối lệnh sạch sẽ, rollback toàn bộ khi có exception.
+    Bảo đảm nguyên tắc nguyên tử (atomic) cho các nghiệp vụ đa bước như giữ chỗ + tạo đơn.
+    """
+    with get_db_connection() as conn:
+        with conn.transaction():
+            yield Transaction(conn)
