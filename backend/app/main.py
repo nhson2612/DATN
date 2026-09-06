@@ -55,6 +55,7 @@ app.include_router(tours.router)
 app.include_router(operators.router)
 app.include_router(operator_tours.router)
 app.include_router(operator_tours.departures_router)
+app.include_router(operator_tours.bookings_router)
 
 
 

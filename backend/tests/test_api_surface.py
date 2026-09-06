@@ -62,6 +62,11 @@ EXPECTED_PATHS = {
     "/api/operator/tours/{tour_id}/departures/{departure_id}/sale",
     "/api/operator/departures/{id}",
     "/api/operator/departures/{id}/sale",
+    "/api/operator/departures/{departure_id}/guests",
+    "/api/operator/departures/{departure_id}/guests.csv",
+    "/api/operator/bookings",
+    "/api/operator/bookings/{booking_id}",
+    "/api/operator/bookings/{booking_id}/confirm",
 }
 
 

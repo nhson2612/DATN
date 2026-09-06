@@ -586,9 +586,11 @@ def create_booking(data: dict, user_id=None, total_price=None, tx=None,
 def get_booking(booking_id: int, tx=None, for_update: bool = False) -> Optional[dict]:
     """Lấy thông tin chi tiết một booking kèm thông tin tour và đợt khởi hành."""
     lock_clause = "FOR UPDATE OF b" if for_update and tx is not None else ""
+    has_operator = _has_col("tours", "operator_id")
+    op_cols = ", t.operator_id, t.operator_id AS tour_operator_id" if has_operator else ""
     rows = _exec(
         f"""
-        SELECT b.*, t.name AS tour_name, t.slug AS tour_slug,
+        SELECT b.*, t.name AS tour_name, t.slug AS tour_slug{op_cols},
                d.depart_date, d.seats_left, d.seats_total
         FROM tour_bookings b
         JOIN tours t ON t.id = b.tour_id
@@ -1528,6 +1530,24 @@ def get_booking_payments(booking_id: int, tx=None) -> list:
     ) or []
 
 
+def get_payments_by_booking_ids(booking_ids: list[int], tx=None) -> list[dict]:
+    """Lấy toàn bộ các giao dịch thanh toán liên quan đến nhiều booking cùng lúc (tránh N+1)."""
+    if not booking_ids or not _has_table("payments"):
+        return []
+
+    return _exec(
+        """
+        SELECT p.*, u.full_name AS confirmed_by_name
+        FROM payments p
+        LEFT JOIN users u ON u.id = p.confirmed_by
+        WHERE p.booking_id = ANY(%s)
+        ORDER BY p.created_at DESC, p.id DESC
+        """,
+        (list(set(booking_ids)),),
+        tx=tx,
+    ) or []
+
+
 def count_successful_payments(booking_id: int, tx=None) -> int:
     """Đếm số giao dịch SUCCESS của một booking (kiểm tra ràng buộc BR-P1)."""
     if not _has_table("payments"):
@@ -1817,3 +1837,122 @@ def sync_tour_price_from(tour_id: int, tx=None):
             (min_price, tour_id),
             tx=tx,
         )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Phase 5.5: Quản lý Booking dành cho Operator & Admin (BR-O1, BR-O2, BR-O3)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def list_operator_bookings(
+    operator_id: Optional[int] = None,
+    tour_id: Optional[int] = None,
+    departure_id: Optional[int] = None,
+    status: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    tx=None,
+) -> list[dict]:
+    """Danh sách booking dành cho operator hoặc admin (Phase 5.5, BR-O1).
+
+    Hỗ trợ lọc theo operator_id, tour_id, departure_id, status.
+    Sắp xếp giảm dần theo thời gian tạo.
+    """
+    conditions = []
+    params = []
+
+    if operator_id is not None:
+        conditions.append("t.operator_id = %s")
+        params.append(operator_id)
+
+    if tour_id is not None:
+        conditions.append("b.tour_id = %s")
+        params.append(tour_id)
+
+    if departure_id is not None:
+        conditions.append("b.departure_id = %s")
+        params.append(departure_id)
+
+    if status:
+        conditions.append("b.status = %s")
+        params.append(status)
+
+    where_sql = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    params.extend([limit, offset])
+
+    return _exec(
+        f"""
+        SELECT b.*, t.name AS tour_name, t.slug AS tour_slug,
+               t.operator_id, t.operator_id AS tour_operator_id,
+               d.depart_date
+        FROM tour_bookings b
+        JOIN tours t ON t.id = b.tour_id
+        LEFT JOIN tour_departures d ON d.id = b.departure_id
+        {where_sql}
+        ORDER BY b.created_at DESC, b.id DESC
+        LIMIT %s OFFSET %s
+        """,
+        tuple(params),
+        tx=tx,
+    ) or []
+
+
+def count_operator_bookings(
+    operator_id: Optional[int] = None,
+    tour_id: Optional[int] = None,
+    departure_id: Optional[int] = None,
+    status: Optional[str] = None,
+    tx=None,
+) -> int:
+    """Đếm tổng số booking thỏa mãn điều kiện lọc của operator / admin."""
+    conditions = []
+    params = []
+
+    if operator_id is not None:
+        conditions.append("t.operator_id = %s")
+        params.append(operator_id)
+
+    if tour_id is not None:
+        conditions.append("b.tour_id = %s")
+        params.append(tour_id)
+
+    if departure_id is not None:
+        conditions.append("b.departure_id = %s")
+        params.append(departure_id)
+
+    if status:
+        conditions.append("b.status = %s")
+        params.append(status)
+
+    where_sql = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    rows = _exec(
+        f"""
+        SELECT COUNT(*) AS total
+        FROM tour_bookings b
+        JOIN tours t ON t.id = b.tour_id
+        LEFT JOIN tour_departures d ON d.id = b.departure_id
+        {where_sql}
+        """,
+        tuple(params),
+        tx=tx,
+    )
+    return int(rows[0]["total"]) if rows else 0
+
+
+def list_departure_guests_bookings(departure_id: int, tx=None) -> list[dict]:
+    """Danh sách các booking thuộc đợt khởi hành phục vụ xuất danh sách khách (Phase 5.5).
+
+    Giả định: Hệ thống hiện tại lưu thông tin khách trên tour_bookings (chưa có bảng booking_passengers).
+    Lấy tất cả booking của departure, sắp xếp theo ID tăng dần.
+    """
+    return _exec(
+        """
+        SELECT b.id, b.code, b.tour_id, b.departure_id, b.full_name, b.phone, b.email,
+               b.guests, b.total_price, b.status, b.created_at, b.note
+        FROM tour_bookings b
+        WHERE b.departure_id = %s
+        ORDER BY b.id ASC
+        """,
+        (departure_id,),
+        tx=tx,
+    ) or []

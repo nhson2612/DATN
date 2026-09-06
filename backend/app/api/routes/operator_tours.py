@@ -12,7 +12,7 @@ Tất cả endpoint yêu cầu quyền Operator (ACTIVE) hoặc Admin.
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from app.core.security import get_current_operator_or_admin
 from app.schemas.requests import (DepartureCreate, DepartureUpsert,
@@ -22,6 +22,7 @@ from app.services import tour_service
 
 router = APIRouter(prefix="/api/operator/tours", tags=["operator-tours"])
 departures_router = APIRouter(prefix="/api/operator/departures", tags=["operator-departures"])
+bookings_router = APIRouter(prefix="/api/operator/bookings", tags=["operator-bookings"])
 
 
 @router.get("")
@@ -451,4 +452,151 @@ def remove_operator_departure_sale(
         "departure": dep,
         "message": "Đã gỡ giá khuyến mãi thành công.",
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Endpoints Xuất Danh sách Khách cho Departure (Phase 5.5, UC-O02)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@departures_router.get("/{departure_id}/guests.csv")
+def export_departure_guests_csv(
+    departure_id: int,
+    current_user: dict = Depends(get_current_operator_or_admin),
+):
+    """Xuất danh sách khách của đợt khởi hành dạng file CSV (Phase 5.5, UC-O02).
+
+    Giả định: Repo chưa có bảng booking_passengers chi tiết từng hành khách,
+    danh sách xuất theo thông tin người đặt của từng đơn booking (họ tên, SĐT, email, số khách...).
+    """
+    try:
+        csv_data = tour_service.xuat_danh_sach_khach_departure(
+            departure_id=departure_id,
+            current_user=current_user,
+        )
+    except tour_service.DepartureNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourPermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+    return Response(
+        content=csv_data,
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="guests_departure_{departure_id}.csv"'
+        },
+    )
+
+
+@departures_router.get("/{departure_id}/guests")
+def get_departure_guests_json(
+    departure_id: int,
+    current_user: dict = Depends(get_current_operator_or_admin),
+):
+    """Lấy danh sách khách của đợt khởi hành dạng JSON (Phase 5.5)."""
+    try:
+        guests = tour_service.lay_danh_sach_khach_departure(
+            departure_id=departure_id,
+            current_user=current_user,
+        )
+    except tour_service.DepartureNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourPermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+    return {"success": True, "departure_id": departure_id, "guests": guests}
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Endpoints Quản lý Booking của Operator (Phase 5.5, UC-O02)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@bookings_router.get("")
+def list_operator_bookings(
+    tour_id: Optional[int] = Query(None, description="Lọc theo ID tour"),
+    departure_id: Optional[int] = Query(None, description="Lọc theo ID đợt khởi hành"),
+    status: Optional[str] = Query(None, description="Lọc theo trạng thái booking"),
+    operator_id: Optional[int] = Query(None, description="Admin lọc theo ID operator"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    current_user: dict = Depends(get_current_operator_or_admin),
+):
+    """Danh sách đơn đặt tour của operator (Phase 5.5, BR-O1, BR-O3).
+
+    - BR-O1: Operator chỉ thấy booking các tour của mình; người khác -> 403.
+    - BR-O3: Response không chứa thông tin thanh toán nhạy cảm (txn_ref, gateway...).
+    - Admin có thể xem toàn bộ hoặc lọc theo operator_id.
+    """
+    try:
+        kq = tour_service.danh_sach_booking_operator(
+            current_user=current_user,
+            tour_id=tour_id,
+            departure_id=departure_id,
+            status=status,
+            query_operator_id=operator_id,
+            page=page,
+            page_size=page_size,
+        )
+    except tour_service.TourNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.DepartureNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourPermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+    return {"success": True, **kq}
+
+
+@bookings_router.get("/{booking_id}")
+def get_operator_booking_detail(
+    booking_id: int,
+    current_user: dict = Depends(get_current_operator_or_admin),
+):
+    """Chi tiết đơn đặt tour kèm lịch sử và tóm tắt thanh toán không nhạy cảm (Phase 5.5, BR-O1, BR-O3).
+
+    - BR-O1: Chặn 403 nếu booking thuộc tour của operator khác hoặc tour không có chủ.
+    - BR-O3: Response KHÔNG chứa txn_ref, gateway hay thông tin nhạy cảm của ngân hàng.
+    """
+    try:
+        kq = tour_service.lay_chi_tiet_booking_operator(
+            booking_id=booking_id,
+            current_user=current_user,
+        )
+    except tour_service.BookingNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourPermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+    return {"success": True, **kq}
+
+
+@bookings_router.post("/{booking_id}/confirm")
+def confirm_operator_booking(
+    booking_id: int,
+    current_user: dict = Depends(get_current_operator_or_admin),
+):
+    """Operator / Admin xác nhận đơn đặt tour đã thanh toán: PAID -> CONFIRMED (Phase 5.5, UC-O02).
+
+    - BR-O1: Operator chỉ xác nhận đơn thuộc tour của mình; người khác -> 403.
+    - Chặn 400 nếu đơn chưa ở trạng thái PAID.
+    """
+    try:
+        kq = tour_service.xac_nhan_booking_operator(
+            booking_id=booking_id,
+            current_user=current_user,
+        )
+    except tour_service.BookingNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourPermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except tour_service.TourBusinessRuleError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except tour_service.InvalidStatusTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return kq
+
 

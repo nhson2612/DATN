@@ -6,7 +6,10 @@ lọc theo giá ở đây có ý nghĩa — khác `price_level` của POI vốn 
 mặc định "Trung bình".
 """
 
+import csv
+import io
 import json
+import re
 import uuid
 from datetime import date, datetime, timedelta
 from typing import Optional
@@ -131,8 +134,14 @@ PHASE_3_ALLOWED_TRANSITIONS = {
     ("PENDING_PAYMENT", "CANCELLED_BY_OPERATOR"),
 }
 
+# Trong phạm vi Phase 5.5 (Operator xem & quản lý booking):
+# Mở thêm chuyển PAID -> CONFIRMED (operator/admin xác nhận booking đã thanh toán)
+PHASE_5_5_ALLOWED_TRANSITIONS = PHASE_3_ALLOWED_TRANSITIONS | {
+    ("PAID", "CONFIRMED"),
+}
+
 # Tập các bước chuyển trạng thái được phép hiện tại
-ALLOWED_STATUS_TRANSITIONS = PHASE_3_ALLOWED_TRANSITIONS
+ALLOWED_STATUS_TRANSITIONS = PHASE_5_5_ALLOWED_TRANSITIONS
 
 
 def la_khuyen_mai_hieu_luc(
@@ -447,11 +456,11 @@ def chuyen_trang_thai(
                 f"Không được phép chuyển trạng thái từ '{current_status}' sang '{sang}'."
             )
 
-        # Kiểm tra phạm vi Phase 3-lite: chặn các chuyển của phase sau (như CONFIRMED)
+        # Kiểm tra phạm vi Phase 5.5: chặn các chuyển của phase sau (như CANCELLED sau khi PAID...)
         if (current_status, sang) not in ALLOWED_STATUS_TRANSITIONS:
             raise InvalidStatusTransitionError(
-                f"Chuyển trạng thái từ '{current_status}' sang '{sang}' chưa được hỗ trợ trong Phase 3-lite "
-                f"(chỉ hỗ trợ PENDING_PAYMENT -> PAID | EXPIRED | CANCELLED_BY_CUSTOMER | CANCELLED_BY_OPERATOR)."
+                f"Chuyển trạng thái từ '{current_status}' sang '{sang}' chưa được hỗ trợ "
+                f"(Phase 5.5 hỗ trợ PENDING_PAYMENT -> PAID | EXPIRED | CANCELLED_* và PAID -> CONFIRMED)."
             )
 
         # Nếu chuyển sang EXPIRED hoặc CANCELLED_*: tự động trả chỗ
@@ -1783,4 +1792,328 @@ def go_gia_sale_departure(
 
     updated["sold_seats"] = tour_repo.get_departure_sold_seats(departure_id)
     return lam_giau_thong_tin_gia(updated)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Phase 5.5: Quản lý Booking dành cho Operator & Admin (BR-O1..BR-O4)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _lay_payments_map_cho_bookings(bookings: list[dict]) -> dict[int, list]:
+    """Lấy batch payments cho các booking chưa kết thúc thanh toán để tránh N+1."""
+    need_payment_ids = [
+        b["id"]
+        for b in bookings
+        if b.get("id") and b.get("status") not in ("PAID", "CONFIRMED", "COMPLETED", "REFUNDED")
+    ]
+    if not need_payment_ids:
+        return {}
+
+    raw_payments = tour_repo.get_payments_by_booking_ids(need_payment_ids)
+    payments_map: dict[int, list] = {}
+    for p in raw_payments:
+        b_id = p.get("booking_id")
+        if b_id is not None:
+            if b_id not in payments_map:
+                payments_map[b_id] = []
+            payments_map[b_id].append(p)
+    return payments_map
+
+
+def _lam_sach_booking_operator(
+    booking: dict,
+    payments_by_booking_id: Optional[dict[int, list]] = None,
+) -> dict:
+    """Làm sạch thông tin booking trả về cho Operator đảm bảo BR-O3.
+
+    - Loại bỏ hoàn toàn các trường thanh toán nhạy cảm (txn_ref, gateway, method, payload...).
+    - Chỉ giữ payment_status và payment_amount tóm tắt.
+    - Nhận payments_by_booking_id (mặc định rỗng) thay vì tự query DB lẻ từng booking.
+    """
+    b = dict(booking)
+    # Xoá các trường nhạy cảm nếu có
+    for k in ("txn_ref", "method", "payload", "gateway", "card_number"):
+        b.pop(k, None)
+
+    status = b.get("status")
+    if status in ("PAID", "CONFIRMED", "COMPLETED"):
+        b["payment_status"] = "PAID"
+        b["payment_amount"] = b.get("total_price")
+    elif status == "REFUNDED":
+        b["payment_status"] = "REFUNDED"
+        b["payment_amount"] = b.get("total_price")
+    else:
+        # Tra cứu từ bảng payments qua map được truyền vào (tránh N+1)
+        pm_map = payments_by_booking_id or {}
+        booking_id = b.get("id")
+        payments = pm_map.get(booking_id, [])
+        if any(p.get("status") == "SUCCESS" for p in payments):
+            b["payment_status"] = "PAID"
+            b["payment_amount"] = next(
+                (p["amount"] for p in payments if p.get("status") == "SUCCESS"),
+                b.get("total_price"),
+            )
+        elif any(p.get("status") == "PENDING" for p in payments):
+            b["payment_status"] = "PENDING"
+            b["payment_amount"] = next(
+                (p["amount"] for p in payments if p.get("status") == "PENDING"),
+                b.get("total_price"),
+            )
+        else:
+            b["payment_status"] = "UNPAID"
+            b["payment_amount"] = 0
+
+    return b
+
+
+def danh_sach_booking_operator(
+    current_user: dict,
+    tour_id: Optional[int] = None,
+    departure_id: Optional[int] = None,
+    status: Optional[str] = None,
+    query_operator_id: Optional[int] = None,
+    page: int = 1,
+    page_size: int = 50,
+) -> dict:
+    """Liệt kê danh sách booking của các tour thuộc sở hữu của Operator (Phase 5.5, BR-O1).
+
+    - BR-O1: Operator chỉ thấy booking của tour mình; truy cập tour/đợt của người khác -> 403.
+    - BR-O3: Không trả về chi tiết giao dịch nhạy cảm (txn_ref, gateway...).
+    - Admin có thể xem tất cả hoặc lọc theo operator_id.
+    """
+    is_admin = current_user.get("is_admin", False)
+
+    if is_admin:
+        target_operator_id = query_operator_id
+    else:
+        target_operator_id = current_user.get("operator_id")
+        if not target_operator_id:
+            raise TourPermissionDeniedError("Tài khoản không có thông tin operator hợp lệ.")
+
+    # Kiểm tra quyền nếu truyền tour_id cụ thể
+    if tour_id is not None:
+        tour = tour_repo.get_tour_by_id(tour_id)
+        if not tour:
+            raise TourNotFoundError(f"Không tìm thấy tour #{tour_id}.")
+        _kiem_tra_quyen_tour(tour, current_user)
+
+    # Kiểm tra quyền nếu truyền departure_id cụ thể
+    if departure_id is not None:
+        dep = tour_repo.get_departure_by_id(departure_id)
+        if not dep:
+            raise DepartureNotFoundError(f"Không tìm thấy đợt khởi hành #{departure_id}.")
+        dep_tour = tour_repo.get_tour_by_id(dep["tour_id"])
+        if not dep_tour:
+            raise TourNotFoundError(f"Không tìm thấy tour liên quan đến đợt khởi hành #{departure_id}.")
+        _kiem_tra_quyen_tour(dep_tour, current_user)
+
+    offset = (page - 1) * page_size
+    raw_bookings = tour_repo.list_operator_bookings(
+        operator_id=target_operator_id,
+        tour_id=tour_id,
+        departure_id=departure_id,
+        status=status,
+        limit=page_size,
+        offset=offset,
+    )
+    total = tour_repo.count_operator_bookings(
+        operator_id=target_operator_id,
+        tour_id=tour_id,
+        departure_id=departure_id,
+        status=status,
+    )
+
+    payments_map = _lay_payments_map_cho_bookings(raw_bookings)
+    clean_bookings = [_lam_sach_booking_operator(b, payments_map) for b in raw_bookings]
+
+    return {
+        "bookings": clean_bookings,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
+
+
+def lay_chi_tiet_booking_operator(booking_id: int, current_user: dict) -> dict:
+    """Lấy thông tin chi tiết một booking của Operator kèm lịch sử trạng thái (Phase 5.5).
+
+    - BR-O1: Chặn 403 nếu booking thuộc tour của operator khác hoặc tour không có chủ sở hữu.
+    - BR-O3: KHÔNG chứa chi tiết thanh toán nhạy cảm (txn_ref, gateway...).
+    """
+    booking = tour_repo.get_booking(booking_id)
+    if not booking:
+        raise BookingNotFoundError(f"Không tìm thấy đơn đặt tour #{booking_id}.")
+
+    # Kiểm tra quyền sở hữu BR-O1
+    is_admin = current_user.get("is_admin", False)
+    if not is_admin:
+        owner_id = booking.get("operator_id") or booking.get("tour_operator_id")
+        user_op_id = current_user.get("operator_id")
+        if owner_id is None or user_op_id is None or owner_id != user_op_id:
+            raise TourPermissionDeniedError("Bạn không có quyền xem đơn đặt tour của nhà điều hành khác (BR-O1).")
+
+    # Lấy lịch sử chuyển trạng thái và che mã giao dịch thanh toán (BR-O3)
+    history = tour_repo.get_booking_status_history(booking_id)
+    safe_history = []
+    for h in history:
+        h_copy = dict(h)
+        reason = h_copy.get("reason") or ""
+        h_copy["reason"] = re.sub(r"PM-\d{8}-\d+", "PM-******", reason)
+        safe_history.append(h_copy)
+
+    # Lấy thông tin thanh toán đã lọc sạch (BR-O3)
+    payments = tour_repo.get_booking_payments(booking_id)
+    safe_payments = [
+        {
+            "id": p["id"],
+            "amount": p["amount"],
+            "status": p["status"],
+            "created_at": p["created_at"],
+            "confirmed_at": p.get("confirmed_at"),
+        }
+        for p in payments
+    ]
+
+    cleaned_booking = _lam_sach_booking_operator(booking, {booking_id: payments})
+
+    return {
+        "booking": cleaned_booking,
+        "status_history": safe_history,
+        "payment_summary": {
+            "status": cleaned_booking.get("payment_status", "UNPAID"),
+            "amount": cleaned_booking.get("payment_amount", 0),
+            "payments": safe_payments,
+        },
+    }
+
+
+def xac_nhan_booking_operator(
+    booking_id: int,
+    current_user: dict,
+    note: Optional[str] = None,
+) -> dict:
+    """Operator xác nhận đơn đặt tour đã thanh toán (PAID -> CONFIRMED) (Phase 5.5, UC-O02).
+
+    Quy tắc nghiệp vụ:
+    - BR-O1: Operator chỉ xác nhận được booking thuộc tour của mình; người khác -> 403.
+    - Chỉ cho phép xác nhận khi booking ở trạng thái PAID; chưa PAID -> 400 Bad Request.
+    - Admin cũng được phép xác nhận (admin dùng chung).
+    - Sử dụng hàm chuyen_trang_thai() chuẩn hoá với ghi nhận status history (BR-L2).
+    """
+    booking = tour_repo.get_booking(booking_id)
+    if not booking:
+        raise BookingNotFoundError(f"Không tìm thấy đơn đặt tour #{booking_id}.")
+
+    # Kiểm tra quyền BR-O1
+    is_admin = current_user.get("is_admin", False)
+    if not is_admin:
+        owner_id = booking.get("operator_id") or booking.get("tour_operator_id")
+        user_op_id = current_user.get("operator_id")
+        if owner_id is None or user_op_id is None or owner_id != user_op_id:
+            raise TourPermissionDeniedError("Bạn không có quyền xác nhận đơn đặt tour của nhà điều hành khác (BR-O1).")
+
+    # Chỉ cho phép xác nhận đơn PAID
+    current_status = booking.get("status")
+    if current_status != "PAID":
+        raise TourBusinessRuleError(
+            f"Chỉ có thể xác nhận đơn đặt tour đã thanh toán (PAID). Trạng thái hiện tại: '{current_status}'."
+        )
+
+    ly_do = note or "Operator xác nhận đơn đặt tour đã thanh toán"
+    actor_id = current_user.get("id")
+
+    chuyen_trang_thai(
+        booking_id=booking_id,
+        tu="PAID",
+        sang="CONFIRMED",
+        ly_do=ly_do,
+        actor_id=actor_id,
+    )
+
+    logger.info(
+        "Operator #%s (user #%s) đã xác nhận booking #%s sang CONFIRMED",
+        current_user.get("operator_id"),
+        actor_id,
+        booking_id,
+    )
+
+    return {
+        "success": True,
+        "booking_id": booking_id,
+        "status": "CONFIRMED",
+        "message": "Xác nhận đơn đặt tour thành công.",
+    }
+
+
+def xuat_danh_sach_khach_departure(departure_id: int, current_user: dict) -> str:
+    """Xuất danh sách khách của một đợt khởi hành dạng CSV (Phase 5.5, UC-O02).
+
+    Giả định: Hệ thống hiện tại chưa có bảng `booking_passengers` chi tiết từng hành khách,
+    nên danh sách được xuất theo thông tin người đặt của từng đơn booking (full_name, phone,
+    email, guests, total_price, status, created_at) theo đúng quy định BR-O1..O4 và yêu cầu Phase 5.5.
+
+    - BR-O1: Operator chỉ xuất được danh sách khách của đợt thuộc tour của mình; người khác -> 403.
+    - Trả về chuỗi CSV có tiền tố BOM UTF-8 (\\ufeff) để Excel hiển thị tiếng Việt có dấu chuẩn xác.
+    """
+    dep = tour_repo.get_departure_by_id(departure_id)
+    if not dep:
+        raise DepartureNotFoundError(f"Không tìm thấy đợt khởi hành #{departure_id}.")
+
+    tour = tour_repo.get_tour_by_id(dep["tour_id"])
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour liên quan đến đợt khởi hành #{departure_id}.")
+
+    _kiem_tra_quyen_tour(tour, current_user)
+
+    bookings = tour_repo.list_departure_guests_bookings(departure_id)
+
+    output = io.StringIO()
+    # Thêm BOM UTF-8 cho file CSV
+    output.write("\ufeff")
+    writer = csv.writer(output)
+
+    # Tiêu đề cột
+    writer.writerow([
+        "Mã đơn",
+        "Họ tên người đặt",
+        "Số điện thoại",
+        "Email",
+        "Số khách",
+        "Tổng tiền",
+        "Trạng thái",
+        "Ngày đặt",
+    ])
+
+    for b in bookings:
+        code = b.get("code") or f"#{b.get('id')}"
+        name = b.get("full_name") or ""
+        phone = b.get("phone") or ""
+        email = b.get("email") or ""
+        guests = b.get("guests") or 1
+        total_price = b.get("total_price") or 0
+        status = b.get("status") or ""
+        created_at = str(b.get("created_at") or "")
+        writer.writerow([code, name, phone, email, guests, total_price, status, created_at])
+
+    return output.getvalue()
+
+
+def lay_danh_sach_khach_departure(departure_id: int, current_user: dict) -> list[dict]:
+    """Lấy danh sách khách dạng JSON của một đợt khởi hành (Phase 5.5).
+
+    Giả định: Hệ thống hiện tại lưu thông tin khách trên tour_bookings (chưa có booking_passengers).
+    """
+    dep = tour_repo.get_departure_by_id(departure_id)
+    if not dep:
+        raise DepartureNotFoundError(f"Không tìm thấy đợt khởi hành #{departure_id}.")
+
+    tour = tour_repo.get_tour_by_id(dep["tour_id"])
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour liên quan đến đợt khởi hành #{departure_id}.")
+
+    _kiem_tra_quyen_tour(tour, current_user)
+
+    raw_bookings = tour_repo.list_departure_guests_bookings(departure_id)
+    payments_map = _lay_payments_map_cho_bookings(raw_bookings)
+    return [_lam_sach_booking_operator(b, payments_map) for b in raw_bookings]
+
 
