@@ -1,89 +1,244 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import Logo from "../../../../components/common/Logo";
 import "./Navbar.css";
 
-export default function Navbar({ user, onNeedAuth, onLogout }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+const NAV_ITEMS = [
+  { to: "/tour", icon: "travel_explore", label: "Explore Tours" },
+  { to: "/chuyen-di", icon: "route", label: "Plan Itinerary" },
+  { to: "/dia-diem", icon: "menu_book", label: "Guide" },
+];
 
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
+export default function Navbar({
+  user,
+  onNeedAuth,
+  onLogout,
+  variant = "sidebar",
+}) {
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const location = useLocation();
+  const isHome = variant === "home";
 
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY <= 50) {
-        // At top of page -> Full Navbar
-        setIsExpanded(true);
-      } else if (currentScrollY < lastScrollY - 5) {
-        // Scrolling UP -> Expand Navbar
-        setIsExpanded(true);
-      } else if (currentScrollY > lastScrollY + 5) {
-        // Scrolling DOWN -> Collapse to Logo Circle
-        setIsExpanded(false);
-      }
-
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const closeMobile = () => setIsMobileOpen(false);
+  const isActive = (to) =>
+    location.pathname === to ||
+    (to !== "/" && location.pathname.startsWith(to));
 
   return (
-    <header className={`wl-nav ${isExpanded ? "wl-nav--expanded" : "wl-nav--collapsed"}`}>
-      <div className="wl-nav__container">
-        {/* Left Wing Nav Items */}
-        <div className="wl-nav__wing wl-nav__wing--left">
-          <a className="wl-nav__item" href="#tour-packages">
-            <span className="material-symbols-outlined text-base text-orange-500">travel_explore</span>
-            <span>Explore Tours</span>
-          </a>
-          <a className="wl-nav__item" href="#custom-itinerary">
-            <span className="material-symbols-outlined text-base text-orange-500">route</span>
-            <span>Plan Itinerary</span>
-          </a>
+    <>
+      {/* Sidebar cố định cho trang con; ở homepage chỉ dùng làm drawer mobile */}
+      <aside
+        className={`wl-sidebar ${
+          isHome ? "wl-sidebar--mobile-only" : ""
+        } ${isMobileOpen ? "wl-sidebar--open" : ""}`}
+        aria-label="Điều hướng chính"
+      >
+        <div className="wl-sidebar__brand">
+          <Link
+            to="/"
+            className="wl-sidebar__brand-link"
+            onClick={closeMobile}
+          >
+            <span className="wl-sidebar__logo">
+              <Logo className="w-9 h-9" />
+            </span>
+            <span className="wl-sidebar__brand-text">
+              <span className="wl-sidebar__brand-name">Wanderlust</span>
+              <span className="wl-sidebar__brand-tag">Vietnam Tours</span>
+            </span>
+          </Link>
+
+          <button
+            type="button"
+            className="wl-sidebar__close"
+            onClick={closeMobile}
+            aria-label="Đóng menu"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
 
-        {/* Center Circular Logo Badge */}
-        <a className="wl-nav__center-logo" href="/" aria-label="Wanderlust Home">
-          <div className="wl-nav__logo-circle">
-            <Logo className="w-20 h-20" />
-          </div>
-        </a>
-
-        {/* Right Wing Nav Items & Actions */}
-        <div className="wl-nav__wing wl-nav__wing--right">
-          <a className="wl-nav__item" href="#guide">
-            <span className="material-symbols-outlined text-base text-orange-500">menu_book</span>
-            <span>Guide</span>
-          </a>
-          {user ? (
-            <div className="wl-nav__user">
-              <span className="wl-nav__user-name">
-                {user.full_name || user.email}
+        <nav className="wl-sidebar__nav">
+          <span className="wl-sidebar__label">Khám phá</span>
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`wl-sidebar__item ${
+                isActive(item.to) ? "wl-sidebar__item--active" : ""
+              }`}
+              onClick={closeMobile}
+            >
+              <span className="material-symbols-outlined wl-sidebar__icon">
+                {item.icon}
               </span>
+              <span className="wl-sidebar__item-label">{item.label}</span>
+            </Link>
+          ))}
+
+          {user && (
+            <>
+              <span className="wl-sidebar__label" style={{ marginTop: "0.75rem" }}>
+                Cá nhân
+              </span>
+              <Link
+                to="/tour/don-cua-toi"
+                className={`wl-sidebar__item ${
+                  isActive("/tour/don-cua-toi") ? "wl-sidebar__item--active" : ""
+                }`}
+                onClick={closeMobile}
+              >
+                <span className="material-symbols-outlined wl-sidebar__icon">
+                  receipt_long
+                </span>
+                <span className="wl-sidebar__item-label">Đơn tour của tôi</span>
+              </Link>
+            </>
+          )}
+        </nav>
+
+        <div className="wl-sidebar__footer">
+          {user ? (
+            <div className="wl-sidebar__user">
+              <span className="wl-sidebar__user-avatar">
+                {(user.full_name || user.email || "?").slice(0, 1).toUpperCase()}
+              </span>
+              <div className="wl-sidebar__user-info">
+                <span className="wl-sidebar__user-name">
+                  {user.full_name || "Người dùng"}
+                </span>
+                <span className="wl-sidebar__user-email">
+                  {user.email || ""}
+                </span>
+              </div>
               <button
-                className="wl-nav__btn wl-nav__btn--ghost"
+                type="button"
+                className="wl-sidebar__logout"
                 onClick={onLogout}
                 title="Đăng xuất"
               >
-                <span className="material-symbols-outlined text-sm">logout</span>
-                <span>Sign Out</span>
+                <span className="material-symbols-outlined">logout</span>
               </button>
             </div>
           ) : (
             <button
-              className="wl-nav__btn wl-nav__btn--primary"
+              type="button"
+              className="wl-sidebar__signin"
               onClick={onNeedAuth}
             >
-              <span className="material-symbols-outlined text-sm">
+              <span className="material-symbols-outlined wl-sidebar__icon">
                 account_circle
               </span>
               <span>Sign In</span>
             </button>
           )}
         </div>
-      </div>
-    </header>
+      </aside>
+
+      {isHome ? (
+        <header className="wl-navbar">
+          <div className="wl-navbar__inner">
+            <Link to="/" className="wl-navbar__brand">
+              <span className="wl-sidebar__logo">
+                <Logo className="w-9 h-9" />
+              </span>
+              <span className="wl-navbar__brand-name">Wanderlust</span>
+            </Link>
+
+            <nav className="wl-navbar__links">
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`wl-navbar__link ${
+                    isActive(item.to) ? "wl-navbar__link--active" : ""
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {user && (
+                <Link
+                  to="/tour/don-cua-toi"
+                  className={`wl-navbar__link ${
+                    isActive("/tour/don-cua-toi") ? "wl-navbar__link--active" : ""
+                  }`}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "1.15rem" }}>
+                    receipt_long
+                  </span>
+                  <span>Đơn tour của tôi</span>
+                </Link>
+              )}
+            </nav>
+
+            <div className="wl-navbar__actions">
+              {user ? (
+                <>
+                  <Link
+                    to="/tour/don-cua-toi"
+                    className="wl-navbar__action"
+                    title="Đơn tour của tôi"
+                  >
+                    <span className="material-symbols-outlined">receipt_long</span>
+                  </Link>
+                  <button
+                    type="button"
+                    className="wl-navbar__action"
+                    onClick={onLogout}
+                    title="Đăng xuất"
+                  >
+                    <span className="material-symbols-outlined">logout</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="wl-navbar__signin"
+                  onClick={onNeedAuth}
+                >
+                  Sign In
+                </button>
+              )}
+              <button
+                type="button"
+                className="wl-navbar__burger"
+                onClick={() => setIsMobileOpen(true)}
+                aria-label="Mở menu"
+              >
+                <span className="material-symbols-outlined">menu</span>
+              </button>
+            </div>
+          </div>
+        </header>
+      ) : (
+        <header className="wl-sidebar__mobile-bar">
+          <Link to="/" className="wl-sidebar__mobile-brand">
+            <span className="wl-sidebar__logo">
+              <Logo className="w-8 h-8" />
+            </span>
+            <span className="wl-sidebar__brand-name">Wanderlust</span>
+          </Link>
+          <button
+            type="button"
+            className="wl-sidebar__mobile-toggle"
+            onClick={() => setIsMobileOpen(true)}
+            aria-label="Mở menu"
+          >
+            <span className="material-symbols-outlined">menu</span>
+          </button>
+        </header>
+      )}
+
+      {isMobileOpen && (
+        <button
+          type="button"
+          className="wl-sidebar__backdrop"
+          onClick={closeMobile}
+          aria-label="Đóng menu"
+        />
+      )}
+    </>
   );
 }

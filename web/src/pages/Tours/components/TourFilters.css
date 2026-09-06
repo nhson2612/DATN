@@ -1,0 +1,176 @@
+/* ==========================================================================
+   BLOCK: .tour-filters (Bộ lọc sidebar chuẩn theo .design/Tours.html)
+   ========================================================================== */
+
+/* Cột bộ lọc desktop: ẩn trên mobile, hiện trên lg, tự cuộn nội bộ khi dài */
+.tours-filter-desktop {
+  display: none;
+  min-width: 0;
+  scrollbar-width: none;
+}
+
+.tours-filter-desktop::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .tours-filter-desktop {
+    display: block;
+    height: 100%;
+    max-height: calc(100dvh - 18rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* Thanh cuộn gọn cho danh sách tỉnh/thành */
+.tour-filters__province-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.tour-filters__province-list::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.tour-filters__province-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.tour-filters__province-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Range slider simulation */
+.tour-filters__range-track {
+  height: 4px;
+  background-color: #ffedd5; /* orange-100 */
+  border-radius: 9999px;
+  position: relative;
+  width: 100%;
+}
+
+.tour-filters__range-fill {
+  position: absolute;
+  height: 100%;
+  background-color: #ea580c; /* brand-600 */
+  border-radius: 9999px;
+}
+
+.tour-filters__range-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) translateX(-50%);
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  background-color: #ea580c;
+  box-shadow: 0 0 0 2px #ffffff, 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.tour-filters__range-thumb:hover {
+  transform: translateY(-50%) translateX(-50%) scale(1.15);
+}
+
+/* Mobile Drawer */
+.tour-filters-mobile__backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.tour-filters-mobile__drawer {
+  position: fixed;
+  inset-block: 0;
+  right: 0;
+  width: 100%;
+  max-width: 24rem;
+  background-color: #ffffff;
+  z-index: 51;
+  padding: 1.5rem;
+  overflow-y: auto;
+  box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* ==========================================================================
+   Accordion Collapsible Filter Groups
+   ========================================================================== */
+.tour-filters__accordion {
+  display: flex;
+  flex-direction: column;
+}
+
+.tour-filters__accordion-item {
+  border-bottom: 1px solid #f1f5f9;
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+}
+
+.tour-filters__accordion-item:first-child {
+  padding-top: 0.25rem;
+}
+
+.tour-filters__accordion-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.tour-filters__accordion-header {
+  min-height: 28px;
+}
+
+.tour-filters__accordion-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tour-filters__accordion-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tour-filters__accordion-panel[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.tour-filters__accordion-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.tour-filters__accordion-body {
+  padding-top: 0.75rem;
+}
+
+/* Tôn trọng người dùng bật prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .tour-filters__accordion-panel,
+  .tour-filters__accordion-arrow {
+    transition: none !important;
+  }
+}

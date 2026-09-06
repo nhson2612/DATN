@@ -2,14 +2,15 @@ import { useCallback, useState } from "react";
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import AuthModal from "./components/auth/AuthModal";
-import Header from "./components/layout/Header";
 import Admin from "./pages/Admin";
 import Destination from "./pages/Destination";
 import Favorites from "./pages/Favorites";
 import HomePage from "./pages/HomePage";
+import Navbar from "./pages/HomePage/components/Navbar/Navbar";
 import PlaceDetail from "./pages/PlaceDetail";
 import PlaceList from "./pages/PlaceList";
 import TourDetail from "./pages/TourDetail";
+import TourMyBookings from "./pages/TourMyBookings";
 import Tours from "./pages/Tours";
 import TripPlanner from "./pages/TripPlanner";
 import Trips from "./pages/Trips";
@@ -31,55 +32,60 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
   const location = useLocation();
   const isPlanner = location.pathname.startsWith("/chuyen-di/") && location.pathname !== "/chuyen-di";
   const isHome = location.pathname === "/";
+  const isTours = location.pathname === "/tour";
 
   return (
-    <div className="font-sans min-h-screen flex flex-col">
-      {!isHome && <Header user={user} onLogin={() => setMoAuth(true)} onLogout={dangXuat} />}
+    <div className="font-sans min-h-screen">
+      <Navbar
+        user={user}
+        onNeedAuth={() => setMoAuth(true)}
+        onLogout={dangXuat}
+        variant={isHome ? "home" : "sidebar"}
+      />
 
-      <div className="flex-1">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <HomePage
-                user={user}
-                onNeedAuth={canDangNhap}
-                onLogout={dangXuat}
-              />
-            }
-          />
-          <Route path="/diem-den/:slug" element={<Destination />} />
-          <Route path="/dia-diem" element={<PlaceList />} />
-          <Route path="/dia-diem/:type/:id"
-            element={<PlaceDetail user={user} onNeedAuth={canDangNhap} />} />
-          <Route path="/tour" element={<Tours />} />
-          <Route path="/tour/:slug"
-            element={<TourDetail user={user} onNeedAuth={canDangNhap} />} />
-          <Route path="/chuyen-di"
-            element={<Trips user={user} onNeedAuth={canDangNhap} />} />
-          <Route path="/chuyen-di/:id"
-            element={<TripPlanner user={user} onNeedAuth={canDangNhap} />} />
-          <Route path="/tro-ly" element={<Navigate to="/chuyen-di" replace />} />
-          <Route path="/quan-tri" element={<Admin user={user} />} />
-          <Route path="/yeu-thich"
-            element={<Favorites user={user} onNeedAuth={canDangNhap} />} />
+      <div
+        className={`min-h-screen flex flex-col ${
+          isHome ? "" : "pt-16 lg:pl-[16.5rem] lg:pt-0"
+        }`}
+      >
+        <div className="flex-1">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/diem-den/:slug" element={<Destination />} />
+            <Route path="/dia-diem" element={<PlaceList />} />
+            <Route path="/dia-diem/:type/:id"
+              element={<PlaceDetail user={user} onNeedAuth={canDangNhap} />} />
+            <Route path="/tour" element={<Tours />} />
+            <Route path="/tour/don-cua-toi"
+              element={<TourMyBookings user={user} onNeedAuth={canDangNhap} />} />
+            <Route path="/tour/:slug"
+              element={<TourDetail user={user} onNeedAuth={canDangNhap} />} />
+            <Route path="/chuyen-di"
+              element={<Trips user={user} onNeedAuth={canDangNhap} />} />
+            <Route path="/chuyen-di/:id"
+              element={<TripPlanner user={user} onNeedAuth={canDangNhap} />} />
+            <Route path="/tro-ly" element={<Navigate to="/chuyen-di" replace />} />
+            <Route path="/quan-tri" element={<Admin user={user} />} />
+            <Route path="/yeu-thich"
+              element={<Favorites user={user} onNeedAuth={canDangNhap} />} />
 
-          <Route path="/map.html" element={<Navigate to="/chuyen-di" replace />} />
-          <Route path="/admin.html" element={<Navigate to="/quan-tri" replace />} />
-          <Route path="*" element={<KhongTimThay />} />
-        </Routes>
+            <Route path="/map.html" element={<Navigate to="/chuyen-di" replace />} />
+            <Route path="/admin.html" element={<Navigate to="/quan-tri" replace />} />
+            <Route path="*" element={<KhongTimThay />} />
+          </Routes>
+        </div>
+
+        {!isHome && !isPlanner && !isTours && (
+          <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-16">
+            <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-zinc-500">
+              <p className="font-semibold text-zinc-700 mb-1">Đi Đâu · Khoá luận tốt nghiệp</p>
+              <p>Dữ liệu địa điểm: Overture Maps · Mạng đường: OpenStreetMap · Ảnh: Wikimedia Commons</p>
+            </div>
+          </footer>
+        )}
+
+        <AuthModal open={moAuth} onClose={() => setMoAuth(false)} onSuccess={setUser} />
       </div>
-
-      {!isHome && !isPlanner && (
-        <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-16">
-          <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-zinc-500">
-            <p className="font-semibold text-zinc-700 mb-1">Đi Đâu · Khoá luận tốt nghiệp</p>
-            <p>Dữ liệu địa điểm: Overture Maps · Mạng đường: OpenStreetMap · Ảnh: Wikimedia Commons</p>
-          </div>
-        </footer>
-      )}
-
-      <AuthModal open={moAuth} onClose={() => setMoAuth(false)} onSuccess={setUser} />
     </div>
   );
 }

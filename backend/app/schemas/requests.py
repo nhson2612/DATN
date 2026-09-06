@@ -1,6 +1,6 @@
 """Pydantic schema cho request. Tách khỏi route để service không phụ thuộc HTTP."""
 
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -125,3 +125,73 @@ class CreatePaymentRequest(BaseModel):
 class AdminConfirmPaymentRequest(BaseModel):
     """Admin xác nhận giao dịch thanh toán đã nhận tiền."""
     note: Optional[str] = None
+
+
+class OperatorCreate(BaseModel):
+    """Admin tạo tài khoản Tour Operator (Phase 5.1).
+
+    Giả định: Admin tạo thẳng user với role='operator' kèm bản ghi operators.
+    Nếu không nhập password, mặc định là '123456'. Mặc định commission_rate là 0.10 (10%)
+    và status là 'ACTIVE' để có thể đăng nhập và tạo tour ngay.
+    """
+    email: str
+    password: str = "123456"
+    full_name: str
+    company_name: str
+    tax_code: Optional[str] = None
+    commission_rate: Optional[float] = 0.10
+    status: Optional[str] = "ACTIVE"
+
+
+class TourUpsert(BaseModel):
+    """Schema tạo và cập nhật Tour của Tour Operator (Phase 5.2)."""
+    slug: Optional[str] = None
+    name: Optional[str] = None
+    operator_id: Optional[int] = None
+    summary: Optional[str] = None
+    description: Optional[str] = None
+    province_id: Optional[int] = None
+    duration_days: Optional[int] = None
+    price_from: Optional[int] = None
+    cover_url: Optional[str] = None
+    images: Optional[List[str]] = None
+    highlights: Optional[List[str]] = None
+    itinerary: Optional[List[dict]] = None
+    included: Optional[List[str]] = None
+    excluded: Optional[List[str]] = None
+    cancellation_policy: Optional[List[dict]] = None
+    status: Optional[str] = None
+
+
+class DepartureCreate(BaseModel):
+    """Schema tạo đợt khởi hành mới của Tour Operator (Phase 5.3)."""
+    depart_date: date
+    list_price: int
+    seats_total: int = 20
+    min_pax: Optional[int] = 1
+    status: Optional[str] = "OPEN"
+    sale_price: Optional[int] = None
+    sale_starts_at: Optional[datetime] = None
+    sale_ends_at: Optional[datetime] = None
+
+
+class DepartureUpsert(BaseModel):
+    """Schema cập nhật đợt khởi hành của Tour Operator (Phase 5.3)."""
+    depart_date: Optional[date] = None
+    list_price: Optional[int] = None
+    seats_total: Optional[int] = None
+    seats_left: Optional[int] = None
+    min_pax: Optional[int] = None
+    status: Optional[str] = None
+    sale_price: Optional[int] = None
+    sale_starts_at: Optional[datetime] = None
+    sale_ends_at: Optional[datetime] = None
+
+
+class SaleDepartureRequest(BaseModel):
+    """Schema đặt/chỉnh sửa giá khuyến mãi cho đợt khởi hành (Phase 5.4, UC-T03)."""
+    sale_price: Optional[int] = None
+    sale_starts_at: Optional[datetime] = None
+    sale_ends_at: Optional[datetime] = None
+
+

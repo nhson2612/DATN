@@ -30,8 +30,20 @@ MAU = [
     ("Thành phố Hồ Chí Minh", 2, 1_990_000, ["Trung tâm Sài Gòn", "Chợ Bến Thành - ẩm thực"]),
 ]
 
-BAO_GOM = "Xe đưa đón, khách sạn 3 sao, ăn theo chương trình, vé tham quan, hướng dẫn viên."
-KHONG_BAO_GOM = "Vé máy bay, chi phí cá nhân, đồ uống, tip cho hướng dẫn viên."
+BAO_GOM = [
+    "Xe đưa đón",
+    "Khách sạn 3 sao",
+    "Ăn theo chương trình",
+    "Vé tham quan",
+    "Hướng dẫn viên",
+]
+KHONG_BAO_GOM = [
+    "Vé máy bay",
+    "Chi phí cá nhân",
+    "Đồ uống",
+    "Tip cho hướng dẫn viên",
+]
+
 
 
 def slugify(t: str) -> str:
@@ -69,7 +81,7 @@ def main():
         # CSDL lưu "Thành phố Đà Nẵng" còn ở đây gõ tắt "Đà Nẵng"; và có bản ghi
         # trùng tên (ranh giới bị tách) nên lấy cái nhiều địa điểm nhất.
         tinh = execute_query(
-            """
+            r"""
             SELECT id, name FROM province_stats
             WHERE name = %s
                OR regexp_replace(name, '^(Thành phố|Tỉnh)\s+', '') = %s
@@ -97,6 +109,10 @@ def main():
             })
 
         ten_ngan = ten_tinh
+        # Lấy mảng URL ảnh của các điểm đến theo thứ tự ngày trong itinerary
+        images = tour_repo.get_itinerary_photos(lich)
+        cover_url = images[0] if images else None
+
         tour_id = tour_repo.create_tour({
             "slug": f"{slugify(ten_tinh)}-{so_ngay}n{so_ngay - 1}d",
             "name": f"Khám phá {ten_ngan} {so_ngay} ngày {so_ngay - 1} đêm",
@@ -107,6 +123,8 @@ def main():
             "province_id": tinh["id"],
             "duration_days": so_ngay,
             "price_from": gia,
+            "cover_url": cover_url,
+            "images": images,
             "highlights": [d["name"] for d in diem[:4]],
             "itinerary": lich,
             "included": BAO_GOM,
@@ -120,7 +138,7 @@ def main():
             tour_repo.add_departure(tour_id, ngay, gia_dot, seats=20)
 
         tao += 1
-        print(f"  {ten_ngan}: {so_ngay} ngày, {len(diem)} địa điểm, 6 đợt khởi hành")
+        print(f"  {ten_ngan}: {so_ngay} ngày, {len(diem)} địa điểm, {len(images)} ảnh itinerary, 6 đợt khởi hành")
 
     print(f"Xong: {tao} tour.")
 

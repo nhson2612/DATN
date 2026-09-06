@@ -1,0 +1,190 @@
+/* ==========================================================================
+   BLOCK: .tours-page (Trang danh sách tour trọn gói chuẩn .design/Tours.html)
+   ========================================================================== */
+
+.tours-page {
+  background-color: #fbfcfe;
+  min-height: 100vh;
+  color: #1e293b;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+.tours-page * {
+  box-sizing: border-box;
+}
+
+/* Ghim hero ở trên; chỉ khu vực danh sách tour cuộn được */
+.tours-page__hero-pane {
+  flex: 0 0 auto;
+}
+
+.tours-page__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.tours-page__body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .tours-page {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .tours-page__body {
+    display: grid;
+    grid-template-columns: minmax(16rem, 18rem) minmax(0, 1fr);
+    align-items: start;
+    gap: 2rem;
+    width: 100%;
+    max-width: 1536px;
+    margin: 0 auto;
+    padding: 0 2.25rem;
+  }
+
+  .tours-page__scroll {
+    overflow-y: auto;
+    height: 100%;
+    min-width: 0;
+  }
+
+  .tours-page__scroll .tours-page__container {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Khung nội dung chính 1536px */
+.tours-page__container {
+  max-width: 1536px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 2.25rem;
+  padding-bottom: 2.25rem;
+}
+
+@media (min-width: 640px) {
+  .tours-page__container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Lưới hiển thị danh sách thẻ tour: 1 cột mobile, 2 cột tablet, 3 cột desktop */
+.tours-page__grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .tours-page__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .tours-page__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Chế độ xem danh sách (List View) */
+.tours-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Skeleton Loading Cards */
+.tours-skeleton-card {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.tours-skeleton-media {
+  height: 12rem;
+  background-color: #e2e8f0;
+  width: 100%;
+}
+
+.tours-skeleton-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tours-skeleton-line-title {
+  height: 1.125rem;
+  background-color: #cbd5e1;
+  border-radius: 0.25rem;
+  width: 85%;
+}
+
+.tours-skeleton-line-feature {
+  height: 0.75rem;
+  background-color: #e2e8f0;
+  border-radius: 0.25rem;
+  width: 70%;
+}
+
+.tours-skeleton-footer {
+  padding: 0.5rem 1rem 1rem 1rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tours-skeleton-price {
+  height: 1.25rem;
+  background-color: #fed7aa;
+  border-radius: 0.25rem;
+  width: 6rem;
+}
+
+.tours-skeleton-btn {
+  height: 1.75rem;
+  background-color: #e2e8f0;
+  border-radius: 0.375rem;
+  width: 5rem;
+}
+
+/* Empty State */
+.tours-empty {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

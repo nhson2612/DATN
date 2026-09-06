@@ -6,6 +6,7 @@ lọc theo giá ở đây có ý nghĩa — khác `price_level` của POI vốn 
 mặc định "Trung bình".
 """
 
+import json
 import uuid
 from datetime import date, datetime, timedelta
 from typing import Optional
@@ -13,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 from app.core.database import transaction
 from app.core.logging import get_logger
-from app.repositories import tour_repo
+from app.repositories import operator_repo, tour_repo
 
 logger = get_logger(__name__)
 
@@ -39,6 +40,23 @@ class PaymentNotFoundError(Exception):
 
 class PaymentInvalidError(Exception):
     """Dữ liệu hoặc trạng thái thanh toán không hợp lệ."""
+
+
+class TourNotFoundError(Exception):
+    """Không tìm thấy tour."""
+
+
+class TourPermissionDeniedError(Exception):
+    """Không có quyền truy cập hoặc thao tác tour này (BR-O1)."""
+
+
+class TourBusinessRuleError(Exception):
+    """Vi phạm quy tắc nghiệp vụ tour (BR-T1, BR-T3, BR-T4, BR-T5)."""
+
+
+class DepartureNotFoundError(Exception):
+    """Không tìm thấy đợt khởi hành."""
+
 
 
 # ── Máy trạng thái Booking (§6 & BR-L1..L5) ──────────────────────────────────
@@ -200,10 +218,127 @@ def lam_giau_thong_tin_gia(departure: dict, thoi_diem: Optional[datetime] = None
     return departure
 
 
-def list_tours(province_id=None, max_days=None, max_price=None, page=1, page_size=24):
+def list_tour_provinces() -> list[dict]:
+    """Danh sách tỉnh/thành có tour đang hoạt động phục vụ bộ lọc."""
+    return tour_repo.list_tour_provinces()
+
+
+def _chuan_hoa_images_api(tour: dict, photos_by_pid: Optional[dict] = None) -> None:
+    """Đảm bảo tour['images'] luôn là list[str] URL thật từ itinerary.
+
+    - Nếu DB cũ chưa migrate (images là None hoặc thiếu): fallback list rỗng [].
+    - Nếu images là chuỗi JSON: parse về list.
+    - Loại bỏ ảnh phong cảnh generic cũ (/assets/images/tour-*, /assets/images/vietnam-*, /assets/images/hero-slide-*).
+    - Nếu images rỗng nhưng itinerary có địa điểm có ảnh trong place_photos:
+      tự tổng hợp lại từ itinerary lúc đọc.
+    - Cập nhật cover_url: nếu cover_url rỗng hoặc là generic, gán cover_url = images[0] nếu có.
+    """
+    raw = tour.get("images")
+    if raw is None:
+        images_list = []
+    elif isinstance(raw, str):
+        try:
+            parsed = json.loads(raw)
+            images_list = parsed if isinstance(parsed, list) else [parsed]
+        except Exception:
+            images_list = [raw] if raw.strip() else []
+    elif isinstance(raw, list):
+        images_list = raw
+    else:
+        images_list = [raw]
+
+    images = [str(x).strip() for x in images_list if str(x).strip()]
+
+    # Nếu tour có itinerary và images chứa ảnh generic cũ (/assets/images/...), loại bỏ ảnh generic
+    has_itinerary = bool(tour.get("itinerary"))
+    if has_itinerary:
+        images = [x for x in images if not x.startswith("/assets/images/")]
+
+    # Fallback: nếu images rỗng nhưng có itinerary, tự tổng hợp lại từ place_photos
+    if not images and has_itinerary:
+        itinerary = tour.get("itinerary") or []
+        pids = []
+        for day in itinerary:
+            for pid in (day.get("place_ids") or []):
+                if pid not in pids:
+                    pids.append(pid)
+        if pids:
+            if photos_by_pid is None:
+                itin_photos = tour_repo.get_itinerary_photos(itinerary)
+            else:
+                itin_photos = []
+                seen = set()
+                for pid in pids:
+                    for url in photos_by_pid.get(pid, []):
+                        if url and url not in seen:
+                            seen.add(url)
+                            itin_photos.append(url)
+            if itin_photos:
+                images = itin_photos
+
+    tour["images"] = images
+
+    # Cập nhật cover_url nếu cover_url rỗng hoặc là generic
+    cover = tour.get("cover_url")
+    is_generic_cover = cover and str(cover).startswith("/assets/images/")
+    if (not cover or is_generic_cover) and images:
+        tour["cover_url"] = images[0]
+    elif is_generic_cover and not images and has_itinerary:
+        tour["cover_url"] = None
+
+
+def list_tours(
+    province_id=None,
+    depart_from=None,
+    depart_to=None,
+    price_min=None,
+    price_max=None,
+    max_price=None,
+    max_days=None,
+    min_days=None,
+    guests=None,
+    sort=None,
+    page=1,
+    page_size=24,
+):
+    if price_max is None and max_price is not None:
+        price_max = max_price
     items, tong = tour_repo.list_tours(
-        province_id=province_id, max_days=max_days, max_price=max_price,
-        limit=page_size, offset=(max(page, 1) - 1) * page_size)
+        province_id=province_id,
+        depart_from=depart_from,
+        depart_to=depart_to,
+        price_min=price_min,
+        price_max=price_max,
+        max_price=price_max,
+        max_days=max_days,
+        min_days=min_days,
+        guests=guests,
+        sort=sort,
+        limit=page_size,
+        offset=(max(page, 1) - 1) * page_size,
+    )
+
+    # Tối ưu: Gom tất cả place_id của các tour cần fallback để query batch 1 lần
+    pids_to_fetch = set()
+    for t in items:
+        raw_imgs = t.get("images") or []
+        if isinstance(raw_imgs, str):
+            try:
+                raw_imgs = json.loads(raw_imgs)
+            except Exception:
+                raw_imgs = []
+        is_empty_or_generic = not raw_imgs or (
+            isinstance(raw_imgs, list) and all(str(x).startswith("/assets/images/") for x in raw_imgs)
+        )
+        if is_empty_or_generic and t.get("itinerary"):
+            for day in t.get("itinerary") or []:
+                for pid in (day.get("place_ids") or []):
+                    pids_to_fetch.add(pid)
+
+    photos_by_pid = tour_repo.get_photos_for_places(list(pids_to_fetch)) if pids_to_fetch else {}
+
+    for t in items:
+        _chuan_hoa_images_api(t, photos_by_pid=photos_by_pid)
     return {"items": items, "total": tong, "page": page, "page_size": page_size}
 
 
@@ -212,6 +347,8 @@ def get_tour(slug: str):
     tour = tour_repo.get_tour(slug)
     if not tour:
         return None
+
+    _chuan_hoa_images_api(tour)
 
     raw_deps = tour_repo.departures(tour["id"])
     enriched_deps = [lam_giau_thong_tin_gia(d) for d in raw_deps]
@@ -534,6 +671,29 @@ def list_my_bookings(user_id: int, limit: int = 100) -> list:
         else:
             r["is_sale"] = False
             r["savings"] = 0
+
+        # Kiểm tra quá hạn giữ chỗ 30 phút
+        status = r.get("status")
+        hold_at = r.get("hold_expires_at")
+        is_hold_expired = False
+        if status == "PENDING_PAYMENT" and hold_at:
+            hold_at_dt = None
+            if isinstance(hold_at, datetime):
+                hold_at_dt = hold_at
+            elif isinstance(hold_at, str):
+                try:
+                    hold_at_dt = datetime.fromisoformat(hold_at)
+                except Exception:
+                    hold_at_dt = None
+
+            if hold_at_dt:
+                now_vn = datetime.now(TZ_VN)
+                if hold_at_dt.tzinfo is None:
+                    hold_at_dt = hold_at_dt.replace(tzinfo=TZ_VN)
+                if now_vn > hold_at_dt:
+                    is_hold_expired = True
+
+        r["is_hold_expired"] = is_hold_expired
 
         # Định dạng chuỗi ngày giờ nếu có
         if r.get("hold_expires_at") and isinstance(r["hold_expires_at"], datetime):
@@ -870,4 +1030,757 @@ def xac_nhan_thanh_toan(
 
     with transaction() as new_tx:
         return _do_xac_nhan(new_tx)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Phase 5.2: Nghiệp vụ Tour dành cho Tour Operator (BR-O1 / BR-T1..T5)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _normalize_json_obj(val):
+    if val is None:
+        return None
+    if isinstance(val, (dict, list)):
+        return val
+    try:
+        return json.loads(val)
+    except Exception:
+        return val
+
+
+def tao_tour_operator(data: dict, current_user: dict) -> dict:
+    """Tạo tour mới dành cho Operator hoặc Admin (UC-T01).
+
+    - BR-T1: duration_days >= 1.
+    - BR-T2: slug duy nhất, tự sinh nếu chưa có.
+    - Gán operator_id từ token (hoặc từ data nếu là admin).
+    - Mặc định trạng thái DRAFT nếu không truyền.
+    """
+    from app.services.destination_service import slugify
+
+    duration_days = int(data.get("duration_days") or 1)
+    if duration_days < 1:
+        raise TourBusinessRuleError("Số ngày của tour (duration_days) phải lớn hơn hoặc bằng 1 theo quy tắc BR-T1.")
+
+    name = (data.get("name") or "").strip()
+    if not name:
+        raise TourBusinessRuleError("Tên tour không được để trống.")
+
+    slug = data.get("slug")
+    if not slug:
+        base_slug = slugify(name)
+        slug = base_slug
+        suffix = 1
+        while tour_repo.get_tour_by_slug(slug) is not None:
+            slug = f"{base_slug}-{suffix}"
+            suffix += 1
+    else:
+        existing = tour_repo.get_tour_by_slug(slug)
+        if existing:
+            raise TourBusinessRuleError(f"Slug '{slug}' đã tồn tại trong hệ thống (BR-T2).")
+
+    is_admin = current_user.get("is_admin", False)
+    if is_admin:
+        operator_id = data.get("operator_id")
+        if not operator_id:
+            raise TourBusinessRuleError(
+                "Admin tạo tour cần truyền operator_id để tour không bị mồ côi (thiếu chủ sở hữu)."
+            )
+        op = operator_repo.find_by_id(operator_id)
+        if not op or op.get("status") != "ACTIVE":
+            raise TourBusinessRuleError(f"Không tìm thấy operator ACTIVE #{operator_id}.")
+    else:
+        operator_id = current_user.get("operator_id")
+        if not operator_id:
+            raise TourPermissionDeniedError("Tài khoản không có thông tin operator hợp lệ.")
+
+    tour_dict = dict(data)
+    tour_dict["slug"] = slug
+    tour_dict["name"] = name
+    tour_dict["duration_days"] = duration_days
+    tour_dict["operator_id"] = operator_id
+    if "status" not in tour_dict or not tour_dict["status"]:
+        tour_dict["status"] = "DRAFT"
+
+    tour_id = tour_repo.create_tour(tour_dict, upsert=False)
+    if not tour_id:
+        raise TourBusinessRuleError(f"Slug '{slug}' vừa bị tour khác chiếm (BR-T2).")
+    created = tour_repo.get_tour_by_id(tour_id)
+    return created
+
+
+def lay_chi_tiet_tour_operator(tour_id: int, current_user: dict) -> dict:
+    """Lấy chi tiết tour theo id kèm kiểm tra quyền sở hữu BR-O1."""
+    tour = tour_repo.get_tour_by_id(tour_id)
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{tour_id}.")
+
+    is_admin = current_user.get("is_admin", False)
+    if not is_admin:
+        if tour.get("operator_id") != current_user.get("operator_id"):
+            raise TourPermissionDeniedError("Bạn không có quyền truy cập tour của nhà điều hành khác (BR-O1).")
+
+    return tour
+
+
+def danh_sach_tour_operator(
+    current_user: dict,
+    query_operator_id: Optional[int] = None,
+    status: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 50,
+) -> dict:
+    """Liệt kê tour theo operator_id hoặc tất cả nếu là admin."""
+    is_admin = current_user.get("is_admin", False)
+    if is_admin:
+        target_operator_id = query_operator_id
+    else:
+        target_operator_id = current_user.get("operator_id")
+
+    offset = (page - 1) * page_size
+    tours = tour_repo.list_operator_tours(
+        operator_id=target_operator_id,
+        status=status,
+        limit=page_size,
+        offset=offset,
+    )
+    total = tour_repo.count_operator_tours(operator_id=target_operator_id, status=status)
+    return {
+        "tours": tours,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
+
+
+def cap_nhat_tour_operator(tour_id: int, data: dict, current_user: dict) -> dict:
+    """Cập nhật tour có kiểm tra BR-O1, BR-T3, BR-T4."""
+    from app.services.destination_service import slugify
+
+    tour_cu = tour_repo.get_tour_by_id(tour_id)
+    if not tour_cu:
+        raise TourNotFoundError(f"Không tìm thấy tour #{tour_id}.")
+
+    is_admin = current_user.get("is_admin", False)
+    if not is_admin:
+        if tour_cu.get("operator_id") != current_user.get("operator_id"):
+            raise TourPermissionDeniedError("Bạn không có quyền chỉnh sửa tour của nhà điều hành khác (BR-O1).")
+
+    duration_days = int(data.get("duration_days") or tour_cu.get("duration_days") or 1)
+    if duration_days < 1:
+        raise TourBusinessRuleError("Số ngày của tour (duration_days) phải lớn hơn hoặc bằng 1 theo quy tắc BR-T1.")
+
+    # BR-T3: Tour đã có booking CONFIRMED thì KHÔNG ĐƯỢC sửa lịch trình, số ngày, chính sách hủy
+    if tour_repo.tour_has_confirmed_bookings(tour_id):
+        if "duration_days" in data and int(data["duration_days"]) != int(tour_cu.get("duration_days", 1)):
+            raise TourBusinessRuleError(
+                "Tour đã có đơn đặt tour được xác nhận (CONFIRMED). "
+                "Theo quy tắc BR-T3, không được thay đổi số ngày (duration_days)."
+            )
+        if "itinerary" in data and _normalize_json_obj(data["itinerary"]) != _normalize_json_obj(tour_cu.get("itinerary")):
+            raise TourBusinessRuleError(
+                "Tour đã có đơn đặt tour được xác nhận (CONFIRMED). "
+                "Theo quy tắc BR-T3, không được thay đổi lịch trình (itinerary)."
+            )
+        if "cancellation_policy" in data and _normalize_json_obj(data["cancellation_policy"]) != _normalize_json_obj(tour_cu.get("cancellation_policy")):
+            raise TourBusinessRuleError(
+                "Tour đã có đơn đặt tour được xác nhận (CONFIRMED). "
+                "Theo quy tắc BR-T3, không được thay đổi chính sách hủy (cancellation_policy)."
+            )
+
+    # BR-T4: Sửa hạn chế khi tour đang ACTIVE (chỉ mô tả, ảnh, highlights, included, excluded, status)
+    if tour_cu.get("status") == "ACTIVE":
+        # Kiểm tra nếu cố đổi các trường cốt lõi
+        if "duration_days" in data and int(data["duration_days"]) != int(tour_cu.get("duration_days", 1)):
+            raise TourBusinessRuleError(
+                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, chỉ được cập nhật mô tả, hình ảnh, điểm nhấn và dịch vụ bao gồm/không bao gồm. "
+                "Để đổi số ngày, vui lòng chuyển tour về DRAFT trước."
+            )
+        if "itinerary" in data and _normalize_json_obj(data["itinerary"]) != _normalize_json_obj(tour_cu.get("itinerary")):
+            raise TourBusinessRuleError(
+                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, chỉ được cập nhật mô tả, hình ảnh, điểm nhấn và dịch vụ bao gồm/không bao gồm. "
+                "Để đổi lịch trình, vui lòng chuyển tour về DRAFT trước."
+            )
+        if "province_id" in data and data["province_id"] != tour_cu.get("province_id"):
+            raise TourBusinessRuleError(
+                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, không được đổi điểm đến tỉnh/thành khi tour đang mở bán."
+            )
+        if "cancellation_policy" in data and _normalize_json_obj(data["cancellation_policy"]) != _normalize_json_obj(tour_cu.get("cancellation_policy")):
+            raise TourBusinessRuleError(
+                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, không được đổi chính sách hủy khi tour đang mở bán."
+            )
+        if "name" in data and data["name"].strip() != tour_cu.get("name", "").strip():
+            raise TourBusinessRuleError(
+                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, không được đổi tên tour khi đang mở bán. Vui lòng chuyển về DRAFT nếu muốn đổi."
+            )
+
+    # Kiểm tra slug nếu đổi
+    new_slug = data.get("slug")
+    if new_slug and new_slug != tour_cu.get("slug"):
+        exist = tour_repo.get_tour_by_slug(new_slug)
+        if exist and exist.get("id") != tour_id:
+            raise TourBusinessRuleError(f"Slug '{new_slug}' đã được sử dụng bởi tour khác.")
+
+    update_payload = dict(data)
+    update_payload["duration_days"] = duration_days
+
+    # Giữ nguyên operator_id của tour, trừ phi admin chỉ định đổi
+    if not is_admin:
+        update_payload["operator_id"] = tour_cu.get("operator_id")
+
+    tour_repo.update_tour(tour_id, update_payload)
+    return tour_repo.get_tour_by_id(tour_id)
+
+
+def xoa_tour_operator(tour_id: int, current_user: dict) -> dict:
+    """Xoá tour của operator theo quy tắc BR-T5:
+
+    - Nếu tour đã từng có booking: xoá mềm (status=INACTIVE, active=FALSE).
+    - Nếu tour chưa từng có booking: xoá cứng khỏi CSDL.
+    """
+    tour = tour_repo.get_tour_by_id(tour_id)
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{tour_id}.")
+
+    is_admin = current_user.get("is_admin", False)
+    if not is_admin:
+        if tour.get("operator_id") != current_user.get("operator_id"):
+            raise TourPermissionDeniedError("Bạn không có quyền xoá tour của nhà điều hành khác (BR-O1).")
+
+    has_booking = tour_repo.tour_has_bookings(tour_id)
+    if has_booking:
+        tour_repo.delete_tour_soft(tour_id)
+        return {
+            "success": True,
+            "tour_id": tour_id,
+            "soft_deleted": True,
+            "message": "Tour đã có đơn đặt phòng nên được chuyển sang trạng thái ngừng hoạt động (INACTIVE) theo quy tắc BR-T5.",
+        }
+    else:
+        tour_repo.delete_tour_hard(tour_id)
+        return {
+            "success": True,
+            "tour_id": tour_id,
+            "soft_deleted": False,
+            "message": "Đã xoá tour thành công khỏi hệ thống.",
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Phase 5.3: Quản lý Đợt khởi hành (Departure Management) cho Operator / Admin
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _kiem_tra_quyen_tour(tour: dict, current_user: dict):
+    """Kiểm tra quyền thao tác trên tour theo quy tắc BR-O1."""
+    is_admin = current_user.get("is_admin", False)
+    if is_admin:
+        return
+    tour_op_id = tour.get("operator_id")
+    user_op_id = current_user.get("operator_id")
+    if tour_op_id is None or user_op_id is None or tour_op_id != user_op_id:
+        raise TourPermissionDeniedError("Bạn không có quyền thao tác trên tour của nhà điều hành khác (BR-O1).")
+
+
+def _kiem_tra_sale_hop_le(list_price, sale_price):
+    """Kiểm tra sale_price với list_price trước khi lưu đợt khởi hành.
+
+    Bảng tour_departures có CHECK tương tự; validate ở service để trả 400
+    (TourBusinessRuleError) thay vì để DB văng lỗi constraint -> HTTP 500.
+    """
+    if sale_price is None:
+        return
+    try:
+        sp = int(sale_price)
+    except (ValueError, TypeError):
+        raise TourBusinessRuleError("Giá khuyến mãi (sale_price) phải là số nguyên.")
+    if sp <= 0 or (list_price is not None and sp >= int(list_price)):
+        raise TourBusinessRuleError(
+            f"Giá khuyến mãi ({sp}) phải lớn hơn 0 và nhỏ hơn giá gốc ({list_price})."
+        )
+
+
+def _kiem_tra_cua_so_sale(sale_starts_at, sale_ends_at):
+    """Kiểm tra cửa sổ thời gian sale: sale_starts_at <= sale_ends_at khi cả hai có giá trị (Rule 2)."""
+    if sale_starts_at is None or sale_ends_at is None:
+        return sale_starts_at, sale_ends_at
+
+    s_start = sale_starts_at
+    s_end = sale_ends_at
+    if isinstance(s_start, str):
+        try:
+            s_start = datetime.fromisoformat(s_start)
+        except ValueError:
+            raise TourBusinessRuleError(f"Định dạng sale_starts_at không hợp lệ: '{s_start}'.")
+    if isinstance(s_end, str):
+        try:
+            s_end = datetime.fromisoformat(s_end)
+        except ValueError:
+            raise TourBusinessRuleError(f"Định dạng sale_ends_at không hợp lệ: '{s_end}'.")
+
+    # Chuẩn hoá múi giờ để so sánh an toàn
+    dt_start = s_start if s_start.tzinfo else s_start.replace(tzinfo=TZ_VN)
+    dt_end = s_end if s_end.tzinfo else s_end.replace(tzinfo=TZ_VN)
+
+    if dt_start > dt_end:
+        raise TourBusinessRuleError(
+            f"Thời gian kết thúc khuyến mãi ({dt_end}) phải lớn hơn hoặc bằng "
+            f"thời gian bắt đầu ({dt_start})."
+        )
+    return s_start, s_end
+
+
+
+def tao_departure_operator(tour_id: int, data: dict, current_user: dict) -> dict:
+    """Tạo đợt khởi hành mới cho tour (Phase 5.3).
+
+    Quy tắc nghiệp vụ:
+    - BR-O1: Chỉ operator sở hữu tour hoặc admin mới được tạo đợt.
+    - BR-D1: depart_date >= hôm nay + 2 ngày (Asia/Ho_Chi_Minh).
+    - BR-D2: (tour_id, depart_date) là duy nhất. Không ghi đè.
+    - BR-D3: 0 <= seats_left <= seats_total; khởi tạo seats_left = seats_total.
+    - list_price > 0, seats_total >= 1, min_pax >= 1.
+    - Đồng bộ price_from của tour sau khi tạo.
+    """
+    tour = tour_repo.get_tour_by_id(tour_id)
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{tour_id}.")
+
+    _kiem_tra_quyen_tour(tour, current_user)
+
+    # 1. Kiểm tra các trường bắt buộc
+    if "depart_date" not in data or data["depart_date"] is None:
+        raise TourBusinessRuleError("Thiếu trường bắt buộc depart_date.")
+    if "list_price" not in data or data["list_price"] is None:
+        raise TourBusinessRuleError("Thiếu trường bắt buộc list_price.")
+    if "seats_total" not in data or data["seats_total"] is None:
+        raise TourBusinessRuleError("Thiếu trường bắt buộc seats_total.")
+
+    # 2. Xử lý và kiểm tra ngày khởi hành (BR-D1)
+    dep_date = data["depart_date"]
+    if isinstance(dep_date, str):
+        try:
+            dep_date = date.fromisoformat(dep_date)
+        except ValueError:
+            raise TourBusinessRuleError(f"Định dạng ngày depart_date không hợp lệ: '{dep_date}'. Yêu cầu YYYY-MM-DD.")
+
+    today_vn = datetime.now(TZ_VN).date()
+    min_lead_date = today_vn + timedelta(days=2)
+    if dep_date < min_lead_date:
+        raise TourBusinessRuleError(
+            f"Ngày khởi hành ({dep_date}) phải từ {min_lead_date} trở đi "
+            f"(tối thiểu 2 ngày trước khởi hành theo BR-D1)."
+        )
+
+    # 3. Kiểm tra giá niêm yết và số chỗ
+    try:
+        list_price = int(data["list_price"])
+    except (ValueError, TypeError):
+        raise TourBusinessRuleError("Giá gốc (list_price) phải là số nguyên.")
+    if list_price <= 0:
+        raise TourBusinessRuleError("Giá gốc (list_price) phải lớn hơn 0.")
+    _kiem_tra_sale_hop_le(list_price, data.get("sale_price"))
+
+    try:
+        seats_total = int(data["seats_total"])
+    except (ValueError, TypeError):
+        raise TourBusinessRuleError("Tổng số chỗ (seats_total) phải là số nguyên.")
+    if seats_total < 1:
+        raise TourBusinessRuleError("Tổng số chỗ (seats_total) phải lớn hơn hoặc bằng 1.")
+
+    min_pax = int(data.get("min_pax") or 1)
+    if min_pax < 1:
+        raise TourBusinessRuleError("Số khách tối thiểu (min_pax) phải lớn hơn hoặc bằng 1.")
+
+    status = data.get("status") or "OPEN"
+    valid_statuses = {'OPEN', 'FULL', 'CLOSED', 'DEPARTED', 'COMPLETED', 'CANCELLED'}
+    if status not in valid_statuses:
+        raise TourBusinessRuleError(f"Trạng thái đợt khởi hành '{status}' không hợp lệ.")
+
+    # 4. Kiểm tra trùng ngày (BR-D2)
+    existing = tour_repo.get_departure_by_tour_and_date(tour_id, dep_date)
+    if existing:
+        raise TourBusinessRuleError(f"Đợt khởi hành ngày {dep_date} của tour này đã tồn tại (BR-D2).")
+
+    # 5. Lưu đợt khởi hành mới
+    payload = dict(data)
+    payload["depart_date"] = dep_date
+    payload["list_price"] = list_price
+    payload["seats_total"] = seats_total
+    payload["seats_left"] = seats_total  # BR-D3
+    payload["min_pax"] = min_pax
+    payload["status"] = status
+
+    created = tour_repo.create_departure(tour_id, payload)
+    tour_repo.sync_tour_price_from(tour_id)
+    return lam_giau_thong_tin_gia(created)
+
+
+def danh_sach_departure_operator(
+    tour_id: int,
+    current_user: dict,
+    status: Optional[str] = None,
+    from_date: Optional[date] = None,
+    page: int = 1,
+    page_size: int = 50,
+) -> dict:
+    """Lấy danh sách các đợt khởi hành của tour cho operator sở hữu hoặc admin."""
+    tour = tour_repo.get_tour_by_id(tour_id)
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{tour_id}.")
+
+    _kiem_tra_quyen_tour(tour, current_user)
+
+    offset = (page - 1) * page_size
+    departures = tour_repo.list_departures_by_tour(
+        tour_id=tour_id,
+        status=status,
+        from_date=from_date,
+        limit=page_size,
+        offset=offset,
+    )
+    total = tour_repo.count_departures_by_tour(
+        tour_id=tour_id,
+        status=status,
+        from_date=from_date,
+    )
+
+    enriched = []
+    for d in departures:
+        st = d.get("seats_total") or 0
+        sl = d.get("seats_left") or 0
+        d["sold_seats"] = max(0, st - sl)
+        enriched.append(lam_giau_thong_tin_gia(d))
+
+    return {
+        "departures": enriched,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
+
+
+def lay_chi_tiet_departure_operator(
+    departure_id: int,
+    current_user: dict,
+    tour_id: Optional[int] = None,
+) -> dict:
+    """Lấy thông tin chi tiết một đợt khởi hành kèm kiểm tra quyền BR-O1."""
+    dep = tour_repo.get_departure_by_id(departure_id)
+    if not dep:
+        raise DepartureNotFoundError(f"Không tìm thấy đợt khởi hành #{departure_id}.")
+
+    if tour_id is not None and dep["tour_id"] != tour_id:
+        raise TourBusinessRuleError(f"Đợt khởi hành #{departure_id} không thuộc tour #{tour_id}.")
+
+    tour = tour_repo.get_tour_by_id(dep["tour_id"])
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{dep['tour_id']}.")
+
+    _kiem_tra_quyen_tour(tour, current_user)
+
+    dep["sold_seats"] = tour_repo.get_departure_sold_seats(departure_id)
+    dep["bookings_count"] = tour_repo.count_departure_bookings(departure_id)
+    return lam_giau_thong_tin_gia(dep)
+
+
+def cap_nhat_departure_operator(
+    departure_id: int,
+    data: dict,
+    current_user: dict,
+    tour_id: Optional[int] = None,
+) -> dict:
+    """Cập nhật đợt khởi hành của operator kèm kiểm tra BR-D1, BR-D2, BR-D3, BR-D4/E6.
+
+    Quy tắc nghiệp vụ:
+    - BR-O1: Chỉ operator sở hữu tour hoặc admin mới được sửa.
+    - BR-D1: Nếu sửa depart_date -> depart_date mới >= hôm nay + 2 ngày.
+    - BR-D2: Nếu sửa depart_date -> không trùng với đợt khác của cùng tour.
+    - BR-D4/E6: Không được giảm seats_total xuống dưới số chỗ đã bán.
+    - BR-D3: Luôn đảm bảo 0 <= seats_left <= seats_total.
+    - Đồng bộ price_from của tour sau khi sửa.
+    """
+    dep = tour_repo.get_departure_by_id(departure_id)
+    if not dep:
+        raise DepartureNotFoundError(f"Không tìm thấy đợt khởi hành #{departure_id}.")
+
+    if tour_id is not None and dep["tour_id"] != tour_id:
+        raise TourBusinessRuleError(f"Đợt khởi hành #{departure_id} không thuộc tour #{tour_id}.")
+
+    tour = tour_repo.get_tour_by_id(dep["tour_id"])
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{dep['tour_id']}.")
+
+    _kiem_tra_quyen_tour(tour, current_user)
+
+    update_payload = {}
+
+    # 1. Cập nhật ngày khởi hành (BR-D1, BR-D2)
+    if "depart_date" in data and data["depart_date"] is not None:
+        new_date = data["depart_date"]
+        if isinstance(new_date, str):
+            try:
+                new_date = date.fromisoformat(new_date)
+            except ValueError:
+                raise TourBusinessRuleError(f"Định dạng ngày depart_date không hợp lệ: '{new_date}'.")
+
+        if new_date != dep["depart_date"]:
+            today_vn = datetime.now(TZ_VN).date()
+            min_lead_date = today_vn + timedelta(days=2)
+            if new_date < min_lead_date:
+                raise TourBusinessRuleError(
+                    f"Ngày khởi hành ({new_date}) phải từ {min_lead_date} trở đi "
+                    f"(tối thiểu 2 ngày trước khởi hành theo BR-D1)."
+                )
+            dup = tour_repo.get_departure_by_tour_and_date(dep["tour_id"], new_date)
+            if dup and dup["id"] != departure_id:
+                raise TourBusinessRuleError(f"Đợt khởi hành ngày {new_date} của tour này đã tồn tại (BR-D2).")
+            update_payload["depart_date"] = new_date
+
+    # 2. Cập nhật giá niêm yết
+    if "list_price" in data and data["list_price"] is not None:
+        try:
+            lp = int(data["list_price"])
+        except (ValueError, TypeError):
+            raise TourBusinessRuleError("Giá gốc (list_price) phải là số nguyên.")
+        if lp <= 0:
+            raise TourBusinessRuleError("Giá gốc (list_price) phải lớn hơn 0.")
+
+        # BR-SL5 / E13: Đợt đã có booking (đang giữ/đã bán, chưa release) -> không cho tăng list_price
+        cur_lp = dep.get("list_price") if dep.get("list_price") is not None else dep.get("price")
+        if cur_lp is not None and lp > cur_lp:
+            sold_seats = tour_repo.get_departure_sold_seats(departure_id)
+            if sold_seats > 0:
+                raise TourBusinessRuleError(
+                    f"Đợt khởi hành đã có {sold_seats} chỗ đang giữ hoặc đã bán, "
+                    f"không được phép tăng giá gốc (list_price) từ {cur_lp} lên {lp} (BR-SL5/E13)."
+                )
+        update_payload["list_price"] = lp
+
+    # Sale phải luôn nhỏ hơn list_price mới nhất (cả khi giảm list_price)
+    next_list_price = update_payload.get("list_price", dep.get("list_price"))
+    if "sale_price" in data:
+        _kiem_tra_sale_hop_le(next_list_price, data.get("sale_price"))
+    else:
+        _kiem_tra_sale_hop_le(next_list_price, dep.get("sale_price"))
+
+    # Kiểm tra cửa sổ thời gian sale nếu có cập nhật
+    next_starts = data["sale_starts_at"] if "sale_starts_at" in data else dep.get("sale_starts_at")
+    next_ends = data["sale_ends_at"] if "sale_ends_at" in data else dep.get("sale_ends_at")
+    if "sale_starts_at" in data or "sale_ends_at" in data:
+        _kiem_tra_cua_so_sale(next_starts, next_ends)
+
+
+    # 3. Cập nhật min_pax
+    if "min_pax" in data and data["min_pax"] is not None:
+        try:
+            mp = int(data["min_pax"])
+        except (ValueError, TypeError):
+            raise TourBusinessRuleError("Số khách tối thiểu (min_pax) phải là số nguyên.")
+        if mp < 1:
+            raise TourBusinessRuleError("Số khách tối thiểu (min_pax) phải lớn hơn hoặc bằng 1.")
+        update_payload["min_pax"] = mp
+
+    # 4. Cập nhật trạng thái đợt
+    if "status" in data and data["status"] is not None:
+        st = data["status"]
+        valid_statuses = {'OPEN', 'FULL', 'CLOSED', 'DEPARTED', 'COMPLETED', 'CANCELLED'}
+        if st not in valid_statuses:
+            raise TourBusinessRuleError(f"Trạng thái đợt khởi hành '{st}' không hợp lệ.")
+        update_payload["status"] = st
+
+    # 5. Cập nhật số chỗ (BR-D4/E6 và BR-D3)
+    sold_seats = tour_repo.get_departure_sold_seats(departure_id)
+    cur_seats_total = dep["seats_total"]
+    cur_seats_left = dep["seats_left"]
+
+    if "seats_total" in data and data["seats_total"] is not None:
+        try:
+            new_seats_total = int(data["seats_total"])
+        except (ValueError, TypeError):
+            raise TourBusinessRuleError("Tổng số chỗ (seats_total) phải là số nguyên.")
+        if new_seats_total < 1:
+            raise TourBusinessRuleError("Tổng số chỗ (seats_total) phải lớn hơn hoặc bằng 1.")
+
+        # BR-D4 / E6: Không được giảm xuống dưới số chỗ đã bán
+        if new_seats_total < sold_seats:
+            raise TourBusinessRuleError(
+                f"Không thể giảm tổng số chỗ xuống {new_seats_total} vì đợt đã bán {sold_seats} chỗ (BR-D4/E6)."
+            )
+
+        update_payload["seats_total"] = new_seats_total
+
+        # Điều chỉnh seats_left nếu không truyền tường minh
+        if "seats_left" not in data or data["seats_left"] is None:
+            update_payload["seats_left"] = new_seats_total - sold_seats
+        else:
+            try:
+                new_seats_left = int(data["seats_left"])
+            except (ValueError, TypeError):
+                raise TourBusinessRuleError("Số chỗ còn lại (seats_left) phải là số nguyên.")
+            max_seats_left = new_seats_total - sold_seats
+            if new_seats_left < 0 or new_seats_left > max_seats_left:
+                raise TourBusinessRuleError(
+                    f"Số chỗ còn lại ({new_seats_left}) phải từ 0 đến {max_seats_left} "
+                    f"vì đợt đang có {sold_seats} chỗ đã bán/giữ (BR-D3/BR-D4)."
+                )
+            update_payload["seats_left"] = new_seats_left
+    elif "seats_left" in data and data["seats_left"] is not None:
+        try:
+            new_seats_left = int(data["seats_left"])
+        except (ValueError, TypeError):
+            raise TourBusinessRuleError("Số chỗ còn lại (seats_left) phải là số nguyên.")
+        max_seats_left = cur_seats_total - sold_seats
+        if new_seats_left < 0 or new_seats_left > max_seats_left:
+            raise TourBusinessRuleError(
+                f"Số chỗ còn lại ({new_seats_left}) phải từ 0 đến {max_seats_left} "
+                f"vì đợt đang có {sold_seats} chỗ đã bán/giữ (BR-D3/BR-D4)."
+            )
+        update_payload["seats_left"] = new_seats_left
+
+    # Giữ các trường sale nếu có truyền vào (chuẩn bị cho 5.4)
+    for k in ("sale_price", "sale_starts_at", "sale_ends_at"):
+        if k in data:
+            update_payload[k] = data[k]
+
+    updated = tour_repo.update_departure(departure_id, update_payload)
+    tour_repo.sync_tour_price_from(dep["tour_id"])
+
+    updated["sold_seats"] = tour_repo.get_departure_sold_seats(departure_id)
+    return lam_giau_thong_tin_gia(updated)
+
+
+def xoa_departure_operator(
+    departure_id: int,
+    current_user: dict,
+    tour_id: Optional[int] = None,
+) -> dict:
+    """Xoá đợt khởi hành của operator:
+
+    - Nếu đợt chưa có booking nào: xoá cứng khỏi CSDL.
+    - Nếu đợt đã có booking (bất kể trạng thái): từ chối 400 (hủy đợt thuộc Phase 6).
+    """
+    dep = tour_repo.get_departure_by_id(departure_id)
+    if not dep:
+        raise DepartureNotFoundError(f"Không tìm thấy đợt khởi hành #{departure_id}.")
+
+    if tour_id is not None and dep["tour_id"] != tour_id:
+        raise TourBusinessRuleError(f"Đợt khởi hành #{departure_id} không thuộc tour #{tour_id}.")
+
+    tour = tour_repo.get_tour_by_id(dep["tour_id"])
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{dep['tour_id']}.")
+
+    _kiem_tra_quyen_tour(tour, current_user)
+
+    # Kiểm tra đơn đặt tour (Rule 7)
+    booking_count = tour_repo.count_departure_bookings(departure_id)
+    if booking_count > 0:
+        raise TourBusinessRuleError(
+            f"Đợt khởi hành #{departure_id} đã có {booking_count} đơn đặt tour (booking), không được xoá. "
+            f"Việc hủy đợt đã có khách thuộc quy trình xử lý hoàn tiền của Phase 6."
+        )
+
+    tour_repo.delete_departure(departure_id)
+    tour_repo.sync_tour_price_from(dep["tour_id"])
+
+    return {
+        "success": True,
+        "departure_id": departure_id,
+        "tour_id": dep["tour_id"],
+        "message": f"Đã xoá đợt khởi hành #{departure_id} thành công.",
+    }
+
+
+def dat_gia_sale_departure(
+    departure_id: int,
+    data: dict,
+    current_user: dict,
+    tour_id: Optional[int] = None,
+) -> dict:
+    """Operator đặt hoặc điều chỉnh giá khuyến mãi (sale) cho đợt khởi hành (Phase 5.4, UC-T03).
+
+    Quy tắc nghiệp vụ:
+    - BR-O1: Operator sở hữu tour hoặc admin mới được thao tác; operator khác -> 403.
+    - BR-SL1 / BR-D7: 0 < sale_price < list_price.
+    - Cửa sổ sale: sale_starts_at <= sale_ends_at khi cả hai có giá trị (Rule 2).
+    - Đồng bộ price_from của tour theo giá bán hiệu lực thấp nhất (Rule 5).
+    """
+    dep = tour_repo.get_departure_by_id(departure_id)
+    if not dep:
+        raise DepartureNotFoundError(f"Không tìm thấy đợt khởi hành #{departure_id}.")
+
+    if tour_id is not None and dep["tour_id"] != tour_id:
+        raise TourBusinessRuleError(f"Đợt khởi hành #{departure_id} không thuộc tour #{tour_id}.")
+
+    tour = tour_repo.get_tour_by_id(dep["tour_id"])
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{dep['tour_id']}.")
+
+    _kiem_tra_quyen_tour(tour, current_user)
+
+    # 1. Xác định sale_price
+    if "sale_price" in data and data["sale_price"] is not None:
+        try:
+            sp = int(data["sale_price"])
+        except (ValueError, TypeError):
+            raise TourBusinessRuleError("Giá khuyến mãi (sale_price) phải là số nguyên.")
+    else:
+        sp = dep.get("sale_price")
+        if sp is None:
+            raise TourBusinessRuleError("Chưa có giá khuyến mãi (sale_price). Vui lòng nhập sale_price lớn hơn 0.")
+
+    lp = dep.get("list_price") if dep.get("list_price") is not None else dep.get("price")
+    _kiem_tra_sale_hop_le(lp, sp)
+
+    # 2. Xác định và kiểm tra cửa sổ thời gian
+    starts = data["sale_starts_at"] if "sale_starts_at" in data else dep.get("sale_starts_at")
+    ends = data["sale_ends_at"] if "sale_ends_at" in data else dep.get("sale_ends_at")
+    starts, ends = _kiem_tra_cua_so_sale(starts, ends)
+
+    update_payload = {
+        "sale_price": sp,
+        "sale_starts_at": starts,
+        "sale_ends_at": ends,
+    }
+    updated = tour_repo.update_departure(departure_id, update_payload)
+    tour_repo.sync_tour_price_from(dep["tour_id"])
+
+    updated["sold_seats"] = tour_repo.get_departure_sold_seats(departure_id)
+    return lam_giau_thong_tin_gia(updated)
+
+
+def go_gia_sale_departure(
+    departure_id: int,
+    current_user: dict,
+    tour_id: Optional[int] = None,
+) -> dict:
+    """Operator gỡ giá khuyến mãi của đợt khởi hành (Phase 5.4, UC-T03).
+
+    Quy tắc nghiệp vụ:
+    - BR-O1: Operator sở hữu tour hoặc admin mới được thao tác; operator khác -> 403.
+    - Xoá sale_price và làm sạch cửa sổ thời gian (sale_starts_at = None, sale_ends_at = None).
+    - Đồng bộ lại price_from của tour theo giá bán hiệu lực mới (Rule 5).
+    """
+    dep = tour_repo.get_departure_by_id(departure_id)
+    if not dep:
+        raise DepartureNotFoundError(f"Không tìm thấy đợt khởi hành #{departure_id}.")
+
+    if tour_id is not None and dep["tour_id"] != tour_id:
+        raise TourBusinessRuleError(f"Đợt khởi hành #{departure_id} không thuộc tour #{tour_id}.")
+
+    tour = tour_repo.get_tour_by_id(dep["tour_id"])
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{dep['tour_id']}.")
+
+    _kiem_tra_quyen_tour(tour, current_user)
+
+    update_payload = {
+        "sale_price": None,
+        "sale_starts_at": None,
+        "sale_ends_at": None,
+    }
+    updated = tour_repo.update_departure(departure_id, update_payload)
+    tour_repo.sync_tour_price_from(dep["tour_id"])
+
+    updated["sold_seats"] = tour_repo.get_departure_sold_seats(departure_id)
+    return lam_giau_thong_tin_gia(updated)
 

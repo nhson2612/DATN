@@ -1,0 +1,607 @@
+<!DOCTYPE html><html lang="vi" style=""><head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>VietTour - Khám Phá &amp; Đặt Tour Du Lịch Việt Nam Trọn Gói</title>
+    <!-- Tailwind CSS v3 with Plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            color: #0b1c30;
+            background-color: #fbfcfe;
+            -webkit-font-smoothing: antialiased;
+        }
+        .hero-bg {
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.82) 42%, rgba(255, 255, 255, 0.25) 75%, rgba(255, 255, 255, 0.1) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuB-Pk8vnvyDPWfepf94Z3FM2wS1MfP7aPjqb85c-iqwofrD0GcpzZowj0hEd0vM26xvI8SxOBSr7itAeEK-gwiwQKDURJCzDNDPfP52fDckMJIl_RBSP7IFwZjPX1FYV8uDYkCbkfe-UjFXfy_c4W9Mn-3-BjIreLmwK52E263nfTSLxEhs84Oqw4JICR5xtVHEI-5PstsY6CO1T1pY3K8xcczLhcPilKqLkUahBJGtnCBGl7hsEAOq');
+            background-size: cover;
+            background-position: center right;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-[#1e293b]">
+<!-- BEGIN: HeroSection -->
+<section class="relative pt-10 pb-12 border-b border-gray-100"><div class="absolute inset-0 overflow-hidden pointer-events-none z-0"><div class="absolute inset-0 bg-cover bg-no-repeat bg-right" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida/AEtjO1U_QO4EKmxH7HHqMc2beTX2wfvA1o-b8go-p5jymN8mVESjzpzakGFOi7hpA-8s83mKylCSj4opTzGnVsKkAhiN_2o2jWpyzbJ4sdbs7eqnbl30A8lbnYjIa9f3i4-AT7MszQAi4-4IcgkT5DzPwi6Dvbk2-Ym9cw2eJ2p-HJGv4uSuTMHD-4_wPI3Op62pvfGyrT89PEHb9al3bpBy-375cmi_VPcmxsV4L13vHJOiyWCb2Y0ALvS_S6g&quot;); mask-image: linear-gradient(to left, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.85) 35%, rgba(0, 0, 0, 0.2) 65%, rgba(0, 0, 0, 0) 75%);"></div><div class="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent" style="width: 65%;"></div></div>
+    <div class="max-w-[1536px] mx-auto px-8 relative z-10">
+        <div class="flex flex-col lg:flex-row items-center justify-between gap-8 pt-4 pb-6">
+            <!-- Hero Text Content -->
+            <div class="max-w-2xl">
+                <h1 class="text-4xl lg:text-[42px] font-extrabold text-[#0f172a] tracking-tight leading-[1.22] mb-3">
+                    Khám Phá Tour<br>Việt Nam Trọn Gói
+                </h1>
+                <p class="text-slate-600 text-[15px] leading-relaxed max-w-xl font-normal">
+                    Hơn 120+ tour tuyển chọn từ Bắc chí Nam, lịch trình tối ưu,<br class="hidden sm:block">
+                    hướng dẫn viên chuyên nghiệp và cam kết trải nghiệm độc bản.
+                </p>
+            </div>
+            <!-- Hero Search Bar -->
+            <div class="w-full lg:w-auto lg:min-w-[660px]">
+                <div class="bg-white rounded-2xl flex items-center border border-gray-200 overflow-hidden">
+                    <div class="flex items-center pl-5 pr-3 flex-1 py-1">
+                        <i class="fa-solid fa-location-dot text-orange-500 text-base mr-3"></i>
+                        <input class="w-full border-0 focus:ring-0 text-slate-800 placeholder-slate-400 text-[14.5px] font-normal p-0 outline-none" placeholder="Bạn muốn đi đâu?" type="text">
+                    </div>
+                    <button class="bg-[#ea580c] hover:bg-orange-700 text-white font-semibold text-[14px] px-8 py-4 rounded-none transition-colors">
+                        Tìm tour
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Trust Badges / Stats Bar Floating Card -->
+        <div class="mt-6 relative overflow-hidden rounded-full bg-white/30 backdrop-blur-md max-w-2xl ml-auto py-2.5 px-6 shadow-sm transition-all"><div class="grid grid-cols-2 md:grid-cols-4 gap-3 relative z-10 md:divide-x divide-orange-100/60"><div class="flex items-center space-x-2.5 px-2 py-0.5 group"><div class="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-orange-500/50 flex items-center justify-center text-[#ea580c] flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"><svg class="w-4 h-4 text-[#ea580c] stroke-current fill-transparent stroke-[1.75]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8a2.5 2.5 0 0 0-2.5 2.5c0 1.6 1.8 3.1 2.5 3.6.7-.5 2.5-2 2.5-3.6A2.5 2.5 0 0 0 12 8z"></path></svg></div><div class="flex flex-col min-w-0"><div class="font-bold text-slate-900 text-[12.5px] leading-tight whitespace-nowrap">4.9/5.0</div><span class="text-[10px] text-slate-500 font-normal whitespace-nowrap">Đánh giá hài lòng</span></div></div><div class="flex items-center space-x-2.5 px-2 py-0.5 group"><div class="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-orange-500/50 flex items-center justify-center text-[#ea580c] flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"><svg class="w-4 h-4 text-[#ea580c] stroke-current fill-transparent stroke-[1.75]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg></div><div class="flex flex-col min-w-0"><div class="font-bold text-slate-900 text-[12px] leading-tight whitespace-nowrap">Bảo hiểm trọn gói</div><span class="text-[10px] text-slate-500 font-normal whitespace-nowrap">100 triệu/khách</span></div></div><div class="flex items-center space-x-2.5 px-2 py-0.5 group"><div class="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-orange-500/50 flex items-center justify-center text-[#ea580c] flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"><svg class="w-4 h-4 text-[#ea580c] stroke-current fill-transparent stroke-[1.75]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg></div><div class="flex flex-col min-w-0"><div class="font-bold text-slate-900 text-[12.5px] leading-tight whitespace-nowrap">Hỗ trợ 24/7</div><span class="text-[10px] text-slate-500 font-normal whitespace-nowrap">Tư vấn tận tâm</span></div></div><div class="flex items-center space-x-2.5 px-2 py-0.5 group"><div class="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-orange-500/50 flex items-center justify-center text-[#ea580c] flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"><svg class="w-4 h-4 text-[#ea580c] stroke-current fill-transparent stroke-[1.75]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect height="16" rx="2" width="22" x="1" y="4"></rect><line x1="1" x2="23" y1="10" y2="10"></line><line x1="5" x2="9" y1="15" y2="15"></line></svg></div><div class="flex flex-col min-w-0"><div class="font-bold text-slate-900 text-[12px] leading-tight whitespace-nowrap">Thanh toán an toàn</div><span class="text-[10px] text-slate-500 font-normal whitespace-nowrap">Đa dạng &amp; linh hoạt</span></div></div></div></div>
+    </div>
+</section>
+<!-- END: HeroSection -->
+<!-- BEGIN: MainContent -->
+<main class="max-w-[1536px] mx-auto px-8 py-9">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- BEGIN: FilterSidebar (Left Column: 3 cols) -->
+        <aside class="lg:col-span-3 pr-2" data-purpose="search-filters">
+            <div class="space-y-7">
+                <!-- Filter Header -->
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                    <h2 class="text-[13px] font-bold tracking-wider text-slate-900 uppercase">BỘ LỌC TÌM KIẾM</h2>
+                    <button class="text-[13px] font-semibold text-orange-600 hover:text-orange-700">Xóa tất cả</button>
+                </div>
+                <!-- Group 1: Khu vực điểm đến -->
+                <div class="space-y-4">
+                    <h3 class="text-[12.5px] font-bold tracking-wide text-slate-900 uppercase">KHU VỰC ĐIỂM ĐẾN</h3>
+                    <div class="space-y-3">
+                        <!-- Checkbox Item 1 -->
+                        <label class="flex items-center justify-between text-sm text-slate-700 hover:text-slate-900 cursor-pointer select-none">
+                            <div class="flex items-center space-x-3">
+                                <input checked="" class="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" type="checkbox">
+                                <span class="text-[13.5px]">Miền Bắc (Hạ Long, Sapa, Hà Giang)</span>
+                            </div>
+                            <span class="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">28</span>
+                        </label>
+                        <!-- Checkbox Item 2 -->
+                        <label class="flex items-center justify-between text-sm text-slate-700 hover:text-slate-900 cursor-pointer select-none">
+                            <div class="flex items-center space-x-3">
+                                <input checked="" class="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" type="checkbox">
+                                <span class="text-[13.5px]">Miền Trung (Đà Nẵng, Huế, Hội An)</span>
+                            </div>
+                            <span class="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">14</span>
+                        </label>
+                        <!-- Checkbox Item 3 -->
+                        <label class="flex items-center justify-between text-sm text-slate-700 hover:text-slate-900 cursor-pointer select-none">
+                            <div class="flex items-center space-x-3">
+                                <input class="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" type="checkbox">
+                                <span class="text-[13.5px]">Miền Nam (Sài Gòn, Miền Tây sông nước)</span>
+                            </div>
+                            <span class="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">8</span>
+                        </label>
+                        <!-- Checkbox Item 4 -->
+                        <label class="flex items-center justify-between text-sm text-slate-700 hover:text-slate-900 cursor-pointer select-none">
+                            <div class="flex items-center space-x-3">
+                                <input class="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" type="checkbox">
+                                <span class="text-[13.5px]">Tây Nguyên (Đại Ngàn)</span>
+                            </div>
+                            <span class="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">5</span>
+                        </label>
+                        <!-- Checkbox Item 5 -->
+                        <label class="flex items-center justify-between text-sm text-slate-700 hover:text-slate-900 cursor-pointer select-none">
+                            <div class="flex items-center space-x-3">
+                                <input checked="" class="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" type="checkbox">
+                                <span class="text-[13.5px]">Tour Biển Đảo (Phú Quốc, Côn Đảo)</span>
+                            </div>
+                            <span class="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">9</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Group 2: Thời lượng lịch trình -->
+                <div class="space-y-4 pt-1">
+                    <h3 class="text-[12.5px] font-bold tracking-wide text-slate-900 uppercase">THỜI LƯỢNG LỊCH TRÌNH</h3>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button class="p-3 text-left rounded-xl border border-gray-200 hover:border-gray-300 transition-colors bg-white">
+                            <div class="text-[13px] font-bold text-slate-800">2 Ngày 1 Đêm</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5">12 tour</div>
+                        </button>
+                        <button class="p-3 text-left rounded-xl border border-orange-500 bg-orange-50/20 transition-colors">
+                            <div class="text-[13px] font-bold text-orange-600">3 Ngày 2 Đêm</div>
+                            <div class="text-[11px] text-orange-500 mt-0.5">24 tour</div>
+                        </button>
+                        <button class="p-3 text-left rounded-xl border border-gray-200 hover:border-gray-300 transition-colors bg-white">
+                            <div class="text-[13px] font-bold text-slate-800">4 Ngày 3 Đêm</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5">8 tour</div>
+                        </button>
+                        <button class="p-3 text-left rounded-xl border border-gray-200 hover:border-gray-300 transition-colors bg-white">
+                            <div class="text-[13px] font-bold text-slate-800">5 Ngày 4 Đêm+</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5">4 tour</div>
+                        </button>
+                    </div>
+                </div>
+                <!-- Group 3: Mức ngân sách / Khách -->
+                <div class="space-y-3 pt-1">
+                    <h3 class="text-[12.5px] font-bold tracking-wide text-slate-900 uppercase">MỨC NGÂN SÁCH / KHÁCH</h3>
+                    <div class="text-[13.5px] font-bold text-slate-800">
+                        1.500.000đ — 10.000.000đ+
+                    </div>
+                    <!-- Range Slider Simulation -->
+                    <div class="relative py-2">
+                        <div class="h-1 bg-orange-100 rounded-full w-full relative">
+                            <div class="absolute left-0 right-4 h-full bg-orange-500 rounded-full"></div>
+                            <!-- Thumb 1 -->
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-orange-500 ring-2 ring-white shadow cursor-pointer"></div>
+                            <!-- Thumb 2 -->
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-4 rounded-full bg-orange-500 ring-2 ring-white shadow cursor-pointer"></div>
+                        </div>
+                    </div>
+                    <div class="text-[12px] text-slate-400">36 tour nằm trong mức giá bạn chọn</div>
+                </div>
+            </div>
+        </aside>
+        <!-- END: FilterSidebar -->
+        <!-- BEGIN: TourCatalogSection (Right Column: 9 cols) -->
+        <section class="lg:col-span-9" data-purpose="tour-listings">
+            <!-- Header & Sorting Bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3">
+                <div class="flex items-baseline space-x-2">
+                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Tìm thấy 48 tour phù hợp</h2>
+                    <span class="text-xs text-slate-400 font-normal">(Cập nhật 5 phút trước)</span>
+                </div>
+                <!-- Sort and View toggles -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 text-sm">
+                        <span class="text-slate-500 text-xs">Sắp xếp:</span>
+                        <div class="relative">
+                            <select class="rounded-lg border-gray-200 text-xs font-semibold text-slate-800 pr-8 py-2 focus:ring-orange-500 focus:border-orange-500 bg-white">
+                                <option>Được đánh giá cao nhất</option>
+                                <option>Giá từ thấp đến cao</option>
+                                <option>Giá từ cao đến thấp</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- View switch icons -->
+                    <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200"><button class="bg-white text-orange-600 shadow-sm rounded-lg py-1.5 px-2.5 font-medium flex items-center gap-1.5 text-xs transition-all"><i class="fa-solid fa-table-cells-large text-sm"></i></button><button class="text-slate-400 hover:text-slate-600 py-1.5 px-2.5 rounded-lg flex items-center gap-1.5 text-xs transition-colors"><i class="fa-solid fa-list text-sm"></i></button></div>
+                </div>
+            </div>
+            <!-- Selected Badges Chips -->
+            <div class="flex flex-wrap items-center gap-2 mb-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+            Miền Bắc &amp; Trung <button class="ml-2 text-slate-400 hover:text-slate-600">×</button>
+</span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+            Thời lượng: 3N2Đ <button class="ml-2 text-slate-400 hover:text-slate-600">×</button>
+</span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+            Khách sạn 4–5 sao <button class="ml-2 text-slate-400 hover:text-slate-600">×</button>
+</span>
+                <button class="text-xs font-semibold text-orange-600 hover:text-orange-700 ml-1">Xóa bộ lọc</button>
+            </div>
+            <!-- Tour Cards Grid: 2 rows x 3 columns -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Tour Card 1: Vịnh Hạ Long -->
+                <article class="bg-white rounded-lg border border-slate-200 overflow-hidden transition-all duration-300 flex flex-col justify-between" data-purpose="tour-card">
+                    <div>
+                        <!-- Image Banner & Badges -->
+                        <div class="relative h-48 w-full overflow-hidden rounded-t-lg">
+                            <img alt="Vịnh Hạ Long" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8eyu79w13Y4Ju8UJjrTRgK21U9NoWyJUJadgFX20urAAnnPj2-2pxTvLHMJqz4ACecQrD5I959lJH-hYs6P5n_c9LJKuS50Pq1hnNManJLScFDTi6Fl968OsyZDmtICX2tNbqGJibayZOk1ycpXfpthQJET4AH-FkVxBm9ZJMy60RIoUtNVk8eG9CL-l-rhPkpicyLdl7TZ0wZzOVdgrnWsuQdaYxjZNBjFKTTpckO-c-pup27Quu">
+                            <span class="absolute top-3 left-3 bg-[#ea580c] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded shadow-sm tracking-wide">
+                  BÁN CHẠY NHẤT
+                </span>
+                            <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/25 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition-colors">
+                                <i class="fa-regular fa-heart text-sm"></i>
+                            </button>
+                            <!-- Bottom Info Pill Bar -->
+                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between text-white text-[11px] font-medium">
+                                <span class=""><i class="fa-regular fa-clock mr-1"></i> 3 Ngày 2 Đêm</span>
+                                <span class=""><i class="fa-regular fa-calendar mr-1"></i> Thứ 6 hàng tuần</span>
+                            </div>
+                        </div>
+                        <!-- Card Body Content -->
+                        <div class="p-4">
+                            <!-- Rating -->
+                            <div class="flex items-center text-xs font-semibold text-slate-700 mb-1.5">
+                                <i class="fa-solid fa-star text-amber-400 text-xs mr-1"></i>
+                                <span class="text-orange-600 font-bold mr-1">4.78</span>
+                                <span class="text-slate-400 font-normal">(520 đánh giá)</span>
+                            </div>
+                            <!-- Title -->
+                            <h3 class="font-bold text-[15px] text-slate-900 line-clamp-2 leading-snug mb-3">
+                                Vịnh Hạ Long &amp; Vịnh Lan Hạ – Hải Trình Thượng Lưu
+                            </h3>
+                            <!-- Key Features List -->
+                            <ul class="space-y-1.5 text-[12px] text-slate-600 border-b border-gray-100 pb-4">
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🚣</span>
+                                    <span class="line-clamp-1">Chèo kayak Hang Luồn ngắm nhìn đá nghìn năm</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🥂</span>
+                                    <span class="line-clamp-1">Tiệc hoàng hôn Sunset Party &amp; BBQ hải sản tươi sống</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🛏</span>
+                                    <span class="line-clamp-1">Cabin ban công riêng tiêu chuẩn 5 sao</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Price and CTA -->
+                    <div class="px-4 pb-4 pt-1 flex items-center justify-between gap-2">
+                        <div class="flex-shrink-0">
+                            <div class="text-[11px] text-slate-400 line-through leading-tight">4.800.000đ</div>
+                            <div class="text-sm font-bold text-orange-600 leading-none whitespace-nowrap">
+                                3.690.000đ <span class="text-[10px] font-normal text-slate-400">/khách</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1.5 flex-shrink-0">
+                            <button class="text-xs font-semibold text-slate-600 hover:text-slate-900 py-1.5 px-2 whitespace-nowrap">Chi tiết</button>
+                            <button class="text-xs font-bold text-orange-600 hover:text-orange-700 py-1.5 px-2 inline-flex items-center whitespace-nowrap">
+                                Đặt ngay <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+                <!-- Tour Card 2: Sapa - Mù Cang Chải -->
+                <article class="bg-white rounded-lg border border-slate-200 overflow-hidden transition-all duration-300 flex flex-col justify-between" data-purpose="tour-card">
+                    <div>
+                        <!-- Image Banner & Badges -->
+                        <div class="relative h-48 w-full overflow-hidden rounded-t-lg">
+                            <img alt="Mù Cang Chải Mùa Lúa" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbf5tfsAFwrrflMxBkqwcqHTY6d6-M9qszigu-dJpVppG0U3K4IlXs2nG1EXEnpuPV03kzIpjbghNYvBtwlpx6QpvMIVvsaDLNjUyzndgNLeppntxKovJggEVqjsCWS3NCMdNGEvqStF-Y19MVP1T_Cjl9EBjgCOv1vENS8yNiByxEe53fZG02mVJOil6PcyeX5dpq9aiDpCDrsPE-S6MjC67y04Sjq96_bTFLo4Z-uHDFKmh7pUMw">
+                            <span class="absolute top-3 left-3 bg-[#ea580c] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded shadow-sm tracking-wide">
+                  MÙA VÀNG TÂY BẮC
+                </span>
+                            <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/25 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition-colors">
+                                <i class="fa-regular fa-heart text-sm"></i>
+                            </button>
+                            <!-- Bottom Info Pill Bar -->
+                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between text-white text-[11px] font-medium">
+                                <span class=""><i class="fa-regular fa-clock mr-1"></i> 3 Ngày 2 Đêm</span>
+                                <span class=""><i class="fa-regular fa-calendar mr-1"></i> Hàng tuần Thứ 5 &amp; 7</span>
+                            </div>
+                        </div>
+                        <!-- Card Body Content -->
+                        <div class="p-4">
+                            <!-- Rating -->
+                            <div class="flex items-center text-xs font-semibold text-slate-700 mb-1.5">
+                                <i class="fa-solid fa-star text-amber-400 text-xs mr-1"></i>
+                                <span class="text-orange-600 font-bold mr-1">4.92</span>
+                                <span class="text-slate-400 font-normal">(180 đánh giá)</span>
+                            </div>
+                            <!-- Title -->
+                            <h3 class="font-bold text-[15px] text-slate-900 line-clamp-2 leading-snug mb-3">
+                                Sapa – Mù Cang Chải Mùa Lúa Chín &amp; Đỉnh Fansipan
+                            </h3>
+                            <!-- Key Features List -->
+                            <ul class="space-y-1.5 text-[12px] text-slate-600 border-b border-gray-100 pb-4">
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🌾</span>
+                                    <span class="line-clamp-1">Cung đường ruộng bậc thang Mâm Xôi &amp; Móng Ngựa</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🏔</span>
+                                    <span class="line-clamp-1">Chinh phục đỉnh Fansipan 3.143m ngắm biển mây</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">👥</span>
+                                    <span class="line-clamp-1">Giao lưu bà con và trải nghiệm văn hóa bản địa</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Price and CTA -->
+                    <div class="px-4 pb-4 pt-1 flex items-center justify-between gap-2">
+                        <div class="flex-shrink-0">
+                            <div class="text-[11px] text-slate-400 line-through leading-tight">3.400.000đ</div>
+                            <div class="text-sm font-bold text-orange-600 leading-none whitespace-nowrap">
+                                2.850.000đ <span class="text-[10px] font-normal text-slate-400">/khách</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1.5 flex-shrink-0">
+                            <button class="text-xs font-semibold text-slate-600 hover:text-slate-900 py-1.5 px-2 whitespace-nowrap">Chi tiết</button>
+                            <button class="text-xs font-bold text-orange-600 hover:text-orange-700 py-1.5 px-2 inline-flex items-center whitespace-nowrap">
+                                Đặt ngay <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+                <!-- Tour Card 3: Ninh Bình - Tràng An -->
+                <article class="bg-white rounded-lg border border-slate-200 overflow-hidden transition-all duration-300 flex flex-col justify-between" data-purpose="tour-card">
+                    <div>
+                        <!-- Image Banner & Badges -->
+                        <div class="relative h-48 w-full overflow-hidden rounded-t-lg">
+                            <img alt="Ninh Bình Tràng An" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACwYWUS3OUWWhKEJEhqZga641zil0-kWgl4zNM2Tk_z2_85WgC9wa_oKpjIqSCaTb42cuqfB_XxPHNLUMKYm052MRNZd75LVj0HmN_t9nxK99PnAq4VJlwOXjpIcveEVMlY0g8ag-rAGY2AmPdKLbeoSNnDcfo6rpylxZ3NqoDkyhVdKQIguMmXSNjvdMo7M0Xis4wwvTbE_i5QQi1VJquLDVuTY7UaHIaYTDWm6oKsOmmQAaWyT2S">
+                            <span class="absolute top-3 left-3 bg-[#4f46e5] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded shadow-sm tracking-wide">
+                  TOUR CUỐI TUẦN
+                </span>
+                            <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/25 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition-colors">
+                                <i class="fa-regular fa-heart text-sm"></i>
+                            </button>
+                            <!-- Bottom Info Pill Bar -->
+                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between text-white text-[11px] font-medium">
+                                <span class=""><i class="fa-regular fa-clock mr-1"></i> 2 Ngày 1 Đêm</span>
+                                <span class=""><i class="fa-regular fa-calendar mr-1"></i> Cuối tuần</span>
+                            </div>
+                        </div>
+                        <!-- Card Body Content -->
+                        <div class="p-4">
+                            <!-- Rating -->
+                            <div class="flex items-center text-xs font-semibold text-slate-700 mb-1.5">
+                                <i class="fa-solid fa-star text-amber-400 text-xs mr-1"></i>
+                                <span class="text-orange-600 font-bold mr-1">4.85</span>
+                                <span class="text-slate-400 font-normal">(210 đánh giá)</span>
+                            </div>
+                            <!-- Title -->
+                            <h3 class="font-bold text-[15px] text-slate-900 line-clamp-2 leading-snug mb-3">
+                                Ninh Bình – Tràng An – Hang Múa Trọn Gói 2 Ngày 1 Đêm
+                            </h3>
+                            <!-- Key Features List -->
+                            <ul class="space-y-1.5 text-[12px] text-slate-600 border-b border-gray-100 pb-4">
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🚣</span>
+                                    <span class="line-clamp-1">Thuyền nan Tràng An di sản thiên nhiên thế giới</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">⛰</span>
+                                    <span class="line-clamp-1">Chinh phục Hang Múa – Ngắm toàn cảnh Ninh Bình</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🍲</span>
+                                    <span class="line-clamp-1">Ẩm thực đặc sản dê núi, cơm cháy</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Price and CTA -->
+                    <div class="px-4 pb-4 pt-1 flex items-center justify-between gap-2">
+                        <div class="flex-shrink-0">
+                            <div class="text-[11px] text-slate-400 line-through leading-tight">2.200.000đ</div>
+                            <div class="text-sm font-bold text-orange-600 leading-none whitespace-nowrap">
+                                1.990.000đ <span class="text-[10px] font-normal text-slate-400">/khách</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1.5 flex-shrink-0">
+                            <button class="text-xs font-semibold text-slate-600 hover:text-slate-900 py-1.5 px-2 whitespace-nowrap">Chi tiết</button>
+                            <button class="text-xs font-bold text-orange-600 hover:text-orange-700 py-1.5 px-2 inline-flex items-center whitespace-nowrap">
+                                Đặt ngay <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+                <!-- Tour Card 4: Phú Quốc -->
+                <article class="bg-white rounded-lg border border-slate-200 overflow-hidden transition-all duration-300 flex flex-col justify-between" data-purpose="tour-card">
+                    <div>
+                        <!-- Image Banner & Badges -->
+                        <div class="relative h-48 w-full overflow-hidden rounded-t-lg">
+                            <img alt="Phú Quốc" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDO_8tDWaMWd76vrwCTOHJt8IAn-96IFrb4jTVT0h1c-ifeVhMmUa0ACDj7hnJnJnZ3gYrWm4CJ_2AWc1Xr5_7VuZiFa2PUrBYdIGBxg8DZp7xSdseodLWyOk1IcmdP17iarkaOCDFcE7mTvD1IdRpt8Ld92dEVGOf9I_oYGDb_mSh2MkWy_l8BANuOJi4ciaQlDZftPF5VxutFQ5G6aPGYiuO54XYKJK4bVYlOaUGa5fiDvns6e89e">
+                            <span class="absolute top-3 left-3 bg-[#eab308] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded shadow-sm tracking-wide">
+                  ƯU ĐÃI HÈ
+                </span>
+                            <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/25 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition-colors">
+                                <i class="fa-regular fa-heart text-sm"></i>
+                            </button>
+                            <!-- Bottom Info Pill Bar -->
+                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between text-white text-[11px] font-medium">
+                                <span class=""><i class="fa-regular fa-clock mr-1"></i> 3 Ngày 2 Đêm</span>
+                                <span class=""><i class="fa-regular fa-calendar mr-1"></i> Hàng ngày</span>
+                            </div>
+                        </div>
+                        <!-- Card Body Content -->
+                        <div class="p-4">
+                            <!-- Rating -->
+                            <div class="flex items-center text-xs font-semibold text-slate-700 mb-1.5">
+                                <i class="fa-solid fa-star text-amber-400 text-xs mr-1"></i>
+                                <span class="text-orange-600 font-bold mr-1">4.90</span>
+                                <span class="text-slate-400 font-normal">(340 đánh giá)</span>
+                            </div>
+                            <!-- Title -->
+                            <h3 class="font-bold text-[15px] text-slate-900 line-clamp-2 leading-snug mb-3">
+                                Phú Quốc Thiên Đường Đảo Ngọc – Tour Cano 4 Đảo &amp; Cáp Treo
+                            </h3>
+                            <!-- Key Features List -->
+                            <ul class="space-y-1.5 text-[12px] text-slate-600 border-b border-gray-100 pb-4">
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🏝</span>
+                                    <span class="line-clamp-1">Trải nghiệm cano cao tốc tham quan 4 đảo đẹp nhất</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🚡</span>
+                                    <span class="line-clamp-1">Cáp treo Hòn Thơm vượt biển dài nhất thế giới</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🦞</span>
+                                    <span class="line-clamp-1">Thưởng thức hải sản Hàm Ninh trọn vẹn phong vị</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Price and CTA -->
+                    <div class="px-4 pb-4 pt-1 flex items-center justify-between gap-2">
+                        <div class="flex-shrink-0">
+                            <div class="text-[11px] text-slate-400 line-through leading-tight">4.200.000đ</div>
+                            <div class="text-sm font-bold text-orange-600 leading-none whitespace-nowrap">
+                                3.250.000đ <span class="text-[10px] font-normal text-slate-400">/khách</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1.5 flex-shrink-0">
+                            <button class="text-xs font-semibold text-slate-600 hover:text-slate-900 py-1.5 px-2 whitespace-nowrap">Chi tiết</button>
+                            <button class="text-xs font-bold text-orange-600 hover:text-orange-700 py-1.5 px-2 inline-flex items-center whitespace-nowrap">
+                                Đặt ngay <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+                <!-- Tour Card 5: Đà Nẵng - Hội An -->
+                <article class="bg-white rounded-lg border border-slate-200 overflow-hidden transition-all duration-300 flex flex-col justify-between" data-purpose="tour-card">
+                    <div>
+                        <!-- Image Banner & Badges -->
+                        <div class="relative h-48 w-full overflow-hidden rounded-t-lg">
+                            <img alt="Đà Nẵng" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFY-PwIw0Wuh6tsExPqbrIrVb87ubqftFBU02GQlsA5DF8sHkhStIEQ7Hm0TfEyE9z1LewnF2CESVT5szoP44It5Va4Lf_ShsHPAYVWmWUV6WarNECXZ5rBoXHFGyq9VK9Ji2hUxmf_gDWTjtQIpnOjas-1jmOZnCHtJUzM_SUKQySVBS8wng7H67z3aM_TsHfnJOKF7I6KqesDIjVKMEINkw7s2FNRVnEaYJ6UG-6NpVAOGaFjvEC">
+                            <span class="absolute top-3 left-3 bg-[#059669] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded shadow-sm tracking-wide">
+                  COMBO TIẾT KIỆM
+                </span>
+                            <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/25 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition-colors">
+                                <i class="fa-regular fa-heart text-sm"></i>
+                            </button>
+                            <!-- Bottom Info Pill Bar -->
+                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between text-white text-[11px] font-medium">
+                                <span class=""><i class="fa-regular fa-clock mr-1"></i> 3 Ngày 2 Đêm</span>
+                                <span class=""><i class="fa-regular fa-calendar mr-1"></i> Khởi hành hàng ngày</span>
+                            </div>
+                        </div>
+                        <!-- Card Body Content -->
+                        <div class="p-4">
+                            <!-- Rating -->
+                            <div class="flex items-center text-xs font-semibold text-slate-700 mb-1.5">
+                                <i class="fa-solid fa-star text-amber-400 text-xs mr-1"></i>
+                                <span class="text-orange-600 font-bold mr-1">4.88</span>
+                                <span class="text-slate-400 font-normal">(412 đánh giá)</span>
+                            </div>
+                            <!-- Title -->
+                            <h3 class="font-bold text-[15px] text-slate-900 line-clamp-2 leading-snug mb-3">
+                                Đà Nẵng – Bà Nà Hills – Phố Cổ Hội An Lung Linh Về Đêm
+                            </h3>
+                            <!-- Key Features List -->
+                            <ul class="space-y-1.5 text-[12px] text-slate-600 border-b border-gray-100 pb-4">
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🌉</span>
+                                    <span class="line-clamp-1">Check-in Cầu Vàng Bàn Tay Khổng Lồ tại Bà Nà</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🏮</span>
+                                    <span class="line-clamp-1">Thả hoa đăng sông Hoài ngắm phố cổ Hội An rực rỡ</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🏖</span>
+                                    <span class="line-clamp-1">Nghỉ dưỡng khách sạn 4 sao ven biển Mỹ Khê</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Price and CTA -->
+                    <div class="px-4 pb-4 pt-1 flex items-center justify-between gap-2">
+                        <div class="flex-shrink-0">
+                            <div class="text-[11px] text-slate-400 line-through leading-tight">3.100.000đ</div>
+                            <div class="text-sm font-bold text-orange-600 leading-none whitespace-nowrap">
+                                2.490.000đ <span class="text-[10px] font-normal text-slate-400">/khách</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1.5 flex-shrink-0">
+                            <button class="text-xs font-semibold text-slate-600 hover:text-slate-900 py-1.5 px-2 whitespace-nowrap">Chi tiết</button>
+                            <button class="text-xs font-bold text-orange-600 hover:text-orange-700 py-1.5 px-2 inline-flex items-center whitespace-nowrap">
+                                Đặt ngay <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+                <!-- Tour Card 6: Hà Giang -->
+                <article class="bg-white rounded-lg border border-slate-200 overflow-hidden transition-all duration-300 flex flex-col justify-between" data-purpose="tour-card">
+                    <div>
+                        <!-- Image Banner & Badges -->
+                        <div class="relative h-48 w-full overflow-hidden rounded-t-lg">
+                            <img alt="Hà Giang" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtC1ueQfQ3D41RsoZzdV_dSx1FUljbLyiz6XrmUOySTPb5h9LJFf4aV6zs9_XaH0-OKRS3yPupKo0F5DEGd0wD2an3cO8dn3oS6M8rZkJxsUR-gOX3C5KpisNp8gPKxRH-KYM5uLfvDY3itd3kPAuUvIVYBnb73K77Keg3wDjxqjT4PPadRGlDTnyd0Jh9UdAhIlLPRTXHVEb5ZCi75txq7tEZxgRsi5vNEkjAYHhGkXgdbsE1VaWo">
+                            <span class="absolute top-3 left-3 bg-[#ea580c] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded shadow-sm tracking-wide">
+                  CẢNH SẮC NGOẠN MỤC
+                </span>
+                            <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/25 hover:bg-black/40 text-white flex items-center justify-center backdrop-blur-sm transition-colors">
+                                <i class="fa-regular fa-heart text-sm"></i>
+                            </button>
+                            <!-- Bottom Info Pill Bar -->
+                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between text-white text-[11px] font-medium">
+                                <span class=""><i class="fa-regular fa-clock mr-1"></i> 3 Ngày 2 Đêm</span>
+                                <span class=""><i class="fa-regular fa-calendar mr-1"></i> Thứ 6 hàng tuần</span>
+                            </div>
+                        </div>
+                        <!-- Card Body Content -->
+                        <div class="p-4">
+                            <!-- Rating -->
+                            <div class="flex items-center text-xs font-semibold text-slate-700 mb-1.5">
+                                <i class="fa-solid fa-star text-amber-400 text-xs mr-1"></i>
+                                <span class="text-orange-600 font-bold mr-1">4.95</span>
+                                <span class="text-slate-400 font-normal">(280 đánh giá)</span>
+                            </div>
+                            <!-- Title -->
+                            <h3 class="font-bold text-[15px] text-slate-900 line-clamp-2 leading-snug mb-3">
+                                Hà Giang Hùng Vĩ – Đèo Mã Pí Lèng – Sông Nho Quế – Lũng Cú
+                            </h3>
+                            <!-- Key Features List -->
+                            <ul class="space-y-1.5 text-[12px] text-slate-600 border-b border-gray-100 pb-4">
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🚤</span>
+                                    <span class="line-clamp-1">Du thuyền trên dòng sông Nho Quế xanh ngọc bích</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🚩</span>
+                                    <span class="line-clamp-1">Chạm mốc cực Bắc Cột cờ Lũng Cú thiêng liêng</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="mr-2 text-slate-400">🏍</span>
+                                    <span class="line-clamp-1">Chinh phục đệ nhất hùng quan đèo Mã Pí Lèng</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Price and CTA -->
+                    <div class="px-4 pb-4 pt-1 flex items-center justify-between gap-2">
+                        <div class="flex-shrink-0">
+                            <div class="text-[11px] text-slate-400 line-through leading-tight">3.200.000đ</div>
+                            <div class="text-sm font-bold text-orange-600 leading-none whitespace-nowrap">
+                                2.650.000đ <span class="text-[10px] font-normal text-slate-400">/khách</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1.5 flex-shrink-0">
+                            <button class="text-xs font-semibold text-slate-600 hover:text-slate-900 py-1.5 px-2 whitespace-nowrap">Chi tiết</button>
+                            <button class="text-xs font-bold text-orange-600 hover:text-orange-700 py-1.5 px-2 inline-flex items-center whitespace-nowrap">
+                                Đặt ngay <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+        <!-- END: TourCatalogSection -->
+    </div>
+</main>
+<!-- END: MainContent -->
+
+
+</body></html>

@@ -70,3 +70,49 @@ def get_current_admin(current_user: dict = Depends(get_current_user)) -> dict:
             detail="Tài khoản không có quyền truy cập chức năng này (Yêu cầu quyền Admin)"
         )
     return current_user
+
+
+def get_current_operator(current_user: dict = Depends(get_current_user)) -> dict:
+    """Xác thực người dùng là Tour Operator đang ở trạng thái ACTIVE (Phase 5.1).
+
+    Trả về dict người dùng kèm operator_id và company_name.
+    Chặn truy cập chéo hoặc tài khoản không phải operator / bị khoá.
+    """
+    if current_user.get("role") != "operator":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tài khoản không có quyền nhà điều hành tour (Yêu cầu quyền Operator)",
+        )
+    op_res = execute_query(
+        "SELECT id, company_name, tax_code, commission_rate, status "
+        "FROM operators WHERE user_id = %s LIMIT 1",
+        (current_user["id"],),
+    )
+    if not op_res or op_res[0].get("status") != "ACTIVE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tài khoản nhà điều hành tour chưa được kích hoạt hoặc đã bị khóa",
+        )
+    op = op_res[0]
+    return {
+        **current_user,
+        "operator_id": op["id"],
+        "company_name": op["company_name"],
+        "commission_rate": op.get("commission_rate"),
+        "operator_status": op.get("status"),
+        "is_admin": False,
+    }
+
+
+def get_current_operator_or_admin(current_user: dict = Depends(get_current_user)) -> dict:
+    """Helper cho phép cả Operator đang active và Admin cùng thao tác trên các endpoint quản lý tour."""
+    role = current_user.get("role")
+    if role == "admin":
+        return {**current_user, "operator_id": None, "is_admin": True}
+    if role == "operator":
+        return get_current_operator(current_user=current_user)
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Tài khoản không có quyền thực hiện thao tác này (Yêu cầu quyền Operator hoặc Admin)",
+    )
+

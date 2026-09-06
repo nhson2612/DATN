@@ -11,7 +11,7 @@ Tiêu chí nghiệm thu Phase 1:
 import os
 import unittest
 from datetime import date, datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
 os.environ.setdefault("JWT_SECRET", "test-secret-key-for-unittest-only")
@@ -119,10 +119,11 @@ class TestNghiemThuPhase1(unittest.TestCase):
             "price_from": 4_500_000,
             "original_price": 6_000_000,
             "cover_url": "https://example.com/cover.jpg",
+            "images": ["https://example.com/cover.jpg", "https://example.com/extra.jpg"],
             "highlights": ["Bà Nà Hills"],
             "itinerary": [],
-            "included": "Bao gồm vé",
-            "excluded": "Không gồm tip",
+            "included": ["Xe đưa đón", "Vé tham quan"],
+            "excluded": ["Vé máy bay", "Chi phí cá nhân"],
             "province_name": "Đà Nẵng",
             "ngay_gan_nhat": str(date.today() + timedelta(days=5)),
             "is_sale": True,
@@ -145,6 +146,8 @@ class TestNghiemThuPhase1(unittest.TestCase):
             # Nhãn khuyến mãi
             self.assertTrue(tour["is_sale"])
             self.assertEqual(tour["discount_pct"], 25)
+            # Mảng images
+            self.assertEqual(tour["images"], ["https://example.com/cover.jpg", "https://example.com/extra.jpg"])
 
     def test_loc_max_price_theo_gia_ban_hieu_luc(self):
         """Khách lọc dưới 5 triệu phải thấy tour giá gốc 6 triệu đang sale còn 4,5 triệu."""
@@ -207,6 +210,224 @@ class TestNghiemThuPhase1(unittest.TestCase):
             self.assertEqual(d2["sale_price"], 4_500_000)
             self.assertTrue(d2["is_sale"])
             self.assertEqual(d2["discount_pct"], 25)
+
+    def test_endpoint_tour_provinces(self):
+        """Endpoint GET /api/tours/provinces trả danh sách tỉnh có tour."""
+        mock_provinces = [{"id": 1, "name": "Đà Nẵng"}, {"id": 2, "name": "Hà Nội"}]
+        with patch("app.repositories.tour_repo.list_tour_provinces", return_value=mock_provinces):
+            resp = self.c.get("/api/tours/provinces")
+            self.assertEqual(resp.status_code, 200)
+            data = resp.json()
+            self.assertTrue(data["success"])
+            self.assertEqual(len(data["provinces"]), 2)
+            self.assertEqual(data["provinces"][0]["name"], "Đà Nẵng")
+
+    def test_loc_va_sap_xep_tours_truyen_dung_tham_so(self):
+        """Kiểm tra GET /api/tours truyền đúng tất cả tham số lọc và sắp xếp xuống repo."""
+        with patch("app.repositories.tour_repo.list_tours", return_value=([], 0)) as mock_list:
+            resp = self.c.get(
+                "/api/tours?province_id=3114&depart_from=2026-09-10&depart_to=2026-09-20"
+                "&price_min=1000000&price_max=5000000&max_days=3&guests=2&sort=price_asc"
+            )
+            self.assertEqual(resp.status_code, 200)
+            mock_list.assert_called_once()
+            _, kwargs = mock_list.call_args
+            self.assertEqual(kwargs.get("province_id"), 3114)
+            self.assertEqual(str(kwargs.get("depart_from")), "2026-09-10")
+            self.assertEqual(str(kwargs.get("depart_to")), "2026-09-20")
+            self.assertEqual(kwargs.get("price_min"), 1_000_000)
+            self.assertEqual(kwargs.get("price_max"), 5_000_000)
+            self.assertEqual(kwargs.get("max_days"), 3)
+            self.assertEqual(kwargs.get("guests"), 2)
+            self.assertEqual(kwargs.get("sort"), "price_asc")
+
+    def test_tour_images_gallery_round_trip(self):
+        """Kiểm thử round-trip: tạo tour có images list -> API GET /api/tours/{slug} trả đúng images list."""
+        test_images = [
+            "/assets/images/tour-danang.jpg",
+            "/assets/images/vietnam-1.jpg",
+            "/assets/images/hero-slide-1.jpg",
+        ]
+        raw_tour = {
+            "id": 8888,
+            "slug": "tour-danang-gallery-roundtrip",
+            "name": "Tour Đà Nẵng Gallery 3N2Đ",
+            "price_from": 3_490_000,
+            "cover_url": "/assets/images/tour-danang.jpg",
+            "images": test_images,
+            "itinerary": [],
+        }
+
+        # Mock tầng repository để kiểm tra tính toàn vẹn khi tầng service và route trả ra API
+        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
+             patch("app.repositories.tour_repo.departures", return_value=[]), \
+             patch("app.repositories.tour_repo.places_of_tour", return_value={}):
+
+            resp = self.c.get("/api/tours/tour-danang-gallery-roundtrip")
+            self.assertEqual(resp.status_code, 200)
+            data = resp.json()
+            self.assertTrue(data["success"])
+            tour = data["tour"]
+
+            # API trả đầy đủ mảng images và cover_url khớp với dữ liệu tạo
+            self.assertIn("images", tour)
+            self.assertIsInstance(tour["images"], list)
+            self.assertEqual(tour["images"], test_images)
+            self.assertEqual(tour["cover_url"], "/assets/images/tour-danang.jpg")
+
+    def test_create_tour_handles_images_and_fallback_cover_url(self):
+        """Kiểm thử create_tour lưu cột images dưới dạng JSON và tự động gán cover_url nếu trống."""
+        mock_execute = MagicMock(return_value=[{"id": 555}])
+
+        # Giả lập CSDL đã có cột images
+        def mock_has_col(table, col):
+            return col in {"cancellation_policy", "status", "images"}
+
+        with patch("app.repositories.tour_repo.execute_query", mock_execute), \
+             patch("app.repositories.tour_repo._has_col", side_effect=mock_has_col):
+
+            # Trường hợp 1: cover_url để trống nhưng có images -> tự gán cover_url = images[0]
+            tour_id = tour_repo.create_tour({
+                "slug": "tour-test-fallback-cover",
+                "name": "Tour Fallback Cover",
+                "duration_days": 3,
+                "images": ["/assets/images/tour-danang.jpg", "/assets/images/vietnam-1.jpg"],
+            })
+            self.assertEqual(tour_id, 555)
+
+            args, _ = mock_execute.call_args
+            sql_query, sql_params = args[0], args[1]
+            self.assertIn("images", sql_query)
+            # Param cover_url (tham số thứ 8) được tự động lấy từ images[0]
+            self.assertEqual(sql_params[7], "/assets/images/tour-danang.jpg")
+            # Param images (tham số thứ 9) được json.dumps đúng
+            self.assertEqual(sql_params[8], '["/assets/images/tour-danang.jpg", "/assets/images/vietnam-1.jpg"]')
+
+            # Trường hợp 2: images rỗng nhưng có cover_url -> chấp nhận và lưu images = [cover_url]
+            tour_repo.create_tour({
+                "slug": "tour-test-only-cover",
+                "name": "Tour Only Cover",
+                "duration_days": 2,
+                "cover_url": "/assets/images/tour-halong.jpg",
+                "images": [],
+            })
+            args, _ = mock_execute.call_args
+            sql_query, sql_params = args[0], args[1]
+            self.assertEqual(sql_params[7], "/assets/images/tour-halong.jpg")
+            self.assertEqual(sql_params[8], '["/assets/images/tour-halong.jpg"]')
+
+    def test_get_tour_fallback_empty_images_when_unmigrated(self):
+        """Kiểm thử khi DB chưa migrate (images là None hoặc thiếu): API trả images dạng list rỗng []."""
+        raw_tour = {
+            "id": 7777,
+            "slug": "tour-unmigrated-db",
+            "name": "Tour DB Cũ Chưa Migrate",
+            "price_from": 2_000_000,
+            "cover_url": None,
+            "images": None,
+            "itinerary": [],
+        }
+
+        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
+             patch("app.repositories.tour_repo.departures", return_value=[]), \
+             patch("app.repositories.tour_repo.places_of_tour", return_value={}):
+
+            resp = self.c.get("/api/tours/tour-unmigrated-db")
+            self.assertEqual(resp.status_code, 200)
+            data = resp.json()
+            self.assertTrue(data["success"])
+            # Fallback thành mảng rỗng [] thay vì None hay lỗi
+            self.assertEqual(data["tour"]["images"], [])
+
+    def test_get_tour_synthesizes_images_from_itinerary_when_empty(self):
+        """Kiểm thử khi tours.images rỗng nhưng place_photos có ảnh cho itinerary: tự tổng hợp lại lúc đọc."""
+        raw_tour = {
+            "id": 5555,
+            "slug": "tour-fallback-itinerary",
+            "name": "Tour Fallback Itinerary",
+            "price_from": 3_000_000,
+            "cover_url": None,
+            "images": [],
+            "itinerary": [
+                {"day": 1, "place_ids": [101, 102]},
+                {"day": 2, "place_ids": [103]},
+            ],
+        }
+        mock_photos = [
+            "https://upload.wikimedia.org/photo_101.jpg",
+            "https://upload.wikimedia.org/photo_102.jpg",
+            "https://upload.wikimedia.org/photo_103.jpg",
+        ]
+
+        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
+             patch("app.repositories.tour_repo.departures", return_value=[]), \
+             patch("app.repositories.tour_repo.places_of_tour", return_value={}), \
+             patch("app.repositories.tour_repo.get_itinerary_photos", return_value=mock_photos):
+
+            resp = self.c.get("/api/tours/tour-fallback-itinerary")
+            self.assertEqual(resp.status_code, 200)
+            data = resp.json()
+            self.assertTrue(data["success"])
+            tour = data["tour"]
+
+            # API tự tổng hợp ảnh thật từ itinerary và gán cover_url = ảnh đầu tiên
+            self.assertEqual(tour["images"], mock_photos)
+            self.assertEqual(tour["cover_url"], "https://upload.wikimedia.org/photo_101.jpg")
+
+    def test_get_tour_strips_generic_images_and_uses_itinerary_photos(self):
+        """Kiểm thử nếu DB còn ảnh generic cũ (/assets/images/tour-*.jpg), API tự bỏ và thay bằng ảnh itinerary."""
+        raw_tour = {
+            "id": 5556,
+            "slug": "tour-strip-generic",
+            "name": "Tour Strip Generic",
+            "price_from": 3_000_000,
+            "cover_url": "/assets/images/tour-danang.jpg",
+            "images": ["/assets/images/tour-danang.jpg", "/assets/images/vietnam-1.jpg"],
+            "itinerary": [
+                {"day": 1, "place_ids": [101]},
+            ],
+        }
+        mock_photos = ["https://upload.wikimedia.org/photo_real_101.jpg"]
+
+        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
+             patch("app.repositories.tour_repo.departures", return_value=[]), \
+             patch("app.repositories.tour_repo.places_of_tour", return_value={}), \
+             patch("app.repositories.tour_repo.get_itinerary_photos", return_value=mock_photos):
+
+            resp = self.c.get("/api/tours/tour-strip-generic")
+            self.assertEqual(resp.status_code, 200)
+            tour = resp.json()["tour"]
+
+            # Ảnh generic bị loại bỏ, thay bằng ảnh thật
+            self.assertEqual(tour["images"], mock_photos)
+            self.assertEqual(tour["cover_url"], "https://upload.wikimedia.org/photo_real_101.jpg")
+
+    def test_get_tour_fallback_empty_when_no_itinerary_photos(self):
+        """Kiểm thử khi điểm đến trong itinerary chưa có ảnh trong place_photos: trả [] và cover_url=None."""
+        raw_tour = {
+            "id": 5557,
+            "slug": "tour-no-photos",
+            "name": "Tour No Photos",
+            "price_from": 3_000_000,
+            "cover_url": "/assets/images/tour-danang.jpg",
+            "images": ["/assets/images/tour-danang.jpg"],
+            "itinerary": [
+                {"day": 1, "place_ids": [999]},
+            ],
+        }
+
+        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
+             patch("app.repositories.tour_repo.departures", return_value=[]), \
+             patch("app.repositories.tour_repo.places_of_tour", return_value={}), \
+             patch("app.repositories.tour_repo.get_itinerary_photos", return_value=[]):
+
+            resp = self.c.get("/api/tours/tour-no-photos")
+            self.assertEqual(resp.status_code, 200)
+            tour = resp.json()["tour"]
+
+            # Trả về rỗng, cover_url = None, KHÔNG fallback về ảnh generic
+            self.assertEqual(tour["images"], [])
+            self.assertIsNone(tour["cover_url"])
 
 
 if __name__ == "__main__":

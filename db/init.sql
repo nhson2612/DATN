@@ -207,12 +207,13 @@ CREATE TABLE IF NOT EXISTS tours (
     duration_days       INTEGER NOT NULL DEFAULT 1,
     price_from          BIGINT,                  -- VND, giá bán hiệu lực thấp nhất trong các ngày khởi hành còn mở
     cover_url           TEXT,
+    images              JSONB NOT NULL DEFAULT '[]', -- danh sách URL ảnh tour cho gallery
     highlights          JSONB,                   -- ["Bà Nà Hills", "Cầu Vàng", ...]
     -- [{day, title, description, place_ids: [int]}] — nối được sang bảng poi để
     -- vẽ lịch trình lên bản đồ.
     itinerary           JSONB,
-    included            TEXT,                    -- giá đã bao gồm những gì
-    excluded            TEXT,
+    included            JSONB NOT NULL DEFAULT '[]',  -- danh sách các khoản đã bao gồm
+    excluded            JSONB NOT NULL DEFAULT '[]',  -- danh sách các khoản không bao gồm
     cancellation_policy JSONB,                   -- bậc thang hoàn tiền theo số ngày trước khởi hành
     status              VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     active              BOOLEAN DEFAULT TRUE,    -- giữ để tương thích với các bộ lọc WHERE t.active

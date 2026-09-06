@@ -44,6 +44,7 @@ EXPECTED_PATHS = {
     "/api/booking-requests",
     "/api/booking-requests/{booking_id}",
     "/api/tours",
+    "/api/tours/provinces",
     "/api/tours/{slug}",
     "/api/tours/book",
     "/api/tours/bookings/me",
@@ -53,7 +54,17 @@ EXPECTED_PATHS = {
     "/api/tours/admin/payments",
     "/api/tours/admin/payments/{payment_id}/confirm",
     "/api/admin/stats",
+    "/api/admin/operators",
+    "/api/operator/tours",
+    "/api/operator/tours/{id}",
+    "/api/operator/tours/{tour_id}/departures",
+    "/api/operator/tours/{tour_id}/departures/{departure_id}",
+    "/api/operator/tours/{tour_id}/departures/{departure_id}/sale",
+    "/api/operator/departures/{id}",
+    "/api/operator/departures/{id}/sale",
 }
+
+
 
 
 class ApiSurfaceTest(unittest.TestCase):

@@ -1,0 +1,19 @@
+/* ==========================================================================
+   BLOCK: .tours-toolbar (Thanh công cụ phân loại & active chips theo .design/Tours.html)
+   ========================================================================== */
+
+.tours-toolbar {
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .tours-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin-bottom: 1rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.5rem;
+    background: #fbfcfe;
+  }
+}

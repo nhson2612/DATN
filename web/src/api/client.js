@@ -21,7 +21,10 @@ async function request(path, options = {}) {
   if (!res.ok) {
     // Ném lỗi kèm thông điệp của backend để component hiện đúng nguyên nhân,
     // thay vì báo chung chung "có lỗi xảy ra".
-    throw new Error(data.detail || `Lỗi ${res.status}`);
+    const err = new Error(data.detail || `Lỗi ${res.status}`);
+    err.status = res.status;
+    err.data = data;
+    throw err;
   }
   return data;
 }
@@ -60,8 +63,15 @@ export const api = {
     );
     return request(`/tours?${qs}`);
   },
+  tourProvinces: () => request("/tours/provinces"),
   tour: (slug) => request(`/tours/${encodeURIComponent(slug)}`),
   bookTour: (body) => request("/tours/book", { method: "POST", body: JSON.stringify(body) }),
+  myTourBookings: (limit = 100) => request(`/tours/bookings/me?limit=${limit}`),
+  payTourBooking: (bookingId, body = {}) =>
+    request(`/tours/bookings/${bookingId}/pay`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 
   // Yêu thích
   favorites: () => request("/favorites"),

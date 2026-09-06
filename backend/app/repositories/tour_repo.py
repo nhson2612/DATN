@@ -1,17 +1,29 @@
 """Truy vấn tour trọn gói. Chỉ SQL."""
 
 import json
+import re
 from datetime import date
 from typing import Optional
 
 from app.core.database import Transaction, execute_query
 
 _COLS = """t.id, t.slug, t.name, t.summary, t.description, t.province_id,
-           t.duration_days, t.cover_url, t.highlights,
+           t.duration_days, t.cover_url, t.images, t.highlights,
            t.itinerary, t.included, t.excluded, t.created_at"""
 
 _COLS_CACHE = {}
 _TABLES_CACHE = {}
+
+
+def _cols_sql() -> str:
+    """Trả về danh sách cột của tours khi query.
+
+    Nếu CSDL chưa chạy migration 005 (chưa có cột images), thay thế 't.images'
+    bằng giá trị rỗng '[]'::jsonb AS images để câu query chạy an toàn, không báo lỗi.
+    """
+    if _has_col("tours", "images"):
+        return _COLS
+    return _COLS.replace("t.images", "'[]'::jsonb AS images")
 
 
 def _has_col(table: str, col: str) -> bool:
@@ -87,35 +99,94 @@ def sql_gia_ban_hieu_luc(alias: str = "d") -> str:
     """.strip()
 
 
-def list_tours(province_id=None, max_days=None, max_price=None, limit=24, offset=0):
+def list_tour_provinces():
+    """Danh sách các tỉnh/thành có tour đang hoạt động, phục vụ bộ lọc."""
+    return execute_query(
+        """
+        SELECT DISTINCT t.province_id AS id, p.name
+        FROM tours t
+        JOIN province_stats p ON p.id = t.province_id
+        WHERE t.active AND t.province_id IS NOT NULL
+        ORDER BY p.name ASC
+        """
+    ) or []
+
+
+def list_tours(
+    province_id=None,
+    depart_from=None,
+    depart_to=None,
+    price_min=None,
+    price_max=None,
+    max_price=None,
+    max_days=None,
+    min_days=None,
+    guests=None,
+    sort=None,
+    limit=24,
+    offset=0,
+):
     """Danh sách tour kèm bộ lọc và giá bán hiệu lực thấp nhất từ các đợt còn mở.
 
     Khách lọc 'dưới 5 triệu' phải thấy tour giá gốc 6 triệu đang khuyến mãi còn 4,5 triệu.
     Đồng thời trả về original_price để giao diện hiển thị gạch ngang mức giá gốc.
     """
+    if price_max is None and max_price is not None:
+        price_max = max_price
+
     dieu_kien = ["t.active"]
-    params = []
+    params = {}
     if province_id:
-        dieu_kien.append("t.province_id = %s")
-        params.append(province_id)
+        dieu_kien.append("t.province_id = %(province_id)s")
+        params["province_id"] = province_id
     if max_days:
-        dieu_kien.append("t.duration_days <= %s")
-        params.append(max_days)
+        dieu_kien.append("t.duration_days <= %(max_days)s")
+        params["max_days"] = max_days
+    if min_days:
+        dieu_kien.append("t.duration_days >= %(min_days)s")
+        params["min_days"] = min_days
 
     sql_eff = sql_gia_ban_hieu_luc("d")
     has_list_price = _has_col("tour_departures", "list_price")
     has_status = _has_col("tour_departures", "status")
     sql_lp = "d.list_price" if has_list_price else "d.price"
-    status_filter = "AND d.status = 'OPEN'" if has_status else ""
 
-    # Subquery tính giá bán hiệu lực thấp nhất từ các đợt khởi hành còn mở
+    dep_where = [
+        "d.tour_id = t.id",
+        "d.depart_date >= CURRENT_DATE",
+    ]
+    if has_status:
+        dep_where.append("d.status = 'OPEN'")
+
+    has_dep_filter = False
+    if guests and guests > 0:
+        dep_where.append("d.seats_left >= %(guests)s")
+        params["guests"] = guests
+        has_dep_filter = True
+    else:
+        dep_where.append("d.seats_left > 0")
+
+    if depart_from:
+        dep_where.append("d.depart_date >= %(depart_from)s")
+        params["depart_from"] = depart_from
+        has_dep_filter = True
+
+    if depart_to:
+        dep_where.append("d.depart_date <= %(depart_to)s")
+        params["depart_to"] = depart_to
+        has_dep_filter = True
+
+    dep_where_sql = " AND ".join(dep_where)
+
+    # Nếu khách lọc theo ngày khởi hành hoặc số khách: chỉ hiện tour có ít nhất 1 đợt thoả mãn
+    if has_dep_filter:
+        dieu_kien.append(f"EXISTS (SELECT 1 FROM tour_departures d WHERE {dep_where_sql})")
+
+    # Subquery tính giá bán hiệu lực thấp nhất từ các đợt khởi hành còn mở thoả mãn bộ lọc
     sub_eff = f"""
         (SELECT min({sql_eff})
          FROM tour_departures d
-         WHERE d.tour_id = t.id
-           AND d.depart_date >= CURRENT_DATE
-           AND d.seats_left > 0
-           {status_filter})
+         WHERE {dep_where_sql})
     """
     gia_hien_tai = f"COALESCE({sub_eff}, t.price_from)"
 
@@ -123,35 +194,50 @@ def list_tours(province_id=None, max_days=None, max_price=None, limit=24, offset
     sub_orig = f"""
         (SELECT {sql_lp}
          FROM tour_departures d
-         WHERE d.tour_id = t.id
-           AND d.depart_date >= CURRENT_DATE
-           AND d.seats_left > 0
-           {status_filter}
+         WHERE {dep_where_sql}
          ORDER BY {sql_eff} ASC, d.depart_date ASC
          LIMIT 1)
     """
 
-    if max_price:
-        dieu_kien.append(f"{gia_hien_tai} <= %s")
-        params.append(max_price)
+    sub_ngay = f"""
+        (SELECT min(d.depart_date)
+         FROM tour_departures d
+         WHERE {dep_where_sql})
+    """
 
-    rows = execute_query(
-        f"""
-        SELECT {_COLS}, p.name AS province_name,
+    if price_min is not None:
+        dieu_kien.append(f"{gia_hien_tai} >= %(price_min)s")
+        params["price_min"] = price_min
+
+    if price_max is not None:
+        dieu_kien.append(f"{gia_hien_tai} <= %(price_max)s")
+        params["price_max"] = price_max
+
+    if sort == "price_asc":
+        order_by_sql = f"{gia_hien_tai} ASC NULLS LAST, t.id ASC"
+    elif sort == "price_desc":
+        order_by_sql = f"{gia_hien_tai} DESC NULLS LAST, t.id ASC"
+    elif sort == "date_asc":
+        order_by_sql = f"ngay_gan_nhat ASC NULLS LAST, {gia_hien_tai} ASC NULLS LAST, t.id ASC"
+    else:
+        order_by_sql = f"{gia_hien_tai} NULLS LAST, t.id ASC"
+
+    params["limit"] = limit
+    params["offset"] = offset
+
+    sql = f"""
+        SELECT {_cols_sql()}, p.name AS province_name,
                {gia_hien_tai} AS price_from,
                {sub_orig} AS original_price,
-               (SELECT min(depart_date) FROM tour_departures d
-                 WHERE d.tour_id = t.id AND d.depart_date >= CURRENT_DATE
-                   AND d.seats_left > 0 {status_filter}) AS ngay_gan_nhat,
+               {sub_ngay} AS ngay_gan_nhat,
                count(*) OVER () AS tong
         FROM tours t
         LEFT JOIN province_stats p ON p.id = t.province_id
         WHERE {" AND ".join(dieu_kien)}
-        ORDER BY {gia_hien_tai} NULLS LAST, t.id
-        LIMIT %s OFFSET %s
-        """,
-        tuple(params) + (limit, offset),
-    ) or []
+        ORDER BY {order_by_sql}
+        LIMIT %(limit)s OFFSET %(offset)s
+    """
+    rows = execute_query(sql, params) or []
 
     tong = rows[0]["tong"] if rows else 0
     for r in rows:
@@ -202,7 +288,7 @@ def get_tour(slug: str):
 
     rows = execute_query(
         f"""
-        SELECT {_COLS}, p.name AS province_name,
+        SELECT {_cols_sql()}, p.name AS province_name,
                {gia_hien_tai} AS price_from,
                {sub_orig} AS original_price
         FROM tours t
@@ -272,6 +358,99 @@ def places_of_tour(itinerary):
         (list(set(ids)),),
     ) or []
     return {r["id"]: r for r in rows}
+
+
+def get_photos_for_places(place_ids: list[int]) -> dict[int, list[str]]:
+    """Lấy bản đồ ảnh place_id -> list[url] từ place_photos (place_type='poi')."""
+    if not place_ids:
+        return {}
+    rows = execute_query(
+        """
+        SELECT place_id, url
+        FROM place_photos
+        WHERE place_type = 'poi' AND place_id = ANY(%s)
+        ORDER BY id ASC
+        """,
+        (list(set(place_ids)),),
+    ) or []
+    photos_by_pid = {}
+    for r in rows:
+        photos_by_pid.setdefault(r["place_id"], []).append(r["url"])
+    return photos_by_pid
+
+
+def get_itinerary_photos(itinerary) -> list[str]:
+    """Tổng hợp mảng URL ảnh từ các điểm đến trong itinerary theo thứ tự ngày 1 -> ngày N, bỏ trùng URL.
+
+    - Đọc place_ids theo đúng thứ tự xuất hiện trong từng ngày.
+    - Truy vấn place_photos ('poi') cho các place_id đó.
+    - Giữ đúng thứ tự xuất hiện, loại bỏ trùng lặp URL.
+    """
+    if not itinerary:
+        return []
+    pids = []
+    for day in (itinerary or []):
+        for pid in (day.get("place_ids") or []):
+            if pid not in pids:
+                pids.append(pid)
+    if not pids:
+        return []
+
+    photos_by_pid = get_photos_for_places(pids)
+    images = []
+    seen = set()
+    for pid in pids:
+        for url in photos_by_pid.get(pid, []):
+            if url and url not in seen:
+                seen.add(url)
+                images.append(url)
+    return images
+
+
+def _chuan_hoa_mang_text(value):
+    """Chuẩn hoá included/excluded về list[str] trước khi ghi JSONB.
+
+    Từ giờ dữ liệu mới là mảng; giá trị string chỉ còn từ caller cũ hoặc dữ liệu
+    TEXT chưa migrate. Tách theo dòng/dấu phẩy/chấm phẩy cho giống migration 004.
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, list):
+                value = parsed
+        except Exception:
+            value = re.split(r"[,;\n]+", value)
+    if not isinstance(value, list):
+        value = [value]
+    return [str(x).strip() for x in value if str(x).strip()]
+
+
+def _chuan_hoa_mang_anh(images, cover_url=None) -> list[str]:
+    """Chuẩn hoá dữ liệu ảnh tour về list[str].
+
+    - Hỗ trợ dữ liệu truyền vào là list, chuỗi JSON hoặc chuỗi đơn.
+    - Nếu images rỗng nhưng có cover_url, tự động dùng [cover_url].
+    - Loại bỏ các phần tử rỗng hoặc khoảng trắng.
+    """
+    if images is None:
+        images = []
+    if isinstance(images, str):
+        try:
+            parsed = json.loads(images)
+            if isinstance(parsed, list):
+                images = parsed
+            else:
+                images = [parsed]
+        except Exception:
+            images = [images] if images.strip() else []
+    if not isinstance(images, list):
+        images = [images]
+    res = [str(x).strip() for x in images if str(x).strip()]
+    if not res and cover_url:
+        res = [str(cover_url).strip()]
+    return res
 
 
 def generate_booking_code(tx=None, target_date: Optional[date] = None) -> str:
@@ -354,7 +533,8 @@ def create_booking(data: dict, user_id=None, total_price=None, tx=None,
     has_code = _has_col("tour_bookings", "code")
     has_status = _has_col("tour_bookings", "status")
 
-    status_val = "PENDING_PAYMENT"
+    status_val = data.get("status") or "PENDING_PAYMENT"
+
 
     if has_snapshot and has_code:
         rows = _exec(
@@ -648,11 +828,20 @@ def list_user_bookings(user_id: int, limit: int = 100) -> list:
     code_expr = "b.code" if has_code else "COALESCE(NULL, 'TB-' || b.id::text) AS code"
 
     has_payments = _has_table("payments")
-    payment_expr = (
-        "(SELECT p.status FROM payments p WHERE p.booking_id = b.id ORDER BY p.id DESC LIMIT 1) AS payment_status"
-        if has_payments
-        else "NULL::varchar AS payment_status"
-    )
+    if has_payments:
+        payment_expr = (
+            "(SELECT p.id FROM payments p WHERE p.booking_id = b.id ORDER BY p.id DESC LIMIT 1) AS payment_id, "
+            "(SELECT p.txn_ref FROM payments p WHERE p.booking_id = b.id ORDER BY p.id DESC LIMIT 1) AS payment_txn_ref, "
+            "(SELECT p.amount FROM payments p WHERE p.booking_id = b.id ORDER BY p.id DESC LIMIT 1) AS payment_amount, "
+            "(SELECT p.status FROM payments p WHERE p.booking_id = b.id ORDER BY p.id DESC LIMIT 1) AS payment_status"
+        )
+    else:
+        payment_expr = (
+            "NULL::integer AS payment_id, "
+            "NULL::varchar AS payment_txn_ref, "
+            "NULL::numeric AS payment_amount, "
+            "NULL::varchar AS payment_status"
+        )
 
     return execute_query(
         f"""
@@ -715,61 +904,349 @@ def list_bookings(status=None, limit=100):
     ) or []
 
 
-def create_tour(data: dict):
+def create_tour(data: dict, upsert: bool = True):
     has_policy = _has_col("tours", "cancellation_policy")
     has_status = _has_col("tours", "status")
+    has_images = _has_col("tours", "images")
+    has_operator = _has_col("tours", "operator_id")
+    has_active = _has_col("tours", "active")
 
-    if has_policy and has_status:
-        rows = execute_query(
-            """
-            INSERT INTO tours (slug, name, summary, description, province_id,
-                               duration_days, price_from, cover_url, highlights,
-                               itinerary, included, excluded, cancellation_policy, status)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    cover_url = data.get("cover_url")
+    images_list = _chuan_hoa_mang_anh(data.get("images"), cover_url)
+
+    # Giả định: Nếu cover_url trống nhưng images có phần tử đầu tiên,
+    # tự động gán cover_url = images[0] để tương thích ngược.
+    if not cover_url and images_list:
+        cover_url = images_list[0]
+
+    images_json = json.dumps(images_list, ensure_ascii=False)
+    status = data.get("status") or "ACTIVE"
+    active = (status == "ACTIVE")
+    operator_id = data.get("operator_id")
+
+    cols = ["slug", "name", "summary", "description", "province_id", "duration_days", "price_from", "cover_url"]
+    vals = [data["slug"], data["name"], data.get("summary"), data.get("description"),
+            data.get("province_id"), data["duration_days"], data.get("price_from"), cover_url]
+
+    if has_operator:
+        cols.append("operator_id")
+        vals.append(operator_id)
+
+    if has_images:
+        cols.append("images")
+        vals.append(images_json)
+
+    cols.append("highlights")
+    vals.append(json.dumps(data.get("highlights") or [], ensure_ascii=False))
+
+    cols.append("itinerary")
+    vals.append(json.dumps(data.get("itinerary") or [], ensure_ascii=False))
+
+    cols.append("included")
+    vals.append(json.dumps(_chuan_hoa_mang_text(data.get("included")), ensure_ascii=False))
+
+    cols.append("excluded")
+    vals.append(json.dumps(_chuan_hoa_mang_text(data.get("excluded")), ensure_ascii=False))
+
+    if has_policy:
+        cols.append("cancellation_policy")
+        vals.append(json.dumps(data.get("cancellation_policy") or [], ensure_ascii=False))
+
+    if has_status:
+        cols.append("status")
+        vals.append(status)
+        if has_active:
+            cols.append("active")
+            vals.append(active)
+
+    cols_str = ", ".join(cols)
+    placeholders = ", ".join(["%s"] * len(vals))
+    updates = []
+    for c in cols:
+        if c == "slug":
+            continue
+        if c == "operator_id":
+            updates.append("operator_id = COALESCE(EXCLUDED.operator_id, tours.operator_id)")
+        else:
+            updates.append(f"{c} = EXCLUDED.{c}")
+    updates_str = ", ".join(updates)
+
+    if upsert:
+        sql = f"""
+            INSERT INTO tours ({cols_str})
+            VALUES ({placeholders})
             ON CONFLICT (slug) DO UPDATE SET
-                name = EXCLUDED.name, summary = EXCLUDED.summary,
-                description = EXCLUDED.description, province_id = EXCLUDED.province_id,
-                duration_days = EXCLUDED.duration_days, price_from = EXCLUDED.price_from,
-                cover_url = EXCLUDED.cover_url, highlights = EXCLUDED.highlights,
-                itinerary = EXCLUDED.itinerary, included = EXCLUDED.included,
-                excluded = EXCLUDED.excluded,
-                cancellation_policy = EXCLUDED.cancellation_policy,
-                status = EXCLUDED.status
+                {updates_str}
             RETURNING id
-            """,
-            (data["slug"], data["name"], data.get("summary"), data.get("description"),
-             data.get("province_id"), data["duration_days"], data.get("price_from"),
-             data.get("cover_url"),
-             json.dumps(data.get("highlights") or [], ensure_ascii=False),
-             json.dumps(data.get("itinerary") or [], ensure_ascii=False),
-             data.get("included"), data.get("excluded"),
-             json.dumps(data.get("cancellation_policy") or [], ensure_ascii=False),
-             data.get("status") or "ACTIVE"),
-        )
+        """
     else:
+        # Tạo tour operator KHÔNG được upsert đè tour khác (kể cả DRAFT/INACTIVE):
+        # trường hợp trùng slug phải trả về None để tầng service báo lỗi BR-T2.
+        sql = f"""
+            INSERT INTO tours ({cols_str})
+            VALUES ({placeholders})
+            ON CONFLICT (slug) DO NOTHING
+            RETURNING id
+        """
+    rows = execute_query(sql, tuple(vals))
+    return rows[0]["id"] if rows else None
+
+
+def get_tour_by_slug(slug: str) -> Optional[dict]:
+    """Tra cứu tour theo slug KHÔNG phụ thuộc active/status.
+
+    Khác `get_tour` công khai (chỉ thấy tour active): hàm này dùng để kiểm tra
+    BR-T2 cho mọi tour kể cả DRAFT hay INACTIVE, tránh upsert đè tour khác.
+    """
+    rows = execute_query(
+        "SELECT id, slug, operator_id, status FROM tours WHERE slug = %s LIMIT 1",
+        (slug,),
+    )
+    return rows[0] if rows else None
+
+
+def get_tour_by_id(tour_id: int) -> Optional[dict]:
+    """Lấy chi tiết tour theo id mà không ràng buộc status/active, phục vụ quản lý tour của operator/admin."""
+    has_operator = _has_col("tours", "operator_id")
+    has_status = _has_col("tours", "status")
+    has_policy = _has_col("tours", "cancellation_policy")
+    has_active = _has_col("tours", "active")
+    has_price_from = _has_col("tours", "price_from")
+
+    extra_cols = []
+    if has_operator:
+        extra_cols.append("t.operator_id, o.company_name AS operator_name")
+    if has_status:
+        extra_cols.append("t.status")
+    if has_policy:
+        extra_cols.append("t.cancellation_policy")
+    if has_active:
+        extra_cols.append("t.active")
+    if has_price_from:
+        extra_cols.append("t.price_from")
+
+    extra_sql = (", " + ", ".join(extra_cols)) if extra_cols else ""
+    join_op = "LEFT JOIN operators o ON o.id = t.operator_id" if has_operator else ""
+
+    sql = f"""
+        SELECT {_cols_sql()}{extra_sql}, p.name AS province_name
+        FROM tours t
+        LEFT JOIN province_stats p ON p.id = t.province_id
+        {join_op}
+        WHERE t.id = %s
+        LIMIT 1
+    """
+    rows = execute_query(sql, (tour_id,))
+    if not rows:
+        return None
+    r = rows[0]
+    for k in ("images", "highlights", "itinerary", "included", "excluded", "cancellation_policy"):
+        if k in r and isinstance(r[k], str):
+            try:
+                r[k] = json.loads(r[k])
+            except Exception:
+                pass
+    return r
+
+
+def update_tour(tour_id: int, data: dict) -> bool:
+    """Cập nhật dữ liệu tour linh hoạt theo các trường có trong data."""
+    has_policy = _has_col("tours", "cancellation_policy")
+    has_status = _has_col("tours", "status")
+    has_images = _has_col("tours", "images")
+    has_active = _has_col("tours", "active")
+    has_operator = _has_col("tours", "operator_id")
+
+    set_clauses = []
+    params = []
+
+    if "name" in data and data["name"] is not None:
+        set_clauses.append("name = %s")
+        params.append(data["name"])
+
+    if "summary" in data:
+        set_clauses.append("summary = %s")
+        params.append(data["summary"])
+
+    if "description" in data:
+        set_clauses.append("description = %s")
+        params.append(data["description"])
+
+    if "province_id" in data:
+        set_clauses.append("province_id = %s")
+        params.append(data["province_id"])
+
+    if "duration_days" in data and data["duration_days"] is not None:
+        set_clauses.append("duration_days = %s")
+        params.append(data["duration_days"])
+
+    if "price_from" in data:
+        set_clauses.append("price_from = %s")
+        params.append(data["price_from"])
+
+    if "cover_url" in data:
+        set_clauses.append("cover_url = %s")
+        params.append(data["cover_url"])
+
+    if "highlights" in data and data["highlights"] is not None:
+        set_clauses.append("highlights = %s")
+        params.append(json.dumps(data["highlights"], ensure_ascii=False))
+
+    if "itinerary" in data and data["itinerary"] is not None:
+        set_clauses.append("itinerary = %s")
+        params.append(json.dumps(data["itinerary"], ensure_ascii=False))
+
+    if "included" in data and data["included"] is not None:
+        set_clauses.append("included = %s")
+        params.append(json.dumps(_chuan_hoa_mang_text(data["included"]), ensure_ascii=False))
+
+    if "excluded" in data and data["excluded"] is not None:
+        set_clauses.append("excluded = %s")
+        params.append(json.dumps(_chuan_hoa_mang_text(data["excluded"]), ensure_ascii=False))
+
+    if "slug" in data and data["slug"]:
+        set_clauses.append("slug = %s")
+        params.append(data["slug"])
+
+    if has_operator and "operator_id" in data:
+        set_clauses.append("operator_id = %s")
+        params.append(data["operator_id"])
+
+    if has_images and "images" in data and data["images"] is not None:
+        images_list = _chuan_hoa_mang_anh(data["images"], data.get("cover_url"))
+        set_clauses.append("images = %s")
+        params.append(json.dumps(images_list, ensure_ascii=False))
+
+    if has_policy and "cancellation_policy" in data and data["cancellation_policy"] is not None:
+        set_clauses.append("cancellation_policy = %s")
+        params.append(json.dumps(data["cancellation_policy"], ensure_ascii=False))
+
+    if has_status and "status" in data and data["status"]:
+        st = data["status"]
+        set_clauses.append("status = %s")
+        params.append(st)
+        if has_active:
+            set_clauses.append("active = %s")
+            params.append(st == "ACTIVE")
+
+    if not set_clauses:
+        return True
+
+    params.append(tour_id)
+    sql = f"UPDATE tours SET {', '.join(set_clauses)} WHERE id = %s"
+    execute_query(sql, tuple(params))
+    return True
+
+
+
+def tour_has_bookings(tour_id: int) -> bool:
+    """Kiểm tra xem tour đã từng có bất kỳ booking nào chưa (để quyết định xoá mềm hay cứng theo BR-T5)."""
+    rows = execute_query(
+        "SELECT 1 FROM tour_bookings WHERE tour_id = %s LIMIT 1",
+        (tour_id,),
+    )
+    return bool(rows)
+
+
+def tour_has_confirmed_bookings(tour_id: int) -> bool:
+    """Kiểm tra xem tour đã từng có booking được CONFIRMED hoặc COMPLETED chưa (theo BR-T3)."""
+    rows = execute_query(
+        "SELECT 1 FROM tour_bookings WHERE tour_id = %s AND status IN ('CONFIRMED', 'COMPLETED') LIMIT 1",
+        (tour_id,),
+    )
+    if rows:
+        return True
+    if _has_table("booking_status_history"):
         rows = execute_query(
             """
-            INSERT INTO tours (slug, name, summary, description, province_id,
-                               duration_days, price_from, cover_url, highlights,
-                               itinerary, included, excluded)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            ON CONFLICT (slug) DO UPDATE SET
-                name = EXCLUDED.name, summary = EXCLUDED.summary,
-                description = EXCLUDED.description, province_id = EXCLUDED.province_id,
-                duration_days = EXCLUDED.duration_days, price_from = EXCLUDED.price_from,
-                cover_url = EXCLUDED.cover_url, highlights = EXCLUDED.highlights,
-                itinerary = EXCLUDED.itinerary, included = EXCLUDED.included,
-                excluded = EXCLUDED.excluded
-            RETURNING id
+            SELECT 1 FROM booking_status_history h
+            JOIN tour_bookings b ON h.booking_id = b.id
+            WHERE b.tour_id = %s AND h.to_status = 'CONFIRMED'
+            LIMIT 1
             """,
-            (data["slug"], data["name"], data.get("summary"), data.get("description"),
-             data.get("province_id"), data["duration_days"], data.get("price_from"),
-             data.get("cover_url"),
-             json.dumps(data.get("highlights") or [], ensure_ascii=False),
-             json.dumps(data.get("itinerary") or [], ensure_ascii=False),
-             data.get("included"), data.get("excluded")),
+            (tour_id,),
         )
-    return rows[0]["id"] if rows else None
+        if rows:
+            return True
+    return False
+
+
+def delete_tour_hard(tour_id: int):
+    """Xoá cứng tour và các đợt khởi hành của nó khi chưa từng có booking."""
+    execute_query("DELETE FROM tour_departures WHERE tour_id = %s", (tour_id,))
+    execute_query("DELETE FROM tours WHERE id = %s", (tour_id,))
+
+
+def delete_tour_soft(tour_id: int):
+    """Xoá mềm tour (chuyển status=INACTIVE, active=FALSE) khi đã từng có booking (BR-T5)."""
+    has_status = _has_col("tours", "status")
+    has_active = _has_col("tours", "active")
+    set_parts = []
+    if has_status:
+        set_parts.append("status = 'INACTIVE'")
+    if has_active:
+        set_parts.append("active = FALSE")
+    if set_parts:
+        execute_query(f"UPDATE tours SET {', '.join(set_parts)} WHERE id = %s", (tour_id,))
+
+
+def list_operator_tours(
+    operator_id: Optional[int] = None,
+    status: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[dict]:
+    """Danh sách tour của operator (hoặc tất cả tour nếu operator_id=None cho admin)."""
+    where = []
+    params = []
+    if operator_id is not None:
+        where.append("t.operator_id = %s")
+        params.append(operator_id)
+    if status is not None:
+        where.append("t.status = %s")
+        params.append(status)
+
+    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+    has_op = _has_col("tours", "operator_id")
+    has_status = _has_col("tours", "status")
+
+    op_col = "t.operator_id, o.company_name AS operator_name," if has_op else ""
+    st_col = "t.status, t.active," if has_status else ""
+    op_join = "LEFT JOIN operators o ON o.id = t.operator_id" if has_op else ""
+
+    params.extend([limit, offset])
+    sql = f"""
+        SELECT t.id, t.slug, t.name, t.summary, t.description, t.province_id,
+               t.duration_days, t.price_from, t.cover_url, t.highlights,
+               {op_col} {st_col}
+               t.created_at, p.name AS province_name
+        FROM tours t
+        LEFT JOIN province_stats p ON p.id = t.province_id
+        {op_join}
+        {where_sql}
+        ORDER BY t.created_at DESC, t.id DESC
+        LIMIT %s OFFSET %s
+    """
+    rows = execute_query(sql, tuple(params))
+    return rows or []
+
+
+def count_operator_tours(operator_id: Optional[int] = None, status: Optional[str] = None) -> int:
+    """Tổng số tour của operator phục vụ phân trang."""
+    where = []
+    params = []
+    if operator_id is not None:
+        where.append("t.operator_id = %s")
+        params.append(operator_id)
+    if status is not None:
+        where.append("t.status = %s")
+        params.append(status)
+
+    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+    sql = f"SELECT count(*) AS total FROM tours t {where_sql}"
+    rows = execute_query(sql, tuple(params))
+    return rows[0]["total"] if rows else 0
+
 
 
 def add_departure(tour_id: int, depart_date, list_price=None, seats: int = 20,
@@ -1066,3 +1543,277 @@ def count_successful_payments(booking_id: int, tx=None) -> int:
         tx=tx,
     )
     return rows[0]["cnt"] if rows else 0
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Phase 5.3: Quản lý Đợt khởi hành (Tour Departures Repository)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def get_departure_by_id(departure_id: int, tx=None) -> Optional[dict]:
+    """Lấy thông tin chi tiết một đợt khởi hành theo id."""
+    rows = _exec(
+        """
+        SELECT d.*, t.name AS tour_name, t.operator_id
+        FROM tour_departures d
+        JOIN tours t ON t.id = d.tour_id
+        WHERE d.id = %s
+        LIMIT 1
+        """,
+        (departure_id,),
+        tx=tx,
+    )
+    return rows[0] if rows else None
+
+
+def get_departure_by_tour_and_date(tour_id: int, depart_date, tx=None) -> Optional[dict]:
+    """Tìm đợt khởi hành theo (tour_id, depart_date) để kiểm tra tính duy nhất BR-D2."""
+    rows = _exec(
+        """
+        SELECT *
+        FROM tour_departures
+        WHERE tour_id = %s AND depart_date = %s
+        LIMIT 1
+        """,
+        (tour_id, depart_date),
+        tx=tx,
+    )
+    return rows[0] if rows else None
+
+
+def list_departures_by_tour(
+    tour_id: int,
+    status: Optional[str] = None,
+    from_date: Optional[date] = None,
+    limit: int = 100,
+    offset: int = 0,
+    tx=None,
+) -> list:
+    """Lấy danh sách tất cả các đợt khởi hành của một tour cho operator/admin."""
+    clauses = ["d.tour_id = %s"]
+    params = [tour_id]
+
+    if status:
+        clauses.append("d.status = %s")
+        params.append(status)
+    if from_date:
+        clauses.append("d.depart_date >= %s")
+        params.append(from_date)
+
+    where_sql = " AND ".join(clauses)
+    params.extend([limit, offset])
+
+    return _exec(
+        f"""
+        SELECT d.*
+        FROM tour_departures d
+        WHERE {where_sql}
+        ORDER BY d.depart_date ASC, d.id ASC
+        LIMIT %s OFFSET %s
+        """,
+        tuple(params),
+        tx=tx,
+    ) or []
+
+
+def count_departures_by_tour(
+    tour_id: int,
+    status: Optional[str] = None,
+    from_date: Optional[date] = None,
+    tx=None,
+) -> int:
+    """Đếm tổng số đợt khởi hành của một tour."""
+    clauses = ["tour_id = %s"]
+    params = [tour_id]
+
+    if status:
+        clauses.append("status = %s")
+        params.append(status)
+    if from_date:
+        clauses.append("depart_date >= %s")
+        params.append(from_date)
+
+    where_sql = " AND ".join(clauses)
+    rows = _exec(
+        f"""
+        SELECT COUNT(*) AS total
+        FROM tour_departures
+        WHERE {where_sql}
+        """,
+        tuple(params),
+        tx=tx,
+    )
+    return rows[0]["total"] if rows else 0
+
+
+def create_departure(tour_id: int, data: dict, tx=None) -> dict:
+    """Tạo đợt khởi hành mới KHÔNG overwrite (không dùng ON CONFLICT DO UPDATE) theo BR-D2."""
+    has_sale = _has_col("tour_departures", "sale_price")
+    has_list_price = _has_col("tour_departures", "list_price")
+
+    depart_date = data["depart_date"]
+    list_price = data.get("list_price") if data.get("list_price") is not None else data.get("price")
+    seats_total = int(data.get("seats_total", 20))
+    seats_left = int(data.get("seats_left", seats_total))
+    min_pax = int(data.get("min_pax", 1))
+    status = data.get("status", "OPEN")
+    sale_price = data.get("sale_price")
+    sale_starts_at = data.get("sale_starts_at")
+    sale_ends_at = data.get("sale_ends_at")
+
+    if has_list_price and has_sale:
+        rows = _exec(
+            """
+            INSERT INTO tour_departures (
+                tour_id, depart_date, list_price, seats_total, seats_left,
+                min_pax, status, sale_price, sale_starts_at, sale_ends_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING *
+            """,
+            (
+                tour_id, depart_date, list_price, seats_total, seats_left,
+                min_pax, status, sale_price, sale_starts_at, sale_ends_at,
+            ),
+            tx=tx,
+        )
+    else:
+        rows = _exec(
+            """
+            INSERT INTO tour_departures (
+                tour_id, depart_date, price, seats_total, seats_left
+            )
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING *
+            """,
+            (tour_id, depart_date, list_price, seats_total, seats_left),
+            tx=tx,
+        )
+    return rows[0] if rows else {}
+
+
+def update_departure(departure_id: int, data: dict, tx=None) -> Optional[dict]:
+    """Cập nhật đợt khởi hành theo từng trường."""
+    if not data:
+        return get_departure_by_id(departure_id, tx=tx)
+
+    set_clauses = []
+    params = []
+    has_sale = _has_col("tour_departures", "sale_price")
+    has_list_price = _has_col("tour_departures", "list_price")
+
+    for key, value in data.items():
+        if key == "list_price":
+            if has_list_price:
+                set_clauses.append("list_price = %s")
+                params.append(value)
+            else:
+                set_clauses.append("price = %s")
+                params.append(value)
+        elif key in ("depart_date", "seats_total", "seats_left", "min_pax", "status"):
+            set_clauses.append(f"{key} = %s")
+            params.append(value)
+        elif key in ("sale_price", "sale_starts_at", "sale_ends_at") and has_sale:
+            set_clauses.append(f"{key} = %s")
+            params.append(value)
+
+    if not set_clauses:
+        return get_departure_by_id(departure_id, tx=tx)
+
+    sql = f"""
+        UPDATE tour_departures
+        SET {', '.join(set_clauses)}
+        WHERE id = %s
+        RETURNING *
+    """
+    params.append(departure_id)
+    rows = _exec(sql, tuple(params), tx=tx)
+    return rows[0] if rows else None
+
+
+def delete_departure(departure_id: int, tx=None) -> bool:
+    """Xóa cứng đợt khởi hành khỏi CSDL."""
+    rows = _exec(
+        "DELETE FROM tour_departures WHERE id = %s RETURNING id",
+        (departure_id,),
+        tx=tx,
+    )
+    return bool(rows)
+
+
+def count_departure_bookings(departure_id: int, tx=None) -> int:
+    """Đếm tổng số đơn booking của một đợt khởi hành (bất kể trạng thái)."""
+    rows = _exec(
+        "SELECT COUNT(*) AS total FROM tour_bookings WHERE departure_id = %s",
+        (departure_id,),
+        tx=tx,
+    )
+    return rows[0]["total"] if rows else 0
+
+
+def get_departure_sold_seats(departure_id: int, tx=None) -> int:
+    """Tính số chỗ đã bán / đang giữ của một đợt khởi hành (BR-D4/E6).
+
+    Nguồn tính toán an toàn:
+    1. Số chỗ đã trừ thực tế trên tour_departures: seats_total - seats_left.
+    2. Tổng số khách (guests) từ các đơn booking còn hiệu lực đang giữ chỗ
+       (seats_released IS NOT TRUE và không thuộc nhóm terminal đã nhả chỗ).
+    Lấy MAX(nguồn 1, nguồn 2) để đảm bảo an toàn tuyệt đối.
+    """
+    # 1. Tính từ tour_departures
+    dep_rows = _exec(
+        "SELECT seats_total, seats_left FROM tour_departures WHERE id = %s",
+        (departure_id,),
+        tx=tx,
+    )
+    sold_from_dep = 0
+    if dep_rows:
+        d = dep_rows[0]
+        st = d.get("seats_total") or 0
+        sl = d.get("seats_left") or 0
+        sold_from_dep = max(0, st - sl)
+
+    # 2. Tính từ tour_bookings
+    has_released = _has_col("tour_bookings", "seats_released")
+    rel_cond = "AND (seats_released IS FALSE OR seats_released IS NULL)" if has_released else ""
+    # Các trạng thái booking giữ chỗ (chưa hủy/hết hạn)
+    b_rows = _exec(
+        f"""
+        SELECT COALESCE(SUM(guests), 0) AS total_guests
+        FROM tour_bookings
+        WHERE departure_id = %s
+          {rel_cond}
+          AND status NOT IN ('EXPIRED', 'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_OPERATOR', 'REFUNDED')
+        """,
+        (departure_id,),
+        tx=tx,
+    )
+    sold_from_bookings = int(b_rows[0]["total_guests"]) if b_rows else 0
+
+    return max(sold_from_dep, sold_from_bookings)
+
+
+def sync_tour_price_from(tour_id: int, tx=None):
+    """Đồng bộ price_from của tour từ các đợt OPEN còn mở trong tương lai (BR-D7)."""
+    sql_eff = sql_gia_ban_hieu_luc("d")
+    has_status = _has_col("tour_departures", "status")
+    status_cond = "AND d.status = 'OPEN'" if has_status else ""
+
+    rows = _exec(
+        f"""
+        SELECT MIN({sql_eff}) AS min_price
+        FROM tour_departures d
+        WHERE d.tour_id = %s
+          AND d.depart_date >= CURRENT_DATE
+          AND d.seats_left > 0
+          {status_cond}
+        """,
+        (tour_id,),
+        tx=tx,
+    )
+    min_price = rows[0]["min_price"] if rows and rows[0]["min_price"] is not None else None
+    if min_price is not None:
+        _exec(
+            "UPDATE tours SET price_from = %s WHERE id = %s",
+            (min_price, tour_id),
+            tx=tx,
+        )

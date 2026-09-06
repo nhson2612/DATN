@@ -1,5 +1,6 @@
 """Endpoint tour trọn gói."""
 
+from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -14,15 +15,40 @@ router = APIRouter(prefix="/api/tours", tags=["tours"])
 
 @router.get("")
 def list_tours(
-    province_id: int = Query(None),
-    max_days: int = Query(None, ge=1, le=30),
-    max_price: int = Query(None, ge=0),
+    province_id: Optional[int] = Query(None),
+    depart_from: Optional[date] = Query(None),
+    depart_to: Optional[date] = Query(None),
+    price_min: Optional[int] = Query(None, ge=0),
+    price_max: Optional[int] = Query(None, ge=0),
+    max_price: Optional[int] = Query(None, ge=0),
+    max_days: Optional[int] = Query(None, ge=1, le=30),
+    min_days: Optional[int] = Query(None, ge=1, le=30),
+    guests: Optional[int] = Query(None, ge=1, le=100),
+    sort: Optional[str] = Query(None, pattern=r"^(price_asc|price_desc|date_asc)$"),
     page: int = Query(1, ge=1),
     page_size: int = Query(24, ge=1, le=100),
 ):
+    eff_max_price = price_max if price_max is not None else max_price
     return {"success": True, **tour_service.list_tours(
-        province_id=province_id, max_days=max_days, max_price=max_price,
-        page=page, page_size=page_size)}
+        province_id=province_id,
+        depart_from=depart_from,
+        depart_to=depart_to,
+        price_min=price_min,
+        price_max=eff_max_price,
+        max_price=eff_max_price,
+        max_days=max_days,
+        min_days=min_days,
+        guests=guests,
+        sort=sort,
+        page=page,
+        page_size=page_size,
+    )}
+
+
+@router.get("/provinces")
+def list_tour_provinces():
+    """Danh sách các tỉnh/thành hiện có tour đang hoạt động (dùng cho bộ lọc)."""
+    return {"success": True, "provinces": tour_service.list_tour_provinces()}
 
 
 @router.get("/bookings/me")

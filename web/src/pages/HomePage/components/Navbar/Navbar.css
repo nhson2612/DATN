@@ -1,197 +1,390 @@
-/* ==========================================================================
-   BLOCK: .wl-nav (Navbar with Centered Circle Logo & Asymmetric Floating Bar)
-   ========================================================================== */
-.wl-nav {
+/* Sidebar điều hướng cố định. Desktop: luôn mở bên trái. Mobile: drawer trượt. */
+
+.wl-sidebar {
   position: fixed;
-  top: 1.25rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  width: calc(100% - 2.5rem);
-  max-width: 54rem;
-  padding: 0;
-  pointer-events: auto;
-  transition: max-width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  inset: 0 auto 0 0;
+  z-index: 60;
+  width: 16.5rem;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-right: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 12px 0 36px -18px rgba(15, 23, 42, 0.16);
+  padding: 1.5rem 1.25rem;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.wl-nav--collapsed {
-  max-width: 5.25rem;
+.wl-sidebar--open {
+  transform: translateX(0);
 }
 
-.wl-nav__container {
-  position: relative;
-  width: 100%;
-  height: 4.25rem;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1.5px solid rgba(226, 232, 240, 0.9);
-  border-radius: 36px 14px 36px 14px !important;
-  box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(0, 0, 0, 0.03);
+.wl-sidebar__brand {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
-  overflow: visible !important;
-  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 2rem;
 }
 
-.wl-nav--collapsed .wl-nav__container {
-  border-radius: 50% !important;
-  padding: 0;
-  height: 5.25rem;
-  border-color: rgba(249, 115, 22, 0.35);
-  box-shadow: 0 12px 30px -5px rgba(249, 115, 22, 0.4), 0 4px 15px rgba(15, 23, 42, 0.1);
+.wl-sidebar__brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  min-width: 0;
 }
 
-.wl-nav__wing {
+.wl-sidebar__logo {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.wl-sidebar__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.wl-sidebar__brand-name {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+.wl-sidebar__brand-tag {
+  margin-top: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f97316;
+}
+
+.wl-sidebar__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.wl-sidebar__close:hover {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.wl-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.wl-sidebar__label {
+  margin: 0 0.75rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.wl-sidebar__item {
   display: flex;
   align-items: center;
-  flex: 1;
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.35s ease;
-  max-width: 50%;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: #475569;
+  text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.wl-sidebar__item:hover {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.wl-sidebar__item--active {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.wl-sidebar__icon {
+  font-size: 1.2rem;
+  color: #f97316;
+}
+
+.wl-sidebar__item-label {
   white-space: nowrap;
 }
 
-.wl-nav--collapsed .wl-nav__wing {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.7);
-  max-width: 0px;
-  overflow: hidden;
-  padding: 0 !important;
+.wl-sidebar__footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
 }
 
-.wl-nav__wing--left {
+.wl-sidebar__signin {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 2.25rem;
-  padding-right: 3.5rem;
-  padding-left: 1rem;
-}
-
-.wl-nav__wing--right {
-  justify-content: center;
-  gap: 2.25rem;
-  padding-left: 3.5rem;
-  padding-right: 1rem;
-}
-
-.wl-nav__item {
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-radius: 0.9rem;
+  background: #ea580c;
+  color: #ffffff;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #334155;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  white-space: nowrap;
-}
-
-.wl-nav__item:hover {
-  color: #f97316;
-  transform: translateY(-1px);
-}
-
-/* Center Circular Logo Badge */
-.wl-nav__center-logo {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 10;
-  text-decoration: none;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.wl-nav__center-logo:hover {
-  transform: translate(-50%, -50%) scale(1.08);
-}
-
-.wl-nav__logo-circle {
-  width: 5.25rem;
-  height: 5.25rem;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 3px solid #ffffff;
-  box-shadow: 0 12px 30px -5px rgba(249, 115, 22, 0.35), 0 4px 15px rgba(15, 23, 42, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
 }
 
-.wl-nav__logo-icon {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f97316, #f59e0b);
+.wl-sidebar__signin:hover {
+  background: #c2410c;
+}
+
+.wl-sidebar__user {
   display: flex;
   align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.wl-sidebar__user-avatar {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: #ffedd5;
+  color: #9a3412;
+  font-weight: 800;
+  flex-shrink: 0;
 }
 
-.wl-nav__logo-text {
-  font-size: 0.55rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  color: #0f172a;
-  text-transform: uppercase;
+.wl-sidebar__user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
 }
 
-.wl-nav__logo-text--dot {
-  color: #f97316;
-}
-
-.wl-nav__btn {
-  padding: 0.55rem 1.35rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
+.wl-sidebar__user-name {
+  font-size: 0.8rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  border: none;
+  color: #0f172a;
   white-space: nowrap;
-}
-
-.wl-nav__btn--primary {
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
-}
-
-.wl-nav__btn--primary:hover {
-  box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45);
-  transform: translateY(-1px);
-}
-
-.wl-nav__user {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.wl-nav__user-name {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #0f172a;
-  max-width: 11rem;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.wl-sidebar__user-email {
+  font-size: 0.7rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wl-sidebar__logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.wl-sidebar__logout:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.wl-sidebar__mobile-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+  padding: 0 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.wl-sidebar__mobile-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: #0f172a;
+}
+
+.wl-sidebar__mobile-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.wl-sidebar__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(15, 23, 42, 0.42);
+  border: 0;
+}
+
+@media (min-width: 1024px) {
+  .wl-sidebar {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .wl-sidebar--mobile-only {
+    transform: translateX(-100%);
+  }
+
+  .wl-sidebar__close,
+  .wl-sidebar__mobile-bar,
+  .wl-sidebar__backdrop {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Navbar ngang cho homepage: cố định ở trên, không co giãn theo scroll
+   ========================================================================== */
+.wl-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.wl-navbar__inner {
+  max-width: 80rem;
+  margin: 0 auto;
+  height: 4.5rem;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.wl-navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: #0f172a;
+}
+
+.wl-navbar__brand-name {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.wl-navbar__links {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto;
+}
+
+.wl-navbar__link {
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: #475569;
+  text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.wl-navbar__link:hover {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.wl-navbar__link--active {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.wl-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wl-navbar__signin {
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: #ea580c;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
   white-space: nowrap;
 }
 
-.wl-nav__btn--ghost {
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
+.wl-navbar__signin:hover {
+  background: #c2410c;
 }
 
-.wl-nav__btn--ghost:hover {
-  background: #f1f5f9;
+.wl-navbar__action,
+.wl-navbar__burger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.wl-navbar__action:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+@media (min-width: 768px) {
+  .wl-navbar__links {
+    display: flex;
+  }
+
+  .wl-navbar__burger {
+    display: none;
+  }
 }
