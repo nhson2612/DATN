@@ -195,3 +195,8 @@ class SaleDepartureRequest(BaseModel):
     sale_ends_at: Optional[datetime] = None
 
 
+class CreateStripeCheckoutRequest(BaseModel):
+    """Yêu cầu khởi tạo Stripe-hosted Checkout Session (Phase 3)."""
+    redirect_base: Optional[str] = None
+
+

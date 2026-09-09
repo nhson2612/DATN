@@ -7,6 +7,7 @@ import TripMap from "../components/map/TripMap";
 import PlannerLichTrinh from "./planner/PlannerLichTrinh";
 import PlannerRail from "./planner/PlannerRail";
 import PlannerTongQuan from "./planner/PlannerTongQuan";
+import PlannerAssistant from "./planner/PlannerAssistant";
 import "./TripPlanner.css";
 
 const MUC_MAC_DINH = "muon-di";
@@ -259,6 +260,45 @@ export default function TripPlanner({ user, onNeedAuth }) {
     capNhat(moi);
   }
 
+  function sapXepLaiTrongNgay(s, viTriMoi) {
+    if (!s || s.day == null) return;
+    const cungNgay = stops.filter(
+      (x) => x.day === s.day && x.role !== "lodging"
+    );
+    const cuIdx = cungNgay.findIndex(
+      (x) => cungDiem(x, s) || x === s
+    );
+    const targetIdx =
+      typeof viTriMoi === "number"
+        ? viTriMoi
+        : cungNgay.findIndex((x) => cungDiem(x, viTriMoi) || x === viTriMoi);
+
+    if (
+      cuIdx < 0 ||
+      targetIdx < 0 ||
+      targetIdx >= cungNgay.length ||
+      cuIdx === targetIdx
+    ) {
+      return;
+    }
+
+    const moiCungNgay = [...cungNgay];
+    const [diemKeo] = moiCungNgay.splice(cuIdx, 1);
+    moiCungNgay.splice(targetIdx, 0, diemKeo);
+
+    let k = 0;
+    const moiStops = stops.map((item) => {
+      if (item.day === s.day && item.role !== "lodging") {
+        const thay = moiCungNgay[k];
+        k++;
+        return thay;
+      }
+      return item;
+    });
+
+    capNhat(moiStops);
+  }
+
   function themMuc(ten) {
     const t = ten.trim();
     if (!t) return;
@@ -367,6 +407,18 @@ export default function TripPlanner({ user, onNeedAuth }) {
     [stops]
   );
 
+  // Phân bổ tuần tự các điểm chưa xếp vào ngày — cập nhật một lần để không mất điểm
+  function phanBoTuDong() {
+    if (!chuaXep.length || !cacNgay.length) return;
+    const moi = [...stops];
+    chuaXep.forEach((s, idx) => {
+      const ngayDich = cacNgay[idx % cacNgay.length];
+      const j = moi.findIndex((x) => cungDiem(x, s) && x.role !== "lodging");
+      if (j >= 0) moi[j] = { ...moi[j], day: ngayDich };
+    });
+    capNhat(moi, sections);
+  }
+
   if (!user)
     return (
       <main className="max-w-6xl mx-auto px-4 py-10 text-sm text-zinc-500">
@@ -409,19 +461,23 @@ export default function TripPlanner({ user, onNeedAuth }) {
   return (
     <main className="trip-planner">
       <header className="trip-planner__header">
-        <button
-          onClick={() => nav("/chuyen-di")}
-          title="Về danh sách chuyến"
-          className="trip-planner__back-btn"
-        >
-          <i className="fa-solid fa-arrow-left text-xs" />
-        </button>
-        <div className="trip-planner__info">
-          <h1 className="trip-planner__title">{trip.name}</h1>
-          <p className="trip-planner__subtitle">
-            {diemDen && <>{diemDen.replace(/^(Thành phố|Tỉnh)\s+/i, "")} · </>}
-            {soDiem} địa điểm · {trip.duration_days} ngày
-          </p>
+        <div className="trip-planner__header-left">
+          <button
+            onClick={() => nav("/chuyen-di")}
+            title="Về danh sách chuyến"
+            aria-label="Về danh sách chuyến"
+            className="trip-planner__back-btn"
+          >
+            <i className="fa-solid fa-arrow-left text-xs" />
+          </button>
+          <div className="trip-planner__info">
+            <span className="trip-planner__eyebrow">Kế hoạch chuyến đi</span>
+            <h1 className="trip-planner__title">{trip.name}</h1>
+            <p className="trip-planner__subtitle">
+              {diemDen && <>{diemDen.replace(/^(Thành phố|Tỉnh)\s+/i, "")} · </>}
+              {soDiem} địa điểm · {trip.duration_days} ngày
+            </p>
+          </div>
         </div>
         <span
           className={`trip-planner__save ${
@@ -433,7 +489,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
               dangLuu ? "fa-arrows-rotate" : "fa-cloud-arrow-up"
             }`}
           />
-          {dangLuu ? "Đang lưu" : "Đã lưu"}
+          {dangLuu ? "Đang lưu thay đổi" : "Đã lưu tự động"}
         </span>
       </header>
 
@@ -468,7 +524,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
           }}
         />
 
-        <section className="pane">
+        <section className="trip-planner__content">
           {muc === "tong-quan" ? (
             <PlannerTongQuan
               trip={trip}
@@ -498,10 +554,12 @@ export default function TripPlanner({ user, onNeedAuth }) {
               chuaXep={chuaXep}
               diemDen={diemDen}
               ngayRefs={ngayRefs}
+              ngayChon={ngayChon}
               onHover={(d) => setNgayXem(d)}
               onXep={xepVaoNgay}
               onBoNgay={boKhoiNgay}
               onChuyen={chuyen}
+              onSapXepLai={sapXepLaiTrongNgay}
               onXem={setDiemChon}
               onDatChoNgu={datChoNgu}
               onBoChoNgu={boChoNgu}
@@ -512,6 +570,11 @@ export default function TripPlanner({ user, onNeedAuth }) {
               dangVe={dangVe}
               duong={duong}
               onResults={setTimThay}
+              onThemChuaXep={(p) =>
+                themVaoMuc(p, sections[0]?.key || MUC_MAC_DINH)
+              }
+              onXoaDiem={xoaHan}
+              onAutoAssign={phanBoTuDong}
               nav={nav}
             />
           )}
@@ -539,6 +602,13 @@ export default function TripPlanner({ user, onNeedAuth }) {
               duongThat={duong?.doan}
             />
           </ErrorBoundary>
+          <PlannerAssistant
+            destination={diemDen}
+            location={viTri}
+            onResults={setTimThay}
+            onFocus={setDiemChon}
+            onAdd={(place) => themVaoMuc(place, sections[0]?.key || MUC_MAC_DINH)}
+          />
         </section>
       </div>
     </main>

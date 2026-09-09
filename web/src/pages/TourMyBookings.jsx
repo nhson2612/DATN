@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import "./TourMyBookings.css";
 
@@ -51,13 +51,29 @@ function BookingCountdown({ holdExpiresAt, onExpired }) {
 }
 
 export default function TourMyBookings({ user, onNeedAuth }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all"); // all | pending | paid | expired
   const [payingBookingId, setPayingBookingId] = useState(null);
+  const [stripePayingBookingId, setStripePayingBookingId] = useState(null);
   const [instructionBooking, setInstructionBooking] = useState(null);
   const [copiedKey, setCopiedKey] = useState("");
+
+  // State thông báo trạng thái thanh toán Stripe Checkout
+  const [checkoutNotice, setCheckoutNotice] = useState(null);
+  const pollTimerRef = useRef(null);
+
+  // Dọn dẹp poll interval khi unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const fetchBookings = useCallback(async () => {
     if (!user) {
@@ -79,6 +95,179 @@ export default function TourMyBookings({ user, onNeedAuth }) {
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
+
+  // Xử lý khi trang được điều hướng về từ Stripe Checkout (Phase 3.3)
+  useEffect(() => {
+    const checkoutParam = searchParams.get("checkout");
+    if (!checkoutParam) return;
+
+    const bookingIdParam = searchParams.get("booking_id");
+    const sessionIdParam = searchParams.get("session_id");
+
+    // Xóa ngay query param để tránh bị lặp lại khi người dùng F5 / reload
+    setSearchParams({}, { replace: true });
+
+    // Trường hợp 1: Người dùng hủy thanh toán trên cổng Stripe
+    if (checkoutParam === "cancelled") {
+      setCheckoutNotice({
+        type: "cancelled",
+        bookingId: bookingIdParam ? Number(bookingIdParam) : null,
+        message: "Quý khách đã huỷ thanh toán. Chỗ vẫn được giữ đến hết thời hạn.",
+      });
+      return;
+    }
+
+    // Trường hợp 2: Khách hoàn tất thanh toán trên Stripe thành công -> Bắt đầu poll
+    if (checkoutParam === "success") {
+      setCheckoutNotice({
+        type: "verifying",
+        message: "Thanh toán đã được ghi nhận. Đang xác nhận với hệ thống...",
+      });
+
+      let pollCount = 0;
+      const MAX_POLLS = 20;
+
+      const runPolling = (targetBookingId) => {
+        if (!targetBookingId) {
+          setCheckoutNotice({
+            type: "info",
+            message: "Hệ thống đang xử lý, vui lòng bấm Làm mới sau vài phút.",
+          });
+          return;
+        }
+
+        if (pollTimerRef.current) {
+          clearInterval(pollTimerRef.current);
+        }
+
+        pollTimerRef.current = setInterval(async () => {
+          pollCount += 1;
+          try {
+            const st = await api.tourBookingStatus(targetBookingId);
+            const status = st?.status;
+            const isHoldExpired = st?.is_hold_expired;
+            const paymentStatus = st?.payment_status;
+
+            if (status === "PAID" || status === "CONFIRMED") {
+              if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+              pollTimerRef.current = null;
+              setCheckoutNotice({
+                type: "success",
+                bookingId: targetBookingId,
+                message: "Thanh toán thành công!",
+              });
+              fetchBookings();
+              return;
+            }
+
+            if (isHoldExpired || status === "EXPIRED") {
+              if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+              pollTimerRef.current = null;
+              setCheckoutNotice({
+                type: "expired",
+                bookingId: targetBookingId,
+                message: "Đơn hàng đã hết hạn giữ chỗ.",
+              });
+              fetchBookings();
+              return;
+            }
+
+            if (paymentStatus === "MISMATCH") {
+              if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+              pollTimerRef.current = null;
+              setCheckoutNotice({
+                type: "error",
+                bookingId: targetBookingId,
+                message: "Số tiền không khớp, vui lòng liên hệ quản trị viên.",
+              });
+              return;
+            }
+
+            if (pollCount >= MAX_POLLS) {
+              if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+              pollTimerRef.current = null;
+              setCheckoutNotice({
+                type: "info",
+                bookingId: targetBookingId,
+                message: "Hệ thống đang xử lý, vui lòng bấm Làm mới sau vài phút.",
+              });
+              fetchBookings();
+            }
+          } catch (pollErr) {
+            console.warn("Lỗi thăm dò trạng thái thanh toán:", pollErr);
+            if (pollCount >= MAX_POLLS) {
+              if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+              pollTimerRef.current = null;
+              setCheckoutNotice({
+                type: "info",
+                bookingId: targetBookingId,
+                message: "Hệ thống đang xử lý, vui lòng bấm Làm mới sau vài phút.",
+              });
+              fetchBookings();
+            }
+          }
+        }, 2000);
+      };
+
+      const resolveBookingAndPoll = async () => {
+        let bId = bookingIdParam ? Number(bookingIdParam) : null;
+        if (bId && !isNaN(bId)) {
+          runPolling(bId);
+          return;
+        }
+
+        try {
+          const res = await api.myTourBookings(100);
+          const list = res.bookings || [];
+          setBookings(list);
+          const pendingBooking = list.find((b) => b.status === "PENDING_PAYMENT");
+          const target = pendingBooking || list[0];
+          if (target?.id) {
+            runPolling(target.id);
+          } else {
+            setCheckoutNotice({
+              type: "info",
+              message: "Hệ thống đang xử lý, vui lòng bấm Làm mới sau vài phút.",
+            });
+          }
+        } catch (fetchErr) {
+          console.warn("Lỗi tìm kiếm đơn đặt tour:", fetchErr);
+          setCheckoutNotice({
+            type: "info",
+            message: "Hệ thống đang xử lý, vui lòng bấm Làm mới sau vài phút.",
+          });
+        }
+      };
+
+      resolveBookingAndPoll();
+    }
+  }, [searchParams, setSearchParams, fetchBookings]);
+
+  // Xử lý thanh toán thẻ qua Stripe từ trang đơn của tôi
+  const handleStripeCheckout = async (bookingId) => {
+    setStripePayingBookingId(bookingId);
+    setCheckoutNotice(null);
+    try {
+      const res = await api.checkoutTourBooking(bookingId, window.location.origin);
+      if (res?.checkout_url) {
+        window.location.assign(res.checkout_url);
+      } else {
+        setCheckoutNotice({
+          type: "error",
+          bookingId,
+          message: "Không nhận được liên kết thanh toán từ cổng Stripe.",
+        });
+      }
+    } catch (err) {
+      setCheckoutNotice({
+        type: "error",
+        bookingId,
+        message: err.message || "Không thể khởi tạo thanh toán Stripe. Vui lòng thử lại.",
+      });
+    } finally {
+      setStripePayingBookingId(null);
+    }
+  };
 
   // Xử lý tạo thông tin chuyển khoản cho đơn PENDING_PAYMENT chưa có payment
   const handleCreatePayment = async (bookingId) => {
@@ -165,6 +354,38 @@ export default function TourMyBookings({ user, onNeedAuth }) {
             </button>
           )}
         </div>
+
+        {/* Banner thông báo Stripe Checkout */}
+        {checkoutNotice && (
+          <div
+            className={`tour-my-bookings__notice tour-my-bookings__notice--${checkoutNotice.type}`}
+            role="status"
+          >
+            <div className="tour-my-bookings__notice-content">
+              {checkoutNotice.type === "verifying" && (
+                <span className="tour-my-bookings__notice-spinner" />
+              )}
+              {checkoutNotice.type === "success" && (
+                <span className="material-symbols-outlined">check_circle</span>
+              )}
+              {(checkoutNotice.type === "cancelled" || checkoutNotice.type === "info") && (
+                <span className="material-symbols-outlined">info</span>
+              )}
+              {(checkoutNotice.type === "expired" || checkoutNotice.type === "error") && (
+                <span className="material-symbols-outlined">warning</span>
+              )}
+              <span className="tour-my-bookings__notice-text">{checkoutNotice.message}</span>
+            </div>
+            <button
+              type="button"
+              className="tour-my-bookings__notice-close"
+              onClick={() => setCheckoutNotice(null)}
+              aria-label="Đóng thông báo"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        )}
 
         {/* Chưa đăng nhập */}
         {!user ? (
@@ -418,6 +639,21 @@ export default function TourMyBookings({ user, onNeedAuth }) {
                             </div>
 
                             <div className="tour-booking-card__action-btns">
+                              {/* Nút thanh toán thẻ qua cổng Stripe */}
+                              <button
+                                type="button"
+                                className="tour-booking-card__btn-stripe"
+                                onClick={() => handleStripeCheckout(b.id)}
+                                disabled={stripePayingBookingId === b.id || payingBookingId === b.id}
+                              >
+                                {stripePayingBookingId === b.id ? (
+                                  <span className="tour-my-bookings__spin-inline" />
+                                ) : (
+                                  <span className="material-symbols-outlined">credit_card</span>
+                                )}
+                                <span>Thanh toán bằng thẻ</span>
+                              </button>
+
                               {b.payment_txn_ref ? (
                                 <button
                                   type="button"
@@ -432,7 +668,7 @@ export default function TourMyBookings({ user, onNeedAuth }) {
                                   type="button"
                                   className="tour-booking-card__btn-create-pay"
                                   onClick={() => handleCreatePayment(b.id)}
-                                  disabled={payingBookingId === b.id}
+                                  disabled={payingBookingId === b.id || stripePayingBookingId === b.id}
                                 >
                                   {payingBookingId === b.id ? (
                                     <span className="tour-my-bookings__spin-inline" />

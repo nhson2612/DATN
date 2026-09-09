@@ -19,8 +19,8 @@ export default function PlaceFinder({ onAddPlace }) {
       setLoading(true);
       setError("");
       try {
-        const res = await api.searchPlaces(query);
-        setResults(res.places || []);
+        const res = await api.searchPlaces({ q: query });
+        setResults(res.items || []);
       } catch (err) {
         setError(err.message || "Không thể tìm kiếm địa điểm.");
       } finally {
@@ -56,7 +56,9 @@ export default function PlaceFinder({ onAddPlace }) {
             >
               <div className="truncate">
                 <p className="font-bold text-slate-900 truncate">{p.name}</p>
-                <p className="text-[11px] text-slate-400 truncate">{p.address || p.category}</p>
+                <p className="text-[11px] text-slate-400 truncate">
+                  {p.dia_chi || p.address || p.category}
+                </p>
               </div>
               <button
                 onClick={() => onAddPlace(p)}

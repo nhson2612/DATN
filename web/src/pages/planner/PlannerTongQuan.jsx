@@ -1,139 +1,22 @@
 import { useState } from "react";
-import PlaceFinder from "../../components/finder/PlaceFinder";
 import { iconLoai, tenLoai } from "../../lib/loaiDiaDiem";
-import { ChonDiaDiem, dongPhu, nhanNgay } from "./PlannerHelpers";
+import PlannerGroup from "./PlannerGroup";
+import PlannerPlacePicker from "./PlannerPlacePicker";
+import { nhanNgay } from "./plannerUtils";
+import "./PlannerTongQuan.css";
 
 const MUC_MAC_DINH = "muon-di";
 
-function KhoiMuc({
-  muc,
-  ds,
-  diemDen,
-  coTheXoa,
-  onThem,
-  onXoa,
-  onBoNgay,
-  onXem,
-  onDoiTen,
-  onXoaMuc,
-}) {
-  const [doiTen, setDoiTen] = useState(false);
-  const [ten, setTen] = useState(muc.name);
-
-  return (
-    <section className="day">
-      <div className="day__header">
-        {doiTen ? (
-          <form
-            className="flex-1 flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              onDoiTen(ten);
-              setDoiTen(false);
-            }}
-          >
-            <input
-              autoFocus
-              value={ten}
-              onChange={(e) => setTen(e.target.value)}
-              className="ui-field flex-1 !py-1 text-[13px]"
-            />
-            <button type="submit" className="day__action">
-              Lưu
-            </button>
-          </form>
-        ) : (
-          <>
-            <h2 className="day__title">{muc.name}</h2>
-            <span className="day__count">{ds.length} điểm</span>
-            <div className="day__actions">
-              <button
-                onClick={() => {
-                  setTen(muc.name);
-                  setDoiTen(true);
-                }}
-                className="day__action"
-              >
-                Đổi tên
-              </button>
-              {coTheXoa && (
-                <button onClick={onXoaMuc} className="day__action day__action--nguy">
-                  Xoá mục
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-
-      {ds.length === 0 ? (
-        <p className="day__empty">Chưa có địa điểm nào trong mục này.</p>
-      ) : (
-        <ul className="day__list">
-          {ds.map((s) => (
-            <li
-              key={`${s.type}-${s.id}`}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData(
-                  "application/json",
-                  JSON.stringify({ type: s.type, id: s.id })
-                );
-                e.dataTransfer.effectAllowed = "move";
-              }}
-              className="stop group"
-            >
-              <span className="stop__index stop__index--plain">
-                <i className="fa-solid fa-location-dot text-[10px]" />
-              </span>
-              <button
-                onClick={() => onXem(s)}
-                className="stop__main"
-                title="Xem thông tin trên bản đồ"
-              >
-                <span className="stop__name">{s.name}</span>
-                {dongPhu(s) && <span className="stop__desc">{dongPhu(s)}</span>}
-              </button>
-              <div className="stop__tools">
-                {s.day ? (
-                  <button
-                    onClick={() => onBoNgay(s)}
-                    className="stop__badge"
-                    title="Bỏ khỏi ngày, vẫn giữ trong mục"
-                  >
-                    Ngày {s.day}
-                  </button>
-                ) : (
-                  <span className="stop__badge stop__badge--mo">Chưa xếp</span>
-                )}
-                <button
-                  onClick={() => onXoa(s)}
-                  aria-label={`Bỏ ${s.name}`}
-                  className="stop__remove"
-                >
-                  <i className="fa-solid fa-xmark" />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <ChonDiaDiem diemDen={diemDen} nhan="Thêm địa điểm vào mục này" onChon={onThem} />
-    </section>
-  );
-}
-
+/**
+ * Giao diện Tổng quan hành trình
+ */
 export default function PlannerTongQuan({
   trip,
   diemDen,
-  viTri,
   sections,
   theoMuc,
   goiY,
   sectionRefs,
-  onResults,
-  onPick,
   onThemVaoMuc,
   onXoa,
   onBoNgay,
@@ -151,55 +34,67 @@ export default function PlannerTongQuan({
     : null;
 
   return (
-    <>
-      <div className="hero">
-        <h2 className="hero__title">{trip.name}</h2>
-        <p className="hero__meta">
+    <div className="planner-overview">
+      {/* Khối Hero */}
+      <div className="planner-overview__hero">
+        <h2 className="planner-overview__hero-title">{trip.name}</h2>
+        <div className="planner-overview__hero-meta">
           {diemDen && (
-            <span className="hero__chip">
-              <i className="fa-solid fa-location-dot text-[10px]" />
-              {diemDen.replace(/^(Thành phố|Tỉnh)\s+/i, "")}
+            <span className="planner-overview__chip">
+              <i className="fa-solid fa-location-dot" />
+              <span>{diemDen.replace(/^(Thành phố|Tỉnh)\s+/i, "")}</span>
             </span>
           )}
           {trip.start_date && (
-            <span className="hero__chip">
-              <i className="fa-regular fa-calendar text-[10px]" />
-              {nhanNgay(trip.start_date, 1)}
-              {ketThuc ? ` tới ${ketThuc}` : ""}
+            <span className="planner-overview__chip">
+              <i className="fa-regular fa-calendar" />
+              <span>
+                {nhanNgay(trip.start_date, 1)}
+                {ketThuc ? ` tới ${ketThuc}` : ""}
+              </span>
             </span>
           )}
-        </p>
+          <span className="planner-overview__chip">
+            <i className="fa-solid fa-clock" />
+            <span>{trip.duration_days} ngày</span>
+          </span>
+        </div>
 
-        <div className="hero__finder">
-          <PlaceFinder
-            viTri={viTri}
-            onResults={onResults}
-            onPick={onPick}
-            hanhDong={(p) => onThemVaoMuc(p, mucDau)}
-            nhanHanhDong="Thêm vào chuyến"
+        <div className="planner-overview__hero-finder">
+          <PlannerPlacePicker
+            diemDen={diemDen}
+            nhan="Tìm địa điểm, quán ăn hoặc chỗ nghỉ"
+            moSan
+            onChon={(p) => onThemVaoMuc(p, mucDau)}
           />
         </div>
       </div>
 
-      {goiY.length > 0 && (
-        <section className="noibat">
-          <h3 className="noibat__title">
-            Gợi ý{diemDen ? ` ở ${diemDen.replace(/^(Thành phố|Tỉnh)\s+/i, "")}` : ""}
+      {/* Gợi ý nổi bật */}
+      {goiY && goiY.length > 0 && (
+        <section className="planner-overview__suggestions">
+          <h3 className="planner-overview__suggestions-title">
+            Gợi ý nổi bật{diemDen ? ` tại ${diemDen.replace(/^(Thành phố|Tỉnh)\s+/i, "")}` : ""}
           </h3>
-          <div className="noibat__row">
+          <div className="planner-overview__suggestions-row">
             {goiY.map((p) => (
-              <article key={`${p.type}-${p.id}`} className="noibat__card">
-                <div className="noibat__thumb">
-                  <i className={`fa-solid ${iconLoai(p.category)} noibat__icon`} />
+              <article key={`${p.type}-${p.id}`} className="planner-overview__sug-card">
+                <div className="planner-overview__sug-icon-box">
+                  <i className={`fa-solid ${iconLoai(p.category)}`} />
                 </div>
-                <p className="noibat__name">{p.name}</p>
-                <p className="noibat__cat">{tenLoai(p.category)}</p>
+                <p className="planner-overview__sug-name" title={p.name}>
+                  {p.name}
+                </p>
+                <p className="planner-overview__sug-cat">
+                  {tenLoai(p.category)}
+                </p>
                 <button
+                  type="button"
                   onClick={() => onThemVaoMuc(p, mucDau)}
-                  className="noibat__add"
-                  title="Thêm vào chuyến"
+                  className="planner-overview__sug-add-btn"
+                  title="Thêm vào danh sách muốn đi"
                 >
-                  <i className="fa-solid fa-plus text-[11px]" />
+                  <i className="fa-solid fa-plus" />
                 </button>
               </article>
             ))}
@@ -207,9 +102,10 @@ export default function PlannerTongQuan({
         </section>
       )}
 
+      {/* Danh sách các khối mục */}
       {sections.map((m) => (
         <div key={m.key} ref={(el) => (sectionRefs.current[m.key] = el)}>
-          <KhoiMuc
+          <PlannerGroup
             muc={m}
             ds={theoMuc[m.key] || []}
             diemDen={diemDen}
@@ -224,9 +120,10 @@ export default function PlannerTongQuan({
         </div>
       ))}
 
+      {/* Form hoặc nút thêm mục mới */}
       {dangThemMuc ? (
         <form
-          className="muc-moi"
+          className="planner-overview__add-group-form"
           onSubmit={(e) => {
             e.preventDefault();
             onThemMuc(tenMucMoi);
@@ -238,25 +135,30 @@ export default function PlannerTongQuan({
             autoFocus
             value={tenMucMoi}
             onChange={(e) => setTenMucMoi(e.target.value)}
-            placeholder="Tên mục, ví dụ: Nhà hàng, Quán cà phê, Chỗ ngủ"
-            className="ui-field flex-1"
+            placeholder="Tên mục mới, ví dụ: Nhà hàng, Quán ăn, Chỗ chụp ảnh..."
+            className="planner-overview__add-group-input"
           />
-          <button type="submit" className="btn-primary !py-2 !px-4 text-[13px]">
-            Thêm
+          <button type="submit" className="planner-overview__add-group-submit">
+            Thêm mục
           </button>
           <button
             type="button"
             onClick={() => setDangThemMuc(false)}
-            className="muc-moi__huy"
+            className="planner-overview__add-group-cancel"
           >
             Huỷ
           </button>
         </form>
       ) : (
-        <button onClick={() => setDangThemMuc(true)} className="itinerary__add-row">
-          <i className="fa-solid fa-plus text-[11px]" /> Thêm mục mới
+        <button
+          type="button"
+          onClick={() => setDangThemMuc(true)}
+          className="planner-overview__add-group-btn"
+        >
+          <i className="fa-solid fa-plus text-[11px]" />
+          <span>Thêm mục mới</span>
         </button>
       )}
-    </>
+    </div>
   );
 }

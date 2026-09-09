@@ -72,6 +72,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  checkoutTourBooking: (bookingId, redirectBase = "") =>
+    request(`/tours/bookings/${bookingId}/checkout`, {
+      method: "POST",
+      body: JSON.stringify({ redirect_base: redirectBase }),
+    }),
+  tourBookingStatus: (bookingId) =>
+    request(`/tours/bookings/${bookingId}/status`),
 
   // Yêu thích
   favorites: () => request("/favorites"),
@@ -97,7 +104,8 @@ export const api = {
 
   // Trợ lý
   chat: (body) => request("/chat", { method: "POST", body: JSON.stringify(body) }),
-  route: (body) => request("/route", { method: "POST", body: JSON.stringify(body) }),
+  route: (body, options = {}) =>
+    request("/route", { method: "POST", body: JSON.stringify(body), ...options }),
 
   // Quản trị
   adminStats: () => request("/admin/stats"),

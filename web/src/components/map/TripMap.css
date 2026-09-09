@@ -1,39 +1,301 @@
+/* ==========================================================================
+   BLOCK: .trip-map
+   Bản đồ tương tác MapLibre tích hợp bộ lọc ngày, điều khiển zoom và legend
+   theo thiết kế Interary.html
+   ========================================================================== */
+
 .trip-map {
-  @apply relative w-full h-full min-h-[400px] overflow-hidden rounded-3xl border border-slate-200/80 shadow-sm bg-slate-100;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  overflow: hidden;
+  border-radius: 1rem; /* rounded-2xl */
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  background-color: #f1f5f9;
 }
 
 .trip-map__canvas {
-  @apply w-full h-full;
+  width: 100%;
+  height: 100%;
 }
 
+/* 1. Thanh chip lọc ngày trên đỉnh bản đồ (Interactive Overlay Header) */
+.trip-map__filter-bar {
+  position: absolute;
+  top: 0.875rem;
+  left: 0.875rem;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 0.375rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: calc(100% - 1.75rem);
+  overflow-x: auto;
+}
+
+.trip-map__filter-bar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.trip-map__filter-chip {
+  padding: 0.3125rem 0.625rem;
+  border-radius: 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #475569;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease-in-out;
+}
+
+.trip-map__filter-chip:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.trip-map__filter-chip--active {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.trip-map__filter-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+/* 2. Cụm điều khiển zoom góc phải dưới */
+.trip-map__zoom-controls {
+  position: absolute;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 10;
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-map__zoom-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  background-color: #ffffff;
+  border: none;
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.trip-map__zoom-btn:first-child {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.trip-map__zoom-btn:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* 3. Legend và thông tin bản quyền góc trái dưới */
+.trip-map__legend {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  font-size: 0.625rem;
+  color: #64748b;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+/* 4. Thông báo trống khi chưa có điểm */
 .trip-map__empty-notice {
-  @apply absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200/80 shadow-md text-xs font-semibold text-slate-600 pointer-events-none;
+  position: absolute;
+  top: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  pointer-events: none;
 }
 
+/* 5. Popup Overlay khi click vào Marker */
 .trip-map__overlay {
-  @apply absolute bottom-4 left-4 z-20 w-80 bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-4 space-y-3 transition-all duration-200;
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 25;
+  width: 19rem;
+  max-width: calc(100% - 2rem);
+  background-color: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.15);
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  animation: trip-map-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes trip-map-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .trip-map__header {
-  @apply flex items-center justify-between gap-2 pb-2 border-b border-slate-100;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem;
 }
 
 .trip-map__add-btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-full text-[11px] font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm !py-1 !px-2.5;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background-color: #ea580c;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s;
+}
+
+.trip-map__add-btn:hover {
+  background-color: #c2410c;
 }
 
 .trip-map__close-btn {
-  @apply w-7 h-7 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.trip-map__close-btn:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.trip-map__main-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.trip-map__info {
+  flex: 1;
+  min-width: 0;
 }
 
 .trip-map__title {
-  @apply text-sm font-bold text-slate-900 line-clamp-1;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .trip-map__tags {
-  @apply flex flex-wrap gap-1.5 mt-1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
 }
 
 .trip-map__tag {
-  @apply text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.375rem;
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.trip-map__thumb {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: #f1f5f9;
+  flex-shrink: 0;
+}
+
+/* 6. Trạng thái tải tuyến đường bộ */
+.trip-map__route-loading {
+  position: absolute;
+  top: 0.875rem;
+  right: 0.875rem;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(6px);
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  pointer-events: none;
+  animation: trip-map-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }

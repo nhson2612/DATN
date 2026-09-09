@@ -47,6 +47,11 @@ export default function TourBookingWizard({
   const [bookingResult, setBookingResult] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
 
+  // State thanh toán Stripe / Thủ công (Phase 3)
+  const [checkoutError, setCheckoutError] = useState("");
+  const [isCreatingStripe, setIsCreatingStripe] = useState(false);
+  const [isCreatingManual, setIsCreatingManual] = useState(false);
+
   // Countdown giữ chỗ 30 phút ở Bước 4
   const [timeLeft, setTimeLeft] = useState(1800); // 30 phút = 1800s
   const [copiedField, setCopiedField] = useState("");
@@ -61,6 +66,9 @@ export default function TourBookingWizard({
     setPriceAlert(null);
     setBookingResult(null);
     setPaymentResult(null);
+    setCheckoutError("");
+    setIsCreatingStripe(false);
+    setIsCreatingManual(false);
     setPendingAuthAdvance(false);
 
     // Chọn departure phù hợp: ưu tiên initialDeparture nếu còn chỗ
@@ -249,20 +257,9 @@ export default function TourBookingWizard({
 
       const bookRes = await api.bookTour(bookData);
       setBookingResult(bookRes);
+      setPaymentResult(null);
 
-      // 3. Tự động gọi tạo thanh toán PENDING
-      try {
-        const payRes = await api.payTourBooking(bookRes.id, {
-          method: "CHUYEN_KHOAN",
-        });
-        setPaymentResult(payRes);
-      } catch (payErr) {
-        console.warn("Không thể tự tạo thanh toán ngay:", payErr);
-        // Vẫn lưu thông tin booking cơ bản để khách xem mã đơn
-        setPaymentResult(null);
-      }
-
-      // 4. Vào Bước 4
+      // 3. Vào Bước 4 chọn phương thức thanh toán
       setStep(4);
     } catch (err) {
       // Bắt lỗi 409 (E1: hết chỗ / tranh chấp chỗ cuối)
@@ -277,6 +274,44 @@ export default function TourBookingWizard({
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Xử lý thanh toán thẻ qua Stripe Checkout (Phase 3)
+  const handlePayByStripe = async () => {
+    if (!bookingResult?.id) return;
+    setCheckoutError("");
+    setIsCreatingStripe(true);
+    try {
+      const res = await api.checkoutTourBooking(bookingResult.id, window.location.origin);
+      if (res?.checkout_url) {
+        window.location.assign(res.checkout_url);
+      } else {
+        setCheckoutError("Không nhận được đường dẫn thanh toán từ Stripe.");
+      }
+    } catch (err) {
+      setCheckoutError(err.message || "Không thể kết nối cổng thanh toán Stripe. Vui lòng thử lại hoặc chọn chuyển khoản.");
+    } finally {
+      setIsCreatingStripe(false);
+    }
+  };
+
+  // Xử lý thanh toán chuyển khoản ngân hàng thủ công
+  const handlePayByBankTransfer = async () => {
+    if (!bookingResult?.id) return;
+    setIsCreatingManual(true);
+    setCheckoutError("");
+    try {
+      const payRes = await api.payTourBooking(bookingResult.id, {
+        method: "CHUYEN_KHOAN",
+      });
+      setPaymentResult(payRes);
+    } catch (payErr) {
+      console.warn("Không thể tự tạo thanh toán ngay:", payErr);
+      setPaymentResult(null);
+      setCheckoutError(payErr.message || "Không thể tạo thông tin chuyển khoản lúc này.");
+    } finally {
+      setIsCreatingManual(false);
     }
   };
 
@@ -784,139 +819,217 @@ export default function TourBookingWizard({
                 </p>
               </div>
 
-              {/* Chi tiết thanh toán an toàn (Tuân thủ HIỆU CHỈNH 1-3: KHÔNG fake bank, KHÔNG fake QR) */}
-              <div className="tour-booking-wizard__payment-box">
-                <h4 className="tour-booking-wizard__payment-heading">
-                  Thông tin chuyển khoản thanh toán
-                </h4>
+              {/* Chọn phương thức thanh toán khi chưa có paymentResult */}
+              {!paymentResult ? (
+                <div className="tour-booking-wizard__pay-methods">
+                  <h4 className="tour-booking-wizard__payment-heading">
+                    <span className="material-symbols-outlined">payments</span>
+                    <span>Chọn phương thức thanh toán</span>
+                  </h4>
+                  <p className="tour-booking-wizard__pay-methods-desc">
+                    Đơn hàng của quý khách đang chờ thanh toán. Vui lòng chọn phương thức phù hợp:
+                  </p>
 
-                <div className="tour-booking-wizard__payment-details">
-                  <div className="tour-booking-wizard__pay-row">
-                    <span className="tour-booking-wizard__pay-label">Mã đơn đặt tour:</span>
-                    <div className="tour-booking-wizard__pay-val-wrap">
-                      <b className="tour-booking-wizard__pay-code">
-                        {bookingResult?.code || `TX-#${bookingResult?.id}`}
-                      </b>
-                      <button
-                        type="button"
-                        className="tour-booking-wizard__copy-btn"
-                        onClick={() =>
-                          handleCopy(
-                            bookingResult?.code || `TX-#${bookingResult?.id}`,
-                            "code"
-                          )
-                        }
-                      >
-                        {copiedField === "code" ? "Đã chép" : "Sao chép"}
-                      </button>
-                    </div>
+                  <div className="tour-booking-wizard__pay-methods-actions">
+                    <button
+                      type="button"
+                      className="tour-booking-wizard__btn-stripe"
+                      onClick={handlePayByStripe}
+                      disabled={isCreatingStripe || isCreatingManual}
+                    >
+                      {isCreatingStripe ? (
+                        <>
+                          <span className="tour-booking-wizard__spinner" />
+                          <span>Đang chuyển hướng...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined">credit_card</span>
+                          <span>Thanh toán bằng thẻ qua Stripe</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="tour-booking-wizard__btn-manual"
+                      onClick={handlePayByBankTransfer}
+                      disabled={isCreatingStripe || isCreatingManual}
+                    >
+                      {isCreatingManual ? (
+                        <>
+                          <span className="tour-booking-wizard__spinner tour-booking-wizard__spinner--dark" />
+                          <span>Đang tạo thông tin...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined">account_balance</span>
+                          <span>Chuyển khoản thủ công</span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
-                  {paymentResult?.txn_ref && (
-                    <div className="tour-booking-wizard__pay-row tour-booking-wizard__pay-row--highlight">
-                      <span className="tour-booking-wizard__pay-label">Mã giao dịch:</span>
+                  {isCreatingStripe && (
+                    <div className="tour-booking-wizard__checkout-loading">
+                      <span className="tour-booking-wizard__spinner tour-booking-wizard__spinner--dark" />
+                      <span>Đang kết nối cổng thanh toán...</span>
+                    </div>
+                  )}
+
+                  {checkoutError && (
+                    <div className="tour-booking-wizard__checkout-error">
+                      <span className="material-symbols-outlined">error</span>
+                      <span>{checkoutError}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Chi tiết thanh toán an toàn (Tuân thủ HIỆU CHỈNH 1-3: KHÔNG fake bank, KHÔNG fake QR) */
+                <div className="tour-booking-wizard__payment-box">
+                  <div className="tour-booking-wizard__payment-box-header">
+                    <h4 className="tour-booking-wizard__payment-heading">
+                      Thông tin chuyển khoản thanh toán
+                    </h4>
+                    <button
+                      type="button"
+                      className="tour-booking-wizard__btn-change-method"
+                      onClick={() => setPaymentResult(null)}
+                      title="Chọn lại phương thức thanh toán"
+                    >
+                      <span className="material-symbols-outlined">swap_horiz</span>
+                      <span>Đổi phương thức</span>
+                    </button>
+                  </div>
+
+                  <div className="tour-booking-wizard__payment-details">
+                    <div className="tour-booking-wizard__pay-row">
+                      <span className="tour-booking-wizard__pay-label">Mã đơn đặt tour:</span>
                       <div className="tour-booking-wizard__pay-val-wrap">
-                        <b className="tour-booking-wizard__pay-code text-primary font-mono">
-                          {paymentResult.txn_ref}
+                        <b className="tour-booking-wizard__pay-code">
+                          {bookingResult?.code || `TX-#${bookingResult?.id}`}
                         </b>
                         <button
                           type="button"
                           className="tour-booking-wizard__copy-btn"
-                          onClick={() => handleCopy(paymentResult.txn_ref, "pm")}
+                          onClick={() =>
+                            handleCopy(
+                              bookingResult?.code || `TX-#${bookingResult?.id}`,
+                              "code"
+                            )
+                          }
                         >
-                          {copiedField === "pm" ? "Đã chép" : "Sao chép"}
+                          {copiedField === "code" ? "Đã chép" : "Sao chép"}
                         </button>
                       </div>
                     </div>
-                  )}
 
-                  <div className="tour-booking-wizard__pay-row">
-                    <span className="tour-booking-wizard__pay-label">Số tiền cần chuyển:</span>
-                    <div className="tour-booking-wizard__pay-val-wrap">
-                      <b className="tour-booking-wizard__pay-amount">
-                        {(paymentResult?.amount || bookingResult?.total_price || totalPrice).toLocaleString(
-                          "vi-VN"
-                        )}
-                        ₫
-                      </b>
-                      <button
-                        type="button"
-                        className="tour-booking-wizard__copy-btn"
-                        onClick={() =>
-                          handleCopy(
-                            String(paymentResult?.amount || bookingResult?.total_price || totalPrice),
-                            "amount"
-                          )
-                        }
-                      >
-                        {copiedField === "amount" ? "Đã chép" : "Sao chép"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Hiển thị thông tin ngân hàng thật nếu có cấu hình từ .env; nếu không thì hiển thị an toàn */}
-                  {BANK_NAME && BANK_ACCOUNT_NO ? (
-                    <>
-                      <div className="tour-booking-wizard__pay-row">
-                        <span className="tour-booking-wizard__pay-label">Ngân hàng:</span>
-                        <span className="tour-booking-wizard__pay-val">{BANK_NAME}</span>
-                      </div>
-                      <div className="tour-booking-wizard__pay-row">
-                        <span className="tour-booking-wizard__pay-label">Số tài khoản:</span>
+                    {paymentResult?.txn_ref && (
+                      <div className="tour-booking-wizard__pay-row tour-booking-wizard__pay-row--highlight">
+                        <span className="tour-booking-wizard__pay-label">Mã giao dịch:</span>
                         <div className="tour-booking-wizard__pay-val-wrap">
-                          <b className="tour-booking-wizard__pay-val font-mono">{BANK_ACCOUNT_NO}</b>
+                          <b className="tour-booking-wizard__pay-code text-primary font-mono">
+                            {paymentResult.txn_ref}
+                          </b>
                           <button
                             type="button"
                             className="tour-booking-wizard__copy-btn"
-                            onClick={() => handleCopy(BANK_ACCOUNT_NO, "acc")}
+                            onClick={() => handleCopy(paymentResult.txn_ref, "pm")}
                           >
-                            {copiedField === "acc" ? "Đã chép" : "Sao chép"}
+                            {copiedField === "pm" ? "Đã chép" : "Sao chép"}
                           </button>
                         </div>
                       </div>
-                      {BANK_ACCOUNT_NAME && (
-                        <div className="tour-booking-wizard__pay-row">
-                          <span className="tour-booking-wizard__pay-label">Chủ tài khoản:</span>
-                          <span className="tour-booking-wizard__pay-val uppercase font-semibold">
-                            {BANK_ACCOUNT_NAME}
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="tour-booking-wizard__safe-instruction">
-                      <p className="tour-booking-wizard__safe-text">
-                        Vui lòng chuyển khoản theo mã giao dịch{" "}
-                        <b>{paymentResult?.txn_ref || bookingResult?.code}</b> và chờ xác nhận.
-                      </p>
-                      <p className="tour-booking-wizard__safe-sub">
-                        Nhân viên phụ trách sẽ liên hệ hotline hoặc đối soát tự động ngay khi nhận được thanh toán.
-                      </p>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="tour-booking-wizard__pay-row tour-booking-wizard__pay-row--note">
-                    <span className="tour-booking-wizard__pay-label">Nội dung chuyển khoản:</span>
-                    <div className="tour-booking-wizard__pay-val-wrap">
-                      <code className="tour-booking-wizard__pay-content">
-                        {paymentResult?.txn_ref || bookingResult?.code}
-                      </code>
-                      <button
-                        type="button"
-                        className="tour-booking-wizard__copy-btn"
-                        onClick={() =>
-                          handleCopy(
-                            paymentResult?.txn_ref || bookingResult?.code,
-                            "content"
-                          )
-                        }
-                      >
-                        {copiedField === "content" ? "Đã chép" : "Sao chép"}
-                      </button>
+                    <div className="tour-booking-wizard__pay-row">
+                      <span className="tour-booking-wizard__pay-label">Số tiền cần chuyển:</span>
+                      <div className="tour-booking-wizard__pay-val-wrap">
+                        <b className="tour-booking-wizard__pay-amount">
+                          {(paymentResult?.amount || bookingResult?.total_price || totalPrice).toLocaleString(
+                            "vi-VN"
+                          )}
+                          ₫
+                        </b>
+                        <button
+                          type="button"
+                          className="tour-booking-wizard__copy-btn"
+                          onClick={() =>
+                            handleCopy(
+                              String(paymentResult?.amount || bookingResult?.total_price || totalPrice),
+                              "amount"
+                            )
+                          }
+                        >
+                          {copiedField === "amount" ? "Đã chép" : "Sao chép"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Hiển thị thông tin ngân hàng thật nếu có cấu hình từ .env; nếu không thì hiển thị an toàn */}
+                    {BANK_NAME && BANK_ACCOUNT_NO ? (
+                      <>
+                        <div className="tour-booking-wizard__pay-row">
+                          <span className="tour-booking-wizard__pay-label">Ngân hàng:</span>
+                          <span className="tour-booking-wizard__pay-val">{BANK_NAME}</span>
+                        </div>
+                        <div className="tour-booking-wizard__pay-row">
+                          <span className="tour-booking-wizard__pay-label">Số tài khoản:</span>
+                          <div className="tour-booking-wizard__pay-val-wrap">
+                            <b className="tour-booking-wizard__pay-val font-mono">{BANK_ACCOUNT_NO}</b>
+                            <button
+                              type="button"
+                              className="tour-booking-wizard__copy-btn"
+                              onClick={() => handleCopy(BANK_ACCOUNT_NO, "acc")}
+                            >
+                              {copiedField === "acc" ? "Đã chép" : "Sao chép"}
+                            </button>
+                          </div>
+                        </div>
+                        {BANK_ACCOUNT_NAME && (
+                          <div className="tour-booking-wizard__pay-row">
+                            <span className="tour-booking-wizard__pay-label">Chủ tài khoản:</span>
+                            <span className="tour-booking-wizard__pay-val uppercase font-semibold">
+                              {BANK_ACCOUNT_NAME}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="tour-booking-wizard__safe-instruction">
+                        <p className="tour-booking-wizard__safe-text">
+                          Vui lòng chuyển khoản theo mã giao dịch{" "}
+                          <b>{paymentResult?.txn_ref || bookingResult?.code}</b> và chờ xác nhận.
+                        </p>
+                        <p className="tour-booking-wizard__safe-sub">
+                          Nhân viên phụ trách sẽ liên hệ hotline hoặc đối soát tự động ngay khi nhận được thanh toán.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="tour-booking-wizard__pay-row tour-booking-wizard__pay-row--note">
+                      <span className="tour-booking-wizard__pay-label">Nội dung chuyển khoản:</span>
+                      <div className="tour-booking-wizard__pay-val-wrap">
+                        <code className="tour-booking-wizard__pay-content">
+                          {paymentResult?.txn_ref || bookingResult?.code}
+                        </code>
+                        <button
+                          type="button"
+                          className="tour-booking-wizard__copy-btn"
+                          onClick={() =>
+                            handleCopy(
+                              paymentResult?.txn_ref || bookingResult?.code,
+                              "content"
+                            )
+                          }
+                        >
+                          {copiedField === "content" ? "Đã chép" : "Sao chép"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>

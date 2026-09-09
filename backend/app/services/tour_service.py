@@ -15,6 +15,7 @@ from datetime import date, datetime, timedelta
 from typing import Optional
 from zoneinfo import ZoneInfo
 
+from app.core.config import settings
 from app.core.database import transaction
 from app.core.logging import get_logger
 from app.repositories import operator_repo, tour_repo
@@ -43,6 +44,10 @@ class PaymentNotFoundError(Exception):
 
 class PaymentInvalidError(Exception):
     """Dữ liệu hoặc trạng thái thanh toán không hợp lệ."""
+
+
+class PaymentGatewayUnavailableError(Exception):
+    """Cổng thanh toán không khả dụng hoặc chưa được cấu hình."""
 
 
 class TourNotFoundError(Exception):
@@ -651,6 +656,28 @@ def xu_ly_booking_het_han(thoi_diem: Optional[datetime] = None) -> dict:
             logger.error("Lỗi khi hủy đơn quá hạn khởi hành #%s: %s", bid, e)
             errors.append({"booking_id": bid, "action": "CANCELLED_BY_OPERATOR", "error": str(e)})
 
+    # c) Expire các Stripe Checkout Session còn mở của các đơn hết hạn
+    try:
+        import stripe
+        if getattr(settings, "stripe_secret_key", None):
+            stripe.api_key = settings.stripe_secret_key
+            st_sessions = tour_repo.list_stripe_sessions_can_expire(limit=50)
+            for p in st_sessions:
+                sid = p.get("stripe_session_id")
+                if not sid:
+                    continue
+                try:
+                    stripe.checkout.Session.expire(sid)
+                    tour_repo.update_payment_status(
+                        payment_id=p["id"],
+                        status="FAILED",
+                        note="Stripe Checkout Session đã được expire do đơn quá hạn giữ chỗ",
+                    )
+                except Exception as st_err:
+                    logger.warning("Không thể expire Stripe session %s: %s", sid, st_err)
+    except Exception as exp_err:
+        logger.warning("Lỗi khi dọn Stripe sessions hết hạn: %s", exp_err)
+
     logger.info(
         "Job dọn đơn hết hạn hoàn tất: %d đơn EXPIRED, %d đơn CANCELLED_BY_OPERATOR, %d lỗi",
         expired_count, cancelled_count, len(errors),
@@ -1039,6 +1066,518 @@ def xac_nhan_thanh_toan(
 
     with transaction() as new_tx:
         return _do_xac_nhan(new_tx)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Phase 3: Thanh toán trực tuyến Stripe Checkout (UC-P01, BR-P1..P5)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def tao_checkout_stripe(
+    booking_id: int,
+    actor_id: Optional[int] = None,
+    redirect_base: Optional[str] = None,
+) -> dict:
+    """Khởi tạo phiên thanh toán Stripe-hosted Checkout Session cho đơn đặt tour (Phase 3.2).
+
+    Quy trình:
+    1. Kiểm tra booking tồn tại trong transaction, khóa FOR UPDATE; không có -> BookingNotFoundError.
+    2. Booking phải ở trạng thái PENDING_PAYMENT và chưa quá hạn hold_expires_at; nếu không -> PaymentInvalidError.
+    3. Sinh mã giao dịch txn_ref bằng generate_payment_txn_ref; số tiền amount = booking total_price (VND).
+    4. Insert payment: method='STRIPE', status='PENDING', amount = total_price, txn_ref, note = "Tạo Checkout Session Stripe".
+    5. Sau khi commit DB, gọi Stripe lazy import `import stripe`, set stripe.api_key = settings.stripe_secret_key:
+       - Thiếu key -> cập nhật payment FAILED note "Chưa cấu hình STRIPE_SECRET_KEY", ném PaymentGatewayUnavailableError.
+       - stripe.checkout.Session.create(...) với line_items VND (zero-decimal, không nhân 100).
+       - Nếu Stripe ném lỗi -> cập nhật payment FAILED + note lỗi, ném PaymentGatewayUnavailableError.
+    6. Lưu stripe_session_id, gateway_payload bằng set_payment_stripe_refs. Nếu lỗi -> expire session best-effort rồi raise.
+    7. Trả dict chứa thông tin session và checkout_url.
+    """
+    with transaction() as tx:
+        booking = tour_repo.get_booking(booking_id, tx=tx, for_update=True)
+        if not booking:
+            raise BookingNotFoundError(f"Không tìm thấy đơn đặt tour #{booking_id}")
+
+        current_status = booking.get("status")
+        if current_status != "PENDING_PAYMENT":
+            raise PaymentInvalidError(
+                f"Đơn hàng #{booking_id} đang ở trạng thái '{current_status}', không thể tạo thanh toán."
+            )
+
+        now_vn = datetime.now(TZ_VN)
+        hold_at = booking.get("hold_expires_at")
+        if hold_at:
+            if isinstance(hold_at, str):
+                try:
+                    hold_at = datetime.fromisoformat(hold_at)
+                except Exception:
+                    hold_at = None
+            if hold_at:
+                if hold_at.tzinfo is None:
+                    hold_at = hold_at.replace(tzinfo=TZ_VN)
+                if now_vn > hold_at:
+                    raise PaymentInvalidError(
+                        f"Đơn #{booking_id} đã hết hạn giữ chỗ ({hold_at.strftime('%Y-%m-%d %H:%M:%S')}), "
+                        f"không thể thanh toán (E3: không tự khôi phục chỗ)."
+                    )
+
+        total_price = booking.get("total_price") or 0
+        if total_price <= 0:
+            raise PaymentInvalidError("Tổng tiền đơn hàng không hợp lệ để thanh toán.")
+
+        txn_ref = tour_repo.generate_payment_txn_ref(tx=tx)
+        payment_data = {
+            "booking_id": booking_id,
+            "method": "STRIPE",
+            "amount": total_price,
+            "status": "PENDING",
+            "txn_ref": txn_ref,
+            "note": "Tạo Checkout Session Stripe",
+            "confirmed_by": None,
+            "confirmed_at": None,
+        }
+        payment_id = tour_repo.create_payment(payment_data, tx=tx)
+        booking_code = booking.get("code") or f"TX-{booking_id}"
+
+    # Bước 5: Ra ngoài transaction DB, gọi Stripe API
+    try:
+        import stripe
+    except ImportError:
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="FAILED",
+            note="Thư viện stripe chưa được cài đặt trong môi trường",
+        )
+        raise PaymentGatewayUnavailableError("Thư viện stripe chưa được cài đặt trên hệ thống.")
+
+    secret_key = settings.stripe_secret_key
+    if not secret_key:
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="FAILED",
+            note="Chưa cấu hình STRIPE_SECRET_KEY",
+        )
+        raise PaymentGatewayUnavailableError("Chưa cấu hình STRIPE_SECRET_KEY")
+
+    stripe.api_key = secret_key
+
+    base = (redirect_base or settings.web_base_url).rstrip("/")
+    success_url = (
+        f"{base}/tour/don-cua-toi?checkout=success&booking_id={booking_id}"
+        f"&session_id={{CHECKOUT_SESSION_ID}}"
+    )
+    cancel_url = f"{base}/tour/don-cua-toi?checkout=cancelled&booking_id={booking_id}"
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            currency="vnd",
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "vnd",
+                        "unit_amount": int(total_price),
+                        "product_data": {
+                            "name": f"Đặt tour #{booking_code}",
+                        },
+                    },
+                    "quantity": 1,
+                }
+            ],
+            client_reference_id=str(booking_id),
+            metadata={
+                "booking_id": str(booking_id),
+                "txn_ref": txn_ref,
+                "payment_id": str(payment_id),
+            },
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+    except Exception as e:
+        logger.error("Lỗi khi gọi stripe.checkout.Session.create cho đơn #%s: %s", booking_id, e)
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="FAILED",
+            note=f"Lỗi Stripe Checkout Session: {e}",
+        )
+        raise PaymentGatewayUnavailableError(f"Không thể khởi tạo phiên thanh toán Stripe: {e}")
+
+    session_id = getattr(session, "id", None) or (session.get("id") if isinstance(session, dict) else str(session))
+    checkout_url = getattr(session, "url", None) or (session.get("url") if isinstance(session, dict) else "")
+
+    if hasattr(session, "to_dict_recursive"):
+        session_payload = session.to_dict_recursive()
+    elif hasattr(session, "to_dict"):
+        session_payload = session.to_dict()
+    elif isinstance(session, dict):
+        session_payload = session
+    else:
+        session_payload = {"id": session_id, "url": checkout_url}
+
+    # Bước 6: Lưu stripe_session_id và gateway_payload
+    try:
+        tour_repo.set_payment_stripe_refs(
+            payment_id=payment_id,
+            stripe_session_id=session_id,
+            gateway_payload=session_payload,
+        )
+    except Exception as save_err:
+        logger.error("Lỗi lưu stripe_session_id cho payment #%s: %s", payment_id, save_err)
+        try:
+            stripe.checkout.Session.expire(session_id)
+        except Exception as exp_err:
+            logger.warning("Không thể expire Stripe session %s sau khi lỗi lưu DB: %s", session_id, exp_err)
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="FAILED",
+            note=f"Lỗi lưu refs Stripe: {save_err}",
+        )
+        raise
+
+    logger.info(
+        "Tạo Stripe Checkout Session thành công cho đơn #%s: payment=#%s, session_id=%s",
+        booking_id, payment_id, session_id,
+    )
+
+    return {
+        "success": True,
+        "payment_id": payment_id,
+        "txn_ref": txn_ref,
+        "amount": total_price,
+        "stripe_session_id": session_id,
+        "checkout_url": checkout_url,
+        "message": "Đang chuyển sang cổng thanh toán Stripe...",
+    }
+
+
+def lay_trang_thai_thanh_toan(booking_id: int) -> dict:
+    """Lấy trạng thái thanh toán và thông tin giữ chỗ an toàn của đơn đặt tour (không lộ secret)."""
+    booking = tour_repo.get_booking(booking_id)
+    if not booking:
+        raise BookingNotFoundError(f"Không tìm thấy đơn đặt tour #{booking_id}")
+
+    payments = tour_repo.get_booking_payments(booking_id)
+    latest_payment = payments[0] if payments else None
+    payment_status = latest_payment.get("status") if latest_payment else None
+    payment_method = latest_payment.get("method") if latest_payment else None
+
+    # Tính toán tình trạng hết hạn giữ chỗ
+    status = booking.get("status")
+    hold_at = booking.get("hold_expires_at")
+    is_hold_expired = False
+    if status == "PENDING_PAYMENT" and hold_at:
+        hold_dt = None
+        if isinstance(hold_at, datetime):
+            hold_dt = hold_at
+        elif isinstance(hold_at, str):
+            try:
+                hold_dt = datetime.fromisoformat(hold_at)
+            except Exception:
+                hold_dt = None
+        if hold_dt:
+            if hold_dt.tzinfo is None:
+                hold_dt = hold_dt.replace(tzinfo=TZ_VN)
+            now_vn = datetime.now(TZ_VN)
+            if now_vn > hold_dt:
+                is_hold_expired = True
+
+    # Thông điệp trạng thái thân thiện tiếng Việt
+    if status == "PAID":
+        message = "Đơn hàng đã được thanh toán thành công."
+    elif status == "CONFIRMED":
+        message = "Đơn hàng đã được xác nhận và thanh toán."
+    elif status == "EXPIRED":
+        message = "Đơn hàng đã hết hạn giữ chỗ."
+    elif is_hold_expired:
+        message = "Đơn hàng đã hết hạn thanh toán (đang chờ hệ thống dọn chỗ)."
+    elif payment_status == "SUCCESS":
+        message = "Thanh toán thành công."
+    elif payment_status == "PENDING":
+        message = "Đang chờ thanh toán qua cổng hoặc xác nhận."
+    elif payment_status == "FAILED":
+        message = "Giao dịch thanh toán gần nhất không thành công. Quý khách có thể thử lại."
+    elif payment_status == "MISMATCH":
+        message = "Số tiền thanh toán không khớp với đơn hàng. Vui lòng liên hệ quản trị viên."
+    else:
+        message = "Đơn hàng đang chờ thanh toán."
+
+    hold_str = None
+    if hold_at:
+        hold_str = hold_at.isoformat() if isinstance(hold_at, datetime) else str(hold_at)
+
+    return {
+        "booking_id": booking["id"],
+        "code": booking.get("code"),
+        "status": status,
+        "hold_expires_at": hold_str,
+        "total_price": booking.get("total_price"),
+        "payment_status": payment_status,
+        "payment_method": payment_method,
+        "is_hold_expired": is_hold_expired,
+        "message": message,
+    }
+
+
+def xu_ly_stripe_webhook(payload: bytes, sig_header: str) -> dict:
+    """Xử lý webhook sự kiện từ Stripe Checkout (Phase 3.3).
+
+    Quy trình:
+    1. Lazy import stripe; nếu thiếu stripe_webhook_secret -> ném PaymentGatewayUnavailableError.
+    2. Xác thực chữ ký webhook; lỗi verify -> ném PaymentInvalidError.
+    3. Chỉ xử lý event['type'] == 'checkout.session.completed'; event khác trả handled=False.
+    4. Lấy session_id, tìm payment qua get_payment_by_stripe_session.
+       Nếu không thấy -> ghi log warning, trả handled=False, reason='khong_tim_thay_payment'.
+    5. Trong một transaction:
+       - Nếu payment đã SUCCESS -> idempotent, trả nguyên trạng.
+       - Lấy booking với khóa FOR UPDATE.
+       - Nếu booking không còn PENDING_PAYMENT hoặc quá hạn hold_expires_at:
+         * Nếu vẫn PENDING_PAYMENT nhưng quá hạn -> chuyển EXPIRED (nhả chỗ đúng 1 lần).
+         * Cập nhật payment: status='SUCCESS', needs_refund=True, note ghi rõ A6/E3 cần admin hoàn tiền.
+         * KHÔNG tự chuyển booking sang PAID, KHÔNG tự khôi phục chỗ.
+         * Trả outcome='needs_refund'.
+       - Đối chiếu tiền: session.amount_total == payment.amount == booking.total_price.
+         Nếu sai -> payment MISMATCH, booking giữ nguyên, trả outcome='mismatch'.
+       - Kiểm tra count_successful_payments == 0 (BR-P1); nếu > 0 -> PaymentInvalidError.
+       - Hợp lệ: cập nhật payment SUCCESS (confirmed_at, intent_id, payload);
+         gọi chuyen_trang_thai(PENDING_PAYMENT -> PAID) trong cùng transaction.
+       - Trả handled=True, booking_status='PAID'.
+    """
+    try:
+        import stripe
+    except ImportError:
+        raise PaymentGatewayUnavailableError("Thư viện stripe chưa được cài đặt trên hệ thống.")
+
+    webhook_secret = settings.stripe_webhook_secret
+    if not webhook_secret:
+        raise PaymentGatewayUnavailableError("Chưa cấu hình STRIPE_WEBHOOK_SECRET")
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+    except Exception as e:
+        logger.warning("Xác thực chữ ký webhook Stripe thất bại: %s", e)
+        raise PaymentInvalidError(f"Chữ ký webhook Stripe không hợp lệ: {e}")
+
+    event_type = event.get("type") if isinstance(event, dict) else getattr(event, "type", None)
+    if event_type != "checkout.session.completed":
+        logger.info("Bỏ qua sự kiện Stripe webhook không cần xử lý: %s", event_type)
+        return {"received": True, "handled": False, "event_type": event_type}
+
+    event_data = event.get("data", {}) if isinstance(event, dict) else getattr(event, "data", {})
+    session = event_data.get("object", {}) if isinstance(event_data, dict) else getattr(event_data, "object", {})
+
+    session_id = session.get("id") if isinstance(session, dict) else getattr(session, "id", None)
+    client_ref = session.get("client_reference_id") if isinstance(session, dict) else getattr(session, "client_reference_id", None)
+    metadata = (session.get("metadata") or {}) if isinstance(session, dict) else (getattr(session, "metadata", {}) or {})
+    raw_bid = client_ref or metadata.get("booking_id")
+    booking_id = int(raw_bid) if raw_bid else None
+
+    payment = tour_repo.get_payment_by_stripe_session(session_id)
+    if not payment:
+        logger.warning("Không tìm thấy payment tương ứng với Stripe session_id: %s (booking_id=%s)", session_id, booking_id)
+        return {
+            "received": True,
+            "handled": False,
+            "reason": "khong_tim_thay_payment",
+            "stripe_session_id": session_id,
+        }
+
+    if hasattr(session, "to_dict_recursive"):
+        session_payload = session.to_dict_recursive()
+    elif hasattr(session, "to_dict"):
+        session_payload = session.to_dict()
+    elif isinstance(session, dict):
+        session_payload = session
+    else:
+        session_payload = {"id": session_id}
+
+    payment_intent_id = session.get("payment_intent") if isinstance(session, dict) else getattr(session, "payment_intent", None)
+    payment_id = payment["id"]
+    now_vn = datetime.now(TZ_VN)
+
+    with transaction() as tx:
+        # Khóa lại bản ghi payment trong transaction để chống race khi Stripe
+        # gửi trùng webhook (đồng thời hai luồng cho cùng một session).
+        payment = tour_repo.get_payment_by_stripe_session(
+            session_id, tx=tx, for_update=True
+        )
+        if payment is None:
+            logger.warning(
+                "Không tìm thấy payment tương ứng với Stripe session_id khi xử lý webhook (trong tx): %s",
+                session_id,
+            )
+            return {
+                "received": True,
+                "handled": False,
+                "reason": "khong_tim_thay_payment",
+                "stripe_session_id": session_id,
+            }
+
+        # Idempotent: payment đã SUCCESS trước đó
+        if payment.get("status") == "SUCCESS":
+            logger.info("Payment #%s (session %s) đã ở trạng thái SUCCESS (idempotent webhook).", payment_id, session_id)
+            return {
+                "received": True,
+                "handled": True,
+                "outcome": "already_success",
+                "booking_id": payment.get("booking_id"),
+                "booking_status": payment.get("booking_status") or "PAID",
+            }
+
+        booking = tour_repo.get_booking(payment["booking_id"], tx=tx, for_update=True)
+        if not booking:
+            logger.warning("Không tìm thấy booking #%s từ payment #%s", payment["booking_id"], payment_id)
+            return {
+                "received": True,
+                "handled": False,
+                "reason": "khong_tim_thay_booking",
+            }
+
+        target_bid = booking["id"]
+        current_booking_status = booking.get("status")
+
+        # Kiểm tra quá hạn hold_expires_at
+        is_overdue = False
+        hold_at = booking.get("hold_expires_at")
+        if hold_at:
+            if isinstance(hold_at, str):
+                try:
+                    hold_at = datetime.fromisoformat(hold_at)
+                except Exception:
+                    hold_at = None
+            if hold_at:
+                if hold_at.tzinfo is None:
+                    hold_at = hold_at.replace(tzinfo=TZ_VN)
+                if now_vn > hold_at:
+                    is_overdue = True
+
+        # Đếm SUCCESS hiện có trước khi định đánh dấu thêm một payment SUCCESS.
+        # BR-P1: mỗi booking chỉ 1 SUCCESS; nếu đã có SUCCESS khác (khách trả
+        # 2 session) thì ghi FAILED + needs_refund để admin đối soát/hoàn tiền,
+        # không tự PAID thêm lần nào và không để DB unique index ném 500.
+        succ_cnt = tour_repo.count_successful_payments(target_bid, tx=tx)
+        if succ_cnt > 0:
+            tour_repo.update_payment_status(
+                payment_id=payment_id,
+                status="FAILED",
+                confirmed_at=now_vn,
+                note=(
+                    f"Đã có payment SUCCESS khác cho đơn #{target_bid} (BR-P1); "
+                    f"tiền của session {session_id} đã thu nhưng cần admin đối soát/hoàn tiền."
+                ),
+                needs_refund=True,
+                stripe_payment_intent_id=payment_intent_id,
+                gateway_payload=session_payload,
+                tx=tx,
+            )
+            logger.warning(
+                "Webhook Stripe #%s bị FAILED + needs_refund vì đơn #%s đã có SUCCESS khác",
+                payment_id, target_bid,
+            )
+            return {
+                "received": True,
+                "handled": True,
+                "outcome": "duplicate_paid",
+                "booking_id": target_bid,
+            }
+
+        # Nếu booking không còn PENDING_PAYMENT hoặc quá hạn hold_expires_at
+        if current_booking_status != "PENDING_PAYMENT" or is_overdue:
+            if current_booking_status == "PENDING_PAYMENT" and is_overdue:
+                chuyen_trang_thai(
+                    booking_id=target_bid,
+                    tu="PENDING_PAYMENT",
+                    sang="EXPIRED",
+                    ly_do="Đơn quá hạn giữ chỗ khi nhận webhook Stripe thanh toán thành công",
+                    actor_id=None,
+                    tx=tx,
+                )
+
+            tour_repo.update_payment_status(
+                payment_id=payment_id,
+                status="SUCCESS",
+                confirmed_at=now_vn,
+                note=(
+                    f"A6/E3: thanh toán về sau khi đơn hết hạn — cần admin hoàn tiền; "
+                    f"session={session_id}; intent={payment_intent_id}"
+                ),
+                needs_refund=True,
+                stripe_payment_intent_id=payment_intent_id,
+                gateway_payload=session_payload,
+                tx=tx,
+            )
+            logger.warning(
+                "Payment #%s chuyển SUCCESS nhưng needs_refund=True vì booking #%s ở trạng thái %s (overdue=%s)",
+                payment_id, target_bid, current_booking_status, is_overdue,
+            )
+            return {
+                "received": True,
+                "handled": True,
+                "outcome": "needs_refund",
+                "booking_id": target_bid,
+            }
+
+        # Đối chiếu số tiền: session.amount_total == payment.amount == booking.total_price
+        session_amount = session.get("amount_total") if isinstance(session, dict) else getattr(session, "amount_total", None)
+        payment_amount = payment.get("amount")
+        booking_total = booking.get("total_price")
+
+        if (
+            session_amount is None
+            or int(session_amount) != int(payment_amount or 0)
+            or int(payment_amount or 0) != int(booking_total or 0)
+        ):
+            mismatch_note = (
+                f"Sai lệch số tiền: Stripe amount_total={session_amount}, "
+                f"payment amount={payment_amount}, booking total_price={booking_total}"
+            )
+            tour_repo.update_payment_status(
+                payment_id=payment_id,
+                status="MISMATCH",
+                confirmed_at=now_vn,
+                note=mismatch_note,
+                stripe_payment_intent_id=payment_intent_id,
+                gateway_payload=session_payload,
+                tx=tx,
+            )
+            logger.warning("Webhook Stripe MISMATCH cho payment #%s: %s", payment_id, mismatch_note)
+            return {
+                "received": True,
+                "handled": True,
+                "outcome": "mismatch",
+                "booking_id": target_bid,
+            }
+
+        # Hợp lệ: cập nhật payment SUCCESS và booking PAID trong cùng transaction
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="SUCCESS",
+            confirmed_at=now_vn,
+            note=f"Thanh toán Stripe thành công; session={session_id}; intent={payment_intent_id}",
+            stripe_payment_intent_id=payment_intent_id,
+            gateway_payload=session_payload,
+            needs_refund=False,
+            expected_status=payment.get("status"),
+            tx=tx,
+        )
+
+        chuyen_trang_thai(
+            booking_id=target_bid,
+            tu="PENDING_PAYMENT",
+            sang="PAID",
+            ly_do=f"Thanh toán thành công qua Stripe Checkout session {session_id}",
+            actor_id=None,
+            tx=tx,
+        )
+
+        logger.info(
+            "Webhook Stripe hoàn tất cho đơn #%s: payment=#%s -> SUCCESS, booking -> PAID",
+            target_bid, payment_id,
+        )
+
+        return {
+            "received": True,
+            "handled": True,
+            "booking_id": target_bid,
+            "booking_status": "PAID",
+        }
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -2115,5 +2654,3 @@ def lay_danh_sach_khach_departure(departure_id: int, current_user: dict) -> list
     raw_bookings = tour_repo.list_departure_guests_bookings(departure_id)
     payments_map = _lay_payments_map_cho_bookings(raw_bookings)
     return [_lam_sach_booking_operator(b, payments_map) for b in raw_bookings]
-
-

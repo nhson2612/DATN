@@ -71,6 +71,12 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
 
+    # ---- Stripe (Thanh toán trực tuyến Phase 3) ----
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_publishable_key: str | None = None
+    web_base_url: str = "http://localhost:5173"
+
     # ---- Định tuyến ----
     max_snap_distance_meters: int = 1500
     min_component_size: int = Field(

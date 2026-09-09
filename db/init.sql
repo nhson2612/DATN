@@ -298,6 +298,10 @@ CREATE TABLE IF NOT EXISTS payments (
     confirmed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     confirmed_at TIMESTAMPTZ,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    stripe_session_id VARCHAR(255),
+    stripe_payment_intent_id VARCHAR(255),
+    gateway_payload JSONB,
+    needs_refund BOOLEAN NOT NULL DEFAULT FALSE,
     CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED', 'MISMATCH')),
     CHECK (amount >= 0)
 );
@@ -306,6 +310,10 @@ CREATE INDEX IF NOT EXISTS payments_status_idx     ON payments(status);
 CREATE UNIQUE INDEX IF NOT EXISTS payments_booking_success_unique_idx
     ON payments(booking_id)
     WHERE status = 'SUCCESS';
+CREATE UNIQUE INDEX IF NOT EXISTS payments_stripe_session_unique_idx
+    ON payments(stripe_session_id) WHERE stripe_session_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS payments_stripe_intent_idx
+    ON payments(stripe_payment_intent_id) WHERE stripe_payment_intent_id IS NOT NULL;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════

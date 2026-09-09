@@ -841,3 +841,150 @@
     grid-column: span 1;
   }
 }
+
+/* ════════════════════ STRIPE CHECKOUT & PAYMENT SELECTION (PHASE 3) ════════════════════ */
+.tour-booking-wizard__pay-methods {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.tour-booking-wizard__pay-methods-desc {
+  font-size: 0.85rem;
+  color: #475569;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tour-booking-wizard__pay-methods-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.tour-booking-wizard__btn-stripe,
+.tour-booking-wizard__pay-method-btn--stripe {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  transition: all 0.18s ease;
+  width: 100%;
+}
+
+.tour-booking-wizard__btn-stripe:hover:not(:disabled),
+.tour-booking-wizard__pay-method-btn--stripe:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+  transform: translateY(-1px);
+}
+
+.tour-booking-wizard__btn-stripe:disabled,
+.tour-booking-wizard__pay-method-btn--stripe:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tour-booking-wizard__btn-manual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #f8fafc;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  width: 100%;
+}
+
+.tour-booking-wizard__btn-manual:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.tour-booking-wizard__btn-manual:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tour-booking-wizard__checkout-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4f46e5;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 0.65rem;
+  padding: 0.65rem 1rem;
+  animation: tour-wizard-fade-in 0.2s ease-out;
+}
+
+.tour-booking-wizard__checkout-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.tour-booking-wizard__payment-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.tour-booking-wizard__btn-change-method {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tour-booking-wizard__btn-change-method:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.tour-booking-wizard__spinner--dark {
+  border: 2px solid rgba(79, 70, 229, 0.2);
+  border-top-color: #4f46e5;
+}

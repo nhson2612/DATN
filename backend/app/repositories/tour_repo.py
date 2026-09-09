@@ -1358,26 +1358,45 @@ def create_payment(data: dict, tx=None) -> Optional[int]:
     if not _has_table("payments"):
         return None
 
-    rows = _exec(
-        """
-        INSERT INTO payments (
-            booking_id, method, amount, status, txn_ref, note, confirmed_by, confirmed_at
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    cols = ["booking_id", "method", "amount", "status", "txn_ref", "note", "confirmed_by", "confirmed_at"]
+    vals = [
+        data["booking_id"],
+        data.get("method", "CHUYEN_KHOAN"),
+        data["amount"],
+        data.get("status", "PENDING"),
+        data["txn_ref"],
+        data.get("note"),
+        data.get("confirmed_by"),
+        data.get("confirmed_at"),
+    ]
+
+    if "stripe_session_id" in data and _has_col("payments", "stripe_session_id"):
+        cols.append("stripe_session_id")
+        vals.append(data.get("stripe_session_id"))
+
+    if "stripe_payment_intent_id" in data and _has_col("payments", "stripe_payment_intent_id"):
+        cols.append("stripe_payment_intent_id")
+        vals.append(data.get("stripe_payment_intent_id"))
+
+    if "gateway_payload" in data and _has_col("payments", "gateway_payload"):
+        cols.append("gateway_payload")
+        raw_payload = data.get("gateway_payload")
+        if isinstance(raw_payload, (dict, list)):
+            vals.append(json.dumps(raw_payload))
+        else:
+            vals.append(raw_payload)
+
+    if "needs_refund" in data and _has_col("payments", "needs_refund"):
+        cols.append("needs_refund")
+        vals.append(bool(data.get("needs_refund", False)))
+
+    placeholders = ", ".join(["%s"] * len(cols))
+    sql = f"""
+        INSERT INTO payments ({", ".join(cols)})
+        VALUES ({placeholders})
         RETURNING id
-        """,
-        (
-            data["booking_id"],
-            data.get("method", "CHUYEN_KHOAN"),
-            data["amount"],
-            data.get("status", "PENDING"),
-            data["txn_ref"],
-            data.get("note"),
-            data.get("confirmed_by"),
-            data.get("confirmed_at"),
-        ),
-        tx=tx,
-    )
+    """
+    rows = _exec(sql, tuple(vals), tx=tx)
     return rows[0]["id"] if rows else None
 
 
@@ -1443,6 +1462,9 @@ def update_payment_status(
     confirmed_at: Optional[object] = None,
     note: Optional[str] = None,
     expected_status: Optional[str] = None,
+    needs_refund: Optional[bool] = None,
+    stripe_payment_intent_id: Optional[str] = None,
+    gateway_payload: Optional[object] = None,
     tx=None,
 ) -> bool:
     """Cập nhật trạng thái và thông tin xác nhận thanh toán nguyên tử."""
@@ -1461,6 +1483,18 @@ def update_payment_status(
     if note is not None:
         clauses.append("note = %s")
         params.append(note)
+    if needs_refund is not None and _has_col("payments", "needs_refund"):
+        clauses.append("needs_refund = %s")
+        params.append(needs_refund)
+    if stripe_payment_intent_id is not None and _has_col("payments", "stripe_payment_intent_id"):
+        clauses.append("stripe_payment_intent_id = %s")
+        params.append(stripe_payment_intent_id)
+    if gateway_payload is not None and _has_col("payments", "gateway_payload"):
+        clauses.append("gateway_payload = %s")
+        if isinstance(gateway_payload, (dict, list)):
+            params.append(json.dumps(gateway_payload))
+        else:
+            params.append(gateway_payload)
 
     where_clauses = ["id = %s"]
     params.append(payment_id)
@@ -1563,6 +1597,117 @@ def count_successful_payments(booking_id: int, tx=None) -> int:
         tx=tx,
     )
     return rows[0]["cnt"] if rows else 0
+
+
+def get_payment_by_stripe_session(stripe_session_id: str, tx=None, for_update: bool = False) -> Optional[dict]:
+    """Lấy chi tiết giao dịch thanh toán kèm booking và tour theo Stripe Checkout Session ID."""
+    if not _has_table("payments") or not _has_col("payments", "stripe_session_id"):
+        return None
+
+    lock_clause = "FOR UPDATE OF p" if for_update and tx is not None else ""
+    rows = _exec(
+        f"""
+        SELECT p.*,
+               b.code AS booking_code,
+               b.total_price AS booking_total_price,
+               b.status AS booking_status,
+               b.hold_expires_at,
+               b.seats_released,
+               b.tour_id,
+               t.name AS tour_name,
+               u.full_name AS confirmed_by_name,
+               u.email AS confirmed_by_email
+        FROM payments p
+        JOIN tour_bookings b ON b.id = p.booking_id
+        JOIN tours t ON t.id = b.tour_id
+        LEFT JOIN users u ON u.id = p.confirmed_by
+        WHERE p.stripe_session_id = %s
+        {lock_clause}
+        """,
+        (stripe_session_id,),
+        tx=tx,
+    )
+    return rows[0] if rows else None
+
+
+def set_payment_stripe_refs(
+    payment_id: int,
+    stripe_session_id: Optional[str] = None,
+    stripe_payment_intent_id: Optional[str] = None,
+    gateway_payload: Optional[object] = None,
+    tx=None,
+) -> bool:
+    """Cập nhật các trường tham chiếu Stripe theo payment_id mà không làm thay đổi trạng thái status."""
+    if not _has_table("payments"):
+        return False
+
+    clauses = []
+    params = []
+
+    if stripe_session_id is not None and _has_col("payments", "stripe_session_id"):
+        clauses.append("stripe_session_id = %s")
+        params.append(stripe_session_id)
+    if stripe_payment_intent_id is not None and _has_col("payments", "stripe_payment_intent_id"):
+        clauses.append("stripe_payment_intent_id = %s")
+        params.append(stripe_payment_intent_id)
+    if gateway_payload is not None and _has_col("payments", "gateway_payload"):
+        clauses.append("gateway_payload = %s")
+        if isinstance(gateway_payload, (dict, list)):
+            params.append(json.dumps(gateway_payload))
+        else:
+            params.append(gateway_payload)
+
+    if not clauses:
+        return True
+
+    params.append(payment_id)
+    sql = f"""
+        UPDATE payments
+        SET {", ".join(clauses)}
+        WHERE id = %s
+        RETURNING id
+    """
+    rows = _exec(sql, tuple(params), tx=tx)
+    return bool(rows)
+
+
+def list_stripe_sessions_can_expire(limit: int = 50, tx=None) -> list[dict]:
+    """Lấy danh sách payment Stripe PENDING còn session mở cần expire.
+
+    Bao gồm đơn còn PENDING_PAYMENT nhưng quá hạn giữ chỗ, và đơn đã bị dọn sang
+    EXPIRED / CANCELLED_* (job chạy sau khi chuyển trạng thái nên phải quét cả
+    trạng thái terminal, nếu chỉ quét PENDING_PAYMENT sẽ không tìm thấy dòng nào).
+    """
+    if not _has_table("payments") or not _has_col("payments", "stripe_session_id"):
+        return []
+
+    has_hold = _has_col("tour_bookings", "hold_expires_at")
+    if has_hold:
+        expire_cond = (
+            "b.hold_expires_at < CURRENT_TIMESTAMP "
+            "OR b.status IN ('EXPIRED', 'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_OPERATOR')"
+        )
+    else:
+        expire_cond = (
+            "b.created_at + INTERVAL '30 minutes' < CURRENT_TIMESTAMP "
+            "OR b.status IN ('EXPIRED', 'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_OPERATOR')"
+        )
+
+    return _exec(
+        f"""
+        SELECT p.id, p.stripe_session_id, p.booking_id, p.created_at
+        FROM payments p
+        JOIN tour_bookings b ON b.id = p.booking_id
+        WHERE p.method = 'STRIPE'
+          AND p.status = 'PENDING'
+          AND p.stripe_session_id IS NOT NULL
+          AND {expire_cond}
+        ORDER BY p.created_at ASC
+        LIMIT %s
+        """,
+        (limit,),
+        tx=tx,
+    ) or []
 
 
 # ═══════════════════════════════════════════════════════════════════════════
