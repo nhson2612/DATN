@@ -1,21 +1,18 @@
-import { tenLoai } from "../../lib/loaiDiaDiem";
-
 /**
- * Bảng màu nhận diện cho từng ngày trong hành trình (lấy theo thiết kế Interary.html)
+ * Accent đỏ dùng chung cho MỌI ngày trong hành trình.
+ *
+ * Trước đây chỗ này là một "bảng màu theo ngày" gồm 7 phần tử giống hệt nhau,
+ * còn TripMap giữ thêm một bản sao của cùng mảng đó — hai nguồn sự thật cho một
+ * màu duy nhất. Nay chỉ còn hằng số này, mọi nơi import từ đây.
  */
-export const MAU_NGAY_PALETTE = Array(7).fill("#f15b4a");
-
-export function mauTheoNgay(day) {
-  const idx = Math.max(0, (Number(day) || 1) - 1);
-  return MAU_NGAY_PALETTE[idx % MAU_NGAY_PALETTE.length];
-}
+export const MAU_NGAY = "#f15b4a";
 
 /**
  * Ghép chuỗi thông tin phụ của địa điểm (loại hình, địa chỉ, mô tả tóm tắt)
  */
 export function dongPhu(s) {
   if (!s) return "";
-  return [tenLoai(s.category || s.amenity || s.tourism), s.dia_chi || s.mo_ta]
+  return [s.dia_chi || s.mo_ta]
     .filter(Boolean)
     .join(" · ");
 }

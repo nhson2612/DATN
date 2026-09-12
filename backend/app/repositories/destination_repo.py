@@ -69,42 +69,8 @@ def find_province(slug_hoac_ten: str):
 
 
 def places_by_group(province_id: int, roots: list, limit: int = 12):
-    """Địa điểm nổi bật của một nhóm trong tỉnh.
-
-    Không sắp theo rating vì cột đó toàn giá trị mặc định 4.0 (xem README §4).
-    Ưu tiên nơi có ảnh, rồi tới nơi có thông tin liên hệ — đó là tín hiệu thật
-    duy nhất cho biết địa điểm đáng hiển thị.
-    """
-    return execute_query(
-        """
-        SELECT t.id, t.name, t.amenity AS category, 'poi' AS type,
-               ST_X(t.geom) AS lon, ST_Y(t.geom) AS lat,
-               t.tags->>'addr:street' AS dia_chi,
-               t.tags->>'phone'       AS dien_thoai,
-               t.tags->>'website'     AS website,
-               ph.url                 AS anh,
-               ph.details             AS cached_details
-        FROM poi t
-        LEFT JOIN place_photos ph ON ph.place_type = 'poi' AND ph.place_id = t.id
-        WHERE t.province_id = %s
-          AND t.tags->>'category_root' = ANY(%s)
-          AND t.name !~ '^(POI|Accommodation|Road) [0-9]+$'
-        -- Đẩy `landmark_and_historical_building` xuống cuối: đó là thùng chứa
-        -- của Overture, gộp cả căn hộ cho thuê lẫn di tích thật, nên nó lấn át
-        -- các loại cụ thể như museum / buddhist_temple / beach.
-        ORDER BY (t.amenity = 'landmark_and_historical_building'),
-                 (ph.url IS NULL),
-                 (t.tags->>'website' IS NULL),
-                 (t.tags->>'phone' IS NULL),
-                 -- Tên ngoài bảng chữ Latin/Việt (Hàn, Nhật, Trung) xuống cuối:
-                 -- sắp theo alphabet thì chúng luôn đứng đầu, mà khách Việt đọc
-                 -- không ra.
-                 (t.name !~ '^[A-Za-zÀ-ỹ0-9]'),
-                 t.name
-        LIMIT %s
-        """,
-        (province_id, roots, limit),
-    ) or []
+    """Đã chuyển POI sang TrackAsia; giữ hàm để code cũ không vỡ import."""
+    return []
 
 
 def accommodations(province_id: int, limit: int = 12):
@@ -140,9 +106,10 @@ def search_places(province_id=None, roots=None, category=None, q=None,
     Baymard: 40% trang du lịch thiếu bộ lọc chuyên ngành và đó là lý do hàng đầu
     khiến người dùng bỏ đi giữa chừng.
     """
-    if bang not in ("poi", "accommodation"):
+    if bang != "accommodation":
         raise ValueError(f"Bảng không hợp lệ: {bang!r}")
-    cot_loai = "amenity" if bang == "poi" else "tourism"
+    cot_loai = "tourism"
+    source_table = "accommodation"
 
     dieu_kien = ["t.name !~ '^(POI|Accommodation|Road) [0-9]+$'"]
     params = []
@@ -218,7 +185,7 @@ def search_places(province_id=None, roots=None, category=None, q=None,
                ph.details             AS cached_details,
                count(*) OVER ()       AS tong
                {select_sim}
-        FROM {bang} t
+        FROM {source_table} t
         LEFT JOIN place_photos ph ON ph.place_type = '{bang}' AND ph.place_id = t.id
         WHERE {where}
         ORDER BY {order_sim}
@@ -240,30 +207,11 @@ def search_places(province_id=None, roots=None, category=None, q=None,
 
 def get_place_detail(place_type: str, place_id: int):
     """Chi tiết một địa điểm cho trang detail."""
-    if place_type == "poi":
-        sql = """
-            SELECT t.id, t.name, t.amenity AS category, 'poi' AS type,
-                   t.description, t.province_id,
-                   ST_X(t.geom) AS lon, ST_Y(t.geom) AS lat,
-                   t.tags->>'addr:street'    AS dia_chi,
-                   t.tags->>'addr:city'      AS thanh_pho,
-                   t.tags->>'phone'          AS dien_thoai,
-                   t.tags->>'website'        AS website,
-                   t.tags->>'social'         AS social,
-                   t.tags->>'brand'          AS thuong_hieu,
-                   t.tags->>'category_root'  AS nhom,
-                   t.tags                    AS tags,
-                   ph.url AS anh, ph.attribution AS anh_nguon,
-                   ph.details AS cached_details
-            FROM poi t
-            LEFT JOIN place_photos ph
-                   ON ph.place_type = 'poi' AND ph.place_id = t.id
-            WHERE t.id = %s
-        """
-    elif place_type == "accommodation":
+    if place_type == "accommodation":
         sql = """
             SELECT a.id, a.name, a.tourism AS category, 'accommodation' AS type,
                    NULL AS description, a.province_id,
+                   pc.name AS tinh_thanh,
                    ST_X(a.geom) AS lon, ST_Y(a.geom) AS lat,
                    a.address AS dia_chi, a.stars, a.price_range,
                    a.tags->>'addr:city' AS thanh_pho,
@@ -273,6 +221,7 @@ def get_place_detail(place_type: str, place_id: int):
                    ph.url AS anh, ph.attribution AS anh_nguon,
                    ph.details AS cached_details
             FROM accommodation a
+            LEFT JOIN provinces_clean pc ON pc.id = a.province_id
             LEFT JOIN place_photos ph
                    ON ph.place_type = 'accommodation' AND ph.place_id = a.id
             WHERE a.id = %s
@@ -291,9 +240,10 @@ def nearby_of_type(bang: str, lon: float, lat: float,
     các điểm đã xếp trong ngày — bảng accommodation không có cột amenity dùng
     làm category nên phải tách câu.
     """
-    if bang not in ("poi", "accommodation"):
-        raise ValueError("bang phải là poi hoặc accommodation")
-    cot_loai = "COALESCE(t.amenity, t.tourism)" if bang == "poi" else "COALESCE(t.tourism, t.amenity)"
+    if bang != "accommodation":
+        raise ValueError("bang phải là accommodation")
+    cot_loai = "COALESCE(t.tourism, t.amenity)"
+    source_table = "accommodation"
     return execute_query(
         f"""
         SELECT t.id, t.name, {cot_loai} AS category, '{bang}' AS type,
@@ -302,7 +252,7 @@ def nearby_of_type(bang: str, lon: float, lat: float,
                NULLIF(t.tags->>'addr:city', '')   AS thanh_pho,
                round(ST_Distance(t.geom::geography,
                      ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)) AS met
-        FROM {bang} t
+        FROM {source_table} t
         WHERE ST_DWithin(t.geom::geography,
                          ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography, %s)
           AND t.name !~ '^(POI|Accommodation|Road) [0-9]+$'
@@ -314,27 +264,8 @@ def nearby_of_type(bang: str, lon: float, lat: float,
 
 
 def nearby(lon: float, lat: float, exclude_id: int, meters: int = 2000, limit: int = 6):
-    """Địa điểm gần đó."""
-    return execute_query(
-        """
-        SELECT t.id, t.name, t.amenity AS category, 'poi' AS type,
-               ST_X(t.geom) AS lon, ST_Y(t.geom) AS lat,
-               round(ST_Distance(t.geom::geography,
-                     ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)) AS met,
-               ph.url AS anh,
-               ph.details AS cached_details
-        FROM poi t
-        LEFT JOIN place_photos ph ON ph.place_type = 'poi' AND ph.place_id = t.id
-        WHERE t.id <> %s
-          AND ST_DWithin(t.geom::geography,
-                         ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography, %s)
-          AND t.name !~ '^(POI|Accommodation|Road) [0-9]+$'
-        ORDER BY ST_Distance(t.geom::geography,
-                             ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)
-        LIMIT %s
-        """,
-        (lon, lat, exclude_id, lon, lat, meters, lon, lat, limit),
-    ) or []
+    """Lân cận POI do TrackAsia trả về; repository chỉ còn chỗ lưu trú."""
+    return []
 
 
 def get_cached_details(place_type: str, place_id: int) -> dict | None:
@@ -365,4 +296,3 @@ def save_place_photo_details(place_type: str, place_id: int, url: str = None, at
         """,
         (place_type, place_id, url_val, attribution, details_json),
     )
-

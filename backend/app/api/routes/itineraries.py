@@ -2,10 +2,13 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.core.logging import get_logger
 from app.core.security import get_current_user
 from app.repositories import itinerary_repo
 from app.schemas.requests import ItineraryCreateUpdate, RecommendRequest
 from app.services import itinerary_service, route_optimizer
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/itineraries", tags=["itineraries"])
 
@@ -71,8 +74,27 @@ def optimize(id: int, day: int = Query(None, ge=1, description="Bỏ trống = t
         raise HTTPException(status_code=404, detail="Không tìm thấy lịch trình.")
 
     # Tối ưu trên bản ĐÃ TRA toạ độ, rồi lưu lại dạng tham chiếu {day,type,id}.
-    chi_tiet = itinerary_service.hydrate_stops(lt.get("stops") or [])
+    stops_da_luu = lt.get("stops") or []
+    chi_tiet = itinerary_service.hydrate_stops(stops_da_luu)
     moi, thong_ke = route_optimizer.toi_uu_lich_trinh(chi_tiet, day)
+
+    # Chốt an toàn: câu dưới ghi đè `stops` bằng chính danh sách này, nên trả về
+    # ít stop hơn số đã lưu nghĩa là xoá vĩnh viễn địa điểm của người dùng.
+    # hydrate_stops bảo đảm giữ đủ số stop; lệch nghĩa là bất biến đó đã vỡ, và
+    # khi đó phải TỪ CHỐI ghi chứ không ghi thiếu.
+    if len(moi) != len(stops_da_luu):
+        logger.error(
+            "Từ chối tối ưu lịch trình #%s: %d stop vào, %d stop ra — ghi lại sẽ mất địa điểm",
+            id, len(stops_da_luu), len(moi),
+        )
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Không tối ưu được vì thao tác này sẽ làm mất một số địa điểm trong chuyến. "
+                "Hãy tải lại trang rồi thử lại; nếu vẫn lỗi, báo cho quản trị viên."
+            ),
+        )
+
     # Ghi lại phải giữ nguyên section và role: chỉ lưu {day,type,id} như trước
     # là xoá sạch việc địa điểm thuộc mục nào và đâu là chỗ ngủ.
     itinerary_repo.update(

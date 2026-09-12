@@ -13,7 +13,7 @@ const TABS = [
 const TRANG_THAI = { moi: "Mới", da_lien_he: "Đã liên hệ", huy: "Huỷ" };
 
 const FORM_RONG = {
-  place_type: "poi", name: "", amenity: "", tourism: "",
+  place_type: "accommodation", name: "", amenity: "", tourism: "",
   description: "", price_range: "", stars: 0, address: "", lon: "", lat: "",
 };
 
@@ -114,7 +114,7 @@ function TongQuan() {
 
 function DiaDiem() {
   const [q, setQ] = useState("");
-  const [bang, setBang] = useState("poi");
+  const [bang, setBang] = useState("trackasia");
   const [ds, setDs] = useState([]);
   const [tong, setTong] = useState(0);
   const [trang, setTrang] = useState(1);
@@ -150,15 +150,16 @@ function DiaDiem() {
       <div className="admin-page__filter-bar">
         <select value={bang} onChange={(e) => { setBang(e.target.value); setTrang(1); }}
                 className="ui-field">
-          <option value="poi">Địa điểm du lịch</option>
+          <option value="trackasia">Địa điểm du lịch (TrackAsia)</option>
           <option value="accommodation">Cơ sở lưu trú</option>
         </select>
         <input value={q} onChange={(e) => { setQ(e.target.value); setTrang(1); }}
                placeholder="Tìm theo tên"
                className="ui-field flex-1 min-w-[200px]" />
         <button onClick={() => setForm({ ...FORM_RONG, place_type: bang })}
+                disabled={bang === "trackasia"}
                 className="btn-primary">
-          Thêm địa điểm
+          {bang === "trackasia" ? "POI từ TrackAsia" : "Thêm địa điểm"}
         </button>
       </div>
 
@@ -202,15 +203,16 @@ function DiaDiem() {
                   {it.lon?.toFixed(4)}, {it.lat?.toFixed(4)}
                 </td>
                 <td className="px-4 py-3 text-right whitespace-nowrap">
-                  <button onClick={() => setForm({
+                  {it.type === "accommodation" && <button onClick={() => setForm({
                             ...FORM_RONG, id: it.id, place_type: it.type,
                             name: it.name, lon: it.lon, lat: it.lat,
                             ...(it.type === "poi" ? { amenity: it.category || "" }
                                                   : { tourism: it.category || "" }),
                           })}
-                          className="text-zinc-500 hover:text-accent-700 px-2">Sửa</button>
-                  <button onClick={() => xoa(it)}
+                          className="text-zinc-500 hover:text-accent-700 px-2">Sửa</button>}
+                  {it.type === "accommodation" && <button onClick={() => xoa(it)}
                           className="text-zinc-500 hover:text-red-600 px-2">Xoá</button>
+                  }
                 </td>
               </tr>
             ))}
@@ -279,7 +281,6 @@ function FormDiaDiem({ form, setForm, onXong }) {
           <select value={form.place_type} disabled={!!form.id}
                   onChange={(e) => dat("place_type", e.target.value)}
                   className="ui-field w-full mt-1 disabled:opacity-60">
-            <option value="poi">Địa điểm du lịch</option>
             <option value="accommodation">Cơ sở lưu trú</option>
           </select>
         </label>

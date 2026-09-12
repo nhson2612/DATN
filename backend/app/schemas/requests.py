@@ -78,8 +78,8 @@ class RecommendRequest(BaseModel):
 
 
 class FavoriteRequest(BaseModel):
-    place_type: str            # 'poi' | 'accommodation'
-    place_id: int
+    place_type: str            # 'serper' | 'trackasia' | 'accommodation'
+    place_id: str
 
 
 class BookingRequest(BaseModel):
@@ -198,5 +198,3 @@ class SaleDepartureRequest(BaseModel):
 class CreateStripeCheckoutRequest(BaseModel):
     """Yêu cầu khởi tạo Stripe-hosted Checkout Session (Phase 3)."""
     redirect_base: Optional[str] = None
-
-

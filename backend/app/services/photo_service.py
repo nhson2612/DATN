@@ -10,18 +10,6 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-CATEGORY_FALLBACK_IMAGES = {
-    "beach": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
-    "hotel": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
-    "resort": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80",
-    "restaurant": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
-    "seafood restaurant": "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=600&q=80",
-    "coffee shop": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80",
-    "tours": "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80",
-    "default": "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80",
-}
-
-
 def _norm(t: str) -> str:
     t = str(t or "").lower().replace("đ", "d")
     t = unicodedata.normalize("NFD", t)
@@ -29,13 +17,12 @@ def _norm(t: str) -> str:
 
 
 def _is_matching_title(place_name: str, wiki_title: str) -> bool:
-    """Kiểm tra tiêu đề Wikipedia có khớp ít nhất 50% từ trong tên địa điểm hay không."""
+    """Chỉ nhận tiêu đề Wikipedia chứa đủ toàn bộ từ của tên địa điểm."""
     p_words = [w for w in _norm(place_name).split() if len(w) >= 2]
     if len(p_words) < 2:
         return False
     t_words = set(_norm(wiki_title).split())
-    matches = [w for w in p_words if w in t_words]
-    return len(matches) * 2 >= len(p_words)
+    return all(word in t_words for word in p_words)
 
 
 def fetch_wikipedia_photo_server(place_name: str):
@@ -61,8 +48,7 @@ def fetch_wikipedia_photo_server(place_name: str):
 
 
 def get_fallback_image(category: str) -> str:
-    cat = (category or "").lower()
-    return CATEGORY_FALLBACK_IMAGES.get(cat, CATEGORY_FALLBACK_IMAGES["default"])
+    return None
 
 
 def ensure_place_photo(place: dict):

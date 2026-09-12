@@ -56,10 +56,13 @@ def _lang_gieng_gan_nhat(diem, bat_dau=0):
     return thu_tu
 
 
-def _hai_opt(thu_tu, diem, is_closed=False):
+def _hai_opt(thu_tu, diem, is_closed=False, diem_xuat_phat=None):
     """Đảo ngược từng đoạn con cho tới khi không rút ngắn được nữa."""
     def dai(tt):
-        return tong_quang_duong([diem[idx] for idx in tt], is_closed=is_closed)
+        tuyen = [diem[idx] for idx in tt]
+        if diem_xuat_phat is not None:
+            tuyen = [diem_xuat_phat] + tuyen
+        return tong_quang_duong(tuyen, is_closed=is_closed)
 
     tot = dai(thu_tu)
     for _ in range(MAX_2OPT_VONG):
@@ -75,12 +78,12 @@ def _hai_opt(thu_tu, diem, is_closed=False):
     return thu_tu, tot
 
 
-def toi_uu_mot_ngay(stops):
+def toi_uu_mot_ngay(stops, diem_xuat_phat=None, khep_kin=False):
     """stops: [{lon, lat, ...}] của MỘT ngày -> (danh sách đã sắp, trước_m, sau_m).
 
-    Giữ nguyên điểm đầu: đó thường là chỗ ở hoặc điểm người dùng cố ý xuất phát.
-    Nếu điểm đầu tiên có type='accommodation', ta sẽ chạy tối ưu vòng khép kín (closed-loop TSP),
-    nghĩa là chặng cuối cùng sẽ từ điểm cuối quay về điểm đầu tiên (khách sạn).
+    Không có chỗ nghỉ thì giữ nguyên điểm đầu vì đó thường là nơi người dùng cố ý
+    xuất phát. Có `diem_xuat_phat` thì chọn điểm đầu theo khoảng cách từ mốc đó;
+    `khep_kin=True` dùng cho ngày có chỗ nghỉ (nghỉ -> các điểm -> nghỉ).
     Bỏ qua nếu dưới 3 điểm — 2 điểm thì đảo thứ tự không đổi quãng đường.
     """
     hop_le = [s for s in stops if s.get("lon") is not None and s.get("lat") is not None]
@@ -88,20 +91,33 @@ def toi_uu_mot_ngay(stops):
         return stops, 0.0, 0.0
 
     diem = [(float(s["lon"]), float(s["lat"])) for s in hop_le]
-    
-    # Kiểm tra xem điểm xuất phát đầu tiên có phải là khách sạn không
-    is_closed = hop_le[0].get("type") == "accommodation"
-    
-    truoc = tong_quang_duong(diem, is_closed=is_closed)
+    moc = None
+    if diem_xuat_phat and diem_xuat_phat.get("lon") is not None and diem_xuat_phat.get("lat") is not None:
+        moc = (float(diem_xuat_phat["lon"]), float(diem_xuat_phat["lat"]))
 
-    thu_tu = _lang_gieng_gan_nhat(diem, bat_dau=0)
-    thu_tu, sau = _hai_opt(thu_tu, diem, is_closed=is_closed)
+    tuyen_ban_dau = ([moc] if moc else []) + diem
+    truoc = tong_quang_duong(tuyen_ban_dau, is_closed=bool(moc and khep_kin))
+
+    if moc:
+        con_lai = set(range(len(diem)))
+        thu_tu = []
+        hien_tai = moc
+        while con_lai:
+            ke = min(con_lai, key=lambda j: khoang_cach_m(hien_tai, diem[j]))
+            thu_tu.append(ke)
+            hien_tai = diem[ke]
+            con_lai.discard(ke)
+    else:
+        thu_tu = _lang_gieng_gan_nhat(diem, bat_dau=0)
+    thu_tu, sau = _hai_opt(
+        thu_tu, diem, is_closed=bool(moc and khep_kin), diem_xuat_phat=moc
+    )
 
     da_sap = [hop_le[i] for i in thu_tu]
     # Điểm thiếu toạ độ không xếp được thì để cuối, không được làm mất chúng.
     thieu = [s for s in stops if s.get("lon") is None or s.get("lat") is None]
     logger.info("Tối ưu %d điểm (closed=%s): %.0fm -> %.0fm (giảm %.0f%%)",
-                len(diem), is_closed, truoc, sau,
+                len(diem), bool(moc and khep_kin), truoc, sau,
                 (truoc - sau) / truoc * 100 if truoc else 0)
     return da_sap + thieu, truoc, sau
 
@@ -120,7 +136,14 @@ def toi_uu_lich_trinh(stops, day=None):
         ds = theo_ngay[ngay]
         # Ngày 0 là kho "chưa xếp ngày" — không có thứ tự đi nên không tối ưu.
         if (day is None and ngay) or (day is not None and ngay == day):
-            ds, truoc, sau = toi_uu_mot_ngay(ds)
+            # Chỗ nghỉ là mốc của tuyến, không phải một điểm tham quan để lẫn
+            # vào timeline. Nếu có, tối ưu một vòng: nghỉ -> các điểm -> nghỉ.
+            cho_ngu = next((s for s in ds if s.get("role") == "lodging"), None)
+            diem_di = [s for s in ds if s.get("role") != "lodging"]
+            diem_di, truoc, sau = toi_uu_mot_ngay(
+                diem_di, diem_xuat_phat=cho_ngu, khep_kin=bool(cho_ngu)
+            )
+            ds = diem_di + ([cho_ngu] if cho_ngu else [])
             if truoc:
                 thong_ke.append({"day": ngay, "truoc_m": round(truoc),
                                  "sau_m": round(sau)})

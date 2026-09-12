@@ -1,7 +1,7 @@
-/* Gallery bất đối xứng: ảnh chính Wikimedia (baseImage) + ảnh web (Tavily).
+/* Gallery bất đối xứng: ảnh chính Wikimedia (baseImage) + ảnh web (Serper).
 
 Quy tắc:
-- Dedupe theo URL — ảnh Tavily trùng ảnh chính không hiện hai lần.
+- Dedupe theo URL — ảnh Serper trùng ảnh chính không hiện hai lần.
 - Ảnh tải lỗi bị loại khỏi danh sách cục bộ; hỏng hết thì về fallback thể loại.
 - Desktop: 1 ảnh chính + tối đa 2 ảnh phụ (CSS ẩn rail). Mobile: rail ngang
   scroll-snap hiện tất cả ảnh (CSS ẩn ảnh phụ).

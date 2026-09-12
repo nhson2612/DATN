@@ -57,7 +57,7 @@ export default function MapOverlayImage({ place, onDetails }) {
               setImgUrl(src);
               if (place?.id) {
                 api.cachePlaceDetails({
-                  place_type: place.type || "poi",
+                  place_type: place.type || "trackasia",
                   place_id: place.id,
                   url: src,
                   attribution: "Wikipedia",
@@ -110,7 +110,7 @@ export default function MapOverlayImage({ place, onDetails }) {
 
             if (place?.id) {
               api.cachePlaceDetails({
-                place_type: place.type || "poi",
+                place_type: place.type || "trackasia",
                 place_id: place.id,
                 url: photoUrl || srcImg || "",
                 attribution: "Google Maps",

@@ -1,4 +1,4 @@
-/* Trình bày dữ liệu web (Tavily) đã qua chuẩn hoá có bằng chứng.
+/* Trình bày dữ liệu web (Serper) đã qua chuẩn hoá có bằng chứng.
 
 Hai chế độ dùng chung MỘT nguồn trạng thái:
 - mode="facts":  dải rating · số đánh giá · giờ mở cửa (hoặc skeleton).

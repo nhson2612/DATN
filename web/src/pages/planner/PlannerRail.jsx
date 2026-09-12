@@ -1,5 +1,8 @@
-import { mauTheoNgay, nhanNgay } from "./plannerUtils";
+import { MAU_NGAY, nhanNgay } from "./plannerUtils";
 import "./PlannerRail.css";
+
+// Mục không phải mục đầu: xám để không tranh chấp với accent chính.
+const MAU_MUC_KHAC = "#c5c8c5";
 
 /**
  * Thanh rail điều hướng danh mục & các ngày của chuyến đi
@@ -34,7 +37,7 @@ export default function PlannerRail({
         <span className="planner-rail__item-text">
           <span
             className="planner-rail__dot"
-            style={{ backgroundColor: "#f15b4a" }}
+            style={{ backgroundColor: MAU_NGAY }}
           />
           <span className="planner-rail__item-title">Tổng quan chuyến đi</span>
         </span>
@@ -54,7 +57,7 @@ export default function PlannerRail({
           <span className="planner-rail__item-text">
             <span
               className="planner-rail__dot"
-              style={{ backgroundColor: idx === 0 ? "#f15b4a" : "#c5c8c5" }}
+              style={{ backgroundColor: idx === 0 ? MAU_NGAY : MAU_MUC_KHAC }}
             />
             <span className="planner-rail__item-title">{m.name}</span>
           </span>
@@ -73,7 +76,7 @@ export default function PlannerRail({
 
       {cacNgay.map((ngay) => {
         const isActive = muc === "lich-trinh" && ngayChon === ngay;
-        const color = mauTheoNgay(ngay);
+        const color = MAU_NGAY;
         const count = (theoNgay[ngay] || []).length;
 
         return (

@@ -134,7 +134,7 @@ CREATE INDEX IF NOT EXISTS itineraries_user_idx ON itineraries(user_id);
 CREATE TABLE IF NOT EXISTS place_photos (
     id          SERIAL PRIMARY KEY,
     place_type  VARCHAR(20) NOT NULL,      -- 'poi' | 'accommodation'
-    place_id    INTEGER NOT NULL,
+    place_id    VARCHAR(512) NOT NULL,
     url         TEXT NOT NULL,
     attribution TEXT,
     details     JSONB,                     -- Cached metadata (rating, review count, open status, address)
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS favorites (
     id         SERIAL PRIMARY KEY,
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     place_type VARCHAR(20) NOT NULL,
-    place_id   INTEGER NOT NULL,
+    place_id   VARCHAR(512) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, place_type, place_id)
 );
@@ -317,7 +317,7 @@ CREATE INDEX IF NOT EXISTS payments_stripe_intent_idx
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- Làm giàu địa điểm (Tavily)
+-- Làm giàu địa điểm (Serper)
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Một dòng cho mỗi (place_type, place_id). `fetching` là job đang chạy (cũ quá
 -- 90 giây thì request khác được chiếm lại); `success`/`not_found` là kết quả
@@ -325,8 +325,8 @@ CREATE INDEX IF NOT EXISTS payments_stripe_intent_idx
 CREATE TABLE IF NOT EXISTS place_enrichments (
     id           BIGSERIAL PRIMARY KEY,
     place_type   VARCHAR(20) NOT NULL,
-    place_id     INTEGER NOT NULL,
-    provider     VARCHAR(30) NOT NULL DEFAULT 'tavily',
+    place_id     VARCHAR(512) NOT NULL,
+    provider     VARCHAR(30) NOT NULL DEFAULT 'trackasia+serper_v1',
     status       VARCHAR(20) NOT NULL,
     summary      TEXT,
     opening_hours JSONB,
@@ -338,6 +338,6 @@ CREATE TABLE IF NOT EXISTS place_enrichments (
     fetched_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     started_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (place_type, place_id),
-    CHECK (place_type IN ('poi', 'accommodation')),
+    CHECK (place_type IN ('poi', 'trackasia', 'serper', 'accommodation')),
     CHECK (status IN ('fetching', 'success', 'not_found'))
 );

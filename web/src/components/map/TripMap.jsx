@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../api/client";
-import { tenLoai } from "../../lib/loaiDiaDiem";
+import { MAU_NGAY } from "../../pages/planner/plannerUtils";
 import MapOverlayImage from "./MapOverlayImage";
 import "./TripMap.css";
 
-const MAU_NGAY = Array(7).fill("#f15b4a");
 const laToaDo = (s) => Number.isFinite(+s?.lon) && Number.isFinite(+s?.lat);
 
 function veVungNhin(map, diem, opts) {
@@ -16,11 +15,14 @@ function veVungNhin(map, diem, opts) {
   map.fitBounds(b, opts);
 }
 
-export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duongThat, diemChon }) {
+export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXemChiTiet, onDayRoutes, diemChon }) {
   const ref = useRef(null);
   const mapRef = useRef(null);
 
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [placeDetail, setPlaceDetail] = useState(null);
+  const [enrichment, setEnrichment] = useState(null);
+  const [enrichmentState, setEnrichmentState] = useState("idle");
   const [localFocusDay, setLocalFocusDay] = useState(null);
   const [dayRoutes, setDayRoutes] = useState({});
   const [isRouting, setIsRouting] = useState(false);
@@ -57,6 +59,40 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
   }, [diemChon]);
 
   useEffect(() => {
+    if (!selectedPlace?.type || selectedPlace?.id == null) return;
+    let cancelled = false;
+    setPlaceDetail(null);
+    api.place(selectedPlace.type, selectedPlace.id)
+      .then((data) => !cancelled && setPlaceDetail(data.place || null))
+      .catch(() => !cancelled && setPlaceDetail(null));
+    return () => { cancelled = true; };
+  }, [selectedPlace?.type, selectedPlace?.id]);
+
+  useEffect(() => {
+    if (!selectedPlace?.type || selectedPlace?.id == null) return;
+    let cancelled = false;
+    const timers = [];
+    const load = async (attempt = 0) => {
+      try {
+        const data = await api.enrichPlace(selectedPlace.type, selectedPlace.id);
+        if (cancelled) return;
+        if (data.status === "fetching" && attempt < 3) {
+          timers.push(setTimeout(() => load(attempt + 1), 2000));
+          return;
+        }
+        setEnrichment(data.enrichment || null);
+        setEnrichmentState(data.status === "not_found" ? "empty" : "ready");
+      } catch {
+        if (!cancelled) setEnrichmentState("error");
+      }
+    };
+    setEnrichment(null);
+    setEnrichmentState("loading");
+    load();
+    return () => { cancelled = true; timers.forEach(clearTimeout); };
+  }, [selectedPlace?.type, selectedPlace?.id]);
+
+  useEffect(() => {
     let huy = false;
 
     const dung = () => {
@@ -69,10 +105,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
       });
 
       map.on("click", (e) => {
-        const isMarkerClick = e.originalEvent?.target?.closest(".maplibregl-marker");
-        if (!isMarkerClick) {
-          setSelectedPlace(null);
-        }
+        if (!e.originalEvent?.target?.closest(".maplibregl-marker")) setSelectedPlace(null);
       });
 
       mapRef.current = map;
@@ -143,7 +176,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
 
       Object.entries(theoNgay).forEach(([ngay, ds]) => {
         const isWishlist = Number(ngay) === 0;
-        const mau = MAU_NGAY[(Number(ngay) - 1) % MAU_NGAY.length];
+        const mau = MAU_NGAY;
         const mo = isWishlist
           ? (currentFocusDay == null ? 0.8 : 0.2)
           : (currentFocusDay == null || Number(ngay) === currentFocusDay ? 1 : 0.25);
@@ -213,6 +246,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
     if (daysToRoute.length === 0) {
       setDayRoutes({});
       setIsRouting(false);
+      if (typeof onDayRoutes === "function") onDayRoutes({});
       return;
     }
 
@@ -224,6 +258,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
       abortControllerRef.current = controller;
 
       const newDayRoutes = {};
+      const thongKeNgay = {};
 
       try {
         await Promise.all(
@@ -235,6 +270,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
             if (chuoi.length < 2) return;
 
             const dayFeatures = [];
+            let metDuongBo = 0;
             for (let i = 0; i < chuoi.length - 1; i++) {
               if (controller.signal.aborted) return;
               const start = chuoi[i];
@@ -242,9 +278,9 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
               const legKey = `${start.lon},${start.lat}->${end.lon},${end.lat}`;
 
               try {
-                let features;
+                let chang;
                 if (legCacheRef.current.has(legKey)) {
-                  features = legCacheRef.current.get(legKey);
+                  chang = legCacheRef.current.get(legKey);
                 } else {
                   const res = await api.route(
                     {
@@ -255,7 +291,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
                     },
                     { signal: controller.signal }
                   );
-                  features = [];
+                  const features = [];
                   if (Array.isArray(res?.path)) {
                     res.path.forEach((c) => {
                       if (c.geom) {
@@ -267,9 +303,11 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
                       }
                     });
                   }
-                  legCacheRef.current.set(legKey, features);
+                  chang = { features, met: res?.total_distance_meters || 0 };
+                  legCacheRef.current.set(legKey, chang);
                 }
-                dayFeatures.push(...features);
+                dayFeatures.push(...chang.features);
+                metDuongBo += chang.met;
               } catch (err) {
                 if (err.name === "AbortError" || controller.signal.aborted) {
                   return;
@@ -285,12 +323,17 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
 
             if (!controller.signal.aborted && dayFeatures.length > 0) {
               newDayRoutes[day] = dayFeatures;
+              thongKeNgay[day] = { met: metDuongBo, isClosed: Boolean(choNgu) };
             }
           })
         );
 
         if (!controller.signal.aborted) {
           setDayRoutes(newDayRoutes);
+          // TripMap là nơi DUY NHẤT tính tuyến đường bộ, nên số km thật cũng phải
+          // đi ra từ đây. Trước kia PlannerDay có nút "Đường bộ" tự gọi /api/route
+          // lần nữa cho đúng các chặng đó — tốn gấp đôi pgr_dijkstra mỗi lượt.
+          if (typeof onDayRoutes === "function") onDayRoutes(thongKeNgay);
         }
       } catch (err) {
         if (err.name !== "AbortError" && !controller.signal.aborted) {
@@ -348,7 +391,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
         if (!features || !features.length) return;
 
         const layerId = `route-day-${day}`;
-        const mau = MAU_NGAY[(day - 1) % MAU_NGAY.length];
+        const mau = MAU_NGAY;
         const mo =
           currentFocusDay == null || Number(day) === currentFocusDay
             ? 0.85
@@ -407,7 +450,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
         const ngoai = document.createElement("div");
         const cham = document.createElement("div");
         cham.style.cssText = `width:24px;height:24px;border-radius:50%;background:#fff;
-          border:2px solid ${MAU_NGAY[0]};color:${MAU_NGAY[0]};text-align:center;
+          border:2px solid ${MAU_NGAY};color:${MAU_NGAY};text-align:center;
           font:700 11px/20px system-ui;cursor:pointer;transition:transform .12s;
           box-shadow:0 1px 4px rgba(0,0,0,.25)`;
         cham.textContent = i + 1;
@@ -438,30 +481,6 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
     });
   }, [noiBat, timThay]);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !window.maplibregl) return;
-
-    const ve = () => {
-      if (map.getLayer("duong-that")) {
-        map.removeLayer("duong-that");
-        map.removeSource("duong-that");
-      }
-      if (!duongThat?.length) return;
-      map.addSource("duong-that", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: duongThat },
-      });
-      map.addLayer({
-        id: "duong-that", type: "line", source: "duong-that",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": MAU_NGAY[0], "line-width": 5, "line-opacity": 0.85 },
-      });
-    };
-
-    map.isStyleLoaded() ? ve() : map.once("load", ve);
-  }, [duongThat]);
-
   const handleSelectDayPill = (day) => {
     if (day === null) {
       setLocalFocusDay(null);
@@ -474,6 +493,18 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
       }
     }
   };
+
+  const place = placeDetail ? { ...selectedPlace, ...placeDetail } : selectedPlace;
+  const dayIndex = place?.day
+    ? (stops || []).filter((stop) => stop.day === place.day && stop.role !== "lodging")
+      .findIndex((stop) => stop.type === place.type && String(stop.id) === String(place.id)) + 1
+    : 0;
+  const directionsUrl = place && laToaDo(place)
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${place.lat},${place.lon}`)}&travelmode=driving`
+    : null;
+  const phone = place?.dien_thoai || place?.phone;
+  const website = place?.website;
+  const coverImage = enrichment?.images?.[0]?.url || place?.anh;
 
   return (
     <div className="trip-map">
@@ -502,7 +533,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
             >
               <span
                 className="trip-map__filter-dot"
-                style={{ backgroundColor: MAU_NGAY[(d - 1) % MAU_NGAY.length] }}
+                style={{ backgroundColor: MAU_NGAY }}
               />
               Ngày {d}
             </button>
@@ -555,54 +586,48 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, duon
         </div>
       )}
 
-      {selectedPlace && (
-        <div className="trip-map__overlay">
-          <div className="trip-map__header">
-            {onThem && !stops?.some((st) => st.name === selectedPlace.name) && (
-              <button
-                type="button"
-                onClick={() => onThem(selectedPlace)}
-                className="trip-map__add-btn"
-              >
-                <i className="fa-solid fa-plus text-[10px]" />
-                <span>Thêm vào chuyến</span>
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setSelectedPlace(null)}
-              className="trip-map__close-btn"
-              title="Đóng"
-            >
-              <i className="fa-solid fa-xmark text-sm" />
-            </button>
-          </div>
+      {place && (
+        <aside className="trip-map__overlay" aria-label={`Thông tin ${place.name}`}>
 
-          <div className="trip-map__body">
-            <div className="trip-map__main-info">
-              <div className="trip-map__info">
-                <h3 className="trip-map__title" title={selectedPlace.name}>
-                  {selectedPlace.name}
-                </h3>
-                <div className="trip-map__tags">
-                  <span className="trip-map__tag trip-map__tag--category">
-                    {tenLoai(selectedPlace.category || selectedPlace.amenity || selectedPlace.tourism) || "Địa điểm"}
-                  </span>
-                  {selectedPlace.day && (
-                    <span className="trip-map__tag">
-                      Ngày {selectedPlace.day}
-                    </span>
-                  )}
-                </div>
+          <div className="trip-map__overlay-content">
+            <div className="trip-map__overlay-copy">
+              <div className="trip-map__overlay-heading">
+                <h3 title={place.name}>{place.name}</h3>
+                <button type="button" onClick={() => setSelectedPlace(null)} aria-label="Đóng thông tin địa điểm"><i className="fa-solid fa-xmark" /></button>
               </div>
-
-              <div className="trip-map__thumb">
-                <MapOverlayImage place={selectedPlace} />
-              </div>
+              {place.day && <p className="trip-map__overlay-day">Ngày {place.day}{dayIndex > 0 ? ` · Điểm dừng ${dayIndex}` : ""}</p>}
+              {(place.dia_chi || place.cached_details?.address) && (
+                <p className="trip-map__overlay-detail">
+                  <i className="fa-solid fa-location-dot" />
+                  {place.dia_chi || place.cached_details?.address}
+                </p>
+              )}
+              {(enrichment?.summary || place.mo_ta || place.description || place.cached_details?.description) && (
+                <p className="trip-map__overlay-description">
+                  {enrichment?.summary || place.mo_ta || place.description || place.cached_details?.description}
+                </p>
+              )}
+              {enrichmentState === "loading" && <p className="trip-map__overlay-loading">Đang tải thông tin địa điểm…</p>}
+              {place.met != null && <p className="trip-map__overlay-distance">Cách vị trí tìm kiếm {(place.met / 1000).toFixed(1)} km</p>}
             </div>
+            <div className="trip-map__thumb"><MapOverlayImage place={{ ...place, anh: coverImage }} /></div>
           </div>
-        </div>
+
+          <div className="trip-map__actions">
+            {directionsUrl && <a href={directionsUrl} target="_blank" rel="noreferrer" className="trip-map__directions"><i className="fa-solid fa-diamond-turn-right" /> Chỉ đường</a>}
+            {onXemChiTiet && <button type="button" onClick={() => onXemChiTiet(place)}><i className="fa-solid fa-arrow-up-right-from-square" /> Xem chi tiết</button>}
+            {phone && <a href={`tel:${phone}`} className="trip-map__utility"><i className="fa-solid fa-phone" /> Gọi</a>}
+            {website && <a href={/^https?:\/\//i.test(website) ? website : `https://${website}`} target="_blank" rel="noreferrer" className="trip-map__utility"><i className="fa-solid fa-globe" /> Website</a>}
+          </div>
+
+          {onThem && !stops?.some((stop) => stop.type === place.type && String(stop.id) === String(place.id)) && (
+            <button type="button" onClick={() => onThem(place)} className="trip-map__add-btn">
+              <i className="fa-solid fa-plus" /> Thêm vào chuyến đi
+            </button>
+          )}
+        </aside>
       )}
+
     </div>
   );
 }

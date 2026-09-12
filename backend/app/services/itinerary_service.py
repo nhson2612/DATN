@@ -8,6 +8,7 @@ from app.core.logging import get_logger, log_duration
 from app.llm.adapter import query_llm
 from app.repositories import place_repo
 from app.services import routing_service
+from app.services import serper_service, trackasia_service
 
 logger = get_logger(__name__)
 
@@ -15,17 +16,22 @@ logger = get_logger(__name__)
 # vẫn đảm bảo các điểm trong cùng một ngày đi lại được trong ngày.
 ITINERARY_RADIUS_M = 30000
 
-# Bảng địa điểm hợp lệ trong `stops` — chặn tên bảng tuỳ ý lọt vào SQL.
-TABLES_HOP_LE = ("poi", "accommodation")
+# Chỗ lưu trú vẫn tra được từ bảng nội bộ, và tra GỘP một lần cho mọi id.
+TABLES_HOP_LE = ("accommodation",)
 
-# Nhóm gốc Overture đáng đưa vào lịch trình. Bỏ shopping/services vì một ngày
-# du lịch hiếm khi dành cho cửa hàng tiện lợi.
-NHOM_DU_LICH = ("cultural_and_historic", "geographic_entities",
-                "food_and_drink", "arts_and_entertainment",
-                "sports_and_recreation")
+# POI không còn nằm trong CSDL nội bộ nên chi tiết phải lấy từ provider:
+#   serper    -> giải mã ngay trong ID, không I/O, không cần mạng
+#   trackasia -> một lời gọi HTTP cho mỗi stop
+#   poi       -> id cũ từ bảng poi nội bộ đã bỏ; chỉ thử provider khi id có
+#                dạng TrackAsia ("17:..."), còn lại giữ nguyên tham chiếu.
+PROVIDER_TYPES = ("serper", "trackasia", "poi")
 
-# Tên placeholder do importer sinh khi OSM không có tên (778 dòng trong poi).
-# Phải loại, nếu không lịch trình sẽ gợi ý khách đến "POI 5107802323".
+# Cache chi tiết TrackAsia trong tiến trình. /api/itineraries hydrate mọi stop
+# của mọi chuyến của người dùng, không cache thì mỗi lần mở trang là N lời gọi
+# HTTP. Chỉ cache kết quả THÀNH CÔNG — lỗi tạm thời phải được thử lại lần sau.
+_trackasia_cache = {}
+_TRACKASIA_CACHE_MAX = 2000
+
 _REAL_NAME = r"name !~ '^(POI|Accommodation|Road) [0-9]+$'"
 
 
@@ -54,6 +60,10 @@ def get_candidates(destination: str, lon: float, lat: float, limit: int = 60):
     để lịch trình có đủ chỗ ở, chỗ ăn và chỗ tham quan — chứ không phải 60 quán
     cà phê.
     """
+    if lon is None:
+        lon = settings.default_lon
+    if lat is None:
+        lat = settings.default_lat
     ref = _diem_den_geom(destination, lon, lat)
 
     accs = execute_query(
@@ -69,24 +79,21 @@ def get_candidates(destination: str, lon: float, lat: float, limit: int = 60):
         (ref, ref, ITINERARY_RADIUS_M, ref, limit // 4),
     ) or []
 
-    # Nhóm gốc của Overture (xem scripts/import_overture_vn.py): tham quan, ăn
-    # uống, vui chơi, thiên nhiên — đúng những gì một lịch trình cần.
-    pois = execute_query(
-        f"""
-        SELECT id, name, amenity AS category, 'poi' AS type,
-               ST_X(geom) AS lon, ST_Y(geom) AS lat,
-               round(ST_Distance(geom::geography, %s::geography)) AS met,
-               tags->>'category_root' AS nhom
-        FROM poi
-        WHERE ST_DWithin(geom::geography, %s::geography, %s)
-          AND tags->>'category_root' = ANY(%s) AND {_REAL_NAME}
-        ORDER BY geom <-> %s
-        LIMIT %s
-        """,
-        (ref, ref, ITINERARY_RADIUS_M, list(NHOM_DU_LICH), ref, limit),
-    ) or []
-
-    return accs + pois
+    # POI lấy trực tiếp từ TrackAsia. Lưu provider id và tọa độ trong stop để
+    # tối ưu tuyến không cần tra lại một bảng GIS nội bộ.
+    pois = trackasia_service.search_places(
+        destination or "tourist attractions",
+        lat,
+        lon,
+        limit,
+    )
+    candidates = []
+    for row in accs + pois:
+        candidate = dict(row)
+        candidate["place_id"] = candidate.get("id")
+        candidate["place_type"] = candidate.get("type")
+        candidates.append(candidate)
+    return candidates
 
 
 def _diem_den_geom(destination: str, lon: float, lat: float):
@@ -96,19 +103,6 @@ def _diem_den_geom(destination: str, lon: float, lat: float):
     if lon is None or lat is None:
         lon, lat = settings.default_lon, settings.default_lat
 
-    if destination:
-        from app.services.search_service import find_anchor, _norm
-        anchor = find_anchor(_norm(destination), lon, lat)
-        if anchor:
-            logger.info("Điểm đến %r -> %r", destination, anchor["name"])
-            rows = execute_query(
-                "SELECT ST_Centroid(ST_GeomFromText(%s, 4326)) AS g",
-                (anchor["wkt"],),
-            )
-            if rows:
-                return rows[0]["g"]
-        logger.warning("Không tra được điểm đến %r, dùng vị trí người dùng",
-                       destination)
     rows = execute_query(
         "SELECT ST_SetSRID(ST_MakePoint(%s, %s), 4326) AS g", (lon, lat))
     return rows[0]["g"]
@@ -123,17 +117,6 @@ def _diem_den_geom(destination: str, lon: float, lat: float):
 # Địa chỉ nằm trong tags chứ không phải cột `address` (cột đó rỗng 100%).
 # NULLIF để chuỗi rỗng thành NULL, frontend khỏi phải đoán.
 SQL_CHI_TIET_STOP = {
-    "poi": """
-        SELECT id, name,
-               NULLIF(description, '')          AS mo_ta,
-               COALESCE(amenity, tourism)       AS category,
-               NULLIF(tags->>'addr:street', '') AS dia_chi,
-               NULLIF(tags->>'addr:city', '')   AS thanh_pho,
-               NULLIF(tags->>'phone', '')       AS phone,
-               NULLIF(tags->>'social', '')      AS social,
-               ST_X(geom) AS lon, ST_Y(geom) AS lat
-        FROM poi WHERE id = ANY(%s)
-    """,
     "accommodation": """
         SELECT id, name,
                NULL::text                       AS mo_ta,
@@ -179,6 +162,94 @@ def chuan_hoa_stop(st):
     }
 
 
+def _chi_tiet_serper(place_id):
+    """Chi tiết POI Serper: ID tự mang dữ liệu nên giải mã là xong, không I/O."""
+    try:
+        return serper_service.place_detail(str(place_id))
+    except Exception as exc:                      # noqa: BLE001 - không được làm sập trang
+        logger.warning("Không giải mã được ID Serper %r: %s", place_id, exc)
+        return None
+
+
+def _chi_tiet_trackasia(place_id):
+    """Chi tiết POI TrackAsia, có cache trong tiến trình.
+
+    Chỉ cache khi tra THÀNH CÔNG: một lần lỗi mạng mà cache None thì stop đó
+    vĩnh viễn không toạ độ cho tới khi khởi động lại tiến trình.
+    """
+    key = str(place_id)
+    if key in _trackasia_cache:
+        return _trackasia_cache[key]
+    try:
+        detail = trackasia_service.place_detail(key)
+        place = trackasia_service.normalize_place(detail) if detail else None
+    except (trackasia_service.TrackAsiaConfigurationError,
+            trackasia_service.TrackAsiaTransientError) as exc:
+        logger.info("TrackAsia chưa tra được %s: %s", key, exc)
+        return None
+    except Exception as exc:                      # noqa: BLE001
+        logger.warning("Lỗi không mong đợi khi tra TrackAsia %s: %s", key, exc)
+        return None
+    if place:
+        if len(_trackasia_cache) >= _TRACKASIA_CACHE_MAX:
+            _trackasia_cache.clear()
+        _trackasia_cache[key] = place
+    return place
+
+
+def _stop_day_du(st, chi_tiet):
+    """Ghép tham chiếu đã lưu với chi tiết tra được -> stop đầy đủ cho frontend."""
+    return {
+        "day": st.get("day"),
+        "section": st.get("section"),
+        "role": st.get("role", "place"),
+        "id": st.get("id"),
+        "type": st.get("type"),
+        "name": chi_tiet.get("name") or st.get("name"),
+        "lon": chi_tiet.get("lon"),
+        "lat": chi_tiet.get("lat"),
+        "mo_ta": chi_tiet.get("mo_ta"),
+        "category": chi_tiet.get("category"),
+        "dia_chi": chi_tiet.get("dia_chi"),
+        # Quận/huyện: cần cho link Google Maps, vì chỉ tên phố thì trùng
+        # khắp cả nước ("Phan Đình Phùng" có ở hàng chục tỉnh).
+        "thanh_pho": chi_tiet.get("thanh_pho"),
+        "phone": chi_tiet.get("phone") or chi_tiet.get("dien_thoai"),
+        "social": chi_tiet.get("social"),
+        # Giữ `details` cho chỗ nào còn đọc theo dạng cũ.
+        "details": {"description": chi_tiet.get("mo_ta"),
+                    "address": chi_tiet.get("dia_chi")},
+    }
+
+
+def _stop_tham_chieu(st):
+    """Không tra được chi tiết -> GIỮ LẠI tham chiếu, đánh dấu `unresolved`.
+
+    Bỏ im lặng ở đây từng làm mất dữ liệu thật của người dùng: /optimize ghi đè
+    `stops` bằng chính kết quả hydrate, nên stop nào bị bỏ là bị xoá khỏi CSDL.
+    Chỗ gọi tự quyết định làm gì với stop `unresolved` (hiện vẫn hiển thị và
+    vẫn được ghi lại nguyên vẹn).
+    """
+    return {
+        "day": st.get("day"),
+        "section": st.get("section"),
+        "role": st.get("role", "place"),
+        "id": st.get("id"),
+        "type": st.get("type"),
+        "name": st.get("name"),
+        "lon": st.get("lon"),
+        "lat": st.get("lat"),
+        "mo_ta": st.get("mo_ta"),
+        "category": st.get("category"),
+        "dia_chi": st.get("dia_chi"),
+        "thanh_pho": st.get("thanh_pho"),
+        "phone": st.get("phone"),
+        "social": st.get("social"),
+        "details": st.get("details") or {},
+        "unresolved": True,
+    }
+
+
 def hydrate_stops(stops):
     """`stops` chỉ lưu tham chiếu {day, type, id} -> tra ra chi tiết địa điểm.
 
@@ -187,49 +258,49 @@ def hydrate_stops(stops):
     tên và toạ độ để vẽ lại lên bản đồ, nên phải tra ở đây — trước đây không có
     bước này, mở lại lịch trình đã lưu là bản đồ trống.
 
-    Gom theo bảng rồi truy vấn một lần mỗi bảng, không tra từng điểm một.
+    Ba nguồn, chọn theo `type` của stop:
+      serper                 -> giải mã trong ID (không I/O)
+      trackasia / id "17:"   -> TrackAsia Places (có cache)
+      accommodation          -> bảng nội bộ, tra GỘP một câu SQL cho cả lô
+
+    BẤT BIẾN: hàm này trả về ĐÚNG số stop nhận vào, cùng thứ tự. Không tra được
+    chi tiết thì trả tham chiếu kèm `unresolved=True`, tuyệt đối không bỏ stop —
+    chỗ gọi ghi lại `stops` từ kết quả này nên bỏ một stop là xoá dữ liệu.
     """
     if not stops:
         return []
 
     stops = [chuan_hoa_stop(st) for st in stops if isinstance(st, dict)]
 
-    theo_bang = {}
+    id_theo_bang = {}
     for st in stops:
-        if st.get("id") and st.get("type") in TABLES_HOP_LE:
-            theo_bang.setdefault(st["type"], set()).add(st["id"])
+        if st.get("type") in TABLES_HOP_LE and st.get("id"):
+            id_theo_bang.setdefault(st["type"], set()).add(st["id"])
 
-    chi_tiet = {}
-    for bang, ids in theo_bang.items():
+    chi_tiet_bang = {}
+    for bang, ids in id_theo_bang.items():
         rows = execute_query(SQL_CHI_TIET_STOP[bang], (list(ids),)) or []
         for r in rows:
-            chi_tiet[(bang, r["id"])] = r
+            chi_tiet_bang[(bang, r["id"])] = r
 
     ket_qua = []
     for st in stops:
-        r = chi_tiet.get((st.get("type"), st.get("id")))
-        if not r:
-            continue          # địa điểm đã bị xoá khỏi CSDL
-        ket_qua.append({
-            "day": st.get("day"),
-            "section": st.get("section"),
-            "role": st.get("role", "place"),
-            "id": r["id"],
-            "type": st["type"],
-            "name": r["name"],
-            "lon": r["lon"],
-            "lat": r["lat"],
-            "mo_ta": r["mo_ta"],
-            "category": r["category"],
-            "dia_chi": r["dia_chi"],
-            # Quận/huyện: cần cho link Google Maps, vì chỉ tên phố thì trùng
-            # khắp cả nước ("Phan Đình Phùng" có ở hàng chục tỉnh).
-            "thanh_pho": r["thanh_pho"],
-            "phone": r.get("phone"),
-            "social": r.get("social"),
-            # Giữ `details` cho chỗ nào còn đọc theo dạng cũ.
-            "details": {"description": r["mo_ta"], "address": r["dia_chi"]},
-        })
+        ptype, pid = st.get("type"), st.get("id")
+        if ptype == "serper":
+            chi_tiet = _chi_tiet_serper(pid)
+        elif ptype in ("trackasia", "poi") and str(pid).startswith("17:"):
+            chi_tiet = _chi_tiet_trackasia(pid)
+        else:
+            chi_tiet = chi_tiet_bang.get((ptype, pid))
+
+        if chi_tiet:
+            ket_qua.append(_stop_day_du(st, chi_tiet))
+        else:
+            logger.warning(
+                "Không tra được chi tiết %s/%s — giữ lại dạng tham chiếu",
+                ptype, pid,
+            )
+            ket_qua.append(_stop_tham_chieu(st))
     return ket_qua
 
 
@@ -261,7 +332,7 @@ QUY TẮC BẮT BUỘC:
         {{
           "time": "Sáng",
           "place_id": <id lấy từ danh sách, không được bịa>,
-          "place_type": "poi" hoặc "accommodation" (đúng `type` của id đó),
+          "place_type": "trackasia" hoặc "accommodation" (đúng `type` của id đó),
           "description": "mô tả ngắn"
         }}
       ]
@@ -321,13 +392,18 @@ def recommend(duration_days: int, preferences: str, budget: str,
                 dropped.append({**act, "reason": "thiếu place_id hoặc place_type"})
                 continue
             # Mọi giá trị khác "poi" từng bị coi là accommodation -> tra sai bảng.
-            if place_type not in ("poi", "accommodation"):
+            if place_type not in ("trackasia", "serper", "poi", "accommodation"):
                 dropped.append({**act, "reason": f"place_type '{place_type}' không hợp lệ"})
                 continue
             if (place_type, place_id) in seen:
                 dropped.append({**act, "reason": "lặp lại trong cùng ngày"})
                 continue
-            row = place_repo.get_by_id(place_type, place_id)
+            row = (
+                {"id": place_id, "name": act.get("name"), "lon": act.get("lon"), "lat": act.get("lat")}
+                if place_type == "trackasia" else
+                serper_service.place_detail(place_id) if place_type == "serper" else
+                place_repo.get_by_id(place_type, place_id)
+            )
             if not row:
                 dropped.append({**act, "reason": f"không có id này trong bảng {place_type}"})
                 continue

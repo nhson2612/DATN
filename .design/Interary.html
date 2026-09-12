@@ -1,0 +1,582 @@
+<!DOCTYPE html><html lang="vi" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Wanderlust Vietnam - Quản lý &amp; Lập Kế Hoạch Chuyến Đi</title>
+<!-- Tailwind CSS CDN with forms and container queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Custom Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c'
+            },
+            surface: {
+              subtle: '#f8fafc',
+              card: '#ffffff',
+              border: '#e2e8f0'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<!-- Map Styling & Utilities -->
+<style data-purpose="map-and-scroll-customization">
+    /* Custom Scrollbar for itinerary panel */
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Route Dash Line Animation Simulation */
+    .route-path-anim {
+      stroke-dasharray: 6, 6;
+      animation: dashMove 35s linear infinite;
+    }
+    @keyframes dashMove {
+      to {
+        stroke-dashoffset: -1000;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#f1f5f9] text-slate-800 font-sans h-screen w-screen overflow-hidden flex antialiased select-none">
+<!-- BEGIN: MainSidebar -->
+<aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 z-20" data-purpose="application-sidebar">
+<!-- Top Branding & Navigation -->
+<div class="p-5 flex flex-col h-full overflow-y-auto custom-scroll">
+<!-- Logo -->
+<div class="flex items-center gap-3 mb-7">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+<svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+<path d="M12 2L2 22h20L12 2zm0 3.84L18.42 19H5.58L12 5.84zM11 11h2v4h-2zM11 16h2v2h-2z"></path>
+</svg>
+</div>
+<div>
+<h1 class="text-base font-bold tracking-tight text-slate-900 leading-tight">Wanderlust</h1>
+<span class="text-[11px] font-semibold text-brand-600 uppercase tracking-widest">Vietnam Tours</span>
+</div>
+</div>
+<!-- Navigation Section: KHÁM PHÁ -->
+<div class="mb-6">
+<p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Khám Phá</p>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors" href="#">
+<svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+            Explore Tours
+          </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-brand-700 bg-brand-50 border border-brand-100 shadow-sm transition-colors" href="#">
+<svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M9 20l-5.447-2.724A2 2 0 013 15.488V4.512a2 2 0 011.553-1.954L9 2m0 18l6-3m-6 3V2m6 15l4.553 2.276A2 2 0 0021 17.488V6.512a2 2 0 00-1.553-1.954L15 4m0 13V4m0 0L9 2" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+            Plan Itinerary
+          </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors" href="#">
+<svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+            Cẩm Nang Du Lịch
+          </a>
+</nav>
+</div>
+<!-- Navigation Section: CÁ NHÂN -->
+<div class="mb-6">
+<p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Cá Nhân</p>
+<nav class="space-y-1">
+<a class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors" href="#">
+<span class="flex items-center gap-3">
+<svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+              Đơn tour của tôi
+            </span>
+
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors" href="#">
+<svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+            Điểm lưu ưa thích
+          </a>
+</nav>
+</div>
+<!-- Quick Nav for Trip Days -->
+<div class="pt-4 border-t border-slate-100">
+<p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Lịch Trình Đang Chọn</p>
+<div class="space-y-1">
+<a class="flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-800" href="#overview">
+<span class="">TỔNG QUAN HÀNH TRÌNH</span>
+<span class="w-2 h-2 rounded-full bg-brand-500"></span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 rounded-lg" href="#unassigned">
+<span class="">Địa điểm muốn đi</span>
+
+</a>
+<a class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 rounded-lg" href="#day-1">
+<span class="">Ngày 1: Hà Nội Cổ Kính</span>
+
+</a>
+<a class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 rounded-lg" href="#day-2">
+<span class="">Ngày 2: Tràng An Ninh Bình</span>
+
+</a>
+<a class="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 rounded-lg" href="#day-3">
+<span class="">Ngày 3: Di Sản Vịnh Hạ Long</span>
+
+</a>
+</div>
+</div>
+</div>
+<!-- User Profile in Footer of Sidebar -->
+<div class="p-4 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between">
+<div class="flex items-center gap-2.5 overflow-hidden">
+<div class="w-8 h-8 rounded-full bg-brand-500 text-white font-bold flex items-center justify-center text-xs shrink-0 ring-2 ring-brand-200">
+          K
+        </div>
+<div class="truncate">
+<p class="text-xs font-bold text-slate-800 truncate">Khách du lịch</p>
+<p class="text-[11px] text-slate-500 truncate">user@wanderlust.vn</p>
+</div>
+</div>
+<button class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition" title="Đăng xuất" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</aside>
+<!-- END: MainSidebar -->
+<!-- BEGIN: ApplicationBody -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+<!-- BEGIN: TopBar -->
+<header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 z-10" data-purpose="top-navigation">
+<div class="flex items-center gap-4">
+<button class="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors shadow-sm" title="Quay lại danh sách chuyến đi" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<div>
+<div class="flex items-center gap-2.5">
+<h2 class="text-base font-bold text-slate-900 tracking-tight">Hành Trình Khám Phá Bắc Bộ Mùa Lúa &amp; Biển Đảo</h2>
+
+</div>
+
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-3">
+<button class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1.5 transition" type="button">
+<svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+          Chia sẻ
+        </button>
+<button class="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 flex items-center gap-1.5 shadow-sm transition" type="button">
+<svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+          Tối ưu đường đi AI
+        </button>
+
+</div>
+</header>
+<!-- END: TopBar -->
+<!-- BEGIN: WorkspaceContainer -->
+<main class="flex-1 flex overflow-hidden p-4 gap-4 bg-[#f8fafc]">
+<!-- BEGIN: ItineraryBuilderColumn (Left/Center Panel) -->
+<section class="w-[46%] flex flex-col h-full overflow-hidden bg-transparent" data-purpose="itinerary-planning-list">
+<!-- Search bar container -->
+<div class="mb-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm shrink-0">
+<div class="relative flex items-center">
+<svg class="w-4 h-4 text-slate-400 absolute left-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<input class="w-full pl-10 pr-24 py-2 text-xs bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-brand-500 text-slate-800 placeholder-slate-400 font-medium" placeholder="Tìm địa điểm, quán ăn, khách sạn thêm vào chuyến (VD: Phố Cổ, Tràng An)..." type="text">
+<span class="absolute right-3 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600">Enter ↵</span>
+</div>
+</div>
+<!-- Scrollable Itinerary Blocks -->
+<div class="flex-1 overflow-y-auto space-y-4 pr-1.5 custom-scroll">
+<!-- Section: Địa điểm muốn đi (Unassigned) -->
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 transition-all hover:border-slate-300">
+<div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+<h3 class="text-sm font-bold text-slate-900">Địa điểm muốn đi (Chưa xếp lịch)</h3>
+<span class="px-2 py-0.5 text-[11px] font-bold bg-slate-100 text-slate-600 rounded-full">4 điểm</span>
+</div>
+<button class="text-xs font-semibold text-brand-600 hover:text-brand-700" type="button">Tự động phân bổ</button>
+</div>
+<!-- Unassigned Cards Grid -->
+<div class="grid grid-cols-2 gap-2.5">
+<!-- Item 1 -->
+<div class="p-2.5 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-white hover:border-brand-300 hover:shadow-sm transition group cursor-pointer">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-slate-800 group-hover:text-brand-600">Cà phê Giảng (Trứng)</h4>
+<p class="text-[10px] text-slate-500">39 Nguyễn Hữu Huân, Hà Nội</p>
+</div>
+
+</div>
+<div class="mt-2 flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-400">
+<span class="">★ 4.7 (2.4k đánh giá)</span>
+
+</div>
+</div>
+<!-- Item 2 -->
+<div class="p-2.5 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-white hover:border-brand-300 hover:shadow-sm transition group cursor-pointer">
+<div class="flex items-start justify-between">
+<div>
+<h4 class="text-xs font-bold text-slate-800 group-hover:text-brand-600">Chợ Đêm Đồng Xuân</h4>
+<p class="text-[10px] text-slate-500">Hoàn Kiếm, Hà Nội</p>
+</div>
+
+</div>
+<div class="mt-2 flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-400">
+<span class="">Mở từ 18:00</span>
+
+</div>
+</div>
+</div>
+<button class="w-full mt-3 py-2 border border-dashed border-slate-300 hover:border-brand-500 rounded-xl text-xs font-semibold text-slate-500 hover:text-brand-600 flex items-center justify-center gap-1.5 transition" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+              Thêm địa điểm vào danh sách chờ
+            </button>
+</div>
+<!-- Section: NGÀY 1 (Active Full Detail) -->
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 transition" id="day-1">
+<!-- Day Header -->
+<div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+<div>
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 bg-brand-500 text-white font-black text-xs rounded-lg">NGÀY 1</span>
+<h3 class="text-sm font-bold text-slate-900">Hà Nội: Trái Tim Cổ Kính &amp; Văn Hiến</h3>
+</div>
+<p class="text-[11px] text-slate-500 mt-0.5">Thứ Sáu, 17/10 • Quãng đường: <strong>7.4 km</strong> • Khoảng 3 giờ tham quan</p>
+</div>
+<div class="flex items-center gap-1.5">
+<button class="p-1 text-slate-400 hover:text-slate-600" title="Tùy chọn ngày" type="button">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Stop Timeline List -->
+<div class="space-y-3 relative before:absolute before:left-3.5 before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-200">
+<!-- Stop 1 -->
+<div class="flex items-start gap-3 relative">
+<div class="w-7 h-7 rounded-full bg-brand-500 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-4 ring-white z-10 shadow-sm">
+                  1
+                </div>
+<div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 hover:bg-white hover:border-brand-400 transition">
+<div class="flex items-start justify-between">
+<div>
+<span class="text-[10px] font-bold text-brand-600 tracking-wide uppercase">08:30 - 10:00</span>
+<h4 class="text-xs font-bold text-slate-900">Hồ Hoàn Kiếm &amp; Đền Ngọc Sơn</h4>
+<p class="text-[11px] text-slate-500 mt-0.5">Phố đi bộ Hoàn Kiếm, trung tâm thủ đô</p>
+</div>
+
+</div>
+<div class="mt-2 text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-100">
+                    💡 <em>Ghi chú: Đi bộ dạo cầu Thê Húc lúc sớm để tránh đông khách và chụp ảnh đẹp nhất.</em>
+</div>
+</div>
+</div>
+<!-- Distance indicator between stops -->
+<div class="flex items-center pl-8 text-[11px] text-slate-400 gap-1.5">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M13 7l5 5m0 0l-5 5m5-5H6" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Di chuyển 1.8 km • 7 phút taxi / 20 phút đi dạo</span>
+</div>
+<!-- Stop 2 -->
+<div class="flex items-start gap-3 relative">
+<div class="w-7 h-7 rounded-full bg-brand-500 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-4 ring-white z-10 shadow-sm">
+                  2
+                </div>
+<div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 hover:bg-white hover:border-brand-400 transition">
+<div class="flex items-start justify-between">
+<div>
+<span class="text-[10px] font-bold text-brand-600 tracking-wide uppercase">10:30 - 12:00</span>
+<h4 class="text-xs font-bold text-slate-900">Hoàng Thành Thăng Long</h4>
+<p class="text-[11px] text-slate-500 mt-0.5">19C Hoàng Diệu, Quán Thánh, Ba Đình</p>
+</div>
+
+</div>
+<p class="text-[11px] text-slate-500 mt-1">Khám phá di tích khảo cổ Đoan Môn, Hậu Lâu và Kỳ Đài Hà Nội.</p>
+</div>
+</div>
+<!-- Stop 3 -->
+<div class="flex items-start gap-3 relative">
+<div class="w-7 h-7 rounded-full bg-brand-500 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-4 ring-white z-10 shadow-sm">
+                  3
+                </div>
+<div class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 hover:bg-white hover:border-brand-400 transition">
+<div class="flex items-start justify-between">
+<div>
+<span class="text-[10px] font-bold text-brand-600 tracking-wide uppercase">12:30 - 14:00</span>
+<h4 class="text-xs font-bold text-slate-900">Bữa Trưa: Bún Chả Hương Liên (Obama)</h4>
+<p class="text-[11px] text-slate-500 mt-0.5">24 Lê Văn Hưu, Phan Chu Trinh, Hai Bà Trưng</p>
+</div>
+
+</div>
+</div>
+</div>
+<!-- Stay Over / Hotel Accommodation Card -->
+<div class="flex items-start gap-3 relative pt-1">
+<div class="w-7 h-7 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-4 ring-white z-10 shadow-sm">
+<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+<path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+</svg>
+</div>
+<div class="flex-1 bg-indigo-50/50 border border-indigo-200 rounded-xl p-3">
+<div class="flex items-center justify-between">
+<div>
+<span class="text-[10px] font-bold text-indigo-700 tracking-wide uppercase">Nơi Nghỉ Đêm (Đã Xác Nhận)</span>
+<h4 class="text-xs font-bold text-slate-900">Acoustic Hotel &amp; Spa - Phố Cổ</h4>
+<p class="text-[11px] text-slate-500 mt-0.5">39 Thợ Nhuộm, Trần Hưng Đạo, Hoàn Kiếm</p>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+<!-- Add stop button for Day 1 -->
+<button class="w-full mt-4 py-2 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 transition" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+              Thêm điểm dừng vào Ngày 1
+            </button>
+</div>
+<!-- Section: NGÀY 2 (Collapsed Accordion View) -->
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 hover:border-slate-300 transition" id="day-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="px-2.5 py-0.5 bg-blue-600 text-white font-black text-xs rounded-lg">NGÀY 2</span>
+<div>
+<h3 class="text-sm font-bold text-slate-900">Ninh Bình: Quần Thể Danh Thắng Tràng An &amp; Tam Cốc</h3>
+<p class="text-[11px] text-slate-500">Thứ Bảy, 18/10 • 3 địa điểm chính • Quãng đường: 95 km</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-slate-400 font-semibold">Chèo thuyền &amp; Leo núi</span>
+<button class="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+<!-- Section: NGÀY 3 (Collapsed Accordion View) -->
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 hover:border-slate-300 transition" id="day-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="px-2.5 py-0.5 bg-emerald-600 text-white font-black text-xs rounded-lg">NGÀY 3</span>
+<div>
+<h3 class="text-sm font-bold text-slate-900">Quảng Ninh: Du Thuyền Ngắm Kỳ Quan Vịnh Hạ Long</h3>
+<p class="text-[11px] text-slate-500">Chủ Nhật, 19/10 • Hang Sửng Sốt, Đảo Ti Tốp, Chèo Kayak</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-slate-400 font-semibold">Du thuyền 5 sao</span>
+<button class="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+<!-- Button: Add Day block -->
+<button class="w-full py-3.5 border-2 border-dashed border-slate-300 hover:border-brand-500 hover:bg-brand-50/50 rounded-2xl text-xs font-bold text-slate-500 hover:text-brand-600 flex items-center justify-center gap-2 transition" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+            + Thêm Ngày Mới Vào Chuyến Đi (Ngày 4)
+          </button>
+</div>
+</section>
+<!-- END: ItineraryBuilderColumn -->
+<!-- BEGIN: InteractiveMapColumn (Right Panel) -->
+<section class="flex-1 h-full bg-white rounded-2xl border border-slate-200 overflow-hidden relative shadow-sm flex flex-col" data-purpose="geographical-interactive-map">
+<!-- Interactive Map Header Overlay: Filter & Search Controls -->
+<div class="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
+<!-- Category Filter Pills -->
+<div class="bg-white/95 backdrop-blur shadow-lg border border-slate-200/80 rounded-2xl p-1.5 flex items-center gap-1.5 pointer-events-auto">
+<button class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-sm" type="button">
+              Tất cả (14)
+            </button>
+<button class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" type="button">
+<span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              Ngày 1 (Hà Nội)
+            </button>
+<button class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" type="button">
+<span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              Ngày 2 (Ninh Bình)
+            </button>
+<button class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" type="button">
+<span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+              Ngày 3 (Hạ Long)
+            </button>
+</div>
+<!-- Status badge indicator -->
+
+</div>
+<!-- SVG Map Container Simulating Vietnam Cartography -->
+<div class="w-full h-full relative overflow-hidden bg-[#eef3f8] flex items-center justify-center">
+<svg class="w-full h-full object-cover" fill="none" viewBox="0 0 1000 750" xmlns="http://www.w3.org/2000/svg">
+<!-- Geographic Water/Land Backdrop -->
+<rect fill="#e9eff5" height="750" width="1000"></rect>
+<!-- Landmass Outline (Northern/Central Vietnam & neighbouring areas) -->
+<path d="M-50,0 L1050,0 L1050,750 L-50,750 Z" fill="#edf2f7"></path>
+<!-- Tonkin Gulf / Biển Đông Water Body -->
+<path d="M520,180 C560,210 610,230 680,260 C750,300 790,390 820,530 C840,630 850,750 850,750 L1000,750 L1000,100 L520,180 Z" fill="#dbeafe" opacity="0.8"></path>
+<path d="M620,160 C660,190 730,220 820,240 C910,260 970,240 1000,230 L1000,0 L620,0 Z" fill="#dbeafe" opacity="0.6"></path>
+<!-- Hainan Island (China) -->
+<path d="M780,260 C850,260 890,310 870,360 C840,410 760,400 730,340 C720,300 750,265 780,260 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2"></path>
+<text fill="#94a3b8" font-size="14" font-weight="700" letter-spacing="3" x="785" y="340">ĐẢO HẢI NAM</text>
+<!-- Main Vietnam Regional Land Vector Borders -->
+<path d="M120,-20 Q260,120 380,140 Q470,160 520,210 Q490,260 480,310 Q490,380 540,460 Q570,520 600,600 Q620,680 630,760" fill="none" stroke="#cbd5e1" stroke-dasharray="4,4" stroke-width="1.5"></path>
+<!-- Province labels for realism -->
+<text fill="#94a3b8" font-size="11" font-weight="700" letter-spacing="1" x="280" y="240">HÒA BÌNH</text>
+<text fill="#94a3b8" font-size="11" font-weight="700" letter-spacing="1" x="340" y="110">THÁI NGUYÊN</text>
+<text fill="#94a3b8" font-size="11" font-weight="700" letter-spacing="1" x="560" y="160">BẮC GIANG</text>
+<text fill="#94a3b8" font-size="11" font-weight="700" letter-spacing="1" x="440" y="360">NAM ĐỊNH</text>
+<text fill="#60a5fa" font-size="14" font-weight="800" letter-spacing="4" opacity="0.7" x="750" y="520">VỊNH BẮC BỘ</text>
+<!-- Highway Line Connection Simulation: Route Between Hanoi -> Ninh Binh -> Ha Long -->
+<!-- Route Hanoi to Ninh Binh -->
+<path class="route-path-anim" d="M375,230 Q400,280 435,320" fill="none" stroke="#2563eb" stroke-linecap="round" stroke-width="3.5"></path>
+<!-- Route Hanoi to Ha Long -->
+<path class="route-path-anim" d="M375,230 Q510,210 630,225" fill="none" stroke="#059669" stroke-linecap="round" stroke-width="3.5"></path>
+<!-- Route Within Hanoi Day 1 Stops -->
+<path class="route-path-anim" d="M370,220 L375,230 L385,242" fill="none" stroke="#f97316" stroke-linecap="round" stroke-width="3"></path>
+<!-- Region Marker: Hạ Long Bay (Day 3) -->
+<g transform="translate(630, 225)">
+<circle class="animate-ping" fill="#059669" fill-opacity="0.2" r="22"></circle>
+<circle class="shadow-lg" fill="#059669" r="14" stroke="#ffffff" stroke-width="2.5"></circle>
+<text fill="#ffffff" font-size="9" font-weight="800" text-anchor="middle" x="0" y="4">D3</text>
+<rect class="shadow-md" fill="#ffffff" height="26" rx="8" stroke="#e2e8f0" width="130" x="-65" y="20"></rect>
+<text fill="#0f172a" font-size="11" font-weight="700" text-anchor="middle" x="0" y="37">Vịnh Hạ Long</text>
+</g>
+<!-- Region Marker: Ninh Bình - Tràng An (Day 2) -->
+<g transform="translate(435, 320)">
+<circle fill="#2563eb" fill-opacity="0.2" r="22"></circle>
+<circle class="shadow-lg" fill="#2563eb" r="14" stroke="#ffffff" stroke-width="2.5"></circle>
+<text fill="#ffffff" font-size="9" font-weight="800" text-anchor="middle" x="0" y="4">D2</text>
+<rect class="shadow-md" fill="#ffffff" height="26" rx="8" stroke="#e2e8f0" width="140" x="-70" y="20"></rect>
+<text fill="#0f172a" font-size="11" font-weight="700" text-anchor="middle" x="0" y="37">Tràng An &amp; Bái Đính</text>
+</g>
+<!-- Active Zoomed Cluster: HÀ NỘI CLUSTER (Day 1 Detail) -->
+<!-- Stop 1: Hồ Hoàn Kiếm -->
+<g class="cursor-pointer" transform="translate(385, 242)">
+<circle class="shadow-md" fill="#f97316" r="12" stroke="#ffffff" stroke-width="2.5"></circle>
+<text fill="#ffffff" font-size="10" font-weight="800" text-anchor="middle" x="0" y="4">1</text>
+<text fill="#1e293b" font-size="11" font-weight="700" x="16" y="4">Hồ Hoàn Kiếm</text>
+</g>
+<!-- Stop 3: Bún Chả -->
+<g class="cursor-pointer" transform="translate(390, 275)">
+<circle class="shadow-md" fill="#f97316" r="12" stroke="#ffffff" stroke-width="2.5"></circle>
+<text fill="#ffffff" font-size="10" font-weight="800" text-anchor="middle" x="0" y="4">3</text>
+<text fill="#1e293b" font-size="11" font-weight="700" x="16" y="4">Bún Chả</text>
+</g>
+<!-- Hotel Marker -->
+<g transform="translate(355, 255)">
+<circle class="shadow-md" fill="#4f46e5" r="12" stroke="#ffffff" stroke-width="2.5"></circle>
+<path d="M-4, -3 L4, -3 L4, 4 L-4, 4 Z" fill="#ffffff"></path>
+<text fill="#4338ca" font-size="10" font-weight="700" x="-8" y="20">Acoustic Hotel</text>
+</g>
+<!-- Stop 2: Hoàng Thành Thăng Long with POPUP CARD Open -->
+<g transform="translate(350, 205)">
+<!-- Pin Marker -->
+<circle class="animate-pulse" fill="#f97316" fill-opacity="0.3" r="18"></circle>
+<circle class="shadow-xl" fill="#ea580c" r="14" stroke="#ffffff" stroke-width="2.5"></circle>
+<text fill="#ffffff" font-size="11" font-weight="900" text-anchor="middle" x="0" y="4">2</text>
+</g>
+</svg>
+<!-- Floating Interactive Tooltip/Popup on Map for Stop 2 -->
+<div class="absolute top-[180px] left-[150px] w-64 bg-white rounded-2xl p-3.5 shadow-2xl border border-slate-200 z-20 transition-transform">
+<div class="flex items-start justify-between">
+
+<button class="text-slate-400 hover:text-slate-600 text-sm leading-none" type="button">×</button>
+</div>
+<h4 class="text-xs font-bold text-slate-900 mt-1.5">Hoàng Thành Thăng Long</h4>
+<p class="text-[11px] text-slate-500 line-clamp-1">19C Hoàng Diệu, Ba Đình, Hà Nội</p>
+<div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100 text-[11px]">
+<span class="text-amber-500 font-bold">★ 4.8</span>
+<span class="text-slate-400">(4.1k lượt)</span>
+
+</div>
+<div class="mt-3 flex gap-1.5">
+<button class="flex-1 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] transition shadow-sm" type="button">
+                Chi Tiết Địa Điểm
+              </button>
+<button class="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-[11px]" type="button">
+                Dẫn Đường
+              </button>
+</div>
+</div>
+<!-- Interactive Map Controls (Bottom Right) -->
+<div class="absolute bottom-5 right-5 flex flex-col gap-2 z-20">
+<!-- Layers button -->
+
+<!-- Reset Center View -->
+
+<!-- Zoom controls group -->
+<div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
+<button class="w-10 h-10 hover:bg-slate-50 text-slate-700 flex items-center justify-center border-b border-slate-100 font-bold text-base transition" title="Phóng to" type="button">
+                +
+              </button>
+<button class="w-10 h-10 hover:bg-slate-50 text-slate-700 flex items-center justify-center font-bold text-base transition" title="Thu nhỏ" type="button">
+                −
+              </button>
+</div>
+</div>
+<!-- Bottom Left Map Legend & Attribution -->
+<div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-xl px-3 py-1.5 border border-slate-200 text-[10px] text-slate-500 font-medium flex items-center gap-3">
+<span class="">Tỉ lệ: 1:50,000</span>
+<span class="">© Wanderlust Vector Maps</span>
+<span class="text-slate-300">|</span>
+<span class="">Dữ liệu: OpenStreetMap Vietnam</span>
+</div>
+</div>
+</section>
+<!-- END: InteractiveMapColumn -->
+</main>
+<!-- END: WorkspaceContainer -->
+</div>
+<!-- END: ApplicationBody -->
+
+
+</body></html>

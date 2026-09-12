@@ -343,21 +343,23 @@ def departures(tour_id: int):
 
 
 def places_of_tour(itinerary):
-    """Địa điểm nhắc trong lịch trình tour -> tra tên và toạ độ để vẽ bản đồ."""
+    """Địa điểm TrackAsia trong lịch trình tour -> tra tên và toạ độ."""
+    from app.services import trackasia_service
+
     ids = []
     for ngay in itinerary or []:
         ids.extend(ngay.get("place_ids") or [])
     if not ids:
         return {}
-    rows = execute_query(
-        """
-        SELECT id, name, amenity AS category,
-               ST_X(geom) AS lon, ST_Y(geom) AS lat
-        FROM poi WHERE id = ANY(%s)
-        """,
-        (list(set(ids)),),
-    ) or []
-    return {r["id"]: r for r in rows}
+    places = {}
+    for place_id in dict.fromkeys(ids):
+        if not isinstance(place_id, str) or not place_id.startswith("17:"):
+            continue
+        detail = trackasia_service.place_detail(place_id)
+        place = trackasia_service.normalize_place(detail) if detail else None
+        if place:
+            places[place_id] = place
+    return places
 
 
 def get_photos_for_places(place_ids: list[int]) -> dict[int, list[str]]:

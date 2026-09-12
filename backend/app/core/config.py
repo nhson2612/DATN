@@ -9,7 +9,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import AliasChoices, Field, field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -39,16 +39,21 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-v4-pro"
     deepseek_api_key: str | None = None
 
-    # ---- Tavily (làm giàu trang chi tiết địa điểm) ----
-    # Đọc TAVILY_API_KEY (tên chuẩn) trước; TAVILI_API_KEY là tên viết sai có
-    # sẵn trong ~/.zshrc của máy dev, chấp nhận tạm để không phải sửa mọi nơi.
-    # Key chỉ tồn tại ở backend — không bao giờ ra frontend/log/API response.
-    tavily_api_key: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("TAVILY_API_KEY", "TAVILI_API_KEY"),
-    )
-    tavily_url: str = "https://api.tavily.com/search"
-    tavily_timeout: int = Field(default=20, ge=1, le=60)
+    # ---- Serper (tìm mô tả và ảnh cho trang chi tiết địa điểm) ----
+    serper_api_key: str | None = None
+    serper_url: str = "https://google.serper.dev/search"
+    serper_images_url: str = "https://google.serper.dev/images"
+    serper_places_url: str = "https://google.serper.dev/places"
+    serper_timeout: int = Field(default=20, ge=1, le=60)
+
+    # ---- TrackAsia (dữ liệu địa điểm có cấu trúc) ----
+    # Chỉ backend gọi API này. Key không bao giờ được đưa vào response hay log.
+    trackasia_api_key: str | None = None
+    trackasia_url: str = "https://maps.track-asia.com"
+    trackasia_timeout: int = Field(default=12, ge=1, le=60)
+    trackasia_match_distance_m: int = Field(default=750, ge=50, le=5000)
+    trackasia_extended_match_distance_m: int = Field(default=5000, ge=500, le=20000)
+    trackasia_search_radius_m: int = Field(default=50000, ge=1000, le=100000)
 
     # Phạm vi địa lý của DB đang dùng, chèn vào IR_SYSTEM_PROMPT. Mặc định là
     # "Đà Nẵng" để giữ nguyên prompt mà mọi số benchmark đo trên đó; đổi sang

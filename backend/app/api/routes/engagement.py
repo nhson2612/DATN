@@ -23,7 +23,7 @@ def _kiem_place_type(place_type: str):
     if place_type not in engagement_repo.BANG_HOP_LE:
         raise HTTPException(
             status_code=400,
-            detail="place_type phải là 'poi' hoặc 'accommodation'.",
+            detail="place_type phải là 'trackasia', 'serper' hoặc 'accommodation'.",
         )
 
 
@@ -46,8 +46,8 @@ def add_favorite(data: FavoriteRequest,
     return {"success": True, "id": new_id, "da_co": new_id is None}
 
 
-@fav_router.delete("/{place_type}/{place_id}")
-def remove_favorite(place_type: str, place_id: int,
+@fav_router.delete("/{place_type}/{place_id:path}")
+def remove_favorite(place_type: str, place_id: str,
                     current_user: dict = Depends(get_current_user)):
     _kiem_place_type(place_type)
     if not engagement_repo.remove_favorite(current_user["id"], place_type, place_id):

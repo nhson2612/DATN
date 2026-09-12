@@ -118,6 +118,3 @@ export default function PlannerPlacePicker({
     </div>
   );
 }
-
-// Giữ alias tương thích
-export { PlannerPlacePicker as ChonDiaDiem };

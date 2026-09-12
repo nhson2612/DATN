@@ -10,7 +10,7 @@ import unicodedata
 
 from app.core.logging import get_logger
 from app.repositories import destination_repo
-from app.services import meta_service, photo_service
+from app.services import meta_service, photo_service, serper_service, trackasia_service
 
 logger = get_logger(__name__)
 
@@ -46,8 +46,14 @@ def get_destination(slug: str, limit_moi_nhom: int = 12):
 
     nhom = []
     for key, cfg in destination_repo.NHOM_HIEN_THI.items():
-        items = destination_repo.places_by_group(
-            tinh["id"], cfg["roots"], limit_moi_nhom)
+        try:
+            items = serper_service.search_places(
+                f"{cfg['ten']} {tinh['name']}", tinh["lat"], tinh["lon"],
+                limit_moi_nhom)
+        except (serper_service.SerperConfigurationError,
+                serper_service.SerperTransientError) as exc:
+            logger.warning("Serper không tải được nhóm %s: %s", key, exc)
+            items = []
         if items:
             photo_service.ensure_places_photos(items)
             nhom.append({"key": key, "ten": cfg["ten"], "items": items})
@@ -72,6 +78,33 @@ def get_destination(slug: str, limit_moi_nhom: int = 12):
 def search_places(destination=None, nhom=None, category=None, q=None,
                   has_photo=False, page=1, page_size=24, bang="poi"):
     """Danh sách địa điểm có lọc, dùng cho view lưới."""
+    if bang in ("poi", "trackasia", "serper"):
+        query = ", ".join(value for value in (q, destination) if value)
+        if not query:
+            query = destination or "tourist attractions"
+        center_lat = center_lon = None
+        if destination:
+            tinh = destination_repo.find_province(slugify(destination))
+            if tinh:
+                center_lat, center_lon = tinh["lat"], tinh["lon"]
+        try:
+            if bang == "trackasia":
+                rows = trackasia_service.search_places(
+                    query, center_lat, center_lon, page * page_size)
+            else:
+                rows = serper_service.search_places(
+                    query, center_lat, center_lon, page * page_size)
+        except (serper_service.SerperConfigurationError,
+                serper_service.SerperTransientError,
+                trackasia_service.TrackAsiaConfigurationError,
+                trackasia_service.TrackAsiaTransientError) as exc:
+            logger.warning("POI search lỗi: %s", exc)
+            rows = []
+        start = (max(page, 1) - 1) * page_size
+        items = rows[start:start + page_size]
+        photo_service.ensure_places_photos(items)
+        return {"items": items, "total": len(rows), "page": page, "page_size": page_size}
+
     province_id = None
     if destination:
         tinh = destination_repo.find_province(slugify(destination))
@@ -89,8 +122,29 @@ def search_places(destination=None, nhom=None, category=None, q=None,
     return {"items": items, "total": tong, "page": page, "page_size": page_size}
 
 
-def place_detail(place_type: str, place_id: int):
+def place_detail(place_type: str, place_id: str):
     """Chi tiết địa điểm + địa điểm lân cận."""
+    if place_type == "serper":
+        place = serper_service.place_detail(str(place_id))
+        if not place:
+            return None
+        photo_service.ensure_place_photo(place)
+        try:
+            place["nearby"] = trackasia_service.nearby_places(place["lat"], place["lon"])
+        except (trackasia_service.TrackAsiaConfigurationError,
+                trackasia_service.TrackAsiaTransientError):
+            place["nearby"] = []
+        return place
+
+    if place_type in ("poi", "trackasia"):
+        detail = trackasia_service.place_detail(str(place_id))
+        place = trackasia_service.normalize_place(detail) if detail else None
+        if not place:
+            return None
+        photo_service.ensure_place_photo(place)
+        place["nearby"] = trackasia_service.nearby_places(place["lat"], place["lon"])
+        return place
+
     place = destination_repo.get_place_detail(place_type, place_id)
     if not place:
         return None
@@ -100,7 +154,6 @@ def place_detail(place_type: str, place_id: int):
     meta_service.bo_sung(place)
     photo_service.ensure_place_photo(place)
     place["nearby"] = destination_repo.nearby(
-        place["lon"], place["lat"], place_id if place_type == "poi" else -1)
+        place["lon"], place["lat"], -1)
     photo_service.ensure_places_photos(place.get("nearby", []))
     return place
-

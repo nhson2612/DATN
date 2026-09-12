@@ -178,6 +178,3 @@ export default function PlannerLodgingPicker({
     </div>
   );
 }
-
-// Giữ alias tương thích
-export { PlannerLodgingPicker as ChonChoNgu };

@@ -19,7 +19,7 @@ export default function PlaceDetail({ user, onNeedAuth }) {
   const [daLuu, setDaLuu] = useState(false);
   const [moForm, setMoForm] = useState(false);
 
-  // Làm giàu web (Tavily) — tách khỏi fetch địa điểm để lỗi/thời gian chờ của
+  // Làm giàu web (Serper) — tách khỏi fetch địa điểm để lỗi/thời gian chờ của
   // nó KHÔNG bao giờ làm chậm hay xoá nội dung cơ bản của trang.
   const [enrichment, setEnrichment] = useState(null);
   const [enrichmentState, setEnrichmentState] = useState("loading");
@@ -82,7 +82,7 @@ export default function PlaceDetail({ user, onNeedAuth }) {
   async function luuYeuThich() {
     if (!user) return onNeedAuth();
     try {
-      await api.addFavorite(type, Number(id));
+      await api.addFavorite(type, id);
       setDaLuu(true);
     } catch (e) {
       alert(e.message || "Không thể lưu vào danh sách yêu thích.");
@@ -276,7 +276,7 @@ export default function PlaceDetail({ user, onNeedAuth }) {
             {p.nearby.map((n) => (
               <article
                 key={n.id}
-                onClick={() => nav(`/dia-diem/poi/${n.id}`)}
+                onClick={() => nav(`/dia-diem/${n.type || "trackasia"}/${encodeURIComponent(n.id)}`)}
                 className="place-field-guide__nearby-card"
               >
                 <h3 className="place-field-guide__nearby-name">{n.name}</h3>
@@ -290,13 +290,15 @@ export default function PlaceDetail({ user, onNeedAuth }) {
         </section>
       )}
 
-      <BookingForm
-        open={moForm}
-        onClose={() => setMoForm(false)}
-        placeType={type}
-        placeId={Number(id)}
-        placeName={p.name}
-      />
+      {type === "accommodation" && (
+        <BookingForm
+          open={moForm}
+          onClose={() => setMoForm(false)}
+          placeType={type}
+          placeId={id}
+          placeName={p.name}
+        />
+      )}
     </main>
   );
 }

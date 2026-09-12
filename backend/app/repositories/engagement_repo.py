@@ -2,7 +2,7 @@
 
 from app.core.database import execute_query
 
-BANG_HOP_LE = ("poi", "accommodation")
+BANG_HOP_LE = ("trackasia", "serper", "accommodation")
 
 
 # ── Yêu thích ────────────────────────────────────────────────────────────────
@@ -12,16 +12,15 @@ def list_favorites(user_id: int):
     return execute_query(
         """
         SELECT f.id, f.place_type, f.place_id, f.created_at,
-               COALESCE(p.name, a.name) AS name,
-               COALESCE(p.amenity, a.tourism) AS category,
-               ST_X(COALESCE(p.geom, a.geom)) AS lon,
-               ST_Y(COALESCE(p.geom, a.geom)) AS lat,
+               COALESCE(a.name, f.place_id) AS name,
+               a.tourism AS category,
+               ST_X(a.geom) AS lon,
+               ST_Y(a.geom) AS lat,
                ph.url AS anh
         FROM favorites f
-        LEFT JOIN poi p           ON f.place_type = 'poi'           AND p.id = f.place_id
         LEFT JOIN accommodation a ON f.place_type = 'accommodation' AND a.id = f.place_id
         LEFT JOIN place_photos ph ON ph.place_type = f.place_type   AND ph.place_id = f.place_id
-        WHERE f.user_id = %s AND COALESCE(p.id, a.id) IS NOT NULL
+        WHERE f.user_id = %s AND (f.place_type IN ('trackasia', 'serper') OR a.id IS NOT NULL)
         ORDER BY f.created_at DESC
         """,
         (user_id,),
@@ -77,9 +76,8 @@ def list_bookings(status=None, limit: int = 100):
     params = (status, limit) if status else (limit,)
     return execute_query(
         f"""
-        SELECT b.*, COALESCE(p.name, a.name) AS place_name
+        SELECT b.*, a.name AS place_name
         FROM booking_requests b
-        LEFT JOIN poi p           ON b.place_type = 'poi'           AND p.id = b.place_id
         LEFT JOIN accommodation a ON b.place_type = 'accommodation' AND a.id = b.place_id
         {dieu_kien}
         ORDER BY b.created_at DESC
@@ -110,7 +108,7 @@ def thong_ke():
     rows = execute_query(
         """
         SELECT
-          (SELECT count(*) FROM poi)                                               AS poi,
+          0                                                                       AS poi,
           (SELECT count(*) FROM accommodation)                                     AS luu_tru,
           (SELECT count(*) FROM users)                                             AS nguoi_dung,
           (SELECT count(*) FROM itineraries)                                       AS lich_trinh,

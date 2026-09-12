@@ -96,6 +96,16 @@ class TestToiUuMotNgay(unittest.TestCase):
         self.assertEqual(ten[0], "A")
         self.assertNotEqual(ten, ["A", "C", "B", "D"])
 
+    def test_dung_cho_nghi_lam_moc_va_khep_tuyen(self):
+        khach_san = _d("Khách sạn", 108.20, 16.00)
+        ds = [_d("C", 108.22, 16.00), _d("B", 108.21, 16.00),
+              _d("D", 108.23, 16.00)]
+        moi, truoc, sau = ro.toi_uu_mot_ngay(
+            ds, diem_xuat_phat=khach_san, khep_kin=True
+        )
+        self.assertEqual([s["name"] for s in moi], ["B", "C", "D"])
+        self.assertLess(sau, truoc)
+
 
 class TestToiUuCaLichTrinh(unittest.TestCase):
     LICH = ([_d("A", 108.20, 16.00, 1), _d("C", 108.22, 16.00, 1),

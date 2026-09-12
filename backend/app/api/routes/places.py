@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from app.core.security import get_current_admin
 from app.repositories import destination_repo
-from app.schemas.requests import AccommodationCreateUpdate, POICreateUpdate
+from app.schemas.requests import AccommodationCreateUpdate
 from app.services import places_service
 
 router = APIRouter(prefix="/api", tags=["places"])
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api", tags=["places"])
 
 class CachePlaceDetailsRequest(BaseModel):
     place_type: str
-    place_id: int
+    place_id: str
     url: Optional[str] = None
     attribution: Optional[str] = "Google Maps"
     details: Optional[dict] = None
@@ -20,8 +20,8 @@ class CachePlaceDetailsRequest(BaseModel):
 
 @router.post("/places/cache-details")
 def cache_place_details(data: CachePlaceDetailsRequest):
-    if data.place_type not in ("poi", "accommodation"):
-        raise HTTPException(status_code=400, detail="place_type phải là poi hoặc accommodation")
+    if data.place_type not in ("trackasia", "serper", "accommodation"):
+        raise HTTPException(status_code=400, detail="place_type không hợp lệ")
     destination_repo.save_place_photo_details(
         place_type=data.place_type,
         place_id=data.place_id,
@@ -64,6 +64,4 @@ def _crud_routes(table: str, path: str, schema):
         return {"success": True, "id": id}
 
 
-_crud_routes("poi", "/poi", POICreateUpdate)
 _crud_routes("accommodation", "/accommodation", AccommodationCreateUpdate)
-

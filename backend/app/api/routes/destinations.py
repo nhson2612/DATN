@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException, Query, Response
 
 from app.repositories import destination_repo
-from app.services import destination_service, enrichment_service
+from app.services import destination_service, enrichment_service, trackasia_service
 
 router = APIRouter(prefix="/api/destinations", tags=["destinations"])
 
@@ -40,8 +40,8 @@ def search_places(
     page: int = Query(1, ge=1),
     page_size: int = Query(24, ge=1, le=100),
 ):
-    if place_type not in ("poi", "accommodation"):
-        raise HTTPException(status_code=400, detail="place_type phải là poi hoặc accommodation.")
+    if place_type not in ("poi", "trackasia", "serper", "accommodation"):
+        raise HTTPException(status_code=400, detail="place_type không hợp lệ.")
     return {"success": True, **destination_service.search_places(
         destination=destination, nhom=nhom, category=category, q=q,
         has_photo=has_photo, page=page, page_size=page_size, bang=place_type)}
@@ -56,16 +56,18 @@ def nearby_places(
     limit: int = Query(12, ge=1, le=50),
 ):
     """Địa điểm gần một toạ độ. Dùng để gợi ý chỗ ngủ quanh lịch trình trong ngày."""
-    if place_type not in ("poi", "accommodation"):
-        raise HTTPException(status_code=400, detail="place_type phải là poi hoặc accommodation.")
+    if place_type not in ("poi", "trackasia", "serper", "accommodation"):
+        raise HTTPException(status_code=400, detail="place_type không hợp lệ.")
+    if place_type == "poi":
+        return {"success": True, "items": trackasia_service.nearby_places(lat, lon, meters, limit)}
     return {"success": True,
             "items": destination_repo.nearby_of_type(place_type, lon, lat, meters, limit)}
 
 
 @places_router.get("/{place_type}/{place_id}")
-def place_detail(place_type: str, place_id: int):
-    if place_type not in ("poi", "accommodation"):
-        raise HTTPException(status_code=400, detail="place_type phải là poi hoặc accommodation.")
+def place_detail(place_type: str, place_id: str):
+    if place_type not in ("poi", "trackasia", "serper", "accommodation"):
+        raise HTTPException(status_code=400, detail="place_type không hợp lệ.")
     data = destination_service.place_detail(place_type, place_id)
     if not data:
         raise HTTPException(status_code=404, detail="Không tìm thấy địa điểm.")
@@ -73,13 +75,13 @@ def place_detail(place_type: str, place_id: int):
 
 
 @places_router.post("/{place_type}/{place_id}/enrichment")
-def enrich_place(place_type: str, place_id: int, response: Response):
+def enrich_place(place_type: str, place_id: str, response: Response):
     """Cache-first làm giàu: 200 cache/hoàn tất, 202 đang fetch, 404/503 lỗi.
 
     Client gọi lại khi gặp 202 (tối đa vài lần, cách nhau 2 giây).
     """
-    if place_type not in ("poi", "accommodation"):
-        raise HTTPException(status_code=400, detail="place_type phải là poi hoặc accommodation.")
+    if place_type not in ("poi", "trackasia", "serper", "accommodation"):
+        raise HTTPException(status_code=400, detail="place_type không hợp lệ.")
     status_code, body = enrichment_service.enrich(place_type, place_id)
     if status_code in (404, 503):
         raise HTTPException(status_code=status_code, detail=body["detail"])

@@ -13,6 +13,8 @@ def ensure_db_schema():
     """Nâng cấp schema nhẹ trên DB cũ khi khởi động (idempotent)."""
     try:
         execute_query("ALTER TABLE place_photos ADD COLUMN IF NOT EXISTS details JSONB;")
+        execute_query("ALTER TABLE place_photos ALTER COLUMN place_id TYPE VARCHAR(512) USING place_id::text;")
+        execute_query("ALTER TABLE favorites ALTER COLUMN place_id TYPE VARCHAR(512) USING place_id::text;")
         enrichment_repo.ensure_schema()
     except Exception as e:
         logger.warning("Không thể nâng cấp schema: %s", e)

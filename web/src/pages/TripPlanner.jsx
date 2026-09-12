@@ -59,8 +59,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
   const [goiYNoiBat, setGoiYNoiBat] = useState([]);
   const [viTri, setViTri] = useState(null);
   const [toiUu, setToiUu] = useState(null);
-  const [duong, setDuong] = useState(null);
-  const [dangVe, setDangVe] = useState(null);
+  const [duongTheoNgay, setDuongTheoNgay] = useState({});
   const [loi, setLoi] = useState("");
 
   const [sidebarWidth, setSidebarWidth] = useState(600);
@@ -167,13 +166,37 @@ export default function TripPlanner({ user, onNeedAuth }) {
       setStops(moiStops);
       if (moiSections) setSections(moiSections);
       setToiUu(null);
-      setDuong(null);
       luu(moiStops, ss);
     },
     [sections, luu]
   );
 
-  function themVaoMuc(p, sectionKey) {
+  // Payload kéo-thả chỉ có {type, id}: thiếu tên hoặc toạ độ thì tra chi tiết
+  // trước khi thêm. KHÔNG bao giờ tạo stop thiếu dữ liệu — nó không lên được bản
+  // đồ, không xếp được tuyến, và biến mất ở lần tải lại sau.
+  async function boSungChiTiet(p) {
+    const thieuDuLieu =
+      !p?.name ||
+      (typeof p.name === "string" && !p.name.trim()) ||
+      p.lon == null ||
+      p.lat == null;
+    if (!thieuDuLieu) return p;
+
+    try {
+      const res = await api.place(p.type, p.id);
+      const chiTiet = res?.place || res;
+      if (!chiTiet?.name || chiTiet.lon == null || chiTiet.lat == null) {
+        setLoi("Không tải được thông tin địa điểm này.");
+        return null;
+      }
+      return { ...p, ...chiTiet };
+    } catch {
+      setLoi("Không tải được thông tin địa điểm này.");
+      return null;
+    }
+  }
+
+  async function themVaoMuc(p, sectionKey) {
     const cu = stops.find((s) => cungDiem(s, p) && s.role !== "lodging");
     if (cu) {
       if (cu.section === sectionKey) return;
@@ -181,17 +204,19 @@ export default function TripPlanner({ user, onNeedAuth }) {
         stops.map((s) => (s === cu ? { ...s, section: sectionKey } : s))
       );
     }
+    const diem = await boSungChiTiet(p);
+    if (!diem) return;
     capNhat([
       ...stops,
       {
-        type: p.type,
-        id: p.id,
-        name: p.name,
-        lon: p.lon,
-        lat: p.lat,
-        category: p.category,
-        dia_chi: p.dia_chi,
-        mo_ta: p.mo_ta,
+        type: diem.type,
+        id: diem.id,
+        name: diem.name,
+        lon: diem.lon,
+        lat: diem.lat,
+        category: diem.category,
+        dia_chi: diem.dia_chi,
+        mo_ta: diem.mo_ta,
         section: sectionKey,
         day: null,
         role: "place",
@@ -199,20 +224,23 @@ export default function TripPlanner({ user, onNeedAuth }) {
     ]);
   }
 
-  function xepVaoNgay(p, day) {
+  async function xepVaoNgay(p, day) {
     const cu = stops.find((s) => cungDiem(s, p) && s.role !== "lodging");
     if (cu) return capNhat(stops.map((s) => (s === cu ? { ...s, day } : s)));
+
+    const diem = await boSungChiTiet(p);
+    if (!diem) return;
     capNhat([
       ...stops,
       {
-        type: p.type,
-        id: p.id,
-        name: p.name,
-        lon: p.lon,
-        lat: p.lat,
-        category: p.category,
-        dia_chi: p.dia_chi,
-        mo_ta: p.mo_ta,
+        type: diem.type,
+        id: diem.id,
+        name: diem.name,
+        lon: diem.lon,
+        lat: diem.lat,
+        category: diem.category,
+        dia_chi: diem.dia_chi,
+        mo_ta: diem.mo_ta,
         section: sections[0]?.key || MUC_MAC_DINH,
         day,
         role: "place",
@@ -245,20 +273,6 @@ export default function TripPlanner({ user, onNeedAuth }) {
 
   const boChoNgu = (day) =>
     capNhat(stops.filter((s) => !(s.day === day && s.role === "lodging")));
-
-  function chuyen(s, huong) {
-    const cungNgay = stops.filter(
-      (x) => x.day === s.day && x.role !== "lodging"
-    );
-    const i = cungNgay.indexOf(s);
-    const j = i + huong;
-    if (j < 0 || j >= cungNgay.length) return;
-    const a = stops.indexOf(cungNgay[i]);
-    const b = stops.indexOf(cungNgay[j]);
-    const moi = [...stops];
-    [moi[a], moi[b]] = [moi[b], moi[a]];
-    capNhat(moi);
-  }
 
   function sapXepLaiTrongNgay(s, viTriMoi) {
     if (!s || s.day == null) return;
@@ -327,47 +341,15 @@ export default function TripPlanner({ user, onNeedAuth }) {
     try {
       const d = await api.optimizeItinerary(id, ngay);
       setStops(d.stops_details || []);
-      setToiUu(d.thong_ke?.[0] || null);
+      const thongKeNgay = (d.thong_ke || []).find((item) => item.day === ngay);
+      setToiUu(thongKeNgay || null);
+      if (!thongKeNgay) {
+        setLoi("Cần ít nhất 3 địa điểm có toạ độ để sắp tuyến cho ngày này.");
+      }
     } catch (e) {
       setLoi(e.message);
     } finally {
       setDangLuu(false);
-    }
-  }
-
-  async function veDuongThat(ngay) {
-    const ds = stops.filter(
-      (s) => s.day === ngay && s.role !== "lodging" && s.lon != null
-    );
-    const choNgu = stops.find((s) => s.day === ngay && s.role === "lodging");
-    const chuoi = choNgu ? [choNgu, ...ds, choNgu] : ds;
-    if (chuoi.length < 2) return;
-    setDangVe(ngay);
-    setLoi("");
-    const doan = [];
-    let met = 0;
-    try {
-      for (let i = 0; i < chuoi.length - 1; i++) {
-        const d = await api.route({
-          start_lon: chuoi[i].lon,
-          start_lat: chuoi[i].lat,
-          end_lon: chuoi[i + 1].lon,
-          end_lat: chuoi[i + 1].lat,
-        });
-        met += d.total_distance_meters || 0;
-        d.path.forEach((c) =>
-          doan.push({
-            type: "Feature",
-            properties: { name: c.street_name },
-            geometry: c.geom,
-          })
-        );
-      }
-      setDuong({ day: ngay, doan, met, isClosed: !!choNgu });
-    } catch (e) {
-      setLoi(`Không tính được đường cho ngày ${ngay}: ${e.message}`);
-    } finally {
-      setDangVe(null);
     }
   }
 
@@ -558,7 +540,6 @@ export default function TripPlanner({ user, onNeedAuth }) {
               onHover={(d) => setNgayXem(d)}
               onXep={xepVaoNgay}
               onBoNgay={boKhoiNgay}
-              onChuyen={chuyen}
               onSapXepLai={sapXepLaiTrongNgay}
               onXem={setDiemChon}
               onDatChoNgu={datChoNgu}
@@ -566,9 +547,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
               onToiUu={toiUuNgay}
               dangLuu={dangLuu}
               toiUu={toiUu}
-              onVeDuong={veDuongThat}
-              dangVe={dangVe}
-              duong={duong}
+              duongTheoNgay={duongTheoNgay}
               onResults={setTimThay}
               onThemChuaXep={(p) =>
                 themVaoMuc(p, sections[0]?.key || MUC_MAC_DINH)
@@ -594,12 +573,13 @@ export default function TripPlanner({ user, onNeedAuth }) {
           <ErrorBoundary ten="Bản đồ">
             <TripMap
               stops={stops}
-              focusDay={duong ? duong.day : ngayXem}
+              focusDay={ngayXem}
               timThay={timThay}
               noiBat={noiBat}
               diemChon={diemChon}
-              onThem={(p) => themVaoMuc(p, sections[0]?.key || MUC_MAC_DINH)}
-              duongThat={duong?.doan}
+              onThem={(place) => themVaoMuc(place, sections[0]?.key || MUC_MAC_DINH)}
+              onXemChiTiet={(place) => nav(`/dia-diem/${place.type}/${place.id}`)}
+              onDayRoutes={setDuongTheoNgay}
             />
           </ErrorBoundary>
           <PlannerAssistant

@@ -20,16 +20,13 @@ export default function PlannerLichTrinh({
   onHover,
   onXep,
   onBoNgay,
-  onChuyen,
   onXem,
   onDatChoNgu,
   onBoChoNgu,
   onToiUu,
   dangLuu,
   toiUu,
-  onVeDuong,
-  dangVe,
-  duong,
+  duongTheoNgay,
   onResults,
   onThemChuaXep,
   onXoaDiem,
@@ -150,14 +147,19 @@ export default function PlannerLichTrinh({
       {/* 2. Nhóm Địa điểm muốn đi / Chưa xếp lịch (theo Interary.html dòng 228-274) */}
       <div className="planner-itinerary__unassigned">
         <div className="planner-itinerary__unassigned-header">
-          <div className="planner-itinerary__unassigned-title-wrap">
-            <span className="planner-itinerary__unassigned-dot" />
-            <h3 className="planner-itinerary__unassigned-title">
-              Địa điểm muốn đi (Chưa xếp lịch)
-            </h3>
-            <span className="planner-itinerary__unassigned-count">
-              {chuaXep.length} điểm
-            </span>
+          <div className="flex-1 min-w-0">
+            <div className="planner-itinerary__unassigned-title-wrap">
+              <span className="planner-itinerary__unassigned-dot" />
+              <h3 className="planner-itinerary__unassigned-title">
+                Chưa xếp lịch
+              </h3>
+              <span className="planner-itinerary__unassigned-count">
+                {chuaXep.length} điểm
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Gồm mọi mục ở phần Tổng quan
+            </p>
           </div>
 
           {onAutoAssign && chuaXep.length > 0 && (
@@ -294,7 +296,6 @@ export default function PlannerLichTrinh({
               onHover={onHover}
               onXep={onXep}
               onBoNgay={onBoNgay}
-              onChuyen={onChuyen}
               onSapXepLai={onSapXepLai}
               onXem={onXem}
               onDatChoNgu={onDatChoNgu}
@@ -302,9 +303,7 @@ export default function PlannerLichTrinh({
               onToiUu={() => onToiUu(ngay)}
               dangLuu={dangLuu}
               toiUu={toiUu?.day === ngay ? toiUu : null}
-              onVeDuong={() => onVeDuong(ngay)}
-              dangVe={dangVe === ngay}
-              duong={duong?.day === ngay ? duong : null}
+              duong={duongTheoNgay?.[ngay] || null}
             />
           </div>
         ))}

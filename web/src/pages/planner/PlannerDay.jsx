@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import PlannerLodgingPicker from "./PlannerLodgingPicker";
 import PlannerPlacePicker from "./PlannerPlacePicker";
 import {
+  MAU_NGAY,
   dongPhu,
-  mauTheoNgay,
   nhanNgay,
   tinhKhoangCachKm,
   uocTinhThoiGian,
@@ -25,7 +25,6 @@ export default function PlannerDay({
   onHover,
   onXep,
   onBoNgay,
-  onChuyen,
   onSapXepLai,
   onXem,
   onDatChoNgu,
@@ -33,8 +32,6 @@ export default function PlannerDay({
   onToiUu,
   dangLuu,
   toiUu,
-  onVeDuong,
-  dangVe,
   duong,
 }) {
   const [keo, setKeo] = useState(false);
@@ -42,22 +39,23 @@ export default function PlannerDay({
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
 
-  const mauNgay = useMemo(() => mauTheoNgay(ngay), [ngay]);
+  // Một accent duy nhất cho mọi ngày — xem plannerUtils.MAU_NGAY.
+  const mauNgay = MAU_NGAY;
 
-  // Tính tổng quãng đường ước tính giữa các điểm dừng
-  const tongKmUocTinh = useMemo(() => {
+  // Tính tổng quãng đường và nhãn hiển thị theo nguồn dữ liệu
+  const nhanQuangDuong = useMemo(() => {
     if (duong?.met) {
-      return (duong.met / 1000).toFixed(1);
+      return `Đường bộ: ~${(duong.met / 1000).toFixed(1)} km`;
     }
     if (toiUu?.sau_m) {
-      return (toiUu.sau_m / 1000).toFixed(1);
+      return `Chim bay (đã tối ưu): ~${(toiUu.sau_m / 1000).toFixed(1)} km`;
     }
     let tong = 0;
     for (let i = 0; i < ds.length - 1; i++) {
       const d = tinhKhoangCachKm(ds[i], ds[i + 1]);
       if (d) tong += d;
     }
-    return tong > 0 ? tong.toFixed(1) : null;
+    return tong > 0 ? `Chim bay: ~${tong.toFixed(1)} km` : null;
   }, [ds, duong, toiUu]);
 
   const handleDragStart = (e, s, index) => {
@@ -177,8 +175,13 @@ export default function PlannerDay({
           </div>
           <p className="planner-day__meta">
             {ds.length} địa điểm
-            {tongKmUocTinh && ` • Quãng đường: ~${tongKmUocTinh} km`}
+            {nhanQuangDuong && ` • ${nhanQuangDuong}`}
             {choNgu ? ` • Nghỉ tại: ${choNgu.name}` : ""}
+            {toiUu && toiUu.sau_m < toiUu.truoc_m && (
+              <span className="planner-day__optimization-result">
+                ↓ giảm {((toiUu.truoc_m - toiUu.sau_m) / 1000).toFixed(1)} km
+              </span>
+            )}
           </p>
         </div>
 
@@ -195,20 +198,6 @@ export default function PlannerDay({
               title="Sắp lại thứ tự cho đi ít đường nhất"
             >
               {dangLuu ? "Đang sắp tuyến..." : "Sắp tuyến tối ưu"}
-            </button>
-          )}
-
-          {isExpanded && ds.length >= 2 && (
-            <button
-              type="button"
-              onClick={onVeDuong}
-              disabled={dangVe}
-              className={`planner-day__action-btn ${
-                duong ? "planner-day__action-btn--active" : ""
-              }`}
-              title="Tính đường bộ thật bằng OSRM / pgRouting"
-            >
-              {dangVe ? "Đang tính..." : duong ? "Đã vẽ đường" : "Đường bộ"}
             </button>
           )}
 
@@ -232,18 +221,6 @@ export default function PlannerDay({
       {/* Nội dung chi tiết chỉ hiện khi ngày đang mở */}
       {isExpanded && (
         <>
-          {/* Thông báo kết quả tối ưu */}
-          {toiUu && (
-            <p className="planner-day__note">
-              <i className="fa-solid fa-bolt" />
-              <span>
-                Đã tối ưu lộ trình: {(toiUu.truoc_m / 1000).toFixed(1)} km còn{" "}
-                <b>{(toiUu.sau_m / 1000).toFixed(1)} km</b>{" "}
-                <span className="planner-day__note-dim">(chim bay)</span>
-              </span>
-            </p>
-          )}
-
           {/* Thông báo kết quả đường bộ thật */}
           {duong && (
             <p className="planner-day__note">
@@ -329,29 +306,6 @@ export default function PlannerDay({
                         </button>
 
                         <div className="planner-day__stop-tools">
-                          <div className="planner-day__reorder">
-                            <button
-                              type="button"
-                              onClick={() => onChuyen(s, -1)}
-                              disabled={i === 0}
-                              aria-label="Lên trước"
-                              className="planner-day__reorder-btn"
-                              title="Chuyển lên trước"
-                            >
-                              <i className="fa-solid fa-caret-up" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onChuyen(s, 1)}
-                              disabled={i === ds.length - 1}
-                              aria-label="Xuống sau"
-                              className="planner-day__reorder-btn"
-                              title="Chuyển xuống sau"
-                            >
-                              <i className="fa-solid fa-caret-down" />
-                            </button>
-                          </div>
-
                           <button
                             type="button"
                             onClick={() => onBoNgay(s)}
@@ -370,7 +324,7 @@ export default function PlannerDay({
                       <div className="planner-day__distance-row">
                         <i className="fa-solid fa-arrow-down-long planner-day__distance-icon" />
                         <span className="planner-day__distance-text">
-                          Di chuyển ~{kmChặng} km {tgChặng ? `• ${tgChặng} đi xe` : ""}
+                          Đi ~{kmChặng} km (chim bay){tgChặng ? ` • ${tgChặng} đi xe` : ""}
                         </span>
                       </div>
                     )}
