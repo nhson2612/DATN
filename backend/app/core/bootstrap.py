@@ -4,7 +4,8 @@ from app.core.config import settings
 from app.core.database import execute_query
 from app.core.logging import get_logger
 from app.core.security import hash_password
-from app.repositories import enrichment_repo, user_repo
+from app.shared.accounts import repository as user_repo
+from app.shared.enrichment import repository as enrichment_repo
 
 logger = get_logger(__name__)
 

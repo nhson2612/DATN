@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from app.core.config import settings  # noqa: E402
 from app.main import app  # noqa: E402
-from app.services.destination_service import slugify  # noqa: E402
+from app.self_guided.destinations.service import slugify  # noqa: E402
 
 
 def _db_available():

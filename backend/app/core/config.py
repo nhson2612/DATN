@@ -44,16 +44,15 @@ class Settings(BaseSettings):
     serper_url: str = "https://google.serper.dev/search"
     serper_images_url: str = "https://google.serper.dev/images"
     serper_places_url: str = "https://google.serper.dev/places"
+    serper_maps_url: str = "https://google.serper.dev/maps"
     serper_timeout: int = Field(default=20, ge=1, le=60)
+    # Bán kính lọc kết quả quanh tâm, tính bằng mét (tự lọc sau khi provider trả về).
+    serper_search_radius_m: int = Field(default=50000, ge=1000, le=100000)
 
-    # ---- TrackAsia (dữ liệu địa điểm có cấu trúc) ----
-    # Chỉ backend gọi API này. Key không bao giờ được đưa vào response hay log.
-    trackasia_api_key: str | None = None
-    trackasia_url: str = "https://maps.track-asia.com"
-    trackasia_timeout: int = Field(default=12, ge=1, le=60)
-    trackasia_match_distance_m: int = Field(default=750, ge=50, le=5000)
-    trackasia_extended_match_distance_m: int = Field(default=5000, ge=500, le=20000)
-    trackasia_search_radius_m: int = Field(default=50000, ge=1000, le=100000)
+    # ---- Tavily (Tìm kiếm web & hỏi đáp thông tin du lịch) ----
+    tavily_api_key: str | None = None
+    tavily_url: str = "https://api.tavily.com/search"
+    tavily_timeout: int = Field(default=15, ge=1, le=60)
 
     # Phạm vi địa lý của DB đang dùng, chèn vào IR_SYSTEM_PROMPT. Mặc định là
     # "Đà Nẵng" để giữ nguyên prompt mà mọi số benchmark đo trên đó; đổi sang

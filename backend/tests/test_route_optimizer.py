@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from app.core.config import settings  # noqa: E402
 from app.main import app  # noqa: E402
-from app.services import route_optimizer as ro  # noqa: E402
+from app.self_guided.itinerary import optimizer as ro  # noqa: E402
 
 
 def _db_available():

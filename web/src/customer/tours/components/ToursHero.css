@@ -1,0 +1,44 @@
+/* ==========================================================================
+   BLOCK: .tours-hero (Hero Banner & Search Bar từ .design/Tours.html)
+   ========================================================================== */
+
+.tours-hero {
+  position: relative;
+  padding-top: 2.5rem;
+  padding-bottom: 3rem;
+  border-bottom: 1px solid #f3f4f6;
+  overflow: hidden;
+}
+
+.tours-hero__bg-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tours-hero__bg-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-image: url("/assets/images/tours-hero-bg.jpg");
+  -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.85) 35%, rgba(0, 0, 0, 0.2) 65%, rgba(0, 0, 0, 0) 75%);
+  mask-image: linear-gradient(to left, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.85) 35%, rgba(0, 0, 0, 0.2) 65%, rgba(0, 0, 0, 0) 75%);
+}
+
+.tours-hero__bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #ffffff 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%);
+  width: 65%;
+}
+
+@media (max-width: 1023px) {
+  .tours-hero__bg-overlay {
+    width: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+  }
+}

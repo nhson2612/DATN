@@ -21,8 +21,8 @@ from fastapi.testclient import TestClient
 from app.core.config import settings
 from app.core.database import execute_query
 from app.main import app
-from app.repositories import tour_repo
-from app.services import tour_service
+from app.tours.search_tours import repository as tour_repo
+from app.tours.search_tours import service as tour_service
 
 TZ_VN = ZoneInfo("Asia/Ho_Chi_Minh")
 
@@ -131,7 +131,7 @@ class TestNghiemThuPhase1(unittest.TestCase):
         }
 
         # Mock tour_repo.list_tours để kiểm tra tầng service và API endpoint
-        with patch("app.repositories.tour_repo.list_tours", return_value=([tour_mau], 1)):
+        with patch("app.tours.search_tours.repository.list_tours", return_value=([tour_mau], 1)):
             resp = self.c.get("/api/tours")
             self.assertEqual(resp.status_code, 200)
             data = resp.json()
@@ -162,7 +162,7 @@ class TestNghiemThuPhase1(unittest.TestCase):
         }
 
         # Bắt tham số truyền xuống repo khi gọi API với max_price=5000000
-        with patch("app.repositories.tour_repo.list_tours", return_value=([tour_mau], 1)) as mock_list:
+        with patch("app.tours.search_tours.repository.list_tours", return_value=([tour_mau], 1)) as mock_list:
             resp = self.c.get("/api/tours?max_price=5000000")
             self.assertEqual(resp.status_code, 200)
             # Đảm bảo max_price=5000000 được chuyển chính xác xuống repo
@@ -187,9 +187,9 @@ class TestNghiemThuPhase1(unittest.TestCase):
             {"id": 2, "depart_date": ngay2, "list_price": 6_000_000, "sale_price": 4_500_000, "seats_left": 10},
         ]
 
-        with patch("app.repositories.tour_repo.get_tour", return_value=raw_tour), \
-             patch("app.repositories.tour_repo.departures", return_value=raw_deps), \
-             patch("app.repositories.tour_repo.places_of_tour", return_value={}):
+        with patch("app.tours.search_tours.repository.get_tour", return_value=raw_tour), \
+             patch("app.tours.search_tours.repository.departures", return_value=raw_deps), \
+             patch("app.tours.search_tours.repository.places_of_tour", return_value={}):
 
             tour = tour_service.get_tour("tour-chi-tiet-sale")
             self.assertIsNotNone(tour)
@@ -214,7 +214,7 @@ class TestNghiemThuPhase1(unittest.TestCase):
     def test_endpoint_tour_provinces(self):
         """Endpoint GET /api/tours/provinces trả danh sách tỉnh có tour."""
         mock_provinces = [{"id": 1, "name": "Đà Nẵng"}, {"id": 2, "name": "Hà Nội"}]
-        with patch("app.repositories.tour_repo.list_tour_provinces", return_value=mock_provinces):
+        with patch("app.tours.search_tours.repository.list_tour_provinces", return_value=mock_provinces):
             resp = self.c.get("/api/tours/provinces")
             self.assertEqual(resp.status_code, 200)
             data = resp.json()
@@ -224,7 +224,7 @@ class TestNghiemThuPhase1(unittest.TestCase):
 
     def test_loc_va_sap_xep_tours_truyen_dung_tham_so(self):
         """Kiểm tra GET /api/tours truyền đúng tất cả tham số lọc và sắp xếp xuống repo."""
-        with patch("app.repositories.tour_repo.list_tours", return_value=([], 0)) as mock_list:
+        with patch("app.tours.search_tours.repository.list_tours", return_value=([], 0)) as mock_list:
             resp = self.c.get(
                 "/api/tours?province_id=3114&depart_from=2026-09-10&depart_to=2026-09-20"
                 "&price_min=1000000&price_max=5000000&max_days=3&guests=2&sort=price_asc"
@@ -259,9 +259,9 @@ class TestNghiemThuPhase1(unittest.TestCase):
         }
 
         # Mock tầng repository để kiểm tra tính toàn vẹn khi tầng service và route trả ra API
-        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
-             patch("app.repositories.tour_repo.departures", return_value=[]), \
-             patch("app.repositories.tour_repo.places_of_tour", return_value={}):
+        with patch("app.tours.search_tours.repository.get_tour", return_value=dict(raw_tour)), \
+             patch("app.tours.search_tours.repository.departures", return_value=[]), \
+             patch("app.tours.search_tours.repository.places_of_tour", return_value={}):
 
             resp = self.c.get("/api/tours/tour-danang-gallery-roundtrip")
             self.assertEqual(resp.status_code, 200)
@@ -283,8 +283,8 @@ class TestNghiemThuPhase1(unittest.TestCase):
         def mock_has_col(table, col):
             return col in {"cancellation_policy", "status", "images"}
 
-        with patch("app.repositories.tour_repo.execute_query", mock_execute), \
-             patch("app.repositories.tour_repo._has_col", side_effect=mock_has_col):
+        with patch("app.tours.search_tours.repository.execute_query", mock_execute), \
+             patch("app.tours.search_tours.repository._has_col", side_effect=mock_has_col):
 
             # Trường hợp 1: cover_url để trống nhưng có images -> tự gán cover_url = images[0]
             tour_id = tour_repo.create_tour({
@@ -328,9 +328,9 @@ class TestNghiemThuPhase1(unittest.TestCase):
             "itinerary": [],
         }
 
-        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
-             patch("app.repositories.tour_repo.departures", return_value=[]), \
-             patch("app.repositories.tour_repo.places_of_tour", return_value={}):
+        with patch("app.tours.search_tours.repository.get_tour", return_value=dict(raw_tour)), \
+             patch("app.tours.search_tours.repository.departures", return_value=[]), \
+             patch("app.tours.search_tours.repository.places_of_tour", return_value={}):
 
             resp = self.c.get("/api/tours/tour-unmigrated-db")
             self.assertEqual(resp.status_code, 200)
@@ -359,10 +359,10 @@ class TestNghiemThuPhase1(unittest.TestCase):
             "https://upload.wikimedia.org/photo_103.jpg",
         ]
 
-        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
-             patch("app.repositories.tour_repo.departures", return_value=[]), \
-             patch("app.repositories.tour_repo.places_of_tour", return_value={}), \
-             patch("app.repositories.tour_repo.get_itinerary_photos", return_value=mock_photos):
+        with patch("app.tours.search_tours.repository.get_tour", return_value=dict(raw_tour)), \
+             patch("app.tours.search_tours.repository.departures", return_value=[]), \
+             patch("app.tours.search_tours.repository.places_of_tour", return_value={}), \
+             patch("app.tours.search_tours.repository.get_itinerary_photos", return_value=mock_photos):
 
             resp = self.c.get("/api/tours/tour-fallback-itinerary")
             self.assertEqual(resp.status_code, 200)
@@ -389,10 +389,10 @@ class TestNghiemThuPhase1(unittest.TestCase):
         }
         mock_photos = ["https://upload.wikimedia.org/photo_real_101.jpg"]
 
-        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
-             patch("app.repositories.tour_repo.departures", return_value=[]), \
-             patch("app.repositories.tour_repo.places_of_tour", return_value={}), \
-             patch("app.repositories.tour_repo.get_itinerary_photos", return_value=mock_photos):
+        with patch("app.tours.search_tours.repository.get_tour", return_value=dict(raw_tour)), \
+             patch("app.tours.search_tours.repository.departures", return_value=[]), \
+             patch("app.tours.search_tours.repository.places_of_tour", return_value={}), \
+             patch("app.tours.search_tours.repository.get_itinerary_photos", return_value=mock_photos):
 
             resp = self.c.get("/api/tours/tour-strip-generic")
             self.assertEqual(resp.status_code, 200)
@@ -416,10 +416,10 @@ class TestNghiemThuPhase1(unittest.TestCase):
             ],
         }
 
-        with patch("app.repositories.tour_repo.get_tour", return_value=dict(raw_tour)), \
-             patch("app.repositories.tour_repo.departures", return_value=[]), \
-             patch("app.repositories.tour_repo.places_of_tour", return_value={}), \
-             patch("app.repositories.tour_repo.get_itinerary_photos", return_value=[]):
+        with patch("app.tours.search_tours.repository.get_tour", return_value=dict(raw_tour)), \
+             patch("app.tours.search_tours.repository.departures", return_value=[]), \
+             patch("app.tours.search_tours.repository.places_of_tour", return_value={}), \
+             patch("app.tours.search_tours.repository.get_itinerary_photos", return_value=[]):
 
             resp = self.c.get("/api/tours/tour-no-photos")
             self.assertEqual(resp.status_code, 200)

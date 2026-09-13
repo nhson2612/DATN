@@ -1,0 +1,547 @@
+/* Bước 5: Xem lại toàn bộ nội dung tour trước khi lưu */
+.op-review-step {
+  width: 100%;
+}
+
+.op-review-step__card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.op-review-step__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f0eae6;
+  padding-bottom: 14px;
+}
+
+.op-review-step__card-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0b1c30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.op-review-step__card-title .material-symbols-outlined {
+  color: #09090b;
+  font-size: 22px;
+}
+
+/* Link "Chỉnh sửa" tinh tế chuẩn UI e-commerce (Amazon, Shopify), không dùng nút to màu primary */
+.op-screen .op-review-step__edit-link,
+.op-review-step__edit-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 2px 6px !important;
+  margin: 0 !important;
+  color: #2563eb !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  border-radius: 4px !important;
+  line-height: 1.4 !important;
+  transition: color 0.15s ease, background-color 0.15s ease !important;
+}
+
+.op-screen .op-review-step__edit-link:hover,
+.op-review-step__edit-link:hover {
+  color: #1d4ed8 !important;
+  text-decoration: underline !important;
+  background-color: rgba(37, 99, 235, 0.06) !important;
+  border: none !important;
+}
+
+.op-screen .op-review-step__edit-link:focus-visible,
+.op-review-step__edit-link:focus-visible {
+  outline: 2px solid #93c5fd !important;
+  outline-offset: 2px !important;
+}
+
+/* ==================== THÔNG TIN CƠ BẢN ==================== */
+.op-review-step__main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.op-review-step__title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.op-review-step__tour-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.35;
+}
+
+.op-review-step__tour-summary {
+  margin: 0;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.op-review-step__meta-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.op-review-step__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.op-review-step__meta-item .material-symbols-outlined {
+  color: #71717a;
+  font-size: 20px;
+}
+
+.op-review-step__meta-item small {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.op-review-step__meta-item strong {
+  display: block;
+  font-size: 14px;
+  color: #111827;
+}
+
+.op-review-step__desc-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.op-review-step__desc-text {
+  margin: 0;
+  font-size: 13.5px;
+  color: #4b5563;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.op-review-step__highlights-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.op-review-step__sublabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.op-review-step__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.op-review-step__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f4f4f5;
+  color: #18181b;
+  border: 1px solid #e4e4e7;
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.op-review-step__tag .material-symbols-outlined {
+  font-size: 15px;
+}
+
+/* ==================== HÌNH ẢNH & MEDIA ==================== */
+.op-review-step__media-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.op-review-step__cover-preview {
+  position: relative;
+  height: 220px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f3f4f6;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.op-review-step__cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.op-review-step__cover-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.op-review-step__cover-empty {
+  height: 160px;
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.op-review-step__cover-empty .material-symbols-outlined {
+  font-size: 32px;
+}
+
+.op-review-step__gallery-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.op-review-step__gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.op-review-step__gallery-tile {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.op-review-step__gallery-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ==================== LỊCH TRÌNH ==================== */
+.op-review-step__itinerary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.op-review-step__day-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border-left: 3px solid #09090b;
+}
+
+.op-review-step__day-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.op-review-step__day-num {
+  background: #09090b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.op-review-step__day-title-text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.op-review-step__day-desc {
+  margin: 0;
+  font-size: 13.5px;
+  color: #565e74;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.op-review-step__day-places {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.op-review-step__place-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.op-review-step__place-item .material-symbols-outlined {
+  color: #71717a;
+  font-size: 18px;
+  flex: none;
+  margin-top: 2px;
+}
+
+.op-review-step__place-item strong {
+  display: block;
+  font-size: 13.5px;
+  color: #111827;
+}
+
+.op-review-step__place-item small {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.op-review-step__place-note {
+  font-style: italic;
+  color: #71717a !important;
+}
+
+.op-review-step__missing-inline {
+  margin: 4px 0 0 0;
+  font-size: 12.5px;
+  color: #dc2626;
+  font-style: italic;
+}
+
+.op-review-step__day-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.op-review-step__check-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #4b5563;
+}
+
+.op-review-step__check-row .material-symbols-outlined {
+  font-size: 16px;
+  color: #16a34a;
+}
+
+/* ==================== DỊCH VỤ & CHÍNH SÁCH ==================== */
+.op-review-step__policy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.op-review-step__service-box {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.op-review-step__sublabel--inc {
+  color: #16a34a;
+}
+
+.op-review-step__sublabel--exc {
+  color: #dc2626;
+}
+
+.op-review-step__service-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.op-review-step__service-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.op-review-step__service-item .material-symbols-outlined {
+  font-size: 18px;
+  flex: none;
+  margin-top: 2px;
+}
+
+.op-review-step__service-item--inc .material-symbols-outlined {
+  color: #16a34a;
+}
+
+.op-review-step__service-item--exc .material-symbols-outlined {
+  color: #dc2626;
+}
+
+.op-review-step__refund-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.op-review-step__refund-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.op-review-step__refund-table th {
+  text-align: left;
+  padding: 10px 14px;
+  background: #f9fafb;
+  color: #4b5563;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.op-review-step__refund-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+}
+
+.op-review-step__refund-table td strong {
+  color: #09090b;
+}
+
+/* Cột bên phải */
+.op-review-step__status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.op-review-step__status-pill--success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.op-review-step__status-pill--warn {
+  background: #f4f4f5;
+  color: #71717a;
+  border: 1px solid #e4e4e7;
+}
+
+.op-review-step__missing-box {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: #991b1b;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.op-review-step__missing-box .material-symbols-outlined {
+  color: #dc2626;
+  font-size: 20px;
+  flex: none;
+  margin-top: 1px;
+}
+
+.op-review-step__missing-box strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.op-review-step__missing-box p {
+  margin: 0;
+}
+
+.op-review-step__empty-text {
+  margin: 0;
+  font-size: 13.5px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .op-review-step__policy-grid {
+    grid-template-columns: 1fr;
+  }
+}

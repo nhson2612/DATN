@@ -1,8 +1,8 @@
 import json
 import random
 import os
-from app.db import execute_query
-from app.gold_templates import get_gold_sql_and_params
+from app.core.database import execute_query
+from app.research.gold_templates import get_gold_sql_and_params
 
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "benchmark_gsqa_auto.json")
 

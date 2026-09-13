@@ -1,0 +1,62 @@
+/* Màn duyệt tour của quản trị (UC-AD02) - Chuẩn Shadcn UI */
+
+.tour-duyet__trong {
+  padding: 48px 16px;
+  text-align: center;
+  color: #71717a;
+  font-size: 14px;
+}
+
+.tour-duyet__ten {
+  display: block;
+  font-weight: 600;
+  color: #09090b;
+}
+
+.tour-duyet__tom-tat {
+  display: block;
+  margin-top: 2px;
+  color: #71717a;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.tour-duyet__thao-tac {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.tour-duyet__ly-do {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.tour-duyet__ly-do input {
+  flex: 1;
+  min-width: 220px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #09090b;
+  outline: none;
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tour-duyet__ly-do input:focus {
+  border-color: #09090b;
+  box-shadow: 0 0 0 2px rgba(9, 9, 11, 0.1);
+}
+
+.tour-duyet__ly-do-loi {
+  display: block;
+  margin-top: 4px;
+  color: #e11d48;
+  font-size: 12px;
+  font-weight: 500;
+}

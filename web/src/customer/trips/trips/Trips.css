@@ -1,0 +1,535 @@
+/* ==========================================================================
+   BLOCK: .wander-trips-page
+   Giao diện danh sách chuyến đi chuẩn phong cách Wanderlog (ảnh rhr.png)
+   ========================================================================== */
+
+.wander-trips-page {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* 1. Dòng tiêu đề chính và nút Plan new trip */
+.wander-trips-page__top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.wander-trips-page__title {
+  font-size: 2.125rem; /* ~34px */
+  font-weight: 900;
+  color: #1e293b;
+  letter-spacing: -0.035em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.wander-trips-page__plan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: #ff5a36; /* Màu coral cam đặc trưng Wanderlog */
+  color: #ffffff;
+  border-radius: 9999px;
+  padding: 0.625rem 1.35rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px -2px rgba(255, 90, 54, 0.35);
+  transition: all 0.15s ease-in-out;
+}
+
+.wander-trips-page__plan-btn:hover {
+  background-color: #e84c28;
+  box-shadow: 0 6px 18px -2px rgba(255, 90, 54, 0.45);
+  transform: translateY(-1px);
+}
+
+.wander-trips-page__plan-btn:active {
+  transform: translateY(0);
+}
+
+/* 2. Dòng bộ lọc: Recently viewed ▾ */
+.wander-trips-page__filter-row {
+  position: relative;
+  display: inline-block;
+  width: fit-content;
+}
+
+.wander-trips-page__filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.15s;
+}
+
+.wander-trips-page__filter-btn:hover {
+  color: #0f172a;
+}
+
+.wander-trips-page__filter-dropdown {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
+  padding: 0.35rem;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 12rem;
+}
+
+.wander-trips-page__filter-item {
+  width: 100%;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.wander-trips-page__filter-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.wander-trips-page__filter-item.active {
+  background-color: #fff1ee;
+  color: #ff5a36;
+  font-weight: 700;
+}
+
+/* 3. Lưới các thẻ chuyến đi */
+.wander-trips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18.5rem, 1fr));
+  gap: 1.75rem;
+  padding-top: 0.25rem;
+}
+
+/* 4. Thẻ chuyến đi đơn lẻ (ảnh rhr.png) */
+.wander-trip-card {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.wander-trip-card:hover {
+  transform: translateY(-2px);
+}
+
+.wander-trip-card__image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 1.125rem; /* rounded-2xl */
+  overflow: hidden;
+  background-color: #f1f5f9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.wander-trip-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wander-trip-card:hover .wander-trip-card__image {
+  transform: scale(1.05);
+}
+
+/* Nút tác vụ nổi trên ảnh (Share & Three dots) */
+.wander-trip-card__overlay-actions {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  z-index: 10;
+}
+
+.wander-trip-card__share-btn {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wander-trip-card__share-btn:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.wander-trip-card__more-btn {
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wander-trip-card__more-btn:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Dropdown tuỳ chọn khác */
+.wander-trip-card__menu-dropdown {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  padding: 0.35rem;
+  min-width: 10.5rem;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.wander-trip-card__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
+  color: #334155;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.15s;
+}
+
+.wander-trip-card__menu-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.wander-trip-card__menu-item--delete {
+  color: #ef4444;
+}
+
+.wander-trip-card__menu-item--delete:hover {
+  background-color: #fef2f2;
+}
+
+/* Thông tin chuyến đi bên dưới ảnh (ảnh rhr.png) */
+.wander-trip-card__body {
+  padding: 0.625rem 0.125rem 0 0.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.wander-trip-card__title {
+  font-size: 0.9375rem; /* ~15px */
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  transition: color 0.15s;
+}
+
+.wander-trip-card:hover .wander-trip-card__title {
+  color: #ff5a36;
+}
+
+.wander-trip-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.wander-trip-card__avatar {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #475569;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wander-trip-card__bullet {
+  color: #cbd5e1;
+  font-weight: bold;
+}
+
+.wander-trip-card__dates {
+  font-weight: 600;
+  color: #475569;
+}
+
+.wander-trip-card__places {
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   MODAL TẠO CHUYẾN ĐI
+   ========================================================================== */
+
+.trips-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.trips-modal-card {
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 28rem;
+  padding: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #f1f5f9;
+}
+
+.trips-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.trips-modal-heading {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.trips-modal-close {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.trips-modal-close:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.trips-form-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  color: #64748b;
+  margin-bottom: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trips-modal-input {
+  width: 100%;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.trips-modal-input:focus {
+  border-color: #ff5a36;
+  box-shadow: 0 0 0 2px rgba(255, 90, 54, 0.15);
+}
+
+.trips-modal-input--with-icon {
+  padding-left: 2.25rem;
+}
+
+.trips-modal-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 1.125rem;
+  pointer-events: none;
+}
+
+.trips-modal-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.trips-modal-hint {
+  font-size: 0.75rem;
+  color: #ea580c;
+  font-weight: 600;
+  background-color: #fff7ed;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  display: inline-block;
+  margin: 0;
+}
+
+.trips-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 1rem;
+}
+
+.trips-dropdown-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 0.375rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+  max-height: 12rem;
+  overflow-y: auto;
+  padding: 0.25rem;
+}
+
+.trips-dropdown-item {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #334155;
+  border: none;
+  background: transparent;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.trips-dropdown-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Trạng thái rỗng */
+.trips-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 1.5rem;
+  background-color: #ffffff;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 1.5rem;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.trips-empty__icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background-color: #fff1ee;
+  color: #ff5a36;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trips-empty__title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.trips-empty__desc {
+  font-size: 0.875rem;
+  color: #64748b;
+  max-width: 24rem;
+  margin: 0;
+}

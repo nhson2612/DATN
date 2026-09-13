@@ -19,8 +19,8 @@ import unittest
 os.environ.setdefault("JWT_SECRET", "test-secret-key-for-unittest-only")
 
 from app.core.database import execute_query                      # noqa: E402
-from app.services import itinerary_service, serper_service, trackasia_service  # noqa: E402
-from app.services.itinerary_service import hydrate_stops          # noqa: E402
+from app.shared.places import serper as serper_service  # noqa: E402
+from app.self_guided.itinerary.service import hydrate_stops          # noqa: E402
 
 
 def _ma_serper(ten="Quán bún đậu", lat=16.0614, lon=108.2272):
@@ -43,9 +43,6 @@ def _co_csdl():
 
 
 class HydrateStopsTest(unittest.TestCase):
-    def setUp(self):
-        itinerary_service._trackasia_cache.clear()
-
     def test_dung_so_luong_va_thu_tu_voi_moi_loai_stop(self):
         """Bất biến chính: N stop vào -> đúng N stop ra, giữ nguyên thứ tự."""
         stops = [
@@ -77,40 +74,23 @@ class HydrateStopsTest(unittest.TestCase):
         self.assertAlmostEqual(ra[0]["lon"], 108.25)
         self.assertIsNone(ra[0].get("unresolved"))
 
-    def test_provider_loi_thi_giu_tham_chieu_chu_khong_bo(self):
-        """TrackAsia chết (thiếu key / mạng lỗi) không được làm mất stop."""
-        from unittest.mock import patch
+    def test_id_provider_cu_khong_tra_duoc_thi_giu_tham_chieu(self):
+        """Id của provider đã bỏ (poi / trackasia) vẫn phải còn trong lịch trình.
 
-        stops = [{"day": 3, "type": "trackasia", "id": "17:venue:abc",
-                  "section": "muon-di", "role": "place"}]
-        with patch.object(trackasia_service, "place_detail",
-                          side_effect=trackasia_service.TrackAsiaTransientError("hết quota")):
-            ra = hydrate_stops(stops)
+        Không còn đường tra tên/toạ độ cho hai loại id này, nhưng bỏ chúng đi là
+        xoá dữ liệu người dùng — nhất là khi /optimize ghi lại stops.
+        """
+        stops = [
+            {"day": 3, "type": "trackasia", "id": "17:venue:abc",
+             "section": "muon-di", "role": "place"},
+            {"day": 3, "type": "poi", "id": 4242, "section": "muon-di", "role": "place"},
+        ]
+        ra = hydrate_stops(stops)
 
-        self.assertEqual(len(ra), 1)
-        self.assertEqual(ra[0]["id"], "17:venue:abc")
-        self.assertTrue(ra[0]["unresolved"])
-        self.assertEqual(ra[0]["day"], 3)
-
-    def test_provider_co_du_lieu_thi_dien_toa_do(self):
-        from unittest.mock import patch
-
-        chi_tiet = {
-            "place_id": "17:venue:abc",
-            "name": "Bảo tàng Chăm",
-            "types": ["museum"],
-            "geometry": {"location": {"lat": 16.0555, "lng": 108.2233}},
-            "formatted_address": "Số 2 Bạch Đằng, Hải Châu, Đà Nẵng",
-        }
-        with patch.object(trackasia_service, "place_detail", return_value=chi_tiet):
-            ra = hydrate_stops([{"day": 2, "type": "trackasia", "id": "17:venue:abc",
-                                 "section": "muon-di", "role": "place"}])
-
-        self.assertEqual(len(ra), 1)
-        self.assertEqual(ra[0]["name"], "Bảo tàng Chăm")
-        self.assertAlmostEqual(ra[0]["lat"], 16.0555)
-        self.assertAlmostEqual(ra[0]["lon"], 108.2233)
-        self.assertEqual(ra[0]["category"], "museum")
+        self.assertEqual(len(ra), 2)
+        self.assertTrue(all(s["unresolved"] for s in ra))
+        self.assertEqual([s["day"] for s in ra], [3, 3])
+        self.assertEqual([s["section"] for s in ra], ["muon-di", "muon-di"])
 
     @unittest.skipUnless(_co_csdl(), "cần PostgreSQL")
     def test_cho_luu_tru_van_tra_duoc_tu_bang_noi_bo(self):

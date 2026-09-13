@@ -20,7 +20,7 @@ class _Response:
 class SerperServiceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from app.services import serper_service
+        from app.shared.places import serper_service
         cls.service = serper_service
 
     def test_search_places_maps_real_serper_fields(self):

@@ -23,8 +23,10 @@ from fastapi.testclient import TestClient
 from app.core.database import execute_query
 from app.core.security import create_access_token, hash_password
 from app.main import app
-from app.repositories import operator_repo, tour_repo, user_repo
-from app.services import tour_service
+from app.shared.accounts import repository as user_repo
+from app.tours.operator import repository as operator_repo
+from app.tours.search_tours import repository as tour_repo
+from app.tours.search_tours import service as tour_service
 
 TZ_VN = ZoneInfo("Asia/Ho_Chi_Minh")
 

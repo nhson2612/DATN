@@ -19,7 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.core.database import execute_query
-from app.repositories import tour_repo
+from app.tours.search_tours import repository as tour_repo
 
 # (tên tỉnh trong CSDL, số ngày, giá/khách, tiêu đề từng ngày)
 MAU = [

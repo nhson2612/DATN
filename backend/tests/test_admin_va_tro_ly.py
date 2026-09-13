@@ -24,16 +24,22 @@ from app.core.config import settings  # noqa: E402
 from app.main import app  # noqa: E402
 
 
-def _db_available():
+def _co_bang(ten: str) -> bool:
     try:
         from app.core.database import execute_query
-        execute_query("SELECT 1 FROM poi LIMIT 1")
+        execute_query(f"SELECT 1 FROM {ten} LIMIT 1")
         return True
     except Exception:
         return False
 
 
-requires_db = unittest.skipUnless(_db_available(), "cần PostGIS có dữ liệu")
+# Trang quản trị chỉ cần bảng accommodation — có trên cả gis_tourism lẫn gis_vietnam.
+requires_db = unittest.skipUnless(_co_bang("accommodation"), "cần PostGIS có dữ liệu")
+
+# Nhóm test trợ lý / tìm POI đi qua Serper (tính tiền mỗi lần gọi) và bảng `poi`
+# chỉ tồn tại ở gis_tourism. Cổng riêng, đừng gộp vào requires_db: bật nhầm là
+# `make test` bắn call tính tiền.
+requires_poi = unittest.skipUnless(_co_bang("poi"), "cần bảng poi (chỉ có ở gis_tourism)")
 
 
 def _token(c, email, password):
@@ -42,7 +48,7 @@ def _token(c, email, password):
     return {"Authorization": f"Bearer {tok}"}
 
 
-@requires_db
+@requires_poi
 class TestTroLyTraDuThongTinChoBanDo(unittest.TestCase):
     """Trang trợ lý vẽ marker và link chi tiết từ chính response này."""
 
@@ -81,7 +87,7 @@ class TestTroLyTraDuThongTinChoBanDo(unittest.TestCase):
         self.assertEqual(met, sorted(met))
 
 
-@requires_db
+@requires_poi
 class TestTimKiemTheoBang(unittest.TestCase):
     """Trang quản trị phải liệt kê và sửa được CẢ cơ sở lưu trú."""
 
@@ -117,9 +123,15 @@ class TestQuanTri(unittest.TestCase):
         self.H = _token(self.c, settings.seed_user_email, settings.seed_user_password)
 
     def test_thong_ke_du_khoa_va_deu_la_so(self):
+        """Bảng tổng quan chỉ được chứa số liệu vận hành được.
+
+        Không có bộ đếm nội bộ kiểu "số ảnh đã cache" hay "số POI": người quản
+        trị không làm gì được với chúng.
+        """
         tk = self.c.get("/api/admin/stats", headers=self.AH).json()["stats"]
-        for k in ("poi", "luu_tru", "nguoi_dung", "lich_trinh", "tour",
-                  "dat_cho_moi", "dat_tour", "anh"):
+        for k in ("doanh_thu", "cho_xac_nhan", "lech_tien", "dat_cho_moi",
+                  "dat_cho_da_lien_he", "dat_tour", "tour_dang_mo", "nguoi_dung",
+                  "lich_trinh", "luu_tru"):
             self.assertIsInstance(tk[k], int, f"khoá {k}")
             self.assertGreaterEqual(tk[k], 0, f"khoá {k}")
 
@@ -132,9 +144,13 @@ class TestQuanTri(unittest.TestCase):
         """
         from app.core.database import execute_query
         tk = self.c.get("/api/admin/stats", headers=self.AH).json()["stats"]
-        for khoa, bang in (("poi", "poi"), ("luu_tru", "accommodation")):
-            that = execute_query(f"SELECT count(*) AS n FROM {bang}")[0]["n"]
-            self.assertEqual(tk[khoa], that, f"{khoa} lệch so với COUNT(*)")
+        that = execute_query("SELECT count(*) AS n FROM accommodation")[0]["n"]
+        self.assertEqual(tk["luu_tru"], that, "luu_tru lệch so với COUNT(*)")
+        # Doanh thu phải là tiền thật đã thu, không phải số đơn hay số tiền hứa.
+        tien = execute_query(
+            "SELECT coalesce(sum(amount), 0)::bigint AS n FROM payments "
+            "WHERE status = 'SUCCESS'")[0]["n"]
+        self.assertEqual(tk["doanh_thu"], tien, "doanh_thu phải bằng tổng payment SUCCESS")
 
     def test_nguoi_dung_thuong_khong_xem_duoc(self):
         self.assertEqual(self.c.get("/api/admin/stats", headers=self.H).status_code, 403)

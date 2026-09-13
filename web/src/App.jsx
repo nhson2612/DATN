@@ -1,19 +1,19 @@
 import { useCallback, useState } from "react";
-import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
-import AuthModal from "./components/auth/AuthModal";
-import Admin from "./pages/Admin";
-import Destination from "./pages/Destination";
-import Favorites from "./pages/Favorites";
-import HomePage from "./pages/HomePage";
-import Navbar from "./pages/HomePage/components/Navbar/Navbar";
-import PlaceDetail from "./pages/PlaceDetail";
-import PlaceList from "./pages/PlaceList";
-import TourDetail from "./pages/TourDetail";
-import TourMyBookings from "./pages/TourMyBookings";
-import Tours from "./pages/Tours";
-import TripPlanner from "./pages/TripPlanner";
-import Trips from "./pages/Trips";
+import AuthModal from "./shared/auth/AuthModal";
+import AdminPage from "./admin/AdminPage";
+import OperatorPage from "./operator/OperatorPage";
+import Destination from "./customer/trips/destinations/Destination";
+import Favorites from "./customer/trips/favorites/Favorites";
+import HomePage from "./customer/trips/home";
+import Navbar from "./customer/trips/home/components/Navbar/Navbar";
+import PlaceDetail from "./customer/trips/place-detail";
+import TourDetail from "./customer/tours/TourDetail";
+import TourMyBookings from "./customer/my-bookings/TourMyBookings";
+import Tours from "./customer/tours";
+import TripPlanner from "./customer/trips/planner/TripPlanner";
+import Trips from "./customer/trips/trips/Trips";
 
 function KhongTimThay() {
   return (
@@ -28,11 +28,50 @@ function KhongTimThay() {
   );
 }
 
+/* Đăng nhập xong, mỗi vai trò về đúng khu của mình. Khách về trang chủ, quản trị
+ * về bảng quản trị. Khu nhà điều hành chưa có màn hình nào nên tạm về trang chủ —
+ * dựng xong thì đổi đúng một dòng ở bảng dưới, không phải đi sửa chỗ khác. */
+const TRANG_MAC_DINH = {
+  admin: "/quan-tri",
+  operator: "/nha-dieu-hanh",
+  user: "/",
+};
+
+function trangMacDinh(role) {
+  return TRANG_MAC_DINH[role] || "/";
+}
+
 function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const isPlanner = location.pathname.startsWith("/chuyen-di/") && location.pathname !== "/chuyen-di";
   const isHome = location.pathname === "/";
   const isTours = location.pathname === "/tour";
+  const isAdmin = location.pathname.startsWith("/quan-tri");
+  const isOperator = location.pathname.startsWith("/nha-dieu-hanh");
+
+  // Đăng nhập xong thì về trang mặc định của chính vai trò đó: khách về trang chủ,
+  // quản trị về bảng quản trị. Khách lỡ đăng nhập ở cửa quản trị cũng được đưa về
+  // chỗ của mình thay vì đứng nhìn màn hình "không có quyền".
+  const sauKhiDangNhap = (u) => {
+    setUser(u);
+    navigate(trangMacDinh(u?.role));
+  };
+
+  // Bảng quản trị có giao diện riêng: không mượn header/sidebar của web khách,
+  // và web khách cũng không có lối nào vào đây (chỉ gõ thẳng /quan-tri).
+  if (isAdmin) {
+    return (
+      <div className="font-sans min-h-screen bg-zinc-50">
+        <AdminPage user={user} onLogout={dangXuat} onNeedAuth={() => setMoAuth(true)} />
+        <AuthModal open={moAuth} onClose={() => setMoAuth(false)} onSuccess={sauKhiDangNhap} />
+      </div>
+    );
+  }
+
+  if (isOperator) {
+    return <div className="font-sans min-h-screen"><OperatorPage user={user} onLogout={dangXuat} onNeedAuth={() => setMoAuth(true)} /><AuthModal open={moAuth} onClose={() => setMoAuth(false)} onSuccess={sauKhiDangNhap} /></div>;
+  }
 
   return (
     <div className="font-sans min-h-screen">
@@ -52,7 +91,6 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/diem-den/:slug" element={<Destination />} />
-            <Route path="/dia-diem" element={<PlaceList />} />
             <Route path="/dia-diem/:type/:id"
               element={<PlaceDetail user={user} onNeedAuth={canDangNhap} />} />
             <Route path="/tour" element={<Tours />} />
@@ -65,7 +103,6 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
             <Route path="/chuyen-di/:id"
               element={<TripPlanner user={user} onNeedAuth={canDangNhap} />} />
             <Route path="/tro-ly" element={<Navigate to="/chuyen-di" replace />} />
-            <Route path="/quan-tri" element={<Admin user={user} />} />
             <Route path="/yeu-thich"
               element={<Favorites user={user} onNeedAuth={canDangNhap} />} />
 
@@ -84,7 +121,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
           </footer>
         )}
 
-        <AuthModal open={moAuth} onClose={() => setMoAuth(false)} onSuccess={setUser} />
+        <AuthModal open={moAuth} onClose={() => setMoAuth(false)} onSuccess={sauKhiDangNhap} />
       </div>
     </div>
   );

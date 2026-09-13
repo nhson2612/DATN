@@ -23,9 +23,9 @@ from fastapi.testclient import TestClient
 from app.core.config import settings
 from app.core.database import execute_query, transaction
 from app.main import app
-from app.repositories import tour_repo
-from app.services import tour_service
-from app.services.tour_service import (
+from app.tours.search_tours import repository as tour_repo
+from app.tours.search_tours import service as tour_service
+from app.tours.search_tours.service import (
     ALL_BOOKING_STATUSES,
     PHASE_2_ALLOWED_TRANSITIONS,
     TERMINAL_BOOKING_STATUSES,
@@ -86,7 +86,7 @@ class TestMayTrangThaiNghiepVu(unittest.TestCase):
                 ly_do="Test trạng thái sai",
             )
 
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_trang_thai_thuc_te_khong_khop_ky_vong(self, mock_get):
         """Nếu truyền 'tu' mà trạng thái thực tế không khớp -> ném InvalidStatusTransitionError."""
         mock_get.return_value = {**self.fake_booking, "status": "PENDING_PAYMENT"}
@@ -99,7 +99,7 @@ class TestMayTrangThaiNghiepVu(unittest.TestCase):
             )
         self.assertIn("không phải 'CONFIRMED'", str(ctx.exception))
 
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_chan_chuyen_tu_terminal_status_br_l1(self, mock_get):
         """BR-L1: Đơn đã ở trạng thái kết thúc (terminal) KHÔNG ĐƯỢC PHÉP chuyển tiếp."""
         for term_status in TERMINAL_BOOKING_STATUSES:
@@ -113,7 +113,7 @@ class TestMayTrangThaiNghiepVu(unittest.TestCase):
                     ly_do="Cố chuyển từ terminal",
                 )
 
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_chan_chuyen_ngoai_pham_vi_phase_hien_tai(self, mock_get):
         """Trạng thái của phase sau chưa được mở (CONFIRMED) phải bị chặn.
 
@@ -130,10 +130,10 @@ class TestMayTrangThaiNghiepVu(unittest.TestCase):
             )
         self.assertIn("Không được phép chuyển trạng thái", str(ctx.exception))
 
-    @patch("app.repositories.tour_repo.add_booking_status_history")
-    @patch("app.repositories.tour_repo.update_booking_status")
-    @patch("app.services.tour_service.nha_cho")
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.add_booking_status_history")
+    @patch("app.tours.search_tours.repository.update_booking_status")
+    @patch("app.tours.search_tours.service.nha_cho")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_chuyen_hop_le_pending_sang_expired(self, mock_get, mock_nha_cho, mock_update, mock_hist):
         """PENDING_PAYMENT -> EXPIRED là hợp lệ trong Phase 2 và tự động gọi nha_cho."""
         mock_get.return_value = {**self.fake_booking, "status": "PENDING_PAYMENT"}
@@ -154,10 +154,10 @@ class TestMayTrangThaiNghiepVu(unittest.TestCase):
         mock_update.assert_called_once()
         mock_hist.assert_called_once()
 
-    @patch("app.repositories.tour_repo.add_booking_status_history")
-    @patch("app.repositories.tour_repo.update_booking_status")
-    @patch("app.services.tour_service.nha_cho")
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.add_booking_status_history")
+    @patch("app.tours.search_tours.repository.update_booking_status")
+    @patch("app.tours.search_tours.service.nha_cho")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_chuyen_hop_le_pending_sang_cancelled_by_operator(self, mock_get, mock_nha_cho, mock_update, mock_hist):
         """PENDING_PAYMENT -> CANCELLED_BY_OPERATOR là hợp lệ và tự động nhả chỗ."""
         mock_get.return_value = {**self.fake_booking, "status": "PENDING_PAYMENT"}
@@ -179,14 +179,14 @@ class TestMayTrangThaiNghiepVu(unittest.TestCase):
 class TestNhaChoChongTraHaiLan(unittest.TestCase):
     """Kiểm thử yêu cầu 2.5: Hàm nha_cho chống trả chỗ hai lần (BR-L3, E11)."""
 
-    @patch("app.repositories.tour_repo.release_booking_seats")
+    @patch("app.tours.search_tours.repository.release_booking_seats")
     def test_nha_cho_lan_dau_thanh_cong(self, mock_release):
         """Lần đầu gọi nha_cho -> trả True."""
         mock_release.return_value = {"released": True, "departure_id": 1, "seats": 2}
         kq = tour_service.nha_cho(123)
         self.assertTrue(kq)
 
-    @patch("app.repositories.tour_repo.release_booking_seats")
+    @patch("app.tours.search_tours.repository.release_booking_seats")
     def test_nha_cho_lan_hai_bi_chan_khong_tra_them(self, mock_release):
         """Lần hai gọi nha_cho -> cờ seats_released chặn, trả False."""
         mock_release.return_value = {"released": False, "reason": "already_released_or_not_found"}
@@ -197,9 +197,9 @@ class TestNhaChoChongTraHaiLan(unittest.TestCase):
 class TestJobDonDonHetHan(unittest.TestCase):
     """Kiểm thử yêu cầu 2.6: Job nền quét dọn đơn hết hạn (E2, E23)."""
 
-    @patch("app.services.tour_service.chuyen_trang_thai")
-    @patch("app.repositories.tour_repo.find_pending_bookings_past_depart_date")
-    @patch("app.repositories.tour_repo.find_expired_bookings")
+    @patch("app.tours.search_tours.service.chuyen_trang_thai")
+    @patch("app.tours.search_tours.repository.find_pending_bookings_past_depart_date")
+    @patch("app.tours.search_tours.repository.find_expired_bookings")
     def test_xu_ly_booking_het_han_chay_dung_nghiep_vu(self, mock_expired, mock_past, mock_chuyen):
         """Quá hạn 30 phút -> EXPIRED; Quá ngày khởi hành -> CANCELLED_BY_OPERATOR."""
         mock_expired.return_value = [{"id": 101}, {"id": 102}]

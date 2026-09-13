@@ -1,0 +1,9 @@
+.op-wizard .op-wizard__itinerary {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.op-wizard .op-wizard__day-item {
+  width: 100%;
+}

@@ -1,0 +1,444 @@
+.op-media-step {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.op-media-step__file {
+  display: none;
+}
+
+.op-media-step__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.op-media-step__head h2 {
+  margin: 0;
+  color: #28221f;
+  font-size: 17px;
+}
+
+.op-media-step__head span {
+  display: block;
+  margin-top: 3px;
+  color: #827871;
+  font-size: 13px;
+}
+
+.op-media-step__cover,
+.op-media-step__gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ==================== YANDEX-STYLE COVER DROPZONE (LIGHT MODE - NO BORDER) ==================== */
+.op-yandex-dropzone {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+  border: none;
+}
+
+.op-media-step__cover--invalid .op-yandex-dropzone {
+  box-shadow: 0 0 0 2px #dc2626;
+}
+
+.op-yandex-dropzone__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: none;
+  border-radius: 12px;
+  padding: 34px 20px 28px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+
+.op-yandex-dropzone__inner:hover,
+.op-yandex-dropzone__inner:focus {
+  background: #f3f4f6;
+}
+
+.op-yandex-dropzone__inner--dragging {
+  background: #f4f4f5;
+  box-shadow: 0 0 0 2px #09090b;
+}
+
+.op-yandex-dropzone__icon {
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12));
+  pointer-events: none;
+}
+
+.op-yandex-dropzone__title {
+  margin: 0 0 5px 0;
+  color: #1f2937;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.op-yandex-dropzone__sub {
+  margin: 0 0 20px 0;
+  color: #6b7280;
+  font-size: 13.5px;
+}
+
+.op-yandex-dropzone__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Các nút hành động trong op-yandex-dropzone__actions - Đè hoàn toàn .op-screen button */
+.op-yandex-dropzone__actions button,
+.op-screen .op-yandex-dropzone__actions button,
+.op-yandex-dropzone__actions .op-yandex-btn {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 24px !important;
+  border-radius: 9999px !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* Nút Chọn tệp: Nền đen, chữ trắng, bo tròn */
+.op-yandex-dropzone__actions button.op-yandex-btn--primary,
+.op-screen .op-yandex-dropzone__actions button.op-yandex-btn--primary {
+  background: #09090b !important;
+  color: #ffffff !important;
+  border: 1px solid #09090b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.op-yandex-dropzone__actions button.op-yandex-btn--primary:hover,
+.op-screen .op-yandex-dropzone__actions button.op-yandex-btn--primary:hover {
+  background: #27272a !important;
+  border-color: #27272a !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Nút Dán từ clipboard: Không có background (trong suốt), viền bo tròn */
+.op-yandex-dropzone__actions button.op-yandex-btn--secondary,
+.op-screen .op-yandex-dropzone__actions button.op-yandex-btn--secondary {
+  background: transparent !important;
+  border: 1px solid #d1d5db !important;
+  color: #374151 !important;
+  box-shadow: none !important;
+}
+
+.op-yandex-dropzone__actions button.op-yandex-btn--secondary:hover,
+.op-screen .op-yandex-dropzone__actions button.op-yandex-btn--secondary:hover {
+  background: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  color: #111827 !important;
+  transform: translateY(-1px);
+}
+
+/* Thanh URL phía dưới (bo góc chuẩn 6px của form) */
+.op-yandex-url-bar {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.op-yandex-url-input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0 14px;
+  font-size: 13.5px;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.op-yandex-url-input::placeholder {
+  color: #9ca3af;
+}
+
+.op-yandex-url-input:focus {
+  border-color: #09090b;
+  box-shadow: 0 0 0 2px rgba(9, 9, 11, 0.1);
+}
+
+.op-yandex-url-btn {
+  flex: none;
+  height: 42px;
+  padding: 0 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 0;
+  background: #09090b;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.op-yandex-url-btn:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border: 1px solid #e5e7eb;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.op-yandex-url-btn:not(:disabled):hover {
+  background: #27272a;
+}
+
+/* ==================== COVER PREVIEW ==================== */
+.op-media-step__cover-preview {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.op-media-step__cover-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.op-media-step__cover-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.op-media-step__cover-actions {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+/* Đè hoàn toàn .op-screen button cho 2 nút trong cover-actions */
+.op-screen .op-media-step__cover-actions button,
+.op-media-step__cover-actions button,
+.op-media-step__cover-actions .op-media-step__cover-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-height: 36px !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.15s ease !important;
+  outline: none !important;
+}
+
+/* Nút Đổi ảnh: Nền trắng, chữ tối */
+.op-screen .op-media-step__cover-actions button:not(.op-media-step__cover-btn--danger),
+.op-media-step__cover-actions button:not(.op-media-step__cover-btn--danger),
+.op-media-step__cover-actions .op-media-step__cover-btn:not(.op-media-step__cover-btn--danger) {
+  background: #ffffff !important;
+  color: #1f2429 !important;
+}
+
+.op-screen .op-media-step__cover-actions button:not(.op-media-step__cover-btn--danger):hover,
+.op-media-step__cover-actions button:not(.op-media-step__cover-btn--danger):hover {
+  background: #f3f4f6 !important;
+  transform: translateY(-1px);
+}
+
+/* Nút Xoá: Nền đỏ, chữ trắng */
+.op-screen .op-media-step__cover-actions button.op-media-step__cover-btn--danger,
+.op-media-step__cover-actions button.op-media-step__cover-btn--danger,
+.op-media-step__cover-actions .op-media-step__cover-btn--danger {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.op-screen .op-media-step__cover-actions button.op-media-step__cover-btn--danger:hover,
+.op-media-step__cover-actions button.op-media-step__cover-btn--danger:hover {
+  background: #b91c1c !important;
+  transform: translateY(-1px);
+}
+
+.op-media-step__cover-actions button .material-symbols-outlined {
+  font-size: 17px !important;
+}
+
+/* ==================== GALLERY GRID ==================== */
+.op-media-step__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.op-media-step__tile {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #f4f4f4;
+}
+
+.op-media-step__add-tile {
+  display: grid;
+  aspect-ratio: 4 / 3;
+  place-items: center;
+  border-radius: 6px;
+  background: #f4f4f4;
+  border: 1px dashed #d1cac4;
+  color: #827871;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.op-media-step__add-tile:hover {
+  border-color: #09090b;
+  color: #09090b;
+  background: #f4f4f5;
+}
+
+.op-media-step__add-tile .material-symbols-outlined {
+  font-size: 28px;
+}
+
+.op-media-step__thumbnail {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.op-media-step__empty {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  background: #f4f4f4;
+  color: #827871;
+}
+
+.op-screen .op-media-step__tile > button,
+.op-media-step__tile > button {
+  position: absolute !important;
+  top: 7px !important;
+  right: 7px !important;
+  display: grid !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  place-items: center !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease !important;
+}
+
+.op-screen .op-media-step__tile > button:hover,
+.op-media-step__tile > button:hover {
+  background: #dc2626 !important;
+}
+
+.op-media-step__tile > button .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.op-media-step__status,
+.op-media-step__error {
+  margin: 0;
+  font-size: 13px;
+}
+
+.op-media-step__status {
+  color: #746b65;
+}
+
+.op-media-step__error {
+  color: #e11d48;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .op-yandex-dropzone {
+    padding: 14px;
+  }
+
+  .op-yandex-dropzone__inner {
+    padding: 24px 14px 20px;
+  }
+
+  .op-yandex-dropzone__title {
+    font-size: 18px;
+  }
+
+  .op-yandex-dropzone__actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .op-yandex-btn {
+    width: 100%;
+  }
+
+  .op-yandex-url-bar {
+    flex-direction: column;
+  }
+
+  .op-yandex-url-input,
+  .op-yandex-url-btn {
+    width: 100%;
+  }
+
+  .op-media-step__cover-preview {
+    height: 190px;
+  }
+
+  .op-media-step__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

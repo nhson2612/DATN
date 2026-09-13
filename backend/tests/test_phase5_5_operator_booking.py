@@ -19,8 +19,10 @@ from fastapi.testclient import TestClient
 from app.core.database import execute_query
 from app.core.security import create_access_token, hash_password
 from app.main import app
-from app.repositories import operator_repo, tour_repo, user_repo
-from app.services import tour_service
+from app.shared.accounts import repository as user_repo
+from app.tours.operator import repository as operator_repo
+from app.tours.search_tours import repository as tour_repo
+from app.tours.search_tours import service as tour_service
 
 
 def _db_available():
@@ -226,7 +228,7 @@ class TestPhase55OperatorBooking(unittest.TestCase):
 
         # Kiểm tra Lỗi 1: get_booking an toàn trên DB cũ chưa có cột tours.operator_id
         from unittest.mock import patch
-        with patch("app.repositories.tour_repo._has_col", side_effect=lambda t, c: False if (t == "tours" and c == "operator_id") else tour_repo._has_col(t, c)):
+        with patch("app.tours.search_tours.repository._has_col", side_effect=lambda t, c: False if (t == "tours" and c == "operator_id") else tour_repo._has_col(t, c)):
             old_db_booking = tour_repo.get_booking(booking_id)
             self.assertIsNotNone(old_db_booking)
             self.assertEqual(old_db_booking["id"], booking_id)
@@ -313,7 +315,7 @@ class TestPhase55OperatorBooking(unittest.TestCase):
 
         # Kiểm tra Lỗi 2: Không bị N+1 payments khi lấy danh sách booking
         from unittest.mock import patch
-        with patch("app.repositories.tour_repo.get_booking_payments", side_effect=AssertionError("Phát hiện N+1: get_booking_payments bị gọi")):
+        with patch("app.tours.search_tours.repository.get_booking_payments", side_effect=AssertionError("Phát hiện N+1: get_booking_payments bị gọi")):
             res_list_no_n1 = self.client.get(
                 "/api/operator/bookings",
                 headers=self.op_a_headers,
@@ -508,7 +510,7 @@ class TestPhase55OperatorBooking(unittest.TestCase):
 
         # Kiểm tra Lỗi 2: Không bị N+1 payments khi lấy danh sách khách
         from unittest.mock import patch
-        with patch("app.repositories.tour_repo.get_booking_payments", side_effect=AssertionError("Phát hiện N+1: get_booking_payments bị gọi khi lấy danh sách khách")):
+        with patch("app.tours.search_tours.repository.get_booking_payments", side_effect=AssertionError("Phát hiện N+1: get_booking_payments bị gọi khi lấy danh sách khách")):
             res_guests_no_n1 = self.client.get(
                 f"/api/operator/departures/{dep_id_a}/guests",
                 headers=self.op_a_headers,

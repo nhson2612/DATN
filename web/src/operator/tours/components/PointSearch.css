@@ -1,0 +1,250 @@
+/* Hàng tìm kiếm địa điểm và nút tròn tác vụ (theo ảnh 5.png) */
+.op-wizard .op-wizard__add-place {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.op-wizard .op-wizard__add-place-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Ô input tìm kiếm bọc pill xám nhạt */
+.op-wizard .op-wizard__search-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 46px;
+  background: #f3f4f6;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0 14px;
+  gap: 10px;
+  transition: all 0.15s ease;
+}
+
+.op-wizard .op-wizard__search-input-wrap:focus-within {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.op-wizard .op-wizard__search-input-icon {
+  color: #64748b;
+  font-size: 20px;
+  flex: none;
+}
+
+.op-wizard .op-wizard__search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.op-wizard .op-wizard__search-input::placeholder {
+  color: #94a3b8;
+}
+
+.op-wizard .op-wizard__search-spinner {
+  font-size: 18px;
+  color: #0891b2;
+  animation: op-spin 1s linear infinite;
+  flex: none;
+}
+
+@keyframes op-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.op-screen .op-wizard__search-clear-btn,
+.op-wizard .op-wizard__search-clear-btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 4px !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 50% !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+.op-screen .op-wizard__search-clear-btn:hover,
+.op-wizard .op-wizard__search-clear-btn:hover {
+  background: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+.op-wizard__search-clear-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* 2 nút tròn thêm Note & Checklist bên phải hàng add-place (theo ảnh 5.png) */
+.op-screen .op-wizard__round-btn,
+.op-wizard .op-wizard__round-btn {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 50% !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #334155 !important;
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  flex: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.op-screen .op-wizard__round-btn:hover,
+.op-wizard .op-wizard__round-btn:hover {
+  background: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  transform: translateY(-1px) !important;
+}
+
+.op-wizard__round-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+/* Modal / Dropdown kết quả tìm kiếm */
+.op-wizard .op-wizard__search-results-modal {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  max-width: 600px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.op-wizard .op-wizard__search-loading-row,
+.op-wizard .op-wizard__search-empty-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  color: #64748b;
+  font-size: 13.5px;
+}
+
+.op-wizard .op-wizard__search-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.op-wizard .op-wizard__search-results-header small {
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.op-wizard .op-wizard__search-results-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* Nút item kết quả tìm kiếm */
+.op-screen .op-wizard__search-item,
+.op-wizard .op-wizard__search-item {
+  display: flex !important;
+  width: 100% !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 16px !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid #f8fafc !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  border-radius: 0 !important;
+  line-height: normal !important;
+  box-shadow: none !important;
+  transition: background-color 0.12s ease !important;
+}
+
+.op-screen .op-wizard__search-item:last-child,
+.op-wizard .op-wizard__search-item:last-child {
+  border-bottom: none !important;
+}
+
+.op-screen .op-wizard__search-item:hover,
+.op-screen .op-wizard__search-item--active,
+.op-wizard .op-wizard__search-item:hover,
+.op-wizard .op-wizard__search-item--active {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.op-wizard .op-wizard__search-item-pin {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ecfeff;
+  color: #0891b2;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.op-wizard .op-wizard__search-item-pin .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.op-wizard .op-wizard__search-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.op-wizard .op-wizard__search-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.op-wizard .op-wizard__search-item-addr {
+  font-size: 12px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.op-wizard .op-wizard__search-item-add-icon {
+  font-size: 20px;
+  color: #0891b2;
+  flex: none;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.op-wizard .op-wizard__search-item:hover .op-wizard__search-item-add-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}

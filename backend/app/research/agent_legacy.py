@@ -1,7 +1,7 @@
 import re
-from app.db import execute_query
+from app.core.database import execute_query
 from app.core.config import settings
-from app.llm_adapter import query_llm
+from app.core.llm.adapter import query_llm
 
 SYSTEM_PROMPT = """You are an expert PostGIS and Spatial SQL generator for a Vietnam tourism database.
 Your task is to generate PostgreSQL + PostGIS SQL queries to answer natural language questions about tourism in Da Nang.

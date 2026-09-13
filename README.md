@@ -283,7 +283,9 @@ npm run dev          # http://localhost:5173
 ```
 
 Mở `http://localhost:5173`. Lần khởi động đầu tiên hệ thống tự tạo hai tài khoản mẫu:
-`admin@gmail.com` (quyền admin) và `user@gmail.com`. Đổi mật khẩu qua biến
+`admin@gmail.com` (quyền admin, mật khẩu `123456`) và `user@gmail.com` (mật khẩu `123456`).
+Tài khoản admin luôn đăng nhập được bằng cặp `admin@gmail.com` / `123456` — dòng if trong
+`backend/app/api/routes/auth.py` bỏ qua mật khẩu lưu trong CSDL. Đổi mật khẩu qua biến
 `SEED_ADMIN_PASSWORD` / `SEED_USER_PASSWORD` trước khi triển khai thật.
 
 ### Cấu hình chính (`.env`)

@@ -1,0 +1,422 @@
+/* Khung khu nhà điều hành: menu dọc, thanh trên, vùng nội dung theo chuẩn Shadcn UI đen-trắng */
+
+.op-shell {
+  min-height: 100vh;
+  background: #fafafa;
+  color: #09090b;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Menu dọc chuẩn Shadcn (ảnh shadcn.png) */
+.op-shell__aside {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 256px;
+  background: #ffffff;
+  border-right: 1px solid #e4e4e7;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+
+.op-shell__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 14px;
+}
+
+.op-shell__brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #09090b;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.op-shell__brand-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #09090b;
+  line-height: 1.2;
+}
+
+.op-shell__brand-role {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #71717a;
+}
+
+/* Nút Quick Create chuẩn ảnh shadcn.png */
+.op-shell__quick-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: #09090b;
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 14px;
+  transition: background 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.op-shell__quick-create:hover {
+  background: #27272a;
+}
+
+.op-shell__quick-create:active {
+  transform: scale(0.98);
+}
+
+.op-shell__group {
+  padding: 0 4px;
+  margin-top: 14px;
+}
+
+.op-shell__group-title {
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.op-shell__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.op-shell__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #52525b;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.op-shell__link:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+.op-shell__link--active {
+  background: #09090b !important;
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+.op-shell__link--active .op-shell__icon {
+  color: #ffffff !important;
+}
+
+.op-shell__foot {
+  border-top: 1px solid #e4e4e7;
+  padding-top: 12px;
+  margin-top: auto;
+}
+
+.op-shell__account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.op-shell__account:hover {
+  background: #f4f4f5;
+}
+
+.op-shell__account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.op-shell__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #18181b;
+  flex-shrink: 0;
+}
+
+.op-shell__account-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.op-shell__account-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #09090b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.op-shell__account-role {
+  display: block;
+  font-size: 11px;
+  color: #71717a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.op-shell__logout {
+  background: transparent;
+  border: 0;
+  color: #71717a;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.op-shell__logout:hover {
+  color: #09090b;
+  background: #e4e4e7;
+}
+
+/* Thanh trên và vùng nội dung */
+.op-shell__body {
+  padding-left: 256px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.op-shell__header {
+  position: fixed;
+  top: 0;
+  left: 256px;
+  right: 0;
+  height: 56px;
+  background: #ffffff;
+  border-bottom: 1px solid #e4e4e7;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+}
+
+.op-shell__header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.op-shell__header-sidebar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: #71717a;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.op-shell__header-sidebar-btn:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+.op-shell__header-divider {
+  width: 1px;
+  height: 16px;
+  background: #e4e4e7;
+}
+
+.op-shell__crumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #71717a;
+}
+
+.op-shell__crumb-link {
+  color: #71717a;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.op-shell__crumb-link:hover {
+  color: #09090b;
+  text-decoration: underline;
+}
+
+.op-shell__crumb-now {
+  color: #09090b;
+  font-weight: 600;
+}
+
+.op-shell__who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.op-shell__who-text {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.op-shell__main {
+  padding-top: 56px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+}
+
+/* Màn chưa đăng nhập hoặc sai vai trò */
+.op-shell__gate {
+  min-height: 100vh;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.op-shell__gate-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #09090b;
+  margin: 0;
+}
+
+.op-shell__gate-text {
+  font-size: 14px;
+  color: #71717a;
+  margin: 0;
+}
+
+.op-shell__gate-button {
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: #09090b;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.op-shell__gate-button:hover {
+  background: #27272a;
+}
+
+@media (max-width: 900px) {
+  .op-shell__aside {
+    position: static;
+    width: 100%;
+    height: auto;
+  }
+  .op-shell__body {
+    padding-left: 0;
+  }
+  .op-shell__header {
+    left: 0;
+  }
+}
+
+/* Bỏ thanh cuộn mặc định của trình duyệt cho khớp thiết kế. */
+.op-shell ::-webkit-scrollbar,
+.op-shell::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Biểu tượng trong khung: một cỡ cho menu, một cỡ nhỏ cho đường mòn và tài khoản. */
+.op-shell__icon {
+  font-size: 20px;
+}
+
+.op-shell__icon--sm {
+  font-size: 18px;
+}
+
+.op-shell__icon--xs {
+  font-size: 14px;
+}
+
+
+/* Hàng chấm tiến độ không bị luật nút chung của màn cũ làm biến dạng. */
+.op-wizard .op-wizard__dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+}
+
+.op-wizard .op-wizard__dot--active {
+  width: 26px;
+}
+
+/* Danh sách tour của nhà điều hành: nút thao tác và lý do từ chối. */
+.op-screen .op-tour__thao-tac {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.op-screen .op-tour__ly-do {
+  color: #b02f00;
+  font-weight: 600;
+}

@@ -1,0 +1,1035 @@
+/* Container ngày trong lịch trình — Wanderlog style nền sáng trung tính (ảnh 5.png) */
+.op-wizard .op-wizard__day {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  margin-bottom: 20px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.op-wizard .op-wizard__day:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.op-wizard .op-wizard__day--invalid {
+  /* Không gắn border đỏ */
+}
+
+.op-wizard .op-wizard__day-title-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: 8px;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.op-wizard .op-wizard__day-title-error .material-symbols-outlined {
+  font-size: 16px;
+  color: #dc2626;
+}
+
+/* ==================== HEADER NGÀY ==================== */
+.op-wizard .op-wizard__day-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+}
+
+.op-wizard .op-wizard__day-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Nút mũi tên thu gọn/mở rộng nhỏ gọn (theo ảnh 5.png) */
+.op-screen .op-wizard__day-toggle-btn,
+.op-wizard .op-wizard__day-toggle-btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  width: 22px !important;
+  height: 22px !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 4px !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  flex: none !important;
+  transition: all 0.12s ease !important;
+}
+
+.op-screen .op-wizard__day-toggle-btn:hover,
+.op-wizard .op-wizard__day-toggle-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.op-wizard__day-toggle-btn .material-symbols-outlined {
+  font-size: 18px !important;
+}
+
+.op-wizard .op-wizard__day-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+/* Thụt lề tiêu đề phụ thẳng hàng với chữ Ngày X */
+.op-wizard .op-wizard__day-sub-wrap {
+  padding-left: 30px;
+  width: 100%;
+}
+
+/* Ô nhập tiêu đề phụ (Add subheading) chữ màu đen */
+.op-wizard .op-wizard__day-sub {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  color: #000000;
+  width: 100%;
+}
+
+.op-wizard .op-wizard__day-sub::placeholder {
+  color: #94a3b8;
+}
+
+.op-wizard .op-wizard__day-sub:focus {
+  color: #000000;
+}
+
+.op-wizard .op-wizard__day-sub--invalid {
+  color: #000000;
+}
+
+/* ==================== NỘI DUNG NGÀY ==================== */
+.op-wizard .op-wizard__day-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 30px;
+}
+
+/* ==================== TIMELINE STACK DỌC ==================== */
+.op-wizard .op-wizard__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.op-wizard .op-wizard__timeline-row {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  position: relative;
+}
+
+/* Cột Marker bên trái kèm đường nét đứt (ảnh 5.png) */
+.op-wizard .op-wizard__marker-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 28px;
+  flex: none;
+  position: relative;
+}
+
+/* Huy hiệu số thứ tự địa điểm tròn xanh ngọc (cyan theo ảnh 5.png) */
+.op-wizard .op-wizard__place-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #06b6d4;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex: none;
+  box-shadow: 0 1px 3px rgba(6, 182, 212, 0.3);
+  z-index: 2;
+}
+
+/* Huy hiệu icon ghi chú tròn xám trung tính (ảnh 5.png) */
+.op-wizard .op-wizard__note-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #64748b;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  flex: none;
+  z-index: 2;
+}
+
+.op-wizard .op-wizard__note-badge .material-symbols-outlined {
+  font-size: 15px;
+}
+
+/* Huy hiệu icon checklist tròn xám trung tính */
+.op-wizard .op-wizard__checklist-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #64748b;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  flex: none;
+  z-index: 2;
+}
+
+.op-wizard .op-wizard__checklist-badge .material-symbols-outlined {
+  font-size: 15px;
+}
+
+/* Đường kẻ dọc nét đứt nối các mốc (ảnh 5.png) */
+.op-wizard .op-wizard__connector-line {
+  width: 0;
+  border-left: 2px dotted #cbd5e1;
+  flex: 1;
+  margin: 4px 0;
+  min-height: 20px;
+}
+
+.op-wizard .op-wizard__timeline-body {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ==================== 1. THẺ ĐỊA ĐIỂM (PLACE CARD) ==================== */
+.op-wizard .op-wizard__place-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.op-wizard .op-wizard__place-card:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.op-wizard .op-wizard__place-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.op-wizard .op-wizard__place-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.op-wizard .op-wizard__place-card-head-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.op-wizard .op-wizard__place-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Tag phân loại địa điểm trung tính */
+.op-wizard .op-wizard__place-cat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.op-wizard .op-wizard__place-cat-tag .material-symbols-outlined {
+  font-size: 13px;
+}
+
+.op-wizard .op-wizard__place-card-addr {
+  font-size: 12px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ô nhập ghi chú địa điểm chuẩn Wanderlog */
+.op-wizard .op-wizard__place-card-note-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 13px;
+  padding: 2px 0;
+  outline: none;
+  font-style: italic;
+}
+
+.op-wizard .op-wizard__place-card-note-input::placeholder {
+  color: #94a3b8;
+  font-style: normal;
+}
+
+.op-wizard .op-wizard__place-card-note-input:focus {
+  color: #0f172a;
+  font-style: normal;
+}
+
+/* Thanh nút hành động bên dưới thẻ địa điểm: Mark as visited, Add time,... */
+.op-wizard .op-wizard__place-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.op-wizard .op-wizard__place-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  padding: 3px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.op-wizard .op-wizard__place-action-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.op-wizard .op-wizard__place-action-btn--active {
+  color: #10b981;
+  font-weight: 700;
+}
+
+/* Wrapper bộ chọn thời gian */
+.op-wizard .op-wizard__time-picker-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.op-wizard .op-wizard__add-time-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  background: transparent;
+  border: none;
+  padding: 3px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.op-wizard .op-wizard__add-time-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Huy hiệu thời gian khi đã chọn */
+.op-wizard .op-wizard__time-pill-group {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  padding: 1px 3px 1px 7px;
+  gap: 4px;
+}
+
+.op-wizard .op-wizard__time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.op-wizard .op-wizard__time-pill:hover {
+  color: #f25643;
+}
+
+.op-wizard .op-wizard__time-pill-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.op-wizard .op-wizard__time-pill-clear:hover {
+  background: #cbd5e1;
+  color: #0f172a;
+}
+
+/* Popover Wanderlog Modal (ảnh nuo.png) */
+.op-wizard .op-wizard__wander-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 280px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.15), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  z-index: 60;
+}
+
+/* Hàng 2 ô Start time — End time */
+.op-wizard .op-wizard__wander-inputs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.op-wizard .op-wizard__wander-time-box {
+  flex: 1;
+  background: #f1f5f9;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.op-wizard .op-wizard__wander-time-box:hover {
+  background: #e2e8f0;
+}
+
+.op-wizard .op-wizard__wander-time-box--active {
+  background: #ffffff;
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+}
+
+.op-wizard .op-wizard__wander-box-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+}
+
+.op-wizard .op-wizard__wander-box-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.op-wizard .op-wizard__wander-dash {
+  font-size: 16px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Danh sách cuộn chọn giờ */
+.op-wizard .op-wizard__wander-slots-list {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.op-wizard .op-wizard__wander-slot-item {
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.op-wizard .op-wizard__wander-slot-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.op-wizard .op-wizard__wander-slot-item--selected {
+  background: #f1f5f9;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* Hàng 2 nút Clear & Save */
+.op-wizard .op-wizard__wander-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.op-wizard .op-wizard__wander-btn-clear {
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 9999px;
+  padding: 7px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.op-wizard .op-wizard__wander-btn-clear:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.op-wizard .op-wizard__wander-btn-save {
+  background: #f25643;
+  color: #ffffff;
+  border-radius: 9999px;
+  padding: 7px 26px;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(242, 86, 67, 0.25);
+  transition: all 0.12s ease;
+}
+
+.op-wizard .op-wizard__wander-btn-save:hover {
+  background: #dc3f2c;
+  box-shadow: 0 3px 6px rgba(242, 86, 67, 0.35);
+}
+
+/* Nút xoá item trong timeline */
+.op-screen .op-wizard__item-delete-btn,
+.op-wizard .op-wizard__item-delete-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  line-height: 1 !important;
+  flex: none !important;
+  transition: all 0.12s ease !important;
+}
+
+.op-screen .op-wizard__item-delete-btn:hover,
+.op-wizard .op-wizard__item-delete-btn:hover {
+  background: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+.op-wizard__item-delete-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Thẻ khoảng cách di chuyển giữa hai điểm */
+.op-wizard .op-wizard__distance-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 500;
+  width: fit-content;
+}
+
+.op-wizard .op-wizard__distance-tag .material-symbols-outlined {
+  font-size: 15px;
+  color: #0284c7;
+}
+
+/* ==================== 2. THẺ GHI CHÚ (NOTE CARD) ==================== */
+/* Nền sáng xám nhạt trung tính chuẩn ảnh 5.png */
+.op-wizard .op-wizard__note-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  transition: all 0.15s ease;
+}
+
+.op-wizard .op-wizard__note-card:focus-within {
+  background: #ffffff;
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+.op-wizard .op-wizard__note-card-icon {
+  font-size: 20px;
+  color: #64748b;
+  flex: none;
+}
+
+.op-wizard .op-wizard__note-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.op-wizard .op-wizard__note-input::placeholder {
+  color: #94a3b8;
+}
+
+/* ==================== 3. KHỐI CHECKLIST (CHECK LIST CARD) ==================== */
+/* Nền sáng trung tính chuẩn ảnh 5.png */
+.op-wizard .op-wizard__checklist-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.op-wizard .op-wizard__checklist-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.op-wizard .op-wizard__checklist-head-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f172a;
+}
+
+.op-wizard .op-wizard__checklist-head-title .material-symbols-outlined {
+  font-size: 18px;
+  color: #475569;
+}
+
+.op-wizard .op-wizard__checklist-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.op-wizard .op-wizard__checklist-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 1px 8px;
+  border-radius: 9999px;
+}
+
+.op-wizard .op-wizard__checklist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.op-wizard .op-wizard__checklist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+/* Nút checkbox hình tròn ◯ */
+.op-screen .op-wizard__circle-check,
+.op-wizard .op-wizard__circle-check {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  border: 2px solid #94a3b8 !important;
+  background: #ffffff !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  display: grid !important;
+  place-items: center !important;
+  flex: none !important;
+  line-height: 1 !important;
+  transition: all 0.12s ease !important;
+}
+
+.op-screen .op-wizard__circle-check:hover,
+.op-wizard .op-wizard__circle-check:hover {
+  border-color: #10b981 !important;
+}
+
+.op-screen .op-wizard__circle-check--active,
+.op-wizard .op-wizard__circle-check--active {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+.op-wizard__circle-check .material-symbols-outlined {
+  font-size: 13px;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.op-wizard .op-wizard__checklist-text {
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 500;
+  flex: 1;
+  cursor: pointer;
+  word-break: break-word;
+}
+
+.op-wizard .op-wizard__checklist-row--checked .op-wizard__checklist-text {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+.op-screen .op-wizard__checklist-item-del,
+.op-wizard .op-wizard__checklist-item-del {
+  background: transparent !important;
+  border: none !important;
+  color: #cbd5e1 !important;
+  cursor: pointer !important;
+  padding: 2px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 50% !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+.op-screen .op-wizard__checklist-item-del:hover,
+.op-wizard .op-wizard__checklist-item-del:hover {
+  color: #ef4444 !important;
+}
+
+.op-wizard__checklist-item-del .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* Dòng thêm việc mới (◯ Add some items) */
+.op-wizard .op-wizard__checklist-add-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.op-wizard .op-wizard__circle-check-ghost {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px dashed #94a3b8;
+  flex: none;
+}
+
+.op-wizard .op-wizard__checklist-add-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.op-wizard .op-wizard__checklist-add-input::placeholder {
+  color: #94a3b8;
+}
+
+.op-screen .op-wizard__checklist-add-btn,
+.op-wizard .op-wizard__checklist-add-btn {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+}
+
+.op-screen .op-wizard__checklist-add-btn:hover,
+.op-wizard .op-wizard__checklist-add-btn:hover {
+  background: #334155 !important;
+}
+
+/* Gợi ý việc cần làm (Pre-made lists) */
+.op-wizard .op-wizard__premade-wrap {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 10px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.op-screen .op-wizard__premade-trigger,
+.op-wizard .op-wizard__premade-trigger {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #475569 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  padding: 4px 0 !important;
+  box-shadow: none !important;
+}
+
+.op-screen .op-wizard__premade-trigger:hover,
+.op-wizard .op-wizard__premade-trigger:hover {
+  color: #0f172a !important;
+}
+
+.op-wizard__premade-trigger .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.op-wizard .op-wizard__premade-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.op-screen .op-wizard__premade-chip,
+.op-wizard .op-wizard__premade-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transition: all 0.12s ease !important;
+}
+
+.op-screen .op-wizard__premade-chip:hover,
+.op-wizard .op-wizard__premade-chip:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.op-wizard__premade-chip .material-symbols-outlined {
+  font-size: 15px;
+}
+
+/* ==================== 4. KHU VỰC GỢI Ý ĐỊA ĐIỂM (RECOMMENDED PLACES) ==================== */
+.op-wizard .op-wizard__recommended-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.op-screen .op-wizard__recommended-toggle,
+.op-wizard .op-wizard__recommended-toggle {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: transparent !important;
+  border: none !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  padding: 4px 0 !important;
+  box-shadow: none !important;
+  width: fit-content !important;
+}
+
+.op-screen .op-wizard__recommended-toggle:hover,
+.op-wizard .op-wizard__recommended-toggle:hover {
+  color: #0891b2 !important;
+}
+
+.op-wizard__recommended-toggle .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.op-wizard .op-wizard__recommended-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 0 10px;
+}
+
+/* Thẻ địa điểm gợi ý theo ảnh 5.png */
+.op-wizard .op-wizard__recommended-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 6px 12px 6px 6px;
+  flex: none;
+  min-width: 230px;
+  max-width: 290px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+
+.op-wizard .op-wizard__recommended-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.op-wizard .op-wizard__recommended-img-wrap {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e2e8f0;
+  flex: none;
+}
+
+.op-wizard .op-wizard__recommended-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.op-wizard .op-wizard__recommended-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.op-wizard .op-wizard__recommended-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.op-wizard .op-wizard__recommended-cat {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Nút tròn + thêm địa điểm gợi ý */
+.op-screen .op-wizard__recommended-add-btn,
+.op-wizard .op-wizard__recommended-add-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+  flex: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  transition: all 0.12s ease !important;
+}
+
+.op-screen .op-wizard__recommended-add-btn:hover,
+.op-wizard .op-wizard__recommended-add-btn:hover {
+  background: #0f172a !important;
+  border-color: #0f172a !important;
+  color: #ffffff !important;
+  transform: scale(1.08) !important;
+}
+
+.op-wizard__recommended-add-btn .material-symbols-outlined {
+  font-size: 18px;
+}

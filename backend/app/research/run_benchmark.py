@@ -5,9 +5,9 @@ import re
 import unicodedata
 from collections import Counter
 from decimal import Decimal
-from app.db import execute_query
-from app import agent_legacy as old_agent
-from app import ir_agent as new_agent
+from app.core.database import execute_query
+from app.research import agent_legacy as old_agent
+from app.research import ir_agent as new_agent
 
 # Load benchmark questions
 BENCHMARK_NAME = "benchmark_gsqa_auto.json"

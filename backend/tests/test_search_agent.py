@@ -14,8 +14,8 @@ from unittest import mock
 
 os.environ.setdefault("JWT_SECRET", "test-secret-key-for-unittest-only")
 
-from app.services import search_agent as ag  # noqa: E402
-from app.services import search_service as ts  # noqa: E402
+from app.self_guided.assistant import search_service as ag  # noqa: E402
+from app.self_guided.search_places import service as ts  # noqa: E402
 
 
 def _db_available():

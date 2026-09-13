@@ -26,9 +26,9 @@ from fastapi.testclient import TestClient
 from app.core.config import settings
 from app.core.database import execute_query, transaction
 from app.main import app
-from app.repositories import tour_repo
-from app.services import tour_service
-from app.services.tour_service import (
+from app.tours.search_tours import repository as tour_repo
+from app.tours.search_tours import service as tour_service
+from app.tours.search_tours.service import (
     ALL_BOOKING_STATUSES,
     ALLOWED_STATUS_TRANSITIONS,
     PHASE_3_ALLOWED_TRANSITIONS,
@@ -85,9 +85,9 @@ class TestTaoPaymentService(unittest.TestCase):
             "hold_expires_at": datetime.now(TZ_VN) + timedelta(minutes=25),
         }
 
-    @patch("app.repositories.tour_repo.create_payment")
-    @patch("app.repositories.tour_repo.generate_payment_txn_ref")
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.create_payment")
+    @patch("app.tours.search_tours.repository.generate_payment_txn_ref")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_tao_payment_pending_mac_dinh_amount(self, mock_get_b, mock_gen_ref, mock_create_p):
         """Tạo payment khi không truyền amount -> lấy mặc định total_price, trạng thái PENDING."""
         mock_get_b.return_value = self.fake_booking
@@ -107,7 +107,7 @@ class TestTaoPaymentService(unittest.TestCase):
         self.assertEqual(kq["txn_ref"], "PM-20260905-0001")
         mock_create_p.assert_called_once()
 
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_tao_payment_chan_khi_booking_khong_phai_pending(self, mock_get_b):
         """Booking đã ở trạng thái khác PENDING_PAYMENT (ví dụ EXPIRED) -> từ chối tạo payment."""
         mock_get_b.return_value = {**self.fake_booking, "status": "EXPIRED"}
@@ -116,7 +116,7 @@ class TestTaoPaymentService(unittest.TestCase):
             tour_service.tao_thanh_toan(booking_id=100)
         self.assertIn("EXPIRED", str(ctx.exception))
 
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_tao_payment_chan_khi_qua_han_hold_expires_at(self, mock_get_b):
         """Booking đã quá hạn hold_expires_at -> từ chối tạo thanh toán (E3: không tự khôi phục chỗ)."""
         expired_hold = datetime.now(TZ_VN) - timedelta(minutes=5)
@@ -126,9 +126,9 @@ class TestTaoPaymentService(unittest.TestCase):
             tour_service.tao_thanh_toan(booking_id=100)
         self.assertIn("hết hạn giữ chỗ", str(ctx.exception))
 
-    @patch("app.repositories.tour_repo.create_payment")
-    @patch("app.repositories.tour_repo.generate_payment_txn_ref")
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.create_payment")
+    @patch("app.tours.search_tours.repository.generate_payment_txn_ref")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_tao_payment_sai_tien_danh_dau_mismatch(self, mock_get_b, mock_gen_ref, mock_create_p):
         """Truyền amount khác total_price -> tạo payment trạng thái MISMATCH."""
         mock_get_b.return_value = self.fake_booking
@@ -165,11 +165,11 @@ class TestXacNhanPaymentService(unittest.TestCase):
             "seats_released": False,
         }
 
-    @patch("app.services.tour_service.chuyen_trang_thai")
-    @patch("app.repositories.tour_repo.update_payment_status")
-    @patch("app.repositories.tour_repo.count_successful_payments")
-    @patch("app.repositories.tour_repo.get_booking")
-    @patch("app.repositories.tour_repo.get_payment")
+    @patch("app.tours.search_tours.service.chuyen_trang_thai")
+    @patch("app.tours.search_tours.repository.update_payment_status")
+    @patch("app.tours.search_tours.repository.count_successful_payments")
+    @patch("app.tours.search_tours.repository.get_booking")
+    @patch("app.tours.search_tours.repository.get_payment")
     def test_confirm_dung_tien_success_va_booking_paid(
         self, mock_get_p, mock_get_b, mock_count, mock_upd_p, mock_chuyen
     ):
@@ -193,9 +193,9 @@ class TestXacNhanPaymentService(unittest.TestCase):
         self.assertEqual(kwargs.get("tu"), "PENDING_PAYMENT")
         self.assertEqual(kwargs.get("sang"), "PAID")
 
-    @patch("app.repositories.tour_repo.update_payment_status")
-    @patch("app.repositories.tour_repo.get_booking")
-    @patch("app.repositories.tour_repo.get_payment")
+    @patch("app.tours.search_tours.repository.update_payment_status")
+    @patch("app.tours.search_tours.repository.get_booking")
+    @patch("app.tours.search_tours.repository.get_payment")
     def test_confirm_khi_don_da_expired_payment_failed(self, mock_get_p, mock_get_b, mock_upd_p):
         """Khi booking đã EXPIRED -> payment bị FAILED, không tự chuyển booking, chỗ không bị trả lặp lại."""
         mock_get_p.return_value = self.fake_payment
@@ -214,10 +214,10 @@ class TestXacNhanPaymentService(unittest.TestCase):
         args, kwargs = mock_upd_p.call_args
         self.assertEqual(kwargs.get("status"), "FAILED")
 
-    @patch("app.repositories.tour_repo.update_payment_status")
-    @patch("app.repositories.tour_repo.count_successful_payments")
-    @patch("app.repositories.tour_repo.get_booking")
-    @patch("app.repositories.tour_repo.get_payment")
+    @patch("app.tours.search_tours.repository.update_payment_status")
+    @patch("app.tours.search_tours.repository.count_successful_payments")
+    @patch("app.tours.search_tours.repository.get_booking")
+    @patch("app.tours.search_tours.repository.get_payment")
     def test_confirm_sai_tien_mismatch(self, mock_get_p, mock_get_b, mock_count, mock_upd_p):
         """Số tiền thanh toán lệch tổng đơn -> payment chuyển sang MISMATCH, booking giữ PENDING_PAYMENT."""
         mock_get_p.return_value = {**self.fake_payment, "amount": 3_000_000}
@@ -234,8 +234,8 @@ class TestXacNhanPaymentService(unittest.TestCase):
         args, kwargs = mock_upd_p.call_args
         self.assertEqual(kwargs.get("status"), "MISMATCH")
 
-    @patch("app.services.tour_service.chuyen_trang_thai")
-    @patch("app.repositories.tour_repo.get_payment")
+    @patch("app.tours.search_tours.service.chuyen_trang_thai")
+    @patch("app.tours.search_tours.repository.get_payment")
     def test_confirm_idempotent_lan_hai(self, mock_get_p, mock_chuyen):
         """Xác nhận lần 2 trên payment đã SUCCESS -> trả về kết quả hiện tại, không gọi lại chuyển trạng thái."""
         mock_get_p.return_value = {
@@ -252,9 +252,9 @@ class TestXacNhanPaymentService(unittest.TestCase):
         # Không được gọi lại máy trạng thái chuyen_trang_thai
         mock_chuyen.assert_not_called()
 
-    @patch("app.repositories.tour_repo.count_successful_payments")
-    @patch("app.repositories.tour_repo.get_booking")
-    @patch("app.repositories.tour_repo.get_payment")
+    @patch("app.tours.search_tours.repository.count_successful_payments")
+    @patch("app.tours.search_tours.repository.get_booking")
+    @patch("app.tours.search_tours.repository.get_payment")
     def test_rang_buoc_moi_booking_toi_da_mot_success_br_p1(self, mock_get_p, mock_get_b, mock_count):
         """BR-P1: Nếu booking đã có 1 payment SUCCESS thì không cho confirm SUCCESS giao dịch thứ hai."""
         mock_get_p.return_value = self.fake_payment
@@ -295,7 +295,7 @@ class TestApiThanhToan(unittest.TestCase):
         self.assertEqual(r.status_code, 403)
 
     @patch("app.core.security.execute_query")
-    @patch("app.repositories.tour_repo.list_payments")
+    @patch("app.tours.search_tours.repository.list_payments")
     def test_admin_truy_cap_admin_payments_thanh_cong(self, mock_list_p, mock_sql):
         """Admin (role='admin') gọi GET /api/tours/admin/payments -> 200 OK."""
         from app.core.security import create_access_token
@@ -312,7 +312,7 @@ class TestApiThanhToan(unittest.TestCase):
         self.assertTrue(r.json()["success"])
 
     @patch("app.core.security.execute_query")
-    @patch("app.services.tour_service.xac_nhan_thanh_toan")
+    @patch("app.tours.search_tours.service.xac_nhan_thanh_toan")
     def test_admin_confirm_payment_qua_api(self, mock_xac_nhan, mock_sql):
         """Admin gọi POST /api/tours/admin/payments/{id}/confirm -> 200 OK."""
         from app.core.security import create_access_token

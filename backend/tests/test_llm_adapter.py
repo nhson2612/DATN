@@ -20,9 +20,9 @@ if "psycopg_pool" not in sys.modules:
     fake_psycopg_pool.ConnectionPool = DummyPool
     sys.modules["psycopg_pool"] = fake_psycopg_pool
 
-from app import agent_legacy, ir_agent
+from app.research import agent_legacy, ir_agent
 from app.core.config import reload_settings, settings
-from app.llm import adapter as llm_adapter
+from app.core.llm import adapter as llm_adapter
 
 
 class FakeResponse:
@@ -65,7 +65,7 @@ class LLMAdapterTest(unittest.TestCase):
             clear=False,
         ):
             reload_settings()
-            with patch("app.llm.adapter.requests.post", return_value=FakeResponse(data)) as post:
+            with patch("app.core.llm.adapter.requests.post", return_value=FakeResponse(data)) as post:
                 result = llm_adapter.query_llm("Hoi?", "System", json_mode=True)
 
         self.assertEqual(result, '{"target": null}')
@@ -100,7 +100,7 @@ class LLMAdapterTest(unittest.TestCase):
             clear=False,
         ):
             reload_settings()
-            with patch("app.llm.adapter.requests.post", return_value=FakeResponse(data)) as post:
+            with patch("app.core.llm.adapter.requests.post", return_value=FakeResponse(data)) as post:
                 result = llm_adapter.query_llm("Generate SQL", "System")
 
         self.assertEqual(result, "SELECT 1")
@@ -112,7 +112,7 @@ class LLMAdapterTest(unittest.TestCase):
         self.assertFalse(kwargs["json"]["stream"])
 
     def test_agents_delegate_to_adapter(self):
-        with patch("app.ir_agent.query_llm", return_value='{"target": null}') as query:
+        with patch("app.research.ir_agent.query_llm", return_value='{"target": null}') as query:
             self.assertEqual(ir_agent.query_ollama_json("Hoi?", "System"), '{"target": null}')
         # Timeout đọc từ cấu hình, không hardcode: 120s không đủ cho qwen2.5:7b
         # trên máy 4 GB VRAM (đo được 236s cho một lần sinh JSON).
@@ -121,7 +121,7 @@ class LLMAdapterTest(unittest.TestCase):
             timeout=settings.llm_timeout_sql,
         )
 
-        with patch("app.agent_legacy.query_llm", return_value="SELECT 1") as query:
+        with patch("app.research.agent_legacy.query_llm", return_value="SELECT 1") as query:
             self.assertEqual(agent_legacy.query_ollama("Generate SQL", "System"), "SELECT 1")
         query.assert_called_once_with(
             "Generate SQL", "System", timeout=settings.llm_timeout_explain

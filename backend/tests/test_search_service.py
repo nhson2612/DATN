@@ -18,7 +18,7 @@ import unittest
 
 os.environ.setdefault("JWT_SECRET", "test-secret-key-for-unittest-only")
 
-from app.services.search_service import (  # noqa: E402
+from app.self_guided.search_places.service import (  # noqa: E402
     _ngrams,
     _norm,
     split_question,
@@ -123,7 +123,7 @@ class TestSearchTheoNhomDuLich(unittest.TestCase):
     DN = (108.2200, 16.0600)
 
     def _search(self, q, pos=None):
-        from app.services.search_service import search
+        from app.self_guided.search_places.service import search
         lon, lat = pos or self.HN
         return search(q, lon, lat, limit=10)
 
@@ -196,7 +196,7 @@ class TestSearchCachDienDat(unittest.TestCase):
     HN = (105.8461, 21.0184)
 
     def _search(self, q):
-        from app.services.search_service import search
+        from app.self_guided.search_places.service import search
         return search(q, *self.HN, limit=10)
 
     def test_go_khong_dau(self):
@@ -226,7 +226,7 @@ class TestSearchMocViTri(unittest.TestCase):
     DN = (108.2200, 16.0600)
 
     def _search(self, q, pos=None):
-        from app.services.search_service import search
+        from app.self_guided.search_places.service import search
         lon, lat = pos or self.HN
         return search(q, lon, lat, limit=10)
 
@@ -251,7 +251,7 @@ class TestSearchMocViTri(unittest.TestCase):
                          "kết quả không sắp theo khoảng cách tăng dần")
 
     def test_ket_qua_nam_trong_ban_kinh(self):
-        from app.services.search_service import DEFAULT_RADIUS_M
+        from app.self_guided.search_places.service import DEFAULT_RADIUS_M
         for r in self._search("quán cà phê gần đây")["results"]:
             self.assertLessEqual(r["met"], DEFAULT_RADIUS_M)
 
@@ -263,7 +263,7 @@ class TestSearchCaBien(unittest.TestCase):
     HN = (105.8461, 21.0184)
 
     def _search(self, q):
-        from app.services.search_service import search
+        from app.self_guided.search_places.service import search
         return search(q, *self.HN, limit=10)
 
     def test_cau_rong(self):

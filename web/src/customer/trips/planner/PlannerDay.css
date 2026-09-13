@@ -1,0 +1,1132 @@
+/* ==========================================================================
+   BLOCK: .planner-day
+   Thẻ ngày lịch trình chuẩn phong cách Wanderlog (ảnh nuo.png)
+   ========================================================================== */
+
+.planner-day {
+  background-color: #ffffff;
+  border-radius: 1.25rem; /* rounded-2xl */
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+  padding: 1.125rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.planner-day:hover {
+  border-color: #cbd5e1;
+}
+
+.planner-day--drag-over {
+  border-color: #0d9488 !important;
+  background-color: #f0fdfa !important;
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.3) !important;
+}
+
+/* Header ngày */
+.planner-day__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  user-select: none;
+}
+
+.planner-day--collapsed .planner-day__header {
+  padding-bottom: 0;
+  border-bottom: none;
+  cursor: pointer;
+}
+
+.planner-day__header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.planner-day__toggle-chevron {
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.planner-day__toggle-chevron:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.planner-day__header-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.planner-day__title {
+  font-size: 1.125rem; /* text-lg / xl */
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.planner-day__subtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.planner-day__optimization-result {
+  margin-left: 0.35rem;
+  color: #0d9488;
+  font-weight: 700;
+}
+
+.planner-day__header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.planner-day__optimize-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #2563eb;
+  transition: opacity 0.15s ease;
+}
+
+.planner-day__optimize-link:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.planner-day__optimize-link-text {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: #2563eb;
+}
+
+.planner-day__optimize-link:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.planner-day__pro-badge {
+  font-size: 0.5625rem;
+  font-weight: 900;
+  background-color: #f97316;
+  color: #ffffff;
+  padding: 0.075rem 0.3rem;
+  border-radius: 0.25rem;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+/* Nội dung chi tiết ngày */
+.planner-day__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.planner-day__empty {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.875rem;
+  padding: 1.25rem;
+  text-align: center;
+  margin: 0;
+}
+
+/* Timeline dọc */
+.planner-day__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.planner-day__timeline-item {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.planner-day__timeline-item--dragging {
+  opacity: 0.45;
+}
+
+.planner-day__timeline-item--drop-target {
+  outline: 2px dashed #0d9488;
+  outline-offset: 4px;
+  border-radius: 1rem;
+}
+
+/* Cột Marker bên trái */
+.planner-day__marker-col {
+  width: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: 0.375rem;
+}
+
+/* Teardrop Marker chuẩn Wanderlog (ảnh nuo.png) */
+.planner-day__teardrop {
+  width: 1.875rem;
+  height: 1.875rem;
+  background: linear-gradient(135deg, #06b6d4 0%, #0d9488 100%);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.35);
+  flex-shrink: 0;
+  z-index: 2;
+  transition: transform 0.15s ease;
+}
+
+.planner-day__timeline-item:hover .planner-day__teardrop {
+  transform: rotate(-45deg) scale(1.08);
+}
+
+.planner-day__teardrop-number {
+  transform: rotate(45deg);
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Dấu icon cho Note / Checklist */
+.planner-day__note-marker {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+/* Đường kẻ dọc đứt nét giữa các item */
+.planner-day__connector-dotted {
+  width: 2px;
+  flex: 1;
+  min-height: 1.5rem;
+  border-left: 2px dotted #cbd5e1;
+  margin-top: 0.25rem;
+}
+
+/* Thẻ địa điểm (Place Card) */
+.planner-day__stop-card {
+  flex: 1;
+  min-width: 0;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.planner-day__stop-card:hover {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+}
+
+.planner-day__stop-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.planner-day__drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: grab;
+  padding: 0.125rem;
+  border-radius: 0.25rem;
+  transition: color 0.15s;
+}
+
+.planner-day__drag-handle:hover {
+  color: #0f172a;
+}
+
+.planner-day__stop-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.35;
+  transition: color 0.15s;
+}
+
+.planner-day__stop-name:hover {
+  color: #0d9488;
+}
+
+.planner-day__stop-addr {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0.15rem 0 0 0;
+}
+
+.planner-day__item-delete-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.125rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.planner-day__item-delete-btn:hover {
+  color: #ef4444;
+}
+
+/* Ô nhập ghi chú địa điểm */
+.planner-day__stop-note-input {
+  width: 100%;
+  font-size: 0.8125rem;
+  color: #334155;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.planner-day__stop-note-input::placeholder {
+  color: #94a3b8;
+}
+
+.planner-day__stop-note-input:hover,
+.planner-day__stop-note-input:focus {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  outline: none;
+}
+
+/* Hàng nút tác vụ thẻ địa điểm */
+.planner-day__stop-actions-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.planner-day__action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.planner-day__action-pill:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.planner-day__action-pill--visited {
+  background-color: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+/* Footer thẻ địa điểm: Emoji & Thêm bởi bạn */
+.planner-day__stop-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.375rem;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 0.25rem;
+}
+
+.planner-day__emoji-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.planner-day__emoji-btn {
+  background: none;
+  border: none;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  transition: background 0.15s;
+}
+
+.planner-day__emoji-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.planner-day__emoji-btn--active {
+  background-color: #e0f2fe;
+}
+
+.planner-day__added-by {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   BLOCK: Transit Step (Khoảng cách & chỉ đường nằm ngoài và ở dưới stop-card, ảnh w4.png)
+   ========================================================================== */
+.planner-day__stop-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.planner-day__transit-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: -0.15rem;
+  margin-bottom: 0.25rem;
+}
+
+.planner-day__transit-marker-col {
+  width: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.planner-day__transit-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 0 0.35rem 0.25rem;
+}
+
+.planner-day__transit-line-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.planner-day__transit-text {
+  color: #334155;
+}
+
+.planner-day__transit-directions-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.planner-day__transit-directions-btn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.planner-day__transit-from {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+  font-weight: 500;
+  padding-left: 1.45rem;
+}
+
+/* Thẻ Ghi chú tự do (Note Card) */
+.planner-day__note-card {
+  flex: 1;
+  min-width: 0;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  padding: 0.625rem 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.planner-day__note-card:hover {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.planner-day__note-textarea {
+  flex: 1;
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 0.8125rem;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+/* Thẻ Checklist (Việc cần làm) */
+.planner-day__checklist-card {
+  flex: 1;
+  min-width: 0;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.planner-day__checklist-card:hover {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.planner-day__checklist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.planner-day__checklist-title-input {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: transparent;
+  border: none;
+  outline: none;
+  flex: 1;
+}
+
+.planner-day__checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.planner-day__checklist-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.planner-day__round-checkbox {
+  width: 1.0625rem;
+  height: 1.0625rem;
+  border-radius: 50%;
+  border: 1.5px solid #94a3b8;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #ffffff;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.planner-day__round-checkbox--checked {
+  background-color: #0d9488;
+  border-color: #0d9488;
+}
+
+.planner-day__round-checkbox--placeholder {
+  cursor: default;
+  border-style: dashed;
+  opacity: 0.5;
+}
+
+.planner-day__checklist-text {
+  flex: 1;
+  color: #334155;
+}
+
+.planner-day__checklist-text--done {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+.planner-day__sub-item-remove {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.planner-day__sub-item-remove:hover {
+  color: #ef4444;
+}
+
+.planner-day__checklist-add-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.planner-day__checklist-input {
+  flex: 1;
+  font-size: 0.75rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.planner-day__checklist-input:focus {
+  outline: none;
+  border-color: #0d9488;
+}
+
+.planner-day__checklist-add-btn {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  background-color: #e2e8f0;
+  border: none;
+  border-radius: 0.375rem;
+  color: #475569;
+  cursor: pointer;
+}
+
+/* 3. Thanh Quick-Add Bar ở cuối mỗi ngày */
+.planner-day__quick-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.375rem;
+}
+
+.planner-day__quick-add-place {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 0.55rem 1rem;
+  font-size: 0.8125rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.planner-day__quick-add-place:hover {
+  background-color: #ffffff;
+  border-color: #0d9488;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.planner-day__quick-btn {
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 9999px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.planner-day__quick-btn:hover {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* Hộp chọn địa điểm khi mở */
+.planner-day__picker-box {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.planner-day__picker-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  margin: 0;
+}
+
+.planner-day__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.planner-day__chip {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.planner-day__chip:hover {
+  background-color: #ccfbf1;
+  border-color: #99f6e4;
+  color: #0f766e;
+}
+
+.planner-day__picker-close {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.planner-day__picker-close:hover {
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   WANDERLOG TIME RANGE POPOVER (tích hợp chuẩn từ ảnh nuo.png)
+   ========================================================================== */
+
+.op-wizard__time-picker-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.op-wizard__time-pill-group {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  padding: 0.15rem 0.4rem;
+  gap: 0.25rem;
+}
+
+.op-wizard__time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #334155;
+  padding: 0;
+}
+
+.op-wizard__time-pill-clear {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.op-wizard__time-pill-clear:hover {
+  color: #ef4444;
+}
+
+.op-wizard__add-time-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.op-wizard__add-time-btn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.op-wizard__wander-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 17rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.15);
+  padding: 0.875rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.op-wizard__wander-inputs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.op-wizard__wander-time-box {
+  flex: 1;
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.625rem;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.15s ease;
+}
+
+.op-wizard__wander-time-box--active {
+  background-color: #ffffff;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
+}
+
+.op-wizard__wander-box-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.op-wizard__wander-box-val {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 0.1rem;
+}
+
+.op-wizard__wander-dash {
+  font-weight: bold;
+  color: #94a3b8;
+}
+
+.op-wizard__wander-slots-list {
+  max-height: 12rem;
+  overflow-y: auto;
+  border: 1px solid #f1f5f9;
+  border-radius: 0.625rem;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.op-wizard__wander-slot-item {
+  padding: 0.35rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.op-wizard__wander-slot-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.op-wizard__wander-slot-item--selected {
+  background-color: #ccfbf1 !important;
+  color: #0f766e !important;
+  font-weight: 700;
+}
+
+.op-wizard__wander-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.op-wizard__wander-btn-clear {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.op-wizard__wander-btn-clear:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.op-wizard__wander-btn-save {
+  padding: 0.35rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  background-color: #f97316;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.op-wizard__wander-btn-save:hover {
+  background-color: #ea580c;
+}
+
+/* ==========================================================================
+   BLOCK: CostPicker (Nút Add cost cạnh Add time trên thẻ stop-card)
+   ========================================================================== */
+.planner-day__cost-picker-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.planner-day__add-cost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.planner-day__add-cost-btn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.planner-day__cost-pill-group {
+  display: inline-flex;
+  align-items: center;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 9999px;
+  padding: 0.15rem 0.45rem;
+  gap: 0.25rem;
+}
+
+.planner-day__cost-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #166534;
+  padding: 0;
+}
+
+.planner-day__cost-pill:hover {
+  color: #14532d;
+}
+
+.planner-day__cost-pill-clear {
+  background: transparent;
+  border: none;
+  color: #86efac;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.planner-day__cost-pill-clear:hover {
+  color: #ef4444;
+}
+
+.planner-day__cost-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 15.5rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.15);
+  padding: 0.875rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.planner-day__cost-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.planner-day__cost-popover-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.planner-day__cost-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.65rem;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.625rem;
+  transition: border-color 0.15s ease;
+}
+
+.planner-day__cost-input-wrap:focus-within {
+  border-color: #16a34a;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.15);
+}
+
+.planner-day__cost-currency {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #16a34a;
+}
+
+.planner-day__cost-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+  outline: none;
+  min-width: 0;
+}
+
+.planner-day__cost-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.planner-day__cost-chip {
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.planner-day__cost-chip:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+

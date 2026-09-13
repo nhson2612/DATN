@@ -326,7 +326,7 @@ CREATE TABLE IF NOT EXISTS place_enrichments (
     id           BIGSERIAL PRIMARY KEY,
     place_type   VARCHAR(20) NOT NULL,
     place_id     VARCHAR(512) NOT NULL,
-    provider     VARCHAR(30) NOT NULL DEFAULT 'trackasia+serper_v1',
+    provider     VARCHAR(30) NOT NULL DEFAULT 'serper_v1',
     status       VARCHAR(20) NOT NULL,
     summary      TEXT,
     opening_hours JSONB,

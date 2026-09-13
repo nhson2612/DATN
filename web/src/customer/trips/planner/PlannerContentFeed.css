@@ -1,0 +1,1192 @@
+/* ==========================================================================
+   BLOCK: .planner-feed
+   Dải nội dung dài cuộn liên tục chuẩn Wanderlog (ảnh w1 - w5)
+   ========================================================================== */
+
+.planner-feed {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding-bottom: 5rem;
+  font-family: inherit;
+  color: #1e293b;
+}
+
+/* ==========================================================================
+   1. HERO & COVER PHOTO + FLOATING TRIP CARD (ảnh w1.png)
+   ========================================================================== */
+.planner-feed__hero-section {
+  width: 100%;
+  position: relative;
+}
+
+.planner-feed__cover-wrap {
+  width: 100%;
+  height: 220px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background-color: #f1f5f9;
+}
+
+.planner-feed__cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.planner-feed__cover-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.05) 50%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+  pointer-events: none;
+}
+
+.planner-feed__cover-edit-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: all 0.15s ease;
+  z-index: 2;
+}
+
+.planner-feed__cover-edit-btn:hover {
+  background: #ffffff;
+  color: #0f172a;
+  transform: scale(1.05);
+}
+
+/* Thẻ nổi thông tin chuyến đi */
+.planner-feed__floating-card {
+  position: relative;
+  margin-top: -3.5rem;
+  margin-left: 1.25rem;
+  margin-right: 1.25rem;
+  background: #ffffff;
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f1f5f9;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.planner-feed__trip-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.planner-feed__floating-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+}
+
+.planner-feed__date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.75rem;
+  background-color: #f1f5f9;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.planner-feed__collaborators {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.planner-feed__avatar-circle {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.planner-feed__add-user-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 1px dashed #cbd5e1;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__add-user-btn:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+/* ==========================================================================
+   2. SECTION CHUNG & HEADER
+   ========================================================================== */
+.planner-feed__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  scroll-margin-top: 2rem;
+}
+
+.planner-feed__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.25rem 0;
+}
+
+.planner-feed__section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.planner-feed__header-chevron {
+  font-size: 0.875rem;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+}
+
+.planner-feed__section-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.planner-feed__section-badge {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.planner-feed__section-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.planner-feed__more-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  transition: color 0.15s ease;
+}
+
+.planner-feed__more-btn:hover {
+  color: #0f172a;
+  background-color: #f1f5f9;
+}
+
+.planner-feed__auto-assign-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__auto-assign-btn:hover {
+  background-color: #dcfce7;
+}
+
+/* ==========================================================================
+   3. EXPLORE SECTION (ảnh w1.png)
+   ========================================================================== */
+.planner-feed__browse-all-btn {
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  background-color: #ff5a36;
+  color: #ffffff;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.planner-feed__browse-all-btn:hover {
+  background-color: #e04826;
+  transform: translateY(-1px);
+}
+
+.planner-feed__explore-body {
+  width: 100%;
+}
+
+.planner-feed__explore-carousel {
+  display: flex;
+  gap: 0.875rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.planner-feed__explore-carousel::-webkit-scrollbar {
+  height: 4px;
+}
+
+.planner-feed__explore-carousel::-webkit-scrollbar-thumb {
+  background-color: #e2e8f0;
+  border-radius: 9999px;
+}
+
+.planner-feed__explore-card {
+  width: 180px;
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.planner-feed__explore-card-img-wrap {
+  width: 100%;
+  height: 100px;
+  background-color: #f1f5f9;
+}
+
+.planner-feed__explore-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.planner-feed__explore-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+}
+
+.planner-feed__explore-card-content {
+  padding: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.planner-feed__explore-card-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.planner-feed__explore-card-sub {
+  font-size: 0.6875rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.planner-feed__explore-card-add-btn {
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0;
+  background-color: #f1f5f9;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__explore-card-add-btn:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   4. RESERVATIONS & BUDGETING ROW (ảnh w1.png)
+   ========================================================================== */
+.planner-feed__cards-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  scroll-margin-top: 2rem;
+}
+
+@media (max-width: 640px) {
+  .planner-feed__cards-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.planner-feed__res-card,
+.planner-feed__budget-quick-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  padding: 1.125rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.planner-feed__res-card-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.875rem 0;
+}
+
+.planner-feed__res-icons-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.planner-feed__res-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__res-icon-item:hover .planner-feed__res-circle {
+  background-color: #e2e8f0;
+  color: #0f172a;
+  transform: translateY(-2px);
+}
+
+.planner-feed__res-circle {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__res-star-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: #f97316;
+  color: #ffffff;
+  font-size: 0.625rem;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.planner-feed__res-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.planner-feed__budget-quick-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.planner-feed__budget-quick-val {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.planner-feed__budget-quick-link {
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  margin-top: 0.25rem;
+}
+
+.planner-feed__budget-quick-link:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   5. PLACES TO VISIT (ảnh w1.png, w2.png)
+   ========================================================================== */
+.planner-feed__places-to-visit {
+  margin-top: 0.5rem;
+}
+
+.planner-feed__places-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.planner-feed__stops-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Stop Card với Blue Teardrop Pin Marker (ảnh w1, w2) */
+.planner-feed__stop-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__stop-card:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.planner-feed__stop-marker-col {
+  flex-shrink: 0;
+}
+
+/* Marker giọt nước màu xanh dương có số (ảnh w1: 1 Hoàn Kiếm Lake, 2 Thang Long...) */
+.planner-feed__blue-pin {
+  width: 1.75rem;
+  height: 1.75rem;
+  background-color: #2563eb;
+  color: #ffffff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+}
+
+.planner-feed__blue-pin > * {
+  transform: rotate(45deg);
+}
+
+.planner-feed__stop-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.planner-feed__stop-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.planner-feed__stop-name {
+  background: transparent;
+  border: none;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.planner-feed__stop-name:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.planner-feed__stop-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0.1rem 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planner-feed__stop-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.planner-feed__stop-day-select {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+.planner-feed__stop-del-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.planner-feed__stop-del-btn:hover {
+  color: #e11d48;
+}
+
+/* Ô tìm kiếm Add a place (ảnh w2.png) */
+.planner-feed__add-place-box {
+  width: 100%;
+}
+
+.planner-feed__search-trigger-pill {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.65rem 1rem;
+  background-color: #f1f5f9;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.planner-feed__search-trigger-pill:hover {
+  background-color: #e2e8f0;
+}
+
+.planner-feed__pin-icon {
+  color: #64748b;
+  font-size: 1.125rem;
+}
+
+.planner-feed__search-placeholder {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.planner-feed__pill-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.planner-feed__pill-icon-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__pill-icon-btn:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.planner-feed__picker-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.planner-feed__picker-close {
+  width: 100%;
+  text-align: center;
+  padding: 0.375rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-top: 0.25rem;
+}
+
+.planner-feed__picker-close:hover {
+  color: #0f172a;
+}
+
+/* Recommended Places Carousel (ảnh w2.png) */
+.planner-feed__recommended-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.planner-feed__rec-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.planner-feed__rec-title {
+  color: #475569;
+}
+
+.planner-feed__rec-carousel {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0.25rem 0;
+}
+
+.planner-feed__rec-carousel::-webkit-scrollbar {
+  height: 4px;
+}
+
+.planner-feed__rec-carousel::-webkit-scrollbar-thumb {
+  background-color: #e2e8f0;
+  border-radius: 9999px;
+}
+
+.planner-feed__rec-card {
+  width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.625rem;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__rec-card:hover {
+  border-color: #2563eb;
+  background: #f8fafc;
+}
+
+.planner-feed__rec-card-thumb {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.planner-feed__rec-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.planner-feed__rec-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+}
+
+.planner-feed__rec-card-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planner-feed__rec-add-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  border: none;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__rec-add-btn:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Center divider with + button (ảnh w2.png) */
+.planner-feed__center-divider {
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.5rem 0;
+}
+
+.planner-feed__center-divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px solid #e2e8f0;
+}
+
+.planner-feed__center-plus-btn {
+  position: relative;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  z-index: 1;
+}
+
+.planner-feed__center-plus-btn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  transform: scale(1.1);
+}
+
+/* Custom Sections (Hotel, Restaurants...) */
+.planner-feed__custom-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
+  scroll-margin-top: 2rem;
+}
+
+/* Nút + New list đỏ san hô (ảnh w2.png) */
+.planner-feed__new-list-row {
+  margin-top: 0.75rem;
+}
+
+.planner-feed__new-list-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1.125rem;
+  border-radius: 9999px;
+  background-color: #ff5a36;
+  color: #ffffff;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(255, 90, 54, 0.25);
+  transition: all 0.15s ease;
+}
+
+.planner-feed__new-list-btn:hover {
+  background-color: #e04826;
+  transform: translateY(-1px);
+}
+
+.planner-feed__new-list-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.planner-feed__new-list-input {
+  flex: 1;
+  max-width: 320px;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.planner-feed__new-list-submit {
+  padding: 0.45rem 0.875rem;
+  background-color: #ff5a36;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.planner-feed__new-list-cancel {
+  padding: 0.45rem 0.75rem;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   6. ITINERARY SECTION (ảnh w3.png, w4.png)
+   ========================================================================== */
+.planner-feed__itinerary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  scroll-margin-top: 2rem;
+}
+
+.planner-feed__itinerary-big-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.planner-feed__itinerary-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.planner-feed__itinerary-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.75rem;
+  background-color: #f1f5f9;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.planner-feed__days-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.planner-feed__day-block {
+  scroll-margin-top: 2rem;
+}
+
+/* ==========================================================================
+   7. BUDGETING SECTION (ảnh w4.png, w5.png)
+   ========================================================================== */
+.planner-feed__budgeting-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  scroll-margin-top: 2rem;
+}
+
+.planner-feed__budget-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.planner-feed__add-expense-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  background-color: #ff5a36;
+  color: #ffffff;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(255, 90, 54, 0.25);
+  transition: all 0.15s ease;
+}
+
+.planner-feed__add-expense-btn:hover {
+  background-color: #e04826;
+  transform: translateY(-1px);
+}
+
+/* Khối Card xám tóm tắt ngân sách (ảnh w5.png) */
+.planner-feed__budget-summary-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .planner-feed__budget-summary-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.planner-feed__budget-sum-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.planner-feed__budget-sum-amount {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.planner-feed__budget-sum-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.planner-feed__budget-pill-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.875rem;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.planner-feed__budget-pill-action:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.planner-feed__budget-sum-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.planner-feed__budget-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: transparent;
+  border: none;
+  color: #475569;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  text-align: left;
+  transition: color 0.15s ease;
+}
+
+.planner-feed__budget-link-row:hover {
+  color: #0f172a;
+  text-decoration: underline;
+}
+
+/* Phần chi phí Expenses (ảnh w5.png) */
+.planner-feed__expenses-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.planner-feed__expenses-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.25rem 0;
+}
+
+.planner-feed__expenses-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.planner-feed__sort-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.planner-feed__sort-label {
+  color: #334155;
+}
+
+.planner-feed__expenses-body {
+  padding: 0.5rem 0;
+}
+
+.planner-feed__expenses-empty {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+.planner-feed__expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.planner-feed__expense-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.875rem;
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  border: 1px solid #f1f5f9;
+}
+
+/* Modal Popup */
+.planner-feed__modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.planner-feed__modal-box {
+  background: #ffffff;
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 420px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}

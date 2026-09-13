@@ -23,3 +23,18 @@ backend/logs/
 
 # IDE files
 .idea/
+
+# Large data and dump files
+*.dump
+*.pbf
+*.osm.pbf
+*.docx
+*.pdf
+*.csv
+operator-live-dom.html
+backend/uploads/
+
+# Exclude screenshot images and downloaded assets
+/*.png
+web/public/assets/images/provinces/
+web/public/assets/images/tours-hero-bg.jpg

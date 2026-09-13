@@ -9,10 +9,10 @@ hay lỗi hệ toạ độ đều bị loại bỏ ở tầng biên dịch.
 import json
 import unicodedata
 
-from app.db import execute_query
-from app.ir import compile_ir, IRError, TABLES
+from app.core.database import execute_query
+from app.research.ir import compile_ir, IRError, TABLES
 from app.core.config import settings
-from app.llm_adapter import query_llm
+from app.core.llm.adapter import query_llm
 
 # Không dùng f-string: prompt chứa đầy JSON mẫu, mọi { } sẽ thành placeholder.
 IR_SYSTEM_PROMPT = """Bạn là trợ lý chuyển câu hỏi du lịch __SCOPE__ thành một đối tượng JSON đại diện (IR).

@@ -1,0 +1,80 @@
+.operator{min-height:100vh;background:#fafafa;color:#09090b;display:grid;grid-template-columns:250px minmax(0,1fr)}.operator aside{border-right:1px solid #e4e4e7;padding:28px 16px;display:flex;flex-direction:column;background:#fff}.op-brand{font-weight:900;letter-spacing:.04em;color:#09090b;font-size:18px;padding:0 12px 28px}.op-brand small{display:block;font-size:11px;letter-spacing:.08em;color:#71717a;margin-top:4px}.operator nav{display:grid;gap:4px}.operator nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;color:#52525b;text-decoration:none;font-weight:500;border-radius:6px}.operator nav a.active{color:#ffffff;background:#09090b}.operator main{padding:42px clamp(24px,5vw,74px);max-width:1280px;width:100%}.op-section-head{border-bottom:1px solid #e4e4e7;padding-bottom:20px;margin-bottom:24px;display:flex;justify-content:space-between;gap:20px}.op-section-head h1{font-size:24px;font-weight:700;color:#09090b;margin:0}.op-section-head p,.op-notice{color:#71717a;margin:6px 0 0}
+.op-screen{padding:40px clamp(20px,4vw,64px);max-width:1280px;width:100%;margin:0 auto}
+.op-screen .op-legacy-btn{border:1px solid #09090b;background:#09090b;color:#fff;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer;border-radius:6px;display:inline-flex;align-items:center;gap:5px}.op-account{margin-top:auto;border-top:1px solid #e4e4e7;padding:18px 12px 0;display:grid;gap:3px}.op-screen small{color:#71717a}.op-account button{background:transparent;color:#71717a;border:0;padding:8px 0;text-align:left}.op-table{overflow:auto;border:1px solid #e4e4e7;border-radius:8px;background:#fff}.op-table table{width:100%;border-collapse:collapse;min-width:700px}.op-table th{text-align:left;color:#71717a;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:12px 16px;background:#fafafa;border-bottom:1px solid #e4e4e7}.op-table td{padding:14px 16px;border-bottom:1px solid #e4e4e7;vertical-align:middle;color:#09090b}.op-table tbody tr:hover{background:#fafafa}.op-table td small{display:block;margin-top:4px;color:#71717a}.op-status{font-size:12px;font-weight:600;color:#09090b}.op-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:10px;background:#fff;border:1px solid #e4e4e7;border-radius:8px;padding:14px;margin:0 0 22px}.op-form input,.op-select,.op-inline input{border:1px solid #e4e4e7;padding:8px 12px;background:#fff;border-radius:6px;font:inherit;min-width:0}.op-select{margin:0 0 16px;min-width:300px}.op-form button,.op-inline button{background:#09090b;color:#fff;border:1px solid #09090b;border-radius:6px;padding:8px 14px;font-weight:600;cursor:pointer;transition:all .15s ease}.op-form button:hover,.op-inline button:hover{background:#27272a;border-color:#27272a}.op-link{background:transparent!important;color:#09090b!important;text-decoration:underline!important;border:0!important;padding:0!important;cursor:pointer}.op-danger{background:#fff!important;color:#e11d48!important;border:1px solid #fecdd3!important;border-radius:6px;padding:6px 12px;font-weight:500;cursor:pointer;transition:all .15s ease}.op-danger:hover{background:#fff1f2!important}.op-inline{display:flex;gap:5px;align-items:center}.op-inline input{width:120px;padding:6px 10px}.op-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid #e4e4e7;border-radius:8px;background:#fff;margin-bottom:28px}.op-stats div{padding:20px;border-right:1px solid #e4e4e7}.op-stats div:last-child{border:0}.op-stats small,.op-stats strong{display:block}.op-stats strong{font-size:24px;margin-top:6px;color:#09090b}.op-gate{padding:10vh 10%;background:#fafafa;min-height:100vh}@media(max-width:760px){.operator{grid-template-columns:1fr}.operator aside{padding:16px;border-bottom:1px solid #e4e4e7}.operator nav{grid-template-columns:repeat(2,1fr)}.op-account{display:none}.operator main{padding:28px 16px}.op-form{grid-template-columns:1fr}.op-stats{grid-template-columns:1fr}.op-stats div{border-right:0;border-bottom:1px solid #e4e4e7}}
+
+/* Màn tạo và sửa tour: form nhiều trường, xếp một cột thay vì dàn ngang. */
+.op-form--tour{grid-template-columns:1fr;gap:0;padding:0;background:#fff;border:0}
+.op-form-title{font-size:20px;font-weight:700;color:#09090b;margin:0}
+.op-fieldset{display:grid;gap:14px;border-top:1px solid #e4e4e7;padding:20px 0}
+.op-fieldset:first-child{border-top:0;padding-top:0}
+.op-field{display:grid;gap:6px}
+.op-field label{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#71717a;font-weight:600}
+.op-field input,.op-field textarea,.op-field select{border:1px solid #e4e4e7;padding:8px 12px;background:#fff;border-radius:6px;font:inherit;width:100%}
+.op-field textarea{min-height:76px;resize:vertical}
+.op-day{display:grid;gap:8px;border-left:2px solid #09090b;padding:10px 0 10px 14px}
+.op-day b{font-size:13px;color:#09090b}
+.op-inline-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.op-actions{display:flex;gap:12px;align-items:center;border-top:1px solid #e4e4e7;padding-top:20px}
+.op-actions button[disabled]{opacity:.6;cursor:default}
+
+/* Một mốc chính sách huỷ: huỷ trước ít nhất N ngày, hoàn bao nhiêu phần trăm. */
+.op-policy-row{display:grid;grid-template-columns:auto 84px auto 84px auto auto;gap:8px;align-items:center;font-size:14px;color:#52525b}
+.op-policy-row input{padding:8px}
+
+/* Danh sách điểm đến của một ngày trong lịch trình. */
+.op-day-points{display:grid;gap:6px;padding:8px 0 4px 12px;border-left:2px solid #e4e4e7}
+.op-day-points-title{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#71717a;font-weight:600}
+
+/* Ba khối nhập của màn tạo tour. */
+.op-block-title{font-size:15px;font-weight:700;margin:0;color:#09090b}
+.op-block-note{margin:0 0 6px;font-size:13px;color:#71717a}
+.op-row-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.op-scroll{max-height:170px;overflow-y:auto;display:grid;gap:6px;padding-right:4px}
+/* Danh sách ngày: một hàng một ngày, chiều dài trang không tăng theo số ngày. */
+.op-day-list{max-height:340px;overflow-y:auto;border:1px solid #e4e4e7}
+.op-day-row{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;text-align:left;
+            background:#fff;border:0;border-bottom:1px solid #f4f4f5;border-radius:0;color:#09090b;padding:12px 14px}
+.op-day-row b{color:#09090b}
+.op-day-row span{color:#71717a;font-weight:500}
+.op-day-row--open{background:#f8fafc}
+.op-day-editor{display:grid;gap:8px;border-left:2px solid #09090b;padding:12px 0 12px 14px;margin-top:10px}
+.op-day-editor textarea{min-height:70px}
+
+/* Thanh tiến độ các bước tạo tour. */
+.op-progress{display:grid;gap:8px;margin:6px 0 18px}
+.op-progress-head{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:#52525b}
+.op-progress-bar{height:6px;background:#e4e4e7;border-radius:99px;overflow:hidden}
+.op-progress-bar span{display:block;height:100%;background:#09090b}
+.op-progress-steps{display:flex;flex-wrap:wrap;gap:6px}
+.op-progress-step{background:transparent!important;border:0!important;color:#71717a!important;
+                  font-weight:600!important;padding:2px 6px!important;font-size:12px}
+.op-progress-step--xong{color:#09090b!important}
+.op-progress-step--dang{color:#09090b!important;text-decoration:underline}
+.op-check{display:flex;gap:8px;align-items:center;font-size:14px}
+.op-cover-preview{max-width:220px;border:1px solid #e4e4e7}
+.op-review{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;border:1px solid #e4e4e7}
+.op-review span{padding:12px;border-right:1px solid #f4f4f5}
+.op-review small{display:block;color:#71717a;font-size:12px}
+
+/* Đè style nút chung của khu: hàng ngày và ô chọn điểm phải xếp theo lưới riêng. */
+.operator .op-day-list{max-height:340px;overflow-y:auto;border:1px solid #e4e4e7;display:block}
+.operator .op-day-row{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;
+  width:100%;text-align:left;background:#fff;color:#09090b;border:0;border-bottom:1px solid #f4f4f5;
+  border-radius:0;padding:12px 14px;font-weight:500}
+.operator .op-day-row b{color:#09090b;font-weight:700}
+.operator .op-day-row span{color:#71717a;font-weight:500}
+.operator .op-day-row--open{background:#f4f4f5}
+.operator .op-check{display:flex;align-items:center;gap:8px;justify-content:flex-start;
+  font-size:14px;color:#18181b;padding:4px 0}
+.operator .op-check input[type="checkbox"]{width:auto;min-width:0;flex:0 0 auto;margin:0}
+.op-day-points .op-scroll{max-height:150px}
+.op-row-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+
+/* Ô tìm điểm để gắn vào một ngày của lịch trình. */
+.op-picker{display:grid;gap:8px;margin-top:6px}
+.op-picker-results{max-height:200px;border:1px solid #e4e4e7}
+.operator .op-picker-item{display:grid;gap:2px;justify-items:start;text-align:left;width:100%;
+  background:#fff;color:#18181b;border:0;border-bottom:1px solid #f4f4f5;border-radius:0;padding:10px 12px;font-weight:600}
+.op-picker-item span{color:#71717a;font-weight:500;font-size:12px}
+.op-diem-da-chon{font-weight:600;color:#18181b}
+.op-diem-da-chon small{color:#71717a;font-weight:500}

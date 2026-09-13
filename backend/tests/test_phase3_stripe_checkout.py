@@ -39,9 +39,9 @@ from fastapi.testclient import TestClient
 
 from app.core.config import reload_settings, settings
 from app.main import app
-from app.repositories import tour_repo
-from app.services import tour_service
-from app.services.tour_service import (
+from app.tours.search_tours import repository as tour_repo
+from app.tours.search_tours import service as tour_service
+from app.tours.search_tours.service import (
     BookingNotFoundError,
     PaymentGatewayUnavailableError,
     PaymentInvalidError,
@@ -61,10 +61,10 @@ class TestTaoCheckoutStripeService(unittest.TestCase):
             "hold_expires_at": datetime.now(TZ_VN) + timedelta(minutes=25),
         }
 
-    @patch("app.repositories.tour_repo.update_payment_status")
-    @patch("app.repositories.tour_repo.create_payment")
-    @patch("app.repositories.tour_repo.generate_payment_txn_ref")
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.update_payment_status")
+    @patch("app.tours.search_tours.repository.create_payment")
+    @patch("app.tours.search_tours.repository.generate_payment_txn_ref")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_1_thieu_stripe_secret_key_nem_unavailable_va_payment_failed(
         self, mock_get_b, mock_gen_ref, mock_create_p, mock_upd_p
     ):
@@ -85,11 +85,11 @@ class TestTaoCheckoutStripeService(unittest.TestCase):
             self.assertEqual(kwargs.get("status"), "FAILED")
             self.assertIn("STRIPE_SECRET_KEY", kwargs.get("note", ""))
 
-    @patch("app.repositories.tour_repo.set_payment_stripe_refs")
+    @patch("app.tours.search_tours.repository.set_payment_stripe_refs")
     @patch("stripe.checkout.Session.create")
-    @patch("app.repositories.tour_repo.create_payment")
-    @patch("app.repositories.tour_repo.generate_payment_txn_ref")
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.create_payment")
+    @patch("app.tours.search_tours.repository.generate_payment_txn_ref")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_2_tao_checkout_stripe_goi_session_create_vnd_khong_nhan_100(
         self, mock_get_b, mock_gen_ref, mock_create_p, mock_stripe_create, mock_set_refs
     ):
@@ -150,7 +150,7 @@ class TestTaoCheckoutStripeService(unittest.TestCase):
         self.assertEqual(refs_kwargs["payment_id"], 2)
         self.assertEqual(refs_kwargs["stripe_session_id"], "cs_test_session_123")
 
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_3_booking_khong_phai_pending_bi_chan(self, mock_get_b):
         """3. Booking không ở trạng thái PENDING_PAYMENT -> chặn với PaymentInvalidError."""
         mock_get_b.return_value = {**self.fake_booking, "status": "CONFIRMED"}
@@ -160,7 +160,7 @@ class TestTaoCheckoutStripeService(unittest.TestCase):
 
         self.assertIn("CONFIRMED", str(ctx.exception))
 
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_3b_booking_qua_han_hold_expires_at_bi_chan(self, mock_get_b):
         """3. Booking đã quá hạn hold_expires_at -> chặn với PaymentInvalidError (E3)."""
         expired_hold = datetime.now(TZ_VN) - timedelta(minutes=10)
@@ -171,7 +171,7 @@ class TestTaoCheckoutStripeService(unittest.TestCase):
 
         self.assertIn("hết hạn giữ chỗ", str(ctx.exception))
 
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_3c_booking_khong_ton_tai(self, mock_get_b):
         """Booking không tồn tại -> ném BookingNotFoundError."""
         mock_get_b.return_value = None
@@ -238,11 +238,11 @@ class TestStripeWebhookService(unittest.TestCase):
         self.assertFalse(res["handled"])
         self.assertEqual(res["event_type"], "payment_intent.succeeded")
 
-    @patch("app.services.tour_service.chuyen_trang_thai")
-    @patch("app.repositories.tour_repo.update_payment_status")
-    @patch("app.repositories.tour_repo.count_successful_payments")
-    @patch("app.repositories.tour_repo.get_booking")
-    @patch("app.repositories.tour_repo.get_payment_by_stripe_session")
+    @patch("app.tours.search_tours.service.chuyen_trang_thai")
+    @patch("app.tours.search_tours.repository.update_payment_status")
+    @patch("app.tours.search_tours.repository.count_successful_payments")
+    @patch("app.tours.search_tours.repository.get_booking")
+    @patch("app.tours.search_tours.repository.get_payment_by_stripe_session")
     @patch("stripe.Webhook.construct_event")
     def test_6_webhook_hop_le_payment_success_va_booking_paid(
         self, mock_construct, mock_get_p, mock_get_b, mock_count, mock_upd_p, mock_chuyen
@@ -280,8 +280,8 @@ class TestStripeWebhookService(unittest.TestCase):
         self.assertEqual(chuyen_kwargs["tu"], "PENDING_PAYMENT")
         self.assertEqual(chuyen_kwargs["sang"], "PAID")
 
-    @patch("app.services.tour_service.chuyen_trang_thai")
-    @patch("app.repositories.tour_repo.get_payment_by_stripe_session")
+    @patch("app.tours.search_tours.service.chuyen_trang_thai")
+    @patch("app.tours.search_tours.repository.get_payment_by_stripe_session")
     @patch("stripe.Webhook.construct_event")
     def test_7_webhook_trung_payment_da_success_idempotent(
         self, mock_construct, mock_get_p, mock_chuyen
@@ -307,10 +307,10 @@ class TestStripeWebhookService(unittest.TestCase):
         # Không được gọi lại chuyển trạng thái
         mock_chuyen.assert_not_called()
 
-    @patch("app.services.tour_service.chuyen_trang_thai")
-    @patch("app.repositories.tour_repo.update_payment_status")
-    @patch("app.repositories.tour_repo.get_booking")
-    @patch("app.repositories.tour_repo.get_payment_by_stripe_session")
+    @patch("app.tours.search_tours.service.chuyen_trang_thai")
+    @patch("app.tours.search_tours.repository.update_payment_status")
+    @patch("app.tours.search_tours.repository.get_booking")
+    @patch("app.tours.search_tours.repository.get_payment_by_stripe_session")
     @patch("stripe.Webhook.construct_event")
     def test_8_webhook_khi_booking_da_expired_needs_refund(
         self, mock_construct, mock_get_p, mock_get_b, mock_upd_p, mock_chuyen
@@ -340,10 +340,10 @@ class TestStripeWebhookService(unittest.TestCase):
         # KHÔNG gọi chuyển booking sang PAID
         mock_chuyen.assert_not_called()
 
-    @patch("app.services.tour_service.chuyen_trang_thai")
-    @patch("app.repositories.tour_repo.update_payment_status")
-    @patch("app.repositories.tour_repo.get_booking")
-    @patch("app.repositories.tour_repo.get_payment_by_stripe_session")
+    @patch("app.tours.search_tours.service.chuyen_trang_thai")
+    @patch("app.tours.search_tours.repository.update_payment_status")
+    @patch("app.tours.search_tours.repository.get_booking")
+    @patch("app.tours.search_tours.repository.get_payment_by_stripe_session")
     @patch("stripe.Webhook.construct_event")
     def test_8b_webhook_khi_booking_pending_nhung_qua_han_hold_expires_at(
         self, mock_construct, mock_get_p, mock_get_b, mock_upd_p, mock_chuyen
@@ -373,10 +373,10 @@ class TestStripeWebhookService(unittest.TestCase):
         mock_upd_p.assert_called_once()
         self.assertTrue(mock_upd_p.call_args[1]["needs_refund"])
 
-    @patch("app.services.tour_service.chuyen_trang_thai")
-    @patch("app.repositories.tour_repo.update_payment_status")
-    @patch("app.repositories.tour_repo.get_booking")
-    @patch("app.repositories.tour_repo.get_payment_by_stripe_session")
+    @patch("app.tours.search_tours.service.chuyen_trang_thai")
+    @patch("app.tours.search_tours.repository.update_payment_status")
+    @patch("app.tours.search_tours.repository.get_booking")
+    @patch("app.tours.search_tours.repository.get_payment_by_stripe_session")
     @patch("stripe.Webhook.construct_event")
     def test_9_webhook_sai_tien_mismatch(
         self, mock_construct, mock_get_p, mock_get_b, mock_upd_p, mock_chuyen
@@ -410,8 +410,8 @@ class TestStripeWebhookService(unittest.TestCase):
 class TestLayTrangThaiThanhToan(unittest.TestCase):
     """Kiểm thử hàm lay_trang_thai_thanh_toan."""
 
-    @patch("app.repositories.tour_repo.get_booking_payments")
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.repository.get_booking_payments")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_lay_trang_thai_thanh_cong_khong_lo_secret(self, mock_get_b, mock_get_p):
         """Tra cứu trạng thái đơn hàng và payment mới nhất an toàn."""
         mock_get_b.return_value = {
@@ -445,10 +445,10 @@ class TestJobStripeSessionExpire(unittest.TestCase):
     """Kiểm thử mở rộng job xu_ly_booking_het_han dọn dẹp Stripe Checkout Session."""
 
     @patch("stripe.checkout.Session.expire")
-    @patch("app.repositories.tour_repo.update_payment_status")
-    @patch("app.repositories.tour_repo.list_stripe_sessions_can_expire")
-    @patch("app.repositories.tour_repo.find_pending_bookings_past_depart_date")
-    @patch("app.repositories.tour_repo.find_expired_bookings")
+    @patch("app.tours.search_tours.repository.update_payment_status")
+    @patch("app.tours.search_tours.repository.list_stripe_sessions_can_expire")
+    @patch("app.tours.search_tours.repository.find_pending_bookings_past_depart_date")
+    @patch("app.tours.search_tours.repository.find_expired_bookings")
     def test_xu_ly_booking_het_han_expire_stripe_sessions(
         self, mock_find_exp, mock_find_past, mock_list_st, mock_upd_p, mock_st_expire
     ):
@@ -476,8 +476,8 @@ class TestApiStripeRoutes(unittest.TestCase):
         self.client = TestClient(app)
 
     @patch("app.core.security.execute_query")
-    @patch("app.services.tour_service.tao_checkout_stripe")
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.service.tao_checkout_stripe")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_api_checkout_route_thanh_cong(self, mock_get_b, mock_tao_st, mock_sql):
         """Khách gọi POST /api/tours/bookings/{id}/checkout -> 200 OK."""
         from app.core.security import create_access_token
@@ -500,8 +500,8 @@ class TestApiStripeRoutes(unittest.TestCase):
         self.assertEqual(res.json()["checkout_url"], "https://checkout.stripe.com/pay/test")
 
     @patch("app.core.security.execute_query")
-    @patch("app.services.tour_service.lay_trang_thai_thanh_toan")
-    @patch("app.repositories.tour_repo.get_booking")
+    @patch("app.tours.search_tours.service.lay_trang_thai_thanh_toan")
+    @patch("app.tours.search_tours.repository.get_booking")
     def test_api_status_route_thanh_cong(self, mock_get_b, mock_lay_tt, mock_sql):
         """Khách gọi GET /api/tours/bookings/{id}/status -> 200 OK."""
         from app.core.security import create_access_token
@@ -523,7 +523,7 @@ class TestApiStripeRoutes(unittest.TestCase):
         self.assertTrue(res.json()["success"])
         self.assertEqual(res.json()["payment_status"], "PENDING")
 
-    @patch("app.services.tour_service.xu_ly_stripe_webhook")
+    @patch("app.tours.search_tours.service.xu_ly_stripe_webhook")
     def test_api_webhook_route_khong_can_auth(self, mock_webhook):
         """Stripe gọi POST /api/tours/stripe/webhook KHÔNG cần header Authorization -> 200 OK."""
         mock_webhook.return_value = {

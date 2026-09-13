@@ -1,0 +1,589 @@
+/* Màn tạo tour: thanh bước, các thẻ nhập, cột xem trước, thanh hành động dính đáy.
+* Tên lớp theo nghiệp vụ; giá trị trình bày lấy từ bộ token Material 3 của thiết kế. */
+
+.op-wizard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+/* Thanh tiến độ */
+.op-wizard__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+}
+.op-wizard .op-wizard__progress-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.op-wizard .op-wizard__progress-name {
+  display: block;
+  font-size: 20px;
+  font-weight: 600;
+}
+.op-wizard .op-wizard__progress-sub {
+  font-size: 13px;
+  color: #565e74;
+}
+.op-wizard .op-wizard__progress-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.op-wizard .op-wizard__progress-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #565e74;
+}
+.op-wizard .op-wizard__progress-pill {
+  background: #09090b;
+  color: #ffffff;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.op-wizard .op-wizard__bar {
+  height: 6px;
+  border-radius: 9999px;
+  background: #e4e4e7;
+  overflow: hidden;
+}
+.op-wizard .op-wizard__bar-fill {
+  height: 100%;
+  background: #09090b;
+  border-radius: 9999px;
+  transition: width 400ms ease-out;
+}
+.op-wizard .op-wizard__dots {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.op-wizard .op-wizard__dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: #e4e4e7;
+  cursor: pointer;
+  transition: all 200ms ease-out;
+}
+.op-wizard .op-wizard__dot--done {
+  background: #71717a;
+}
+.op-wizard .op-wizard__dot--active {
+  width: 26px;
+  background: #09090b;
+}
+/* Bố cục hai cột */
+.op-wizard__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: start;
+}
+.op-wizard .op-wizard__main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+/* Cột việc cần đạt dính theo màn hình: cuộn tới đâu vẫn thấy yêu cầu. */
+.op-wizard .op-wizard__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  position: sticky;
+  top: 88px;
+}
+.op-wizard .op-wizard__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.op-wizard .op-wizard__card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0b1c30;
+  margin: 0;
+  min-width: 0;
+}
+.op-wizard .op-wizard__card-title .material-symbols-outlined {
+  color: #9d4300;
+  font-size: 22px;
+}
+.op-wizard .op-wizard__badge {
+  background: #dae2fd;
+  color: #131b2e;
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+
+.op-wizard .op-wizard__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid #e8e3df;
+}
+.op-wizard .op-wizard__footer-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.op-wizard .op-wizard__footer-side:last-child { justify-content: flex-end; }
+.op-wizard .op-wizard__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.op-wizard .op-wizard__btn--back {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  background: transparent;
+  color: #28221f;
+}
+.op-wizard .op-wizard__btn--back:disabled {
+  background: transparent;
+  color: #746b65;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.op-wizard .op-wizard__btn--plain {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  background: none;
+  color: #565e74;
+}
+.op-wizard .op-wizard__btn--exit {
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  background: none;
+  color: #565e74;
+}
+.op-wizard .op-wizard__btn--primary {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #09090b;
+  color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #09090b;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: background 0.15s ease;
+}
+.op-wizard .op-wizard__btn--primary:hover {
+  background: #27272a;
+  border-color: #27272a;
+}
+.op-wizard .op-wizard__btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.op-wizard .op-wizard__notice {
+  background: #ffdad6;
+  color: #93000a;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  margin: 0;
+}
+@media (max-width: 1024px) {
+.op-wizard .op-wizard__grid, .op-wizard .op-wizard__row {
+    grid-template-columns: 1fr;
+  }
+.op-wizard .op-wizard__main, .op-wizard .op-wizard__aside {
+    grid-column: span 12;
+  }
+.op-wizard .op-wizard__steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+.op-wizard {
+    padding: 16px;
+  }
+.op-wizard .op-wizard__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Lỗi hiện ngay dưới ô nhập đang sai, kèm viền đỏ quanh ô đó. */
+.op-wizard .op-wizard__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ba1a1a;
+}
+
+.op-wizard .op-wizard__error-icon {
+  font-size: 16px;
+}
+
+.op-wizard .op-wizard__field--invalid .op-wizard__input,
+.op-wizard .op-wizard__field--invalid .op-wizard__textarea,
+.op-wizard .op-wizard__field--invalid .op-wizard__select,
+.op-wizard .op-wizard__field--invalid .op-wizard__duration,
+.op-wizard .op-wizard__field--invalid .op-wizard__editor {
+  box-shadow: 0 0 0 2px #ba1a1a;
+}
+
+/* Lỗi của cả form (máy chủ trả về) hiện trên đầu, không nằm dưới đáy. */
+.op-wizard .op-wizard__form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #ffdad6;
+  color: #93000a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Viền đỏ cho cả những ô nhập kiểu cũ của bước 2 tới bước 6. */
+.op-wizard .op-wizard__field--invalid input,
+.op-wizard .op-wizard__field--invalid textarea,
+.op-wizard .op-wizard__field--invalid select,
+.op-wizard .op-wizard__field--invalid .op-scroll,
+.op-wizard .op-wizard__field--invalid .op-wizard__day-list {
+  box-shadow: 0 0 0 2px #ba1a1a;
+}
+
+/* Khung xem thẻ tour mở bằng nút, không chiếm chỗ trên màn nhập. */
+/* Khung xem thẻ tour: thẻ hộp thoại thật của trình duyệt, nền mờ do ::backdrop lo. */
+.op-wizard .op-wizard__dialog {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+
+.op-wizard .op-wizard__dialog::backdrop {
+  background: rgba(11, 28, 48, 0.45);
+}
+
+.op-wizard .op-wizard__dialog-panel {
+  width: 100%;
+  max-width: 380px;
+  background: #f8f9ff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.op-wizard .op-wizard__dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.op-wizard .op-wizard__dialog-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.op-wizard .op-wizard__dialog-close {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: #565e74;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+
+/* Thanh cuộn mảnh cho khớp thiết kế, không ẩn hẳn để vẫn biết trang còn nội dung. */
+.op-wizard ::-webkit-scrollbar,
+.op-shell ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.op-wizard ::-webkit-scrollbar-thumb,
+.op-shell ::-webkit-scrollbar-thumb {
+  background: #d3e4fe;
+  border-radius: 9999px;
+}
+
+/* ---------- Thanh bước: vạch màu + số thứ tự + tên bước ---------- */
+.op-wizard .op-wizard__steps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.op-wizard .op-wizard__step {
+  border: 0;
+  padding: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.op-wizard .op-wizard__step-bar {
+  display: block;
+  height: 6px;
+  width: 100%;
+  border-radius: 9999px;
+  background: #e4e4e7;
+  transition: background 0.2s ease;
+}
+
+.op-wizard .op-wizard__step--done .op-wizard__step-bar {
+  background: #09090b;
+}
+
+.op-wizard .op-wizard__step--active .op-wizard__step-bar {
+  background: #09090b;
+  box-shadow: 0 0 0 1px #09090b;
+}
+
+.op-wizard .op-wizard__step-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.op-wizard .op-wizard__step-number {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  background: #f4f4f5;
+  color: #71717a;
+}
+
+.op-wizard .op-wizard__step--done .op-wizard__step-number {
+  background: #e4e4e7;
+  color: #09090b;
+}
+
+.op-wizard .op-wizard__step--active .op-wizard__step-number {
+  background: #09090b;
+  color: #ffffff;
+}
+
+.op-wizard .op-wizard__step-name {
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  color: #565e74;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.op-wizard .op-wizard__step--done .op-wizard__step-name {
+  color: #0b1c30;
+  font-weight: 600;
+}
+
+.op-wizard .op-wizard__step--active .op-wizard__step-name {
+  color: #9d4300;
+  font-weight: 700;
+}
+
+.op-wizard .op-wizard__step--todo {
+  opacity: 0.5;
+}
+
+/* ---------- Ô tìm điểm ---------- */
+.op-wizard .op-wizard__search {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.op-wizard .op-wizard__search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.op-wizard .op-wizard__search-row .op-wizard__input {
+  flex: 1;
+}
+
+.op-wizard .op-wizard__search-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.op-wizard .op-wizard__search-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 22px;
+  color: #565e74;
+  pointer-events: none;
+}
+
+.op-wizard .op-wizard__search-input .op-wizard__input {
+  padding-left: 46px;
+  width: 100%;
+}
+
+.op-wizard .op-wizard__search-note {
+  font-size: 12px;
+  color: #565e74;
+}
+
+/* ---------- Thẻ mẹo ---------- */
+.op-wizard .op-wizard__tips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.op-wizard .op-wizard__tips li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #565e74;
+}
+
+.op-wizard .op-wizard__tips li > .material-symbols-outlined {
+  font-size: 18px;
+  color: #9d4300;
+  margin-top: 2px;
+}
+
+.op-wizard .op-wizard__tips b {
+  color: #0b1c30;
+}
+
+/* ---------- Lịch trình theo ngày được định kiểu chi tiết trong DayEditor.css ---------- */
+
+/* Ô thêm điểm */
+.op-wizard .op-wizard__add-place {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.op-wizard .op-wizard__add-place-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  padding: 0;
+}
+
+
+/* Danh sách việc của ngày. */
+.op-wizard .op-wizard__checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Nút chỉ có biểu tượng (thu gọn ngày, xoá điểm, xoá việc) — không tô nền như nút thường. */
+.op-wizard .op-wizard__icon-btn {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: #565e74;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+
+
+/* Khoảng cách đường đi giữa hai điểm */
+.op-wizard__gap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-sm);
+  color: var(--on-surface-variant);
+  font: var(--body-sm);
+  background: #eff4ff;
+  border-radius: var(--borderRadius);
+  margin: var(--space-2xs) 0;
+}
+
+.op-wizard__gap .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--primary);
+}
+
+
+
+
+/* Note và checklist là các mục trong timeline, tách khỏi ô tìm địa điểm. */
+
+/* Bề mặt input dùng chung cho toàn bộ wizard. */
+.op-wizard .op-wizard__input-wrap { position:relative; display:flex; align-items:center; min-height:46px; border:1px solid #d9dce1; border-radius:6px; background:#fff; overflow:hidden; }
+.op-wizard .op-wizard__input-icon { position:absolute; left:13px; color:#69737d; font-size:20px; pointer-events:none; }
+.op-wizard .op-wizard__input, .op-wizard .op-wizard__textarea, .op-wizard .op-wizard__select { box-sizing:border-box; width:100%; border:1px solid #d9dce1; border-radius:6px; background:#fff; color:#20262d; font:inherit; font-size:14px; outline:0; }
+.op-wizard .op-wizard__input, .op-wizard .op-wizard__select { min-height:46px; padding:0 13px; }.op-wizard .op-wizard__input-wrap .op-wizard__input, .op-wizard .op-wizard__input-wrap .op-wizard__select { border:0; border-radius:0; background:transparent; }.op-wizard .op-wizard__input--with-icon { padding-left:43px; }
+.op-wizard .op-wizard__textarea { min-height:94px; padding:12px 13px; resize:vertical; line-height:1.5; }.op-wizard .op-wizard__input::placeholder, .op-wizard .op-wizard__textarea::placeholder { color:#99a1a9; }.op-wizard .op-wizard__input-wrap:focus-within, .op-wizard .op-wizard__input:focus, .op-wizard .op-wizard__textarea:focus, .op-wizard .op-wizard__select:focus { border-color:#09090b; box-shadow:0 0 0 2px rgba(9, 9, 11, 0.1); }
+
+/* Các lớp xuất hiện trong năm bước của wizard. */
+.op-wizard .op-wizard__field { display:flex; flex-direction:column; gap:7px; }.op-wizard .op-wizard__field-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }.op-wizard .op-wizard__label { color:#303841; font-size:13px; font-weight:700; }.op-wizard .op-wizard__required { color:#e11d48; }.op-wizard .op-wizard__counter { color:#89939b; font-size:12px; white-space:nowrap; }
+.op-wizard .op-wizard__check { padding:16px; border:1px solid #e2e5e8; border-radius:6px; background:#fff; }.op-wizard .op-wizard__check-title { display:block; margin-bottom:11px; color:#303841; font-size:13px; font-weight:800; }.op-wizard .op-wizard__check-list { display:flex; flex-direction:column; gap:9px; margin:0; padding:0; list-style:none; }.op-wizard .op-wizard__check-item { display:flex; align-items:flex-start; gap:7px; color:#68737d; font-size:12px; line-height:1.45; }.op-wizard .op-wizard__check-item .material-symbols-outlined { flex:none; font-size:17px; }.op-wizard .op-wizard__check-item--done { color:#10b981; }
+.op-wizard .op-wizard__preview { display:flex; flex-direction:column; gap:10px; }.op-wizard .op-wizard__preview-label { color:#6f7982; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }.op-wizard .op-wizard__preview-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#09090b; }.op-wizard .op-wizard__preview-card { overflow:hidden; border:1px solid #e0e3e6; border-radius:6px; background:#fff; }.op-wizard .op-wizard__preview-media { height:138px; background:#f1f2f4; }.op-wizard .op-wizard__preview-img { width:100%; height:100%; object-fit:cover; }.op-wizard .op-wizard__preview-tags { display:flex; gap:6px; padding:10px 12px 0; }.op-wizard .op-wizard__preview-place, .op-wizard .op-wizard__preview-duration { color:#69737d; font-size:12px; }.op-wizard .op-wizard__preview-body { padding:10px 12px 13px; }.op-wizard .op-wizard__preview-name { margin:0; color:#252d34; font-size:16px; }.op-wizard .op-wizard__preview-desc { margin:6px 0; color:#6b747d; font-size:12px; line-height:1.5; }.op-wizard .op-wizard__preview-price { color:#09090b; font-size:15px; font-weight:700; }.op-wizard .op-wizard__preview-cta { width:100%; min-height:36px; margin-top:10px; border:0; border-radius:6px; background:#09090b; color:#fff; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }

@@ -1,0 +1,359 @@
+/* ==========================================================================
+   SHADCN UI ADMIN DASHBOARD SYSTEM
+   Strict Monochrome (#09090b / #ffffff / #f4f4f5 / #e4e4e7 / #71717a)
+   ========================================================================== */
+
+.admin-shell {
+  min-height: 100vh;
+  display: flex;
+  background: #fafafa;
+  color: #09090b;
+  font-family: inherit;
+}
+
+/* ==================== SIDEBAR ==================== */
+.admin-shell__aside {
+  width: 260px;
+  min-width: 260px;
+  background: #ffffff;
+  border-right: 1px solid #e4e4e7;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.admin-shell__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px 18px;
+  border-bottom: 1px solid #f4f4f5;
+  margin-bottom: 16px;
+}
+
+.admin-shell__brand-mark {
+  width: 32px;
+  height: 32px;
+  background: #09090b;
+  color: #ffffff;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  flex: none;
+}
+
+.admin-shell__brand-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #09090b;
+  line-height: 1.2;
+}
+
+.admin-shell__brand-sub {
+  display: block;
+  font-size: 11px;
+  color: #71717a;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.admin-shell__group {
+  margin-bottom: 18px;
+}
+
+.admin-shell__group-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  padding: 0 10px 6px;
+}
+
+.admin-shell__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.admin-shell__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #52525b;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.admin-shell__nav-item:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+.admin-shell__nav-item--active {
+  background: #09090b !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.admin-shell__nav-icon {
+  font-size: 19px !important;
+  flex: none;
+}
+
+.admin-shell__foot {
+  border-top: 1px solid #e4e4e7;
+  padding-top: 14px;
+  margin-top: auto;
+}
+
+.admin-shell__account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px;
+}
+
+.admin-shell__account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-shell__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  color: #09090b;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex: none;
+}
+
+.admin-shell__account-info {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.admin-shell__account-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #09090b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-shell__account-role {
+  display: block;
+  font-size: 11px;
+  color: #71717a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-shell__logout-btn {
+  border: 0;
+  background: transparent;
+  color: #71717a;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  transition: all 0.15s ease;
+}
+
+.admin-shell__logout-btn:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+/* ==================== MAIN BODY ==================== */
+.admin-shell__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.admin-shell__header {
+  height: 56px;
+  border-bottom: 1px solid #e4e4e7;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.admin-shell__header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-shell__header-icon {
+  font-size: 20px;
+  color: #71717a;
+}
+
+.admin-shell__header-divider {
+  width: 1px;
+  height: 16px;
+  background: #e4e4e7;
+}
+
+.admin-shell__crumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #71717a;
+  font-weight: 500;
+}
+
+.admin-shell__crumb-root {
+  color: #71717a;
+}
+
+.admin-shell__crumb-active {
+  color: #09090b;
+  font-weight: 600;
+}
+
+.admin-shell__home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #52525b;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.admin-shell__home-btn:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+.admin-shell__main {
+  flex: 1;
+  padding: 28px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ==================== GATE (AUTH REQUIRED) ==================== */
+.admin-shell__gate {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: #fafafa;
+}
+
+.admin-shell__gate-card {
+  max-width: 400px;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  padding: 32px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.admin-shell__gate-title {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #09090b;
+}
+
+.admin-shell__gate-text {
+  margin: 0 0 20px 0;
+  font-size: 13.5px;
+  color: #71717a;
+  line-height: 1.5;
+}
+
+/* ==================== SHADCN FORM MODAL ==================== */
+.admin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(9, 9, 11, 0.45);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.admin-modal__card {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .admin-shell {
+    flex-direction: column;
+  }
+  .admin-shell__aside {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-right: 0;
+    border-bottom: 1px solid #e4e4e7;
+  }
+  .admin-shell__main {
+    padding: 20px 14px;
+  }
+}

@@ -13,8 +13,8 @@ from unittest.mock import patch
 os.environ.setdefault("JWT_SECRET", "test-secret-key-for-unittest-only")
 
 from app.core.database import execute_query, transaction
-from app.repositories import tour_repo
-from app.services import tour_service
+from app.tours.search_tours import repository as tour_repo
+from app.tours.search_tours import service as tour_service
 
 
 def _db_available():
@@ -117,7 +117,7 @@ class TestDatTourTransaction(unittest.TestCase):
         }
 
         # Giả lập create_booking gặp sự cố văng lỗi
-        with patch("app.repositories.tour_repo.create_booking", side_effect=RuntimeError("Lỗi hệ thống khi ghi đơn")):
+        with patch("app.tours.search_tours.repository.create_booking", side_effect=RuntimeError("Lỗi hệ thống khi ghi đơn")):
             with self.assertRaises(RuntimeError):
                 tour_service.book(data_dat_tour)
 
