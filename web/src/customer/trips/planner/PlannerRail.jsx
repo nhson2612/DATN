@@ -41,6 +41,7 @@ export default function PlannerRail({
   onOpenAssistant,
   onToggleSidebar,
   isCollapsed = false,
+  nav,
 }) {
   const [openOverview, setOpenOverview] = useState(true);
   const [openItinerary, setOpenItinerary] = useState(true);
@@ -65,7 +66,28 @@ export default function PlannerRail({
 
   return (
     <aside className={`planner-rail ${isCollapsed ? "planner-rail--collapsed" : ""}`}>
-      {/* 1. Nút AI Assistant Gradient ở đỉnh (w1 - w5) */}
+      {/* 0. Brand & Back Header (Chuẩn Voyage) */}
+      <div className="planner-rail__top">
+        <button
+          type="button"
+          onClick={() => (nav ? nav("/chuyen-di") : (window.location.href = "/chuyen-di"))}
+          className="planner-rail__back-btn"
+          title="Quay lại danh sách chuyến đi"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+        </button>
+        <span
+          className="planner-rail__brand"
+          onClick={() => (nav ? nav("/chuyen-di") : (window.location.href = "/chuyen-di"))}
+          role="button"
+          tabIndex={0}
+        >
+          Voyage
+        </span>
+        <span className="planner-rail__tag">Itinerary</span>
+      </div>
+
+      {/* 1. Nút AI Assistant chuẩn Voyage */}
       <div className="planner-rail__ai-wrap">
         <button
           type="button"
@@ -74,7 +96,7 @@ export default function PlannerRail({
           title="Trợ lý du lịch AI"
         >
           <span className="planner-rail__ai-sparkle">
-            <i className="fa-solid fa-wand-magic-sparkles" />
+            <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
           </span>
           <span className="planner-rail__ai-label">AI Assistant</span>
         </button>
@@ -85,9 +107,7 @@ export default function PlannerRail({
         {/* NHÓM 1: OVERVIEW */}
         <div className="planner-rail__group">
           <div
-            className={`planner-rail__group-header ${
-              activeSection === "overview" ? "planner-rail__group-header--active-pill" : ""
-            }`}
+            className="planner-rail__group-header"
             onClick={() => {
               setOpenOverview(!openOverview);
               handleNav("overview");

@@ -1,0 +1,304 @@
+/* ==========================================================================
+   BLOCK: .custom-dropdown (Reusable Custom Dropdown System)
+   ========================================================================== */
+
+.custom-dropdown {
+  position: relative;
+  display: inline-block;
+  font-family: inherit;
+  user-select: none;
+}
+
+.custom-dropdown-trigger {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  width: 100%;
+}
+
+.custom-dropdown-trigger:focus-visible {
+  outline: 2px solid rgba(20, 26, 31, 0.2);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 1. Variant: Searchfield (Trong thanh tìm kiếm chính) */
+.custom-dropdown--searchfield {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.custom-dropdown-trigger--searchfield {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.custom-dropdown-label {
+  font-size: 11px;
+  color: #8a9298;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  display: block;
+}
+
+.custom-dropdown-value-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.custom-dropdown-prefix {
+  font-size: 14px;
+  color: #141a1f;
+  display: inline-block;
+}
+
+.custom-dropdown-value {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #141a1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.custom-dropdown-value--placeholder {
+  color: #59636b;
+  font-weight: 500;
+}
+
+/* 2. Variant: Minimal (Trong thanh lọc filterbar) */
+.custom-dropdown--minimal {
+  display: inline-flex;
+  align-items: center;
+}
+
+.custom-dropdown-trigger--minimal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: #66717a;
+  padding: 4px 0;
+  transition: color 0.2s ease;
+}
+
+.custom-dropdown-trigger--minimal:hover,
+.custom-dropdown--minimal.custom-dropdown--open .custom-dropdown-trigger--minimal,
+.custom-dropdown--minimal.custom-dropdown--active .custom-dropdown-trigger--minimal {
+  color: #141a1f;
+}
+
+.custom-dropdown--minimal.custom-dropdown--active .custom-dropdown-minimal-label {
+  font-weight: 600;
+  color: #141a1f;
+}
+
+.custom-dropdown-minimal-label {
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+
+.custom-dropdown-arrow {
+  font-size: 10px;
+  opacity: 0.55;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.custom-dropdown-trigger:hover .custom-dropdown-arrow,
+.custom-dropdown-arrow--up {
+  opacity: 1;
+}
+
+.custom-dropdown-arrow--up {
+  transform: rotate(180deg);
+}
+
+/* 3. Variant: Default (Chuẩn form) */
+.custom-dropdown--default {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.custom-dropdown-top-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #141a1f;
+}
+
+.custom-dropdown-trigger--default {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid #dfe3e6;
+  background: #ffffff;
+  justify-content: space-between;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-dropdown-trigger--default:hover {
+  border-color: #a0aab2;
+}
+
+.custom-dropdown--open .custom-dropdown-trigger--default {
+  border-color: #141a1f;
+  box-shadow: 0 0 0 3px rgba(20, 26, 31, 0.08);
+}
+
+/* ==========================================================================
+   DROPDOWN MENU POPOVER
+   ========================================================================== */
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 100;
+  min-width: 200px;
+  max-width: 320px;
+  background: #ffffff;
+  border: 1px solid rgba(20, 26, 31, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(18, 27, 34, 0.12),
+              0 4px 12px rgba(18, 27, 34, 0.06);
+  padding: 6px;
+  animation: customDropdownIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top left;
+}
+
+@keyframes customDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.custom-dropdown-menu--left {
+  left: 0;
+  right: auto;
+}
+
+.custom-dropdown-menu--right {
+  right: 0;
+  left: auto;
+  transform-origin: top right;
+}
+
+.custom-dropdown-menu--minimal {
+  min-width: 170px;
+  top: calc(100% + 6px);
+}
+
+.custom-dropdown-menu-inner {
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+  /* Thanh cuộn mảnh thanh lịch */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(20, 26, 31, 0.2) transparent;
+}
+
+.custom-dropdown-menu-inner::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-dropdown-menu-inner::-webkit-scrollbar-thumb {
+  background: rgba(20, 26, 31, 0.2);
+  border-radius: 999px;
+}
+
+/* ==========================================================================
+   DROPDOWN ITEM
+   ========================================================================== */
+
+.custom-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: #141a1f;
+  font-family: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.custom-dropdown-item:hover {
+  background-color: #f4f6f8;
+}
+
+.custom-dropdown-item--active {
+  background-color: #f7f6f2;
+  font-weight: 600;
+  color: #141a1f;
+}
+
+.custom-dropdown-item-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.custom-dropdown-item-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-dropdown-item-sublabel {
+  font-size: 11px;
+  color: #8a9298;
+  margin-top: 2px;
+}
+
+.custom-dropdown-item-icon {
+  font-size: 15px;
+  color: #66717a;
+  flex-shrink: 0;
+}
+
+.custom-dropdown-check {
+  font-size: 12px;
+  font-weight: 700;
+  color: #141a1f;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   DISABLED STATE
+   ========================================================================== */
+
+.custom-dropdown--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}

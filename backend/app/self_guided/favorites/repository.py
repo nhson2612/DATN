@@ -1,4 +1,4 @@
-"""Truy vấn `favorites` và `booking_requests`. Chỉ SQL, không nghiệp vụ."""
+"""Truy vấn yêu thích. Chỉ SQL, không nghiệp vụ."""
 
 from app.core.database import execute_query
 
@@ -52,48 +52,6 @@ def remove_favorite(user_id: int, place_type: str, place_id: int):
     ))
 
 
-# ── Yêu cầu đặt chỗ ──────────────────────────────────────────────────────────
-
-def create_booking(data: dict, user_id=None):
-    rows = execute_query(
-        """
-        INSERT INTO booking_requests
-            (user_id, place_type, place_id, full_name, phone, email,
-             check_in, check_out, guests, note)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        RETURNING id
-        """,
-        (user_id, data["place_type"], data["place_id"], data["full_name"],
-         data["phone"], data.get("email"), data.get("check_in"),
-         data.get("check_out"), data.get("guests") or 1, data.get("note")),
-    )
-    return rows[0]["id"] if rows else None
-
-
-def list_bookings(status=None, limit: int = 100):
-    """Danh sách cho trang quản trị. Kèm tên địa điểm để admin khỏi tra tay."""
-    dieu_kien = "WHERE b.status = %s" if status else ""
-    params = (status, limit) if status else (limit,)
-    return execute_query(
-        f"""
-        SELECT b.*, a.name AS place_name
-        FROM booking_requests b
-        LEFT JOIN accommodation a ON b.place_type = 'accommodation' AND a.id = b.place_id
-        {dieu_kien}
-        ORDER BY b.created_at DESC
-        LIMIT %s
-        """,
-        params,
-    ) or []
-
-
-def update_booking_status(booking_id: int, status: str):
-    return bool(execute_query(
-        "UPDATE booking_requests SET status = %s WHERE id = %s RETURNING id",
-        (status, booking_id),
-    ))
-
-
 # ── Thống kê cho trang quản trị ──────────────────────────────────────────────
 
 def thong_ke():
@@ -116,8 +74,6 @@ def thong_ke():
           (SELECT count(*) FROM itineraries)                                       AS lich_trinh,
           (SELECT count(*) FROM tours WHERE status = 'ACTIVE')                     AS tour_dang_mo,
           (SELECT count(*) FROM tour_bookings)                                     AS dat_tour,
-          (SELECT count(*) FROM booking_requests WHERE status = 'moi')             AS dat_cho_moi,
-          (SELECT count(*) FROM booking_requests WHERE status = 'da_lien_he')      AS dat_cho_da_lien_he,
           (SELECT coalesce(sum(amount), 0)::bigint FROM payments
             WHERE status = 'SUCCESS')                                              AS doanh_thu,
           (SELECT count(*) FROM payments WHERE status = 'PENDING')                 AS cho_xac_nhan,

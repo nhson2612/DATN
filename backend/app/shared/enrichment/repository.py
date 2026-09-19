@@ -16,7 +16,7 @@ _PLACE_TYPES = ("poi", "trackasia", "serper", "accommodation")
 
 # Mọi cột cần trả về service — gồm raw_response để debug cách field được tạo ra.
 _COT = ("id, place_type, place_id, provider, status, summary, opening_hours, "
-        "rating, review_highlights, images, sources, raw_response, fetched_at, "
+        "rating, review_highlights, images, contact, sources, raw_response, fetched_at, "
         "started_at")
 
 
@@ -60,6 +60,7 @@ def claim(place_type: str, place_id: str, stale_seconds: int = 90) -> bool:
         SET status = 'fetching', started_at = CURRENT_TIMESTAMP,
             summary = NULL, opening_hours = NULL, rating = NULL,
             review_highlights = '[]'::jsonb, images = '[]'::jsonb,
+            contact = '{}'::jsonb,
             sources = '[]'::jsonb, raw_response = NULL
         WHERE (place_enrichments.status = 'fetching'
                AND place_enrichments.started_at
@@ -85,6 +86,7 @@ def save_success(place_type: str, place_id: str, data: dict,
             rating = %s::jsonb,
             review_highlights = %s::jsonb,
             images = %s::jsonb,
+            contact = %s::jsonb,
             sources = %s::jsonb,
             raw_response = %s::jsonb,
             provider = %s,
@@ -96,6 +98,7 @@ def save_success(place_type: str, place_id: str, data: dict,
          _json(data.get("rating")),
          _json(data.get("review_highlights") or []),
          _json(data.get("images") or []),
+         _json(data.get("contact") or {}),
          _json(data.get("sources") or []),
          _json(raw_response),
          provider,
@@ -120,6 +123,7 @@ def save_not_found(place_type: str, place_id: str, raw_response: dict,
             rating = NULL,
             review_highlights = '[]'::jsonb,
             images = '[]'::jsonb,
+            contact = '{}'::jsonb,
             sources = '[]'::jsonb,
             raw_response = %s::jsonb,
             provider = %s,
@@ -158,6 +162,7 @@ def ensure_schema() -> None:
             rating       JSONB,
             review_highlights JSONB NOT NULL DEFAULT '[]'::jsonb,
             images       JSONB NOT NULL DEFAULT '[]'::jsonb,
+            contact      JSONB NOT NULL DEFAULT '{}'::jsonb,
             sources      JSONB NOT NULL DEFAULT '[]'::jsonb,
             raw_response JSONB,
             fetched_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -171,6 +176,7 @@ def ensure_schema() -> None:
     execute_query(
         """
         ALTER TABLE place_enrichments
+          ADD COLUMN IF NOT EXISTS contact JSONB NOT NULL DEFAULT '{}'::jsonb,
           ALTER COLUMN place_id TYPE VARCHAR(512) USING place_id::text;
         ALTER TABLE place_enrichments DROP CONSTRAINT IF EXISTS place_enrichments_place_type_check;
         ALTER TABLE place_enrichments ADD CONSTRAINT place_enrichments_place_type_check

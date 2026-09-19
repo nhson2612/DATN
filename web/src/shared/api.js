@@ -97,6 +97,7 @@ export const api = {
   tour: (slug) => request(`/tours/${encodeURIComponent(slug)}`),
   bookTour: (body) => request("/tours/book", { method: "POST", body: JSON.stringify(body) }),
   myTourBookings: (limit = 100) => request(`/tours/bookings/me?limit=${limit}`),
+  cancelMyTourBooking: (bookingId, reason = "") => request(`/tours/bookings/${bookingId}/cancel`, { method: "POST", body: JSON.stringify({ reason }) }),
   payTourBooking: (bookingId, body = {}) =>
     request(`/tours/bookings/${bookingId}/pay`, {
       method: "POST",
@@ -110,15 +111,20 @@ export const api = {
   tourBookingStatus: (bookingId) =>
     request(`/tours/bookings/${bookingId}/status`),
 
+  supportConversations: () => request("/support/conversations/me"),
+  createSupportConversation: (body) => request("/support/conversations", { method: "POST", body: JSON.stringify(body) }),
+  supportMessages: (id) => request(`/support/conversations/${id}/messages`),
+  sendSupportMessage: (id, body) => request(`/support/conversations/${id}/messages`, { method: "POST", body: JSON.stringify(body) }),
+  supportInbox: (status = "") => request(`/support/inbox${status ? `?status=${status}` : ""}`),
+  updateSupportConversation: (id, body) => request(`/support/conversations/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  takeOverSupportConversation: (id) => request(`/support/conversations/${id}/take-over`, { method: "POST" }),
+  supportAiDraft: (id) => request(`/support/conversations/${id}/ai-draft`, { method: "POST" }),
+
   // Yêu thích
   favorites: () => request("/favorites"),
   addFavorite: (place_type, place_id) =>
     request("/favorites", { method: "POST", body: JSON.stringify({ place_type, place_id }) }),
   removeFavorite: (type, id) => request(`/favorites/${type}/${id}`, { method: "DELETE" }),
-
-  // Đặt chỗ
-  createBooking: (body) =>
-    request("/booking-requests", { method: "POST", body: JSON.stringify(body) }),
 
   // Chuyến đi tự lên lịch
   recommend: (body) =>
@@ -139,10 +145,6 @@ export const api = {
 
   // Quản trị
   adminStats: () => request("/admin/stats"),
-  adminBookings: (status) =>
-    request(`/booking-requests${status ? `?status=${status}` : ""}`),
-  adminSetBookingStatus: (id, status) =>
-    request(`/booking-requests/${id}?status=${status}`, { method: "PUT" }),
   adminTourBookings: () => request("/tours/admin/bookings"),
   adminPayments: (status) =>
     request(`/tours/admin/payments${status ? `?status=${status}` : ""}`),
@@ -165,6 +167,7 @@ export const api = {
   removeOperatorSale: (id) => request(`/operator/departures/${id}/sale`, { method: "DELETE" }),
   operatorBookings: (params = {}) => request(`/operator/bookings?${new URLSearchParams(params)}`),
   confirmOperatorBooking: (id) => request(`/operator/bookings/${id}/confirm`, { method: "POST" }),
+  setOperatorBookingOperationalStatus: (id, status) => request(`/operator/bookings/${id}/operational-status`, { method: "POST", body: JSON.stringify({ status }) }),
   operatorGuests: (id) => request(`/operator/departures/${id}/guests`),
   downloadOperatorGuests: (id) => download(`/operator/departures/${id}/guests.csv`, `khach-dot-${id}.csv`),
   cancelOperatorDeparture: (id, reason) => request(`/operator/departures/${id}/cancel`, { method: "POST", body: JSON.stringify({ reason }) }),

@@ -703,6 +703,7 @@ export default function PlannerDay({
             ds={placesOnly}
             choNgu={choNgu}
             diemDen={diemDen}
+            startDate={startDate}
             onDat={onDatChoNgu}
             onBo={onBoChoNgu}
           />

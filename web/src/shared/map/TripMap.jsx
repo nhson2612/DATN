@@ -481,7 +481,11 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
       veVungNhin(map, hopLe, { padding: 60, maxZoom: 15, duration: 600 });
     };
 
-    map.isStyleLoaded() ? ve() : map.once("load", ve);
+    if (map.isStyleLoaded()) {
+      ve();
+    } else {
+      map.once("load", ve);
+    }
   }, [timThay]);
 
   useEffect(() => {

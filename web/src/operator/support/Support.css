@@ -1,0 +1,22 @@
+/* Support Desk (Màn hỗ trợ khách hàng của Operator) — Chuẩn Shadcn UI */
+
+.border-l-3 {
+  border-left-width: 3px;
+}
+
+/* Tinh chỉnh thanh cuộn cho danh sách hội thoại và khung chat */
+aside::-webkit-scrollbar,
+main div::-webkit-scrollbar {
+  width: 5px;
+}
+
+aside::-webkit-scrollbar-thumb,
+main div::-webkit-scrollbar-thumb {
+  background-color: #e4e4e7;
+  border-radius: 9999px;
+}
+
+aside::-webkit-scrollbar-thumb:hover,
+main div::-webkit-scrollbar-thumb:hover {
+  background-color: #d4d4d8;
+}

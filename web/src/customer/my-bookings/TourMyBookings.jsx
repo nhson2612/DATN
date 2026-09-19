@@ -60,6 +60,7 @@ export default function TourMyBookings({ user, onNeedAuth }) {
   const [stripePayingBookingId, setStripePayingBookingId] = useState(null);
   const [instructionBooking, setInstructionBooking] = useState(null);
   const [copiedKey, setCopiedKey] = useState("");
+  const [cancellingBookingId, setCancellingBookingId] = useState(null);
 
   // State thông báo trạng thái thanh toán Stripe Checkout
   const [checkoutNotice, setCheckoutNotice] = useState(null);
@@ -96,18 +97,15 @@ export default function TourMyBookings({ user, onNeedAuth }) {
     fetchBookings();
   }, [fetchBookings]);
 
-  // Xử lý khi trang được điều hướng về từ Stripe Checkout (Phase 3.3)
+  // Stripe trở về web; webhook độc lập mới là nguồn xác nhận thanh toán.
   useEffect(() => {
     const checkoutParam = searchParams.get("checkout");
     if (!checkoutParam) return;
 
     const bookingIdParam = searchParams.get("booking_id");
-    const sessionIdParam = searchParams.get("session_id");
-
     // Xóa ngay query param để tránh bị lặp lại khi người dùng F5 / reload
     setSearchParams({}, { replace: true });
 
-    // Trường hợp 1: Người dùng hủy thanh toán trên cổng Stripe
     if (checkoutParam === "cancelled") {
       setCheckoutNotice({
         type: "cancelled",
@@ -117,7 +115,6 @@ export default function TourMyBookings({ user, onNeedAuth }) {
       return;
     }
 
-    // Trường hợp 2: Khách hoàn tất thanh toán trên Stripe thành công -> Bắt đầu poll
     if (checkoutParam === "success") {
       setCheckoutNotice({
         type: "verifying",
@@ -243,7 +240,6 @@ export default function TourMyBookings({ user, onNeedAuth }) {
     }
   }, [searchParams, setSearchParams, fetchBookings]);
 
-  // Xử lý thanh toán thẻ qua Stripe từ trang đơn của tôi
   const handleStripeCheckout = async (bookingId) => {
     setStripePayingBookingId(bookingId);
     setCheckoutNotice(null);
@@ -255,7 +251,7 @@ export default function TourMyBookings({ user, onNeedAuth }) {
         setCheckoutNotice({
           type: "error",
           bookingId,
-          message: "Không nhận được liên kết thanh toán từ cổng Stripe.",
+          message: "Không nhận được liên kết thanh toán từ Stripe.",
         });
       }
     } catch (err) {
@@ -266,6 +262,19 @@ export default function TourMyBookings({ user, onNeedAuth }) {
       });
     } finally {
       setStripePayingBookingId(null);
+    }
+  };
+
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm("Hủy đơn này? Chỗ sẽ được trả lại. Giao dịch đã thanh toán sẽ được đưa vào quy trình hoàn tiền.")) return;
+    setCancellingBookingId(bookingId);
+    try {
+      await api.cancelMyTourBooking(bookingId);
+      await fetchBookings();
+    } catch (err) {
+      setCheckoutNotice({ type: "error", bookingId, message: err.message || "Không thể hủy đơn." });
+    } finally {
+      setCancellingBookingId(null);
     }
   };
 
@@ -355,7 +364,7 @@ export default function TourMyBookings({ user, onNeedAuth }) {
           )}
         </div>
 
-        {/* Banner thông báo Stripe Checkout */}
+        {/* Banner thông báo thanh toán */}
         {checkoutNotice && (
           <div
             className={`tour-my-bookings__notice tour-my-bookings__notice--${checkoutNotice.type}`}
@@ -539,10 +548,21 @@ export default function TourMyBookings({ user, onNeedAuth }) {
                             </span>
                           )}
                           {isPending && (
-                            <span className="tour-booking-card__badge tour-booking-card__badge--pending">
-                              <span className="material-symbols-outlined">schedule</span>
-                              Chờ chuyển khoản
-                            </span>
+                            <button
+                              type="button"
+                              className="tour-booking-card__cta-pay-badge"
+                              onClick={() => {
+                                if (b.payment_txn_ref) {
+                                  setInstructionBooking(b);
+                                } else {
+                                  handleStripeCheckout(b.id);
+                                }
+                              }}
+                              title="Bấm để thanh toán đơn tour ngay"
+                            >
+                              <span className="material-symbols-outlined">payments</span>
+                              <span>Thanh toán ngay →</span>
+                            </button>
                           )}
                           {isExpired && (
                             <span className="tour-booking-card__badge tour-booking-card__badge--expired">
@@ -639,7 +659,7 @@ export default function TourMyBookings({ user, onNeedAuth }) {
                             </div>
 
                             <div className="tour-booking-card__action-btns">
-                              {/* Nút thanh toán thẻ qua cổng Stripe */}
+                              {/* Thanh toán trực tuyến qua Stripe */}
                               <button
                                 type="button"
                                 className="tour-booking-card__btn-stripe"
@@ -649,9 +669,9 @@ export default function TourMyBookings({ user, onNeedAuth }) {
                                 {stripePayingBookingId === b.id ? (
                                   <span className="tour-my-bookings__spin-inline" />
                                 ) : (
-                                  <span className="material-symbols-outlined">credit_card</span>
+                                  <span className="material-symbols-outlined">account_balance_wallet</span>
                                 )}
-                                <span>Thanh toán bằng thẻ</span>
+                                <span>Thanh toán Stripe</span>
                               </button>
 
                               {b.payment_txn_ref ? (
@@ -678,6 +698,10 @@ export default function TourMyBookings({ user, onNeedAuth }) {
                                   <span>Tạo thông tin chuyển khoản</span>
                                 </button>
                               )}
+                              <button type="button" className="tour-booking-card__btn-pay-info" onClick={() => handleCancelBooking(b.id)} disabled={cancellingBookingId === b.id}>
+                                <span className="material-symbols-outlined">cancel</span>
+                                <span>{cancellingBookingId === b.id ? "Đang hủy..." : "Hủy đơn"}</span>
+                              </button>
                             </div>
                           </div>
                         )}
@@ -708,6 +732,7 @@ export default function TourMyBookings({ user, onNeedAuth }) {
                             <span>
                               Thanh toán thành công {b.payment_txn_ref ? `(Mã: ${b.payment_txn_ref})` : ""}. Bộ phận chăm sóc khách hàng sẽ liên hệ trước ngày khởi hành.
                             </span>
+                            <button type="button" className="tour-booking-card__btn-pay-info" onClick={() => handleCancelBooking(b.id)} disabled={cancellingBookingId === b.id}>Hủy đơn</button>
                           </div>
                         )}
 

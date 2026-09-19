@@ -502,8 +502,7 @@ def export_departure_guests_csv(
 ):
     """Xuất danh sách khách của đợt khởi hành dạng file CSV (Phase 5.5, UC-O02).
 
-    Giả định: Repo chưa có bảng booking_passengers chi tiết từng hành khách,
-    danh sách xuất theo thông tin người đặt của từng đơn booking (họ tên, SĐT, email, số khách...).
+    Xuất từng hành khách đã khai khi khách tạo booking.
     """
     try:
         csv_data = tour_service.xuat_danh_sach_khach_departure(
@@ -664,3 +663,21 @@ def confirm_operator_booking(
         raise HTTPException(status_code=400, detail=str(e))
 
     return kq
+
+
+@bookings_router.post("/{booking_id}/operational-status")
+def set_operator_booking_operational_status(
+    booking_id: int,
+    payload: dict | None = None,
+    current_user: dict = Depends(get_current_operator_or_admin),
+):
+    try:
+        return tour_service.ket_thuc_booking_operator(booking_id, (payload or {}).get("status", ""), current_user)
+    except tour_service.BookingNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourPermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except (tour_service.TourBusinessRuleError, tour_service.InvalidStatusTransitionError) as e:
+        raise HTTPException(status_code=400, detail=str(e))

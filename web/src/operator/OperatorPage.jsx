@@ -5,6 +5,7 @@ import CancellationsScreen from "./cancellations";
 import DeparturesScreen from "./departures";
 import RevenueScreen from "./revenue";
 import ToursScreen from "./tours";
+import SupportScreen from "./support";
 import "./Operator.css";
 import "./OperatorShell.css";
 
@@ -25,6 +26,7 @@ const NHOM_MENU = [
       { path: "cancellations", icon: "event_busy", label: "Huỷ đợt", Screen: CancellationsScreen },
     ],
   },
+  { tieuDe: "Khách hàng", muc: [{ path: "support", icon: "support_agent", label: "Hộp thư hỗ trợ", Screen: SupportScreen }] },
   {
     tieuDe: "Tài chính",
     muc: [{ path: "revenue", icon: "monitoring", label: "Doanh thu", Screen: RevenueScreen }],
@@ -73,8 +75,16 @@ export default function OperatorPage({ user, onLogout, onNeedAuth }) {
     );
   }
 
+  // Admin không được xem inbox hay dữ liệu hội thoại của operator. Không chỉ
+  // chặn API mà còn loại nó khỏi menu và từ chối URL gõ trực tiếp.
+  const manDuocPhep = user.role === "operator"
+    ? TAT_CA_MAN
+    : TAT_CA_MAN.filter((item) => item.path !== "support");
   const currentPath = pathname.split("/")[2] || TAT_CA_MAN[0].path;
-  const dangMo = TAT_CA_MAN.find((item) => item.path === currentPath) || TAT_CA_MAN[0];
+  if (currentPath === "support" && user.role !== "operator") {
+    return <Gate title="Bạn không có quyền truy cập" description="Hộp thư hỗ trợ chỉ dành cho nhân viên trực." />;
+  }
+  const dangMo = manDuocPhep.find((item) => item.path === currentPath) || manDuocPhep[0];
   const Screen = dangMo.Screen;
 
   const action = searchParams.get("action");
@@ -101,11 +111,14 @@ export default function OperatorPage({ user, onLogout, onNeedAuth }) {
             <span>Tạo tour mới</span>
           </Link>
 
-          {NHOM_MENU.map((nhom) => (
+          {NHOM_MENU.map((nhom) => {
+            const muc = nhom.muc.filter((item) => manDuocPhep.includes(item));
+            if (!muc.length) return null;
+            return (
             <div className="op-shell__group" key={nhom.tieuDe}>
               <div className="op-shell__group-title">{nhom.tieuDe}</div>
               <nav className="op-shell__nav">
-                {nhom.muc.map(({ path, icon, label }) => (
+                {muc.map(({ path, icon, label }) => (
                   <NavLink
                     key={path}
                     to={`/nha-dieu-hanh/${path}`}
@@ -119,7 +132,8 @@ export default function OperatorPage({ user, onLogout, onNeedAuth }) {
                 ))}
               </nav>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="op-shell__foot">

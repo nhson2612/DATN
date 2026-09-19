@@ -82,7 +82,7 @@ const tuTour = (tour) => ({
       timeline: day.timeline?.length
         ? day.timeline
         : [
-            ...places.map((place) => ({ id: crypto.randomUUID(), type: "place", placeId: place.id })),
+            ...places.map((place) => ({ id: crypto.randomUUID(), type: "place", place })),
             ...(day.description ? [{ id: crypto.randomUUID(), type: "note", text: day.description }] : []),
             ...(day.checklist?.length ? [{ id: crypto.randomUUID(), type: "checklist", items: day.checklist }] : []),
           ],

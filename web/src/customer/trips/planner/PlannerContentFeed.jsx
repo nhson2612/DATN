@@ -983,7 +983,7 @@ export default function PlannerContentFeed({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#ff5a36] hover:bg-[#e04826] rounded-lg shadow-sm"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#141a1f] hover:bg-[#232e36] rounded-lg shadow-sm"
                 >
                   Lưu khoản chi
                 </button>
@@ -1022,7 +1022,7 @@ export default function PlannerContentFeed({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#ff5a36] hover:bg-[#e04826] rounded-lg shadow-sm"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#141a1f] hover:bg-[#232e36] rounded-lg shadow-sm"
                 >
                   Cập nhật ngân sách
                 </button>

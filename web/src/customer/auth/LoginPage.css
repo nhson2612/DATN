@@ -1,0 +1,924 @@
+/* ==========================================================================
+   BLOCK: .voyage-login-page
+   Trang đăng nhập & đăng ký chuẩn thiết kế login.html với ảnh Vịnh Lan Hạ
+   ========================================================================== */
+
+.voyage-login-page {
+  --ink: #0f2430;
+  --muted: #65727d;
+  --line: #dfe5e8;
+  --soft: #f5f7f8;
+  --panel: #ffffff;
+  --accent: #0f2a38;
+  --radius-shell: 20px;
+  --radius-control: 12px;
+  --shadow: 0 24px 70px rgba(7, 25, 35, 0.22);
+
+  margin: 0;
+  height: 100vh;
+  max-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(65, 112, 138, 0.22), transparent 35%),
+    #071923;
+  color: var(--ink);
+  font-family: "DM Sans", "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.voyage-login-page * {
+  box-sizing: border-box;
+}
+
+.voyage-login-page button,
+.voyage-login-page input {
+  font: inherit;
+}
+
+.voyage-login-page button,
+.voyage-login-page a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.voyage-login-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Shell bao bọc chia 2 cột vừa vặn màn hình */
+.voyage-login-shell {
+  width: min(1560px, 100%);
+  height: calc(100vh - 32px);
+  max-height: 940px;
+  min-height: 0;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(420px, 1fr);
+  border-radius: var(--radius-shell);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: #ffffff;
+  animation: loginShellIn 0.7s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+@keyframes loginShellIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   CỘT TRÁI: HERO VỊNH LAN HẠ
+   ========================================================================== */
+.voyage-login-hero {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  background-image:
+    linear-gradient(180deg, rgba(8, 27, 39, 0.38) 0%, rgba(8, 27, 39, 0.12) 28%, rgba(8, 27, 39, 0.16) 63%, rgba(6, 20, 29, 0.62) 100%),
+    linear-gradient(90deg, rgba(7, 24, 35, 0.28), transparent 45%),
+    url('https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&fm=jpg&q=88&w=2400');
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.voyage-login-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 70%, rgba(8, 26, 37, 0.08));
+  z-index: -1;
+}
+
+/* Header bên trong hero */
+.voyage-login-nav {
+  height: clamp(54px, 7vh, 80px);
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(24px, 3vw, 44px);
+  gap: clamp(20px, 3vw, 40px);
+  position: relative;
+  z-index: 3;
+}
+
+.voyage-login-brand {
+  font-family: var(--serif, "Playfair Display", Georgia, serif);
+  font-size: clamp(24px, 2vw, 29px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  color: #ffffff;
+}
+
+.voyage-login-nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(18px, 2.2vw, 36px);
+  font-size: 14.5px;
+  flex: 1;
+}
+
+.voyage-login-nav-link {
+  position: relative;
+  opacity: 0.94;
+  transition: opacity 0.2s ease;
+  color: #ffffff;
+}
+
+.voyage-login-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -6px;
+  height: 1px;
+  background: currentColor;
+  transition: right 0.28s ease;
+}
+
+.voyage-login-nav-link:hover {
+  opacity: 1;
+}
+
+.voyage-login-nav-link:hover::after {
+  right: 0;
+}
+
+.voyage-login-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.voyage-login-icon-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0.95;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.voyage-login-icon-btn:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.voyage-login-icon-btn svg {
+  width: 21px;
+  height: 21px;
+}
+
+/* Nội dung giữa hero */
+.voyage-login-hero-content {
+  position: absolute;
+  left: clamp(28px, 3.8vw, 56px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(690px, calc(100% - 112px));
+  animation: loginContentIn 1s 0.15s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+@keyframes loginContentIn {
+  from {
+    opacity: 0;
+    transform: translateY(-44%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+}
+
+.voyage-login-eyebrow {
+  margin: 0 0 clamp(10px, 2vh, 22px);
+  font-size: clamp(11px, 1vw, 13.5px);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.voyage-login-hero h1 {
+  margin: 0;
+  font-family: var(--serif, "Playfair Display", Georgia, serif);
+  font-weight: 500;
+  font-size: clamp(38px, 4.2vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  max-width: 760px;
+  text-wrap: balance;
+  text-shadow: 0 4px 28px rgba(0, 0, 0, 0.18);
+  color: #ffffff;
+}
+
+.voyage-login-hero-copy {
+  margin-top: clamp(10px, 1.8vh, 20px);
+  max-width: 530px;
+  font-size: clamp(15px, 1.2vw, 21px);
+  line-height: 1.4;
+  opacity: 0.94;
+  color: #ffffff;
+}
+
+/* Footer chân hero: Địa danh Vịnh Lan Hạ, Việt Nam */
+.voyage-login-hero-footer {
+  position: absolute;
+  left: clamp(28px, 3.8vw, 56px);
+  right: clamp(24px, 3vw, 44px);
+  bottom: clamp(16px, 2.8vh, 32px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  z-index: 3;
+}
+
+.voyage-login-tagline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.voyage-login-tagline::before {
+  content: "";
+  width: 44px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.voyage-login-place {
+  text-align: left;
+  display: grid;
+  grid-template-columns: 18px auto;
+  column-gap: 10px;
+  row-gap: 2px;
+  font-size: 13.5px;
+}
+
+.voyage-login-place svg {
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+}
+
+.voyage-login-place strong {
+  font-weight: 600;
+}
+
+.voyage-login-place span {
+  grid-column: 2;
+  opacity: 0.82;
+  font-size: 12px;
+}
+
+/* ==========================================================================
+   CỘT PHẢI: FORM ĐĂNG NHẬP / ĐĂNG KÝ
+   ========================================================================== */
+.voyage-login-auth {
+  height: 100%;
+  min-height: 0;
+  background: rgba(255, 255, 255, 0.98);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(16px, 2.4vh, 36px) clamp(28px, 3.5vw, 60px);
+  position: relative;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.voyage-login-auth-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.voyage-login-auth-brand {
+  font-family: var(--serif, "Playfair Display", Georgia, serif);
+  font-size: clamp(22px, 2vw, 26px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.voyage-login-account-prompt {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.voyage-login-account-prompt button {
+  color: var(--ink);
+  font-weight: 600;
+  margin-left: 8px;
+  padding-bottom: 2px;
+  border: none;
+  background: transparent;
+  border-bottom: 1.5px solid var(--ink);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.voyage-login-account-prompt button:hover {
+  opacity: 0.7;
+}
+
+.voyage-login-form-wrap {
+  width: min(100%, 480px);
+  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(6px, 1.2vh, 16px) 0;
+}
+
+.voyage-login-form-wrap h2 {
+  margin: 0;
+  font-family: var(--serif, "Playfair Display", Georgia, serif);
+  font-size: clamp(28px, 2.6vw, 42px);
+  line-height: 1.1;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+
+.voyage-login-subtitle {
+  margin: 4px 0 clamp(10px, 1.5vh, 20px);
+  color: #4e5f6a;
+  font-size: clamp(13px, 0.95vw, 15px);
+  line-height: 1.35;
+}
+
+/* Thông báo lỗi */
+.voyage-login-error {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #b91c1c;
+  font-size: 13px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: loginErrorShake 0.35s ease;
+}
+
+@keyframes loginErrorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.voyage-login-field {
+  margin-bottom: clamp(8px, 1.2vh, 14px);
+}
+
+.voyage-login-field label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #31424c;
+}
+
+.voyage-login-input-shell {
+  min-height: clamp(40px, 4.6vh, 48px);
+  height: clamp(40px, 4.6vh, 48px);
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.voyage-login-input-shell:focus-within {
+  border-color: #8fa3ae;
+  box-shadow: 0 0 0 3px rgba(15, 42, 56, 0.08);
+  transform: translateY(-1px);
+}
+
+.voyage-login-input-shell svg {
+  width: 18px;
+  height: 18px;
+  color: #6b7b85;
+  flex: none;
+}
+
+.voyage-login-input-shell input {
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14.5px;
+}
+
+.voyage-login-input-shell input::placeholder {
+  color: #98a3aa;
+}
+
+.voyage-login-password-toggle {
+  border: 0;
+  background: transparent;
+  color: #6b7b85;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.voyage-login-password-toggle:hover {
+  color: #0f2430;
+}
+
+.voyage-login-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: clamp(4px, 0.8vh, 8px) 0 clamp(8px, 1.2vh, 14px);
+}
+
+.voyage-login-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #53636d;
+  font-size: 13px;
+  user-select: none;
+  cursor: pointer;
+}
+
+.voyage-login-remember input {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid #b7c1c7;
+  border-radius: 4px;
+  display: grid;
+  place-content: center;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.voyage-login-remember input::before {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg) scale(0);
+  margin-top: -2px;
+  transition: transform 0.12s ease;
+}
+
+.voyage-login-remember input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.voyage-login-remember input:checked::before {
+  transform: rotate(-45deg) scale(1);
+}
+
+.voyage-login-forgot {
+  font-size: 13px;
+  color: #1474b8;
+  transition: opacity 0.2s ease;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.voyage-login-forgot:hover {
+  opacity: 0.72;
+}
+
+/* Nút Submit chính */
+.voyage-login-primary {
+  width: 100%;
+  min-height: clamp(42px, 4.8vh, 48px);
+  height: clamp(42px, 4.8vh, 48px);
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(15, 42, 56, 0.14);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.voyage-login-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 42, 56, 0.2);
+  background: #0b2430;
+}
+
+.voyage-login-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.voyage-login-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.voyage-login-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  margin: clamp(8px, 1.2vh, 14px) 0;
+  color: #7d8991;
+  font-size: 12px;
+}
+
+.voyage-login-divider::before,
+.voyage-login-divider::after {
+  content: "";
+  height: 1px;
+  background: var(--line);
+}
+
+/* Nút mạng xã hội Google / Apple / Microsoft */
+.voyage-login-socials {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(8px, 1vw, 14px);
+}
+
+.voyage-login-social {
+  min-height: clamp(42px, 5.2vh, 56px);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  color: #3f4d56;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.voyage-login-social:hover {
+  transform: translateY(-2px);
+  border-color: #c5d0d6;
+  box-shadow: 0 8px 20px rgba(25, 46, 58, 0.06);
+}
+
+.voyage-login-social span {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.voyage-login-social svg {
+  width: 20px;
+  height: 20px;
+}
+
+.voyage-login-helper {
+  margin-top: clamp(6px, 1vh, 12px);
+  color: #97a1a8;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.35;
+}
+
+/* Toast */
+.voyage-login-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translate(-50%, 20px);
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #0d2734;
+  color: #ffffff;
+  font-size: 13.5px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+  z-index: 9999;
+}
+
+.voyage-login-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ==========================================================================
+   HIỆU ỨNG CHUYỂN CẢNH ĐIỆN ẢNH VÀO TRANG HOME (CINEMATIC TRANSITION)
+   ========================================================================== */
+
+/* Lớp ảnh nền Home được đặt sẵn dưới hero */
+.voyage-login-home-bg-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: scale(1.02);
+  transition: opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), transform 1.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Lớp phủ thương hiệu xuất hiện nhẹ khi chuyển cảnh */
+.voyage-login-transition-curtain {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.55s ease;
+  background: radial-gradient(circle at center, rgba(16, 23, 28, 0.28) 0%, rgba(8, 15, 20, 0.55) 100%);
+}
+
+.voyage-login-transition-pulse {
+  text-align: center;
+  transform: scale(0.92);
+  opacity: 0;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease;
+}
+
+.voyage-login-transition-brand {
+  font-family: var(--serif, "Playfair Display", Georgia, serif);
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: #ffffff;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* KHI ĐANG CHUYỂN CẢNH (TRANSITIONING ACTIVE) */
+.voyage-login-page--transitioning {
+  background: #10171c !important;
+  transition: background 0.6s ease;
+}
+
+.voyage-login-shell--transitioning {
+  position: fixed !important;
+  inset: 18px !important;
+  width: calc(100vw - 36px) !important;
+  height: calc(100vh - 36px) !important;
+  max-height: none !important;
+  border-radius: 16px !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  z-index: 9999 !important;
+  grid-template-columns: 1fr 0fr !important;
+  transition: inset 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+              width 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+              height 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-radius 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+              grid-template-columns 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.voyage-login-hero--transitioning {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* Ảnh nền Home hiện lên và zoom mượt mà */
+.voyage-login-hero--transitioning .voyage-login-home-bg-preview {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+/* Ẩn các text/nav của login hero */
+.voyage-login-hero--transitioning .voyage-login-nav,
+.voyage-login-hero--transitioning .voyage-login-hero-content,
+.voyage-login-hero--transitioning .voyage-login-hero-footer {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.45s ease, transform 0.5s ease;
+}
+
+/* Hiện logo thương hiệu Voyage trong khoảnh khắc chuyển giao */
+.voyage-login-hero--transitioning .voyage-login-transition-curtain {
+  opacity: 1;
+}
+
+.voyage-login-hero--transitioning .voyage-login-transition-pulse {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Ẩn hoàn toàn cột form đăng nhập khi chuyển cảnh */
+.voyage-login-shell--transitioning .voyage-login-auth {
+  opacity: 0 !important;
+  transform: translateX(60px) scale(0.95) !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  transition: opacity 0.45s ease, transform 0.5s ease, width 0.55s ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voyage-login-page--transitioning,
+  .voyage-login-shell--transitioning,
+  .voyage-login-home-bg-preview,
+  .voyage-login-transition-curtain,
+  .voyage-login-transition-pulse,
+  .voyage-login-hero--transitioning .voyage-login-nav,
+  .voyage-login-hero--transitioning .voyage-login-hero-content,
+  .voyage-login-hero--transitioning .voyage-login-hero-footer,
+  .voyage-login-shell--transitioning .voyage-login-auth {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 1100px) {
+  .voyage-login-page {
+    padding: 0;
+    background: #ffffff;
+    height: 100vh;
+  }
+  .voyage-login-shell {
+    height: 100vh;
+    min-height: 100vh;
+    border-radius: 0;
+    grid-template-columns: 1.2fr 1fr;
+    box-shadow: none;
+  }
+  .voyage-login-nav {
+    padding: 0 28px;
+    gap: 28px;
+  }
+  .voyage-login-nav-links {
+    gap: 22px;
+  }
+  .voyage-login-hero-content,
+  .voyage-login-hero-footer {
+    left: 34px;
+    right: 34px;
+  }
+  .voyage-login-auth {
+    padding-inline: 36px;
+  }
+}
+
+@media (max-width: 860px) {
+  .voyage-login-page {
+    height: auto;
+    min-height: 100vh;
+    padding: 0;
+    background: #ffffff;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+  }
+
+  .voyage-login-shell {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  /* Ẩn hero ảnh lớn ở chế độ bình thường để hiển thị form trực tiếp */
+  .voyage-login-hero {
+    display: none;
+  }
+
+  /* Khi chuyển cảnh, hiển thị hero toàn màn hình cho mobile */
+  .voyage-login-hero--transitioning {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+  }
+
+  .voyage-login-auth {
+    width: 100%;
+    min-height: 100vh;
+    padding: clamp(24px, 4vh, 40px) clamp(20px, 5vw, 36px);
+    overflow-y: visible;
+    justify-content: flex-start;
+  }
+
+  .voyage-login-form-wrap {
+    width: 100%;
+    max-width: 440px;
+    margin: clamp(18px, 3vh, 32px) auto 0;
+    padding: 0;
+  }
+
+  .voyage-login-form-wrap h2 {
+    font-size: clamp(30px, 7vw, 40px);
+  }
+
+  .voyage-login-subtitle {
+    margin: 6px 0 20px;
+    font-size: 14px;
+  }
+
+  .voyage-login-socials {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .voyage-login-social {
+    min-height: 52px;
+    padding: 6px;
+  }
+
+  .voyage-login-social span {
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .voyage-login-auth-top {
+    gap: 12px;
+  }
+  .voyage-login-auth-brand {
+    font-size: 22px;
+  }
+  .voyage-login-account-prompt {
+    font-size: 12px;
+  }
+  .voyage-login-socials {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .voyage-login-social {
+    min-height: 48px;
+    flex-direction: row;
+    gap: 10px;
+  }
+}

@@ -197,11 +197,14 @@ export default function DeparturesScreen() {
 
     try {
       setSubmitting(true);
-      await api.cancelOperatorDeparture(cancelingDep.id, cancelReason || "Nhà điều hành huỷ đợt");
+      const result = await api.cancelOperatorDeparture(cancelingDep.id, cancelReason || "Nhà điều hành huỷ đợt");
       setCancelingDep(null);
+      const autoRefunded = result.stripe_refunded_payment_ids?.length || 0;
+      const manualRefunds = result.manual_refund_payment_ids?.length || 0;
+      const failedRefunds = result.stripe_refund_failed?.length || 0;
       setToast({
-        message: `Đã hủy đợt khởi hành ngày ${date(cancelingDep.depart_date)}. Các đơn liên quan đã chuyển hủy và kích hoạt hoàn tiền.`,
-        type: "success",
+        message: `Đã hủy đợt khởi hành ngày ${date(cancelingDep.depart_date)}. Stripe đã hoàn ${autoRefunded} giao dịch; ${manualRefunds + failedRefunds} giao dịch cần xử lý.`,
+        type: failedRefunds ? "error" : "success",
       });
       reload();
     } catch (err) {

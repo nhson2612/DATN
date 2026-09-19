@@ -143,6 +143,15 @@
   margin: 0;
 }
 
+.planner-lodging-picker__booking-link {
+  display: inline-flex;
+  margin: 0 0 12px;
+  color: #ff5a32;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .planner-lodging-picker__close-btn {
   font-size: 0.75rem;
   font-weight: 600;

@@ -145,6 +145,11 @@ PHASE_3_ALLOWED_TRANSITIONS = {
 # Mở thêm chuyển PAID -> CONFIRMED (operator/admin xác nhận booking đã thanh toán)
 PHASE_5_5_ALLOWED_TRANSITIONS = PHASE_3_ALLOWED_TRANSITIONS | {
     ("PAID", "CONFIRMED"),
+    ("PAID", "CANCELLED_BY_CUSTOMER"),
+    ("CANCELLED_BY_OPERATOR", "REFUNDED"),
+    ("CANCELLED_BY_CUSTOMER", "REFUNDED"),
+    ("CONFIRMED", "COMPLETED"),
+    ("CONFIRMED", "NO_SHOW"),
 }
 
 # Tập các bước chuyển trạng thái được phép hiện tại
@@ -577,6 +582,9 @@ def book(data: dict, user_id=None):
     """
     guests = int(data.get("guests") or 1)
     departure_id = data.get("departure_id")
+    passengers = data.get("passengers") or []
+    if len(passengers) != guests or any(not (p.get("full_name") or "").strip() for p in passengers):
+        raise PaymentInvalidError("Cần nhập họ tên cho từng hành khách và số lượng phải khớp số chỗ đặt.")
 
     # Retry nếu xảy ra xung đột mã đơn cực hiếm khi không truyền code cố định
     max_retries = 3
@@ -589,6 +597,9 @@ def book(data: dict, user_id=None):
                 don_gia = None
 
                 if departure_id:
+                    departure = tour_repo.get_departure_by_id(departure_id, tx=tx)
+                    if not departure or departure.get("tour_id") != data.get("tour_id"):
+                        raise PaymentInvalidError("Đợt khởi hành không thuộc tour đã chọn.")
                     con = tour_repo.giu_cho(departure_id, guests, tx=tx)
                     if not con:
                         raise HetChoError("Đợt khởi hành này không còn đủ chỗ. Hãy chọn ngày khác.")
@@ -619,6 +630,7 @@ def book(data: dict, user_id=None):
                     code=code,
                     hold_expires_at=hold_expires_at,
                 )
+                tour_repo.create_booking_passengers(booking_id, passengers, tx=tx)
 
                 # Ghi nhật ký trạng thái đầu tiên (BR-L2): NULL -> PENDING_PAYMENT
                 tour_repo.add_booking_status_history(
@@ -648,6 +660,27 @@ def book(data: dict, user_id=None):
                 logger.warning("Trùng mã booking code, thử lại lần %d...", attempt + 1)
                 continue
             raise
+
+
+def huy_booking_khach(booking_id: int, user_id: int, ly_do: str = "") -> dict:
+    """Khách tự hủy đơn của mình; nhả chỗ và đưa giao dịch đã thu vào hàng hoàn tiền."""
+    with transaction() as tx:
+        booking = tour_repo.get_booking(booking_id, tx=tx, for_update=True)
+        if not booking:
+            raise BookingNotFoundError(f"Không tìm thấy đơn đặt tour #{booking_id}.")
+        if booking.get("user_id") != user_id:
+            raise TourPermissionDeniedError("Bạn không có quyền hủy đơn của người khác.")
+        status = booking.get("status")
+        if status not in {"PENDING_PAYMENT", "PAID"}:
+            raise PaymentInvalidError("Chỉ hủy được đơn đang chờ thanh toán hoặc đã thanh toán.")
+        chuyen_trang_thai(booking_id, status, "CANCELLED_BY_CUSTOMER", ly_do or "Khách tự hủy đơn", user_id, tx=tx)
+        payment_ids = []
+        if status == "PAID":
+            for payment in tour_repo.get_booking_payments(booking_id, tx=tx):
+                if payment.get("status") == "SUCCESS" and not payment.get("refunded_at"):
+                    tour_repo.update_payment_status(payment["id"], "SUCCESS", needs_refund=True, note="Khách tự hủy đơn; chờ xử lý hoàn tiền.", tx=tx)
+                    payment_ids.append(payment["id"])
+        return {"success": True, "booking_id": booking_id, "status": "CANCELLED_BY_CUSTOMER", "refund_pending_payment_ids": payment_ids}
 
 
 def xu_ly_booking_het_han(thoi_diem: Optional[datetime] = None) -> dict:
@@ -703,27 +736,24 @@ def xu_ly_booking_het_han(thoi_diem: Optional[datetime] = None) -> dict:
             logger.error("Lỗi khi hủy đơn quá hạn khởi hành #%s: %s", bid, e)
             errors.append({"booking_id": bid, "action": "CANCELLED_BY_OPERATOR", "error": str(e)})
 
-    # c) Expire các Stripe Checkout Session còn mở của các đơn hết hạn
     try:
         import stripe
-        if getattr(settings, "stripe_secret_key", None):
+        if settings.stripe_secret_key:
             stripe.api_key = settings.stripe_secret_key
-            st_sessions = tour_repo.list_stripe_sessions_can_expire(limit=50)
-            for p in st_sessions:
-                sid = p.get("stripe_session_id")
-                if not sid:
+            for payment in tour_repo.list_stripe_sessions_can_expire(limit=50):
+                session_id = payment.get("stripe_session_id")
+                if not session_id:
                     continue
                 try:
-                    stripe.checkout.Session.expire(sid)
+                    stripe.checkout.Session.expire(session_id)
                     tour_repo.update_payment_status(
-                        payment_id=p["id"],
-                        status="FAILED",
-                        note="Stripe Checkout Session đã được expire do đơn quá hạn giữ chỗ",
+                        payment_id=payment["id"], status="FAILED",
+                        note="Stripe Checkout Session đã được đóng do đơn quá hạn giữ chỗ",
                     )
-                except Exception as st_err:
-                    logger.warning("Không thể expire Stripe session %s: %s", sid, st_err)
-    except Exception as exp_err:
-        logger.warning("Lỗi khi dọn Stripe sessions hết hạn: %s", exp_err)
+                except Exception as exc:
+                    logger.warning("Không thể đóng Stripe Checkout session %s: %s", session_id, exc)
+    except Exception as exc:
+        logger.warning("Lỗi khi dọn Stripe Checkout sessions quá hạn: %s", exc)
 
     logger.info(
         "Job dọn đơn hết hạn hoàn tất: %d đơn EXPIRED, %d đơn CANCELLED_BY_OPERATOR, %d lỗi",
@@ -1403,6 +1433,25 @@ def xu_ly_stripe_webhook(payload: bytes, sig_header: str) -> dict:
         raise PaymentInvalidError(f"Chữ ký webhook Stripe không hợp lệ: {e}")
 
     event_type = event.get("type") if isinstance(event, dict) else getattr(event, "type", None)
+    if event_type in {"refund.updated", "refund.failed"}:
+        event_data = event.get("data", {}) if isinstance(event, dict) else getattr(event, "data", {})
+        refund = event_data.get("object", {}) if isinstance(event_data, dict) else getattr(event_data, "object", {})
+        intent_id = refund.get("payment_intent") if isinstance(refund, dict) else getattr(refund, "payment_intent", None)
+        refund_id = refund.get("id") if isinstance(refund, dict) else getattr(refund, "id", None)
+        refund_status = refund.get("status") if isinstance(refund, dict) else getattr(refund, "status", None)
+        if not intent_id:
+            return {"received": True, "handled": False, "event_type": event_type, "reason": "missing_payment_intent"}
+        with transaction() as tx:
+            payment = tour_repo.get_payment_by_stripe_intent(intent_id, tx=tx, for_update=True)
+            if not payment:
+                return {"received": True, "handled": False, "event_type": event_type, "reason": "payment_not_found"}
+            if refund_status == "succeeded":
+                tour_repo.record_payment_refund(payment["id"], str(refund_id), f"Stripe hoàn tiền thành công: {refund_id}", tx=tx)
+                if payment.get("booking_status") == "CANCELLED_BY_OPERATOR":
+                    chuyen_trang_thai(payment["booking_id"], "CANCELLED_BY_OPERATOR", "REFUNDED", f"Stripe hoàn tiền {refund_id}", None, tx=tx)
+            elif event_type == "refund.failed":
+                tour_repo.update_payment_status(payment["id"], "SUCCESS", note=f"Stripe hoàn tiền thất bại: {refund_id}", needs_refund=True, tx=tx)
+        return {"received": True, "handled": True, "event_type": event_type, "refund_status": refund_status}
     if event_type != "checkout.session.completed":
         logger.info("Bỏ qua sự kiện Stripe webhook không cần xử lý: %s", event_type)
         return {"received": True, "handled": False, "event_type": event_type}
@@ -1627,7 +1676,6 @@ def xu_ly_stripe_webhook(payload: bytes, sig_header: str) -> dict:
         }
 
 
-# ═══════════════════════════════════════════════════════════════════════════
 # Phase 5.2: Nghiệp vụ Tour dành cho Tour Operator (BR-O1 / BR-T1..T5)
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -2294,8 +2342,8 @@ def xoa_departure_operator(
 def huy_departure_operator(departure_id: int, current_user: dict, ly_do: str = "") -> dict:
     """Huỷ một đợt và đóng các đơn còn hiệu lực trong cùng transaction.
 
-    Đơn đã thu tiền được chuyển sang CANCELLED_BY_OPERATOR; quy trình hoàn tiền
-    tiếp tục do nghiệp vụ thanh toán xử lý theo chính sách tour.
+    Payment Stripe có PaymentIntent được hoàn tự động sau transaction; các cách
+    thanh toán khác vẫn được đưa vào hàng đợi hoàn tiền thủ công.
     """
     dep = tour_repo.get_departure_by_id(departure_id)
     if not dep:
@@ -2309,6 +2357,8 @@ def huy_departure_operator(departure_id: int, current_user: dict, ly_do: str = "
 
     active = tour_repo.list_operator_bookings(departure_id=departure_id, limit=500)
     cancellable = {"PENDING_PAYMENT", "PARTIALLY_PAID", "PAID", "CONFIRMED"}
+    stripe_refunds = []
+    manual_refund_payment_ids = []
     with transaction() as tx:
         updated = tour_repo.update_departure(departure_id, {"status": "CANCELLED"}, tx=tx)
         cancelled = 0
@@ -2323,9 +2373,71 @@ def huy_departure_operator(departure_id: int, current_user: dict, ly_do: str = "
                 nha_cho(booking["id"], tx=tx)
                 tour_repo.update_booking_status(booking["id"], "CANCELLED_BY_OPERATOR", status, tx=tx)
                 tour_repo.add_booking_status_history(booking["id"], status, "CANCELLED_BY_OPERATOR", current_user.get("id"), ly_do or "Nhà điều hành huỷ đợt", tx=tx)
+                successful_payments = [
+                    payment for payment in tour_repo.get_booking_payments(booking["id"], tx=tx)
+                    if payment.get("status") == "SUCCESS" and not payment.get("refunded_at")
+                ]
+                for payment in successful_payments:
+                    refund_note = (
+                        f"Đợt #{departure_id} bị hủy; hoàn tiền 100%. "
+                        f"{ly_do or 'Nhà điều hành huỷ đợt'}"
+                    )
+                    tour_repo.update_payment_status(
+                        payment_id=payment["id"],
+                        status="SUCCESS",
+                        note=refund_note,
+                        needs_refund=True,
+                        tx=tx,
+                    )
+                    if payment.get("method") == "STRIPE" and payment.get("stripe_payment_intent_id"):
+                        stripe_refunds.append({
+                            "payment_id": payment["id"], "booking_id": booking["id"],
+                            "payment_intent": payment["stripe_payment_intent_id"],
+                            "amount": int(payment["amount"]), "reason": refund_note,
+                        })
+                    else:
+                        manual_refund_payment_ids.append(payment["id"])
             cancelled += 1
     tour_repo.sync_tour_price_from(dep["tour_id"])
-    return {"success": True, "departure": updated, "cancelled_bookings": cancelled}
+
+    stripe_refunded, stripe_refund_failed = [], []
+    for item in stripe_refunds:
+        try:
+            refund = _hoan_tien_stripe(**item)
+            refund_id = str(getattr(refund, "id", None) or refund.get("id"))
+            refund_status = getattr(refund, "status", None) or refund.get("status")
+            if refund_status == "succeeded":
+                with transaction() as tx:
+                    tour_repo.record_payment_refund(item["payment_id"], refund_id, f"{item['reason']} Stripe xác nhận hoàn tiền: {refund_id}", tx=tx)
+                    chuyen_trang_thai(item["booking_id"], "CANCELLED_BY_OPERATOR", "REFUNDED", f"Stripe xác nhận hoàn tiền {refund_id}", current_user.get("id"), tx=tx)
+                stripe_refunded.append(item["payment_id"])
+        except Exception as exc:
+            logger.exception("Không hoàn được Stripe payment #%s", item["payment_id"])
+            stripe_refund_failed.append({"payment_id": item["payment_id"], "error": str(exc)})
+
+    return {
+        "success": True,
+        "departure": updated,
+        "cancelled_bookings": cancelled,
+        "stripe_refunded_payment_ids": stripe_refunded,
+        "manual_refund_payment_ids": manual_refund_payment_ids,
+        "stripe_refund_failed": stripe_refund_failed,
+    }
+
+
+def _hoan_tien_stripe(*, payment_intent: str, amount: int, reason: str, **_ignored):
+    """Gọi Stripe Refund API sau commit; webhook là nguồn xác nhận cho refund async."""
+    try:
+        import stripe
+    except ImportError as exc:
+        raise PaymentGatewayUnavailableError("Thư viện stripe chưa được cài đặt trên hệ thống.") from exc
+    if not settings.stripe_secret_key:
+        raise PaymentGatewayUnavailableError("Chưa cấu hình STRIPE_SECRET_KEY")
+    stripe.api_key = settings.stripe_secret_key
+    try:
+        return stripe.Refund.create(payment_intent=payment_intent, amount=amount, metadata={"reason": reason[:300]})
+    except Exception as exc:
+        raise PaymentGatewayUnavailableError(f"Stripe không tạo được refund: {exc}") from exc
 
 
 def doanh_thu_operator(current_user: dict) -> dict:
@@ -2682,12 +2794,28 @@ def xac_nhan_booking_operator(
     }
 
 
+def ket_thuc_booking_operator(booking_id: int, status: str, current_user: dict) -> dict:
+    """Ghi nhận khách hoàn thành tour hoặc vắng mặt sau khi booking đã CONFIRMED."""
+    if status not in {"COMPLETED", "NO_SHOW"}:
+        raise TourBusinessRuleError("Trạng thái vận hành phải là COMPLETED hoặc NO_SHOW.")
+    booking = tour_repo.get_booking(booking_id)
+    if not booking:
+        raise BookingNotFoundError(f"Không tìm thấy đơn đặt tour #{booking_id}.")
+    tour = tour_repo.get_tour_by_id(booking["tour_id"])
+    if not tour:
+        raise TourNotFoundError(f"Không tìm thấy tour #{booking['tour_id']}.")
+    _kiem_tra_quyen_tour(tour, current_user)
+    return chuyen_trang_thai(
+        booking_id, "CONFIRMED", status,
+        "Khách hoàn thành hành trình" if status == "COMPLETED" else "Khách không có mặt khi khởi hành",
+        current_user.get("id"),
+    )
+
+
 def xuat_danh_sach_khach_departure(departure_id: int, current_user: dict) -> str:
     """Xuất danh sách khách của một đợt khởi hành dạng CSV (Phase 5.5, UC-O02).
 
-    Giả định: Hệ thống hiện tại chưa có bảng `booking_passengers` chi tiết từng hành khách,
-    nên danh sách được xuất theo thông tin người đặt của từng đơn booking (full_name, phone,
-    email, guests, total_price, status, created_at) theo đúng quy định BR-O1..O4 và yêu cầu Phase 5.5.
+    Mỗi dòng là một hành khách của booking, không còn gộp theo người đặt.
 
     - BR-O1: Operator chỉ xuất được danh sách khách của đợt thuộc tour của mình; người khác -> 403.
     - Trả về chuỗi CSV có tiền tố BOM UTF-8 (\\ufeff) để Excel hiển thị tiếng Việt có dấu chuẩn xác.
@@ -2702,7 +2830,7 @@ def xuat_danh_sach_khach_departure(departure_id: int, current_user: dict) -> str
 
     _kiem_tra_quyen_tour(tour, current_user)
 
-    bookings = tour_repo.list_departure_guests_bookings(departure_id)
+    passengers = tour_repo.list_departure_passengers(departure_id)
 
     output = io.StringIO()
     # Thêm BOM UTF-8 cho file CSV
@@ -2712,7 +2840,7 @@ def xuat_danh_sach_khach_departure(departure_id: int, current_user: dict) -> str
     # Tiêu đề cột
     writer.writerow([
         "Mã đơn",
-        "Họ tên người đặt",
+        "Hành khách",
         "Số điện thoại",
         "Email",
         "Số khách",
@@ -2721,16 +2849,8 @@ def xuat_danh_sach_khach_departure(departure_id: int, current_user: dict) -> str
         "Ngày đặt",
     ])
 
-    for b in bookings:
-        code = b.get("code") or f"#{b.get('id')}"
-        name = b.get("full_name") or ""
-        phone = b.get("phone") or ""
-        email = b.get("email") or ""
-        guests = b.get("guests") or 1
-        total_price = b.get("total_price") or 0
-        status = b.get("status") or ""
-        created_at = str(b.get("created_at") or "")
-        writer.writerow([code, name, phone, email, guests, total_price, status, created_at])
+    for p in passengers:
+        writer.writerow([p.get("code"), p.get("full_name"), p.get("phone") or "", p.get("email") or "", 1, "", p.get("status"), str(p.get("created_at") or "")])
 
     return output.getvalue()
 
@@ -2738,7 +2858,7 @@ def xuat_danh_sach_khach_departure(departure_id: int, current_user: dict) -> str
 def lay_danh_sach_khach_departure(departure_id: int, current_user: dict) -> list[dict]:
     """Lấy danh sách khách dạng JSON của một đợt khởi hành (Phase 5.5).
 
-    Giả định: Hệ thống hiện tại lưu thông tin khách trên tour_bookings (chưa có booking_passengers).
+    Trả từng hành khách trong `booking_passengers`.
     """
     dep = tour_repo.get_departure_by_id(departure_id)
     if not dep:
@@ -2750,6 +2870,4 @@ def lay_danh_sach_khach_departure(departure_id: int, current_user: dict) -> list
 
     _kiem_tra_quyen_tour(tour, current_user)
 
-    raw_bookings = tour_repo.list_departure_guests_bookings(departure_id)
-    payments_map = _lay_payments_map_cho_bookings(raw_bookings)
-    return [_lam_sach_booking_operator(b, payments_map) for b in raw_bookings]
+    return tour_repo.list_departure_passengers(departure_id)

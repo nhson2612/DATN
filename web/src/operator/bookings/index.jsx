@@ -32,6 +32,15 @@ export default function BookingsScreen() {
     }
   };
 
+  const setOperationalStatus = async (bookingId, status) => {
+    try {
+      await api.setOperatorBookingOperationalStatus(bookingId, status);
+      loadBookings();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   return (
     <section>
       <SectionHeader title="Đơn đặt tour" />
@@ -54,6 +63,10 @@ export default function BookingsScreen() {
             </td>
             <td>
               {booking.status === "PAID" && <button onClick={() => confirm(booking.id)}>Xác nhận</button>}
+              {booking.status === "CONFIRMED" && <>
+                <button onClick={() => setOperationalStatus(booking.id, "COMPLETED")}>Đã hoàn thành</button>
+                <button onClick={() => setOperationalStatus(booking.id, "NO_SHOW")}>Vắng mặt</button>
+              </>}
             </td>
           </tr>
         ))}

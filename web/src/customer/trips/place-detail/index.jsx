@@ -4,7 +4,6 @@ import { api } from "../../../shared/api";
 import DetailSkeleton from "../../../shared/skeletons/DetailSkeleton";
 import ErrorBoundary from "../../../shared/common/ErrorBoundary";
 import MiniMap from "../../../shared/map/MiniMap";
-import BookingForm from "../../booking/BookingForm";
 import PlaceGallery from "./PlaceGallery";
 import EnrichmentContent from "./EnrichmentContent";
 import { tenLoai } from "../../../shared/lib/loaiDiaDiem";
@@ -17,7 +16,6 @@ export default function PlaceDetail({ user, onNeedAuth }) {
   const [p, setP] = useState(null);
   const [loi, setLoi] = useState("");
   const [daLuu, setDaLuu] = useState(false);
-  const [moForm, setMoForm] = useState(false);
 
   // Làm giàu web (Serper) — tách khỏi fetch địa điểm để lỗi/thời gian chờ của
   // nó KHÔNG bao giờ làm chậm hay xoá nội dung cơ bản của trang.
@@ -118,7 +116,10 @@ export default function PlaceDetail({ user, onNeedAuth }) {
 
   // Chỉ nhận http(s) ở href; thêm giao thức cho giá trị trần "sunworld.vn/…".
   const laHttp = (u) => /^https?:\/\//i.test(u);
-  const webUrl = p.website ? (laHttp(p.website) ? p.website : `https://${p.website}`) : null;
+  const contact = enrichment?.contact || {};
+  const phone = p.dien_thoai || contact.phone || "";
+  const website = p.website || contact.website || "";
+  const webUrl = website ? (laHttp(website) ? website : `https://${website}`) : null;
 
   return (
     <main className="place-field-guide">
@@ -195,11 +196,11 @@ export default function PlaceDetail({ user, onNeedAuth }) {
               <i className="fa-solid fa-address-book" aria-hidden="true" /> Liên hệ
             </h2>
             <dl className="place-field-guide__lien-he">
-              {p.dien_thoai && (
+              {phone && (
                 <div className="place-field-guide__lh-item">
                   <dt><i className="fa-solid fa-phone" aria-hidden="true" />Điện thoại</dt>
                   <dd>
-                    <a href={`tel:${p.dien_thoai}`} className="place-field-guide__link">{p.dien_thoai}</a>
+                    <a href={`tel:${phone}`} className="place-field-guide__link">{phone}</a>
                   </dd>
                 </div>
               )}
@@ -216,7 +217,7 @@ export default function PlaceDetail({ user, onNeedAuth }) {
                   <dt><i className="fa-solid fa-globe" aria-hidden="true" />Website</dt>
                   <dd>
                     <a href={webUrl} target="_blank" rel="noopener noreferrer" className="place-field-guide__link">
-                      {p.website}
+                      {website}
                     </a>
                   </dd>
                 </div>
@@ -251,19 +252,6 @@ export default function PlaceDetail({ user, onNeedAuth }) {
             </dl>
           </section>
 
-          <section className="place-field-guide__card place-field-guide__hanh-dong" aria-labelledby="hd-title">
-            <h2 className="place-field-guide__card-title" id="hd-title">
-              <i className="fa-solid fa-bolt" aria-hidden="true" /> Hành động
-            </h2>
-            {/* Website/Fanpage nằm ở thẻ Liên hệ bên trên — không lặp link. */}
-            <button
-              type="button"
-              onClick={() => (user ? setMoForm(true) : onNeedAuth())}
-              className="place-field-guide__btn-chinh"
-            >
-              <i className="fa-solid fa-paper-plane" aria-hidden="true" /> Gửi yêu cầu đặt chỗ
-            </button>
-          </section>
         </aside>
       </div>
 
@@ -290,15 +278,6 @@ export default function PlaceDetail({ user, onNeedAuth }) {
         </section>
       )}
 
-      {type === "accommodation" && (
-        <BookingForm
-          open={moForm}
-          onClose={() => setMoForm(false)}
-          placeType={type}
-          placeId={id}
-          placeName={p.name}
-        />
-      )}
     </main>
   );
 }

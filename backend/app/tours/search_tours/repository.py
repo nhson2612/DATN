@@ -641,6 +641,24 @@ def create_booking(data: dict, user_id=None, total_price=None, tx=None,
     return rows[0]["id"] if rows else None
 
 
+def create_booking_passengers(booking_id: int, passengers: list[dict], tx=None) -> None:
+    for index, passenger in enumerate(passengers, start=1):
+        _exec(
+            """INSERT INTO booking_passengers (booking_id, sequence_no, full_name, phone, email)
+               VALUES (%s, %s, %s, %s, %s)""",
+            (booking_id, index, passenger["full_name"], passenger.get("phone"), passenger.get("email")), tx=tx,
+        )
+
+
+def list_departure_passengers(departure_id: int, tx=None) -> list[dict]:
+    return _exec(
+        """SELECT p.id, p.sequence_no, p.full_name, p.phone, p.email, b.code, b.status, b.created_at
+           FROM booking_passengers p JOIN tour_bookings b ON b.id = p.booking_id
+           WHERE b.departure_id = %s ORDER BY b.id, p.sequence_no""",
+        (departure_id,), tx=tx,
+    ) or []
+
+
 def get_booking(booking_id: int, tx=None, for_update: bool = False) -> Optional[dict]:
     """Lấy thông tin chi tiết một booking kèm thông tin tour và đợt khởi hành."""
     lock_clause = "FOR UPDATE OF b" if for_update and tx is not None else ""
@@ -1571,6 +1589,107 @@ def update_payment_status(
     return bool(rows)
 
 
+def record_payment_refund(
+    payment_id: int,
+    refund_reference: str,
+    note: str,
+    tx=None,
+) -> bool:
+    """Ghi nhận refund đã được gateway xác nhận, không làm thay đổi payment gốc."""
+    if not _has_table("payments"):
+        return False
+    rows = _exec(
+        """
+        UPDATE payments
+        SET needs_refund = FALSE,
+            refunded_at = CURRENT_TIMESTAMP,
+            refund_reference = %s,
+            note = %s
+        WHERE id = %s
+        RETURNING id
+        """,
+        (refund_reference, note, payment_id),
+        tx=tx,
+    )
+    return bool(rows)
+
+
+def set_payment_provider_refs(
+    payment_id: int,
+    *,
+    provider: str,
+    provider_order_id: str | None = None,
+    provider_transaction_id: str | None = None,
+    provider_request_id: str | None = None,
+    gateway_payload: object | None = None,
+    refund_request_id: str | None = None,
+    refund_payload: object | None = None,
+    tx=None,
+) -> bool:
+    """Lưu mã tham chiếu của cổng thanh toán mà không đổi trạng thái payment."""
+    if not _has_table("payments"):
+        return False
+    values = {
+        "provider": provider,
+        "provider_order_id": provider_order_id,
+        "provider_transaction_id": provider_transaction_id,
+        "provider_request_id": provider_request_id,
+        "refund_request_id": refund_request_id,
+    }
+    clauses, params = [], []
+    for column, value in values.items():
+        if value is not None and _has_col("payments", column):
+            clauses.append(f"{column} = %s")
+            params.append(value)
+    for column, value in (("gateway_payload", gateway_payload), ("refund_payload", refund_payload)):
+        if value is not None and _has_col("payments", column):
+            clauses.append(f"{column} = %s")
+            params.append(json.dumps(value) if isinstance(value, (dict, list)) else value)
+    if not clauses:
+        return False
+    params.append(payment_id)
+    rows = _exec(
+        f"UPDATE payments SET {', '.join(clauses)} WHERE id = %s RETURNING id",
+        tuple(params), tx=tx,
+    )
+    return bool(rows)
+
+
+def get_payment_by_provider_order(provider: str, order_id: str, tx=None, for_update: bool = False) -> Optional[dict]:
+    """Lấy payment theo mã đơn do cổng thanh toán trả về."""
+    if not _has_table("payments") or not _has_col("payments", "provider_order_id"):
+        return None
+    lock_clause = "FOR UPDATE OF p" if for_update and tx is not None else ""
+    rows = _exec(
+        f"""
+        SELECT p.*, b.code AS booking_code, b.total_price AS booking_total_price,
+               b.status AS booking_status, b.hold_expires_at, b.seats_released,
+               b.tour_id, t.name AS tour_name
+        FROM payments p
+        JOIN tour_bookings b ON b.id = p.booking_id
+        JOIN tours t ON t.id = b.tour_id
+        WHERE p.provider = %s AND p.provider_order_id = %s
+        {lock_clause}
+        """,
+        (provider, order_id), tx=tx,
+    )
+    return rows[0] if rows else None
+
+
+def mark_payment_refund_pending(payment_id: int, refund_request_id: str, note: str, tx=None) -> bool:
+    """Ghi requestId trước khi gọi gateway để retry hoàn tiền vẫn idempotent."""
+    if not _has_table("payments"):
+        return False
+    rows = _exec(
+        """
+        UPDATE payments SET needs_refund = TRUE, refund_request_id = %s, note = %s
+        WHERE id = %s RETURNING id
+        """,
+        (refund_request_id, note, payment_id), tx=tx,
+    )
+    return bool(rows)
+
+
 def list_payments(status: Optional[str] = None, limit: int = 100, offset: int = 0) -> list:
     """Danh sách giao dịch thanh toán cho admin quản lý đối soát."""
     if not _has_table("payments"):
@@ -1684,6 +1803,24 @@ def get_payment_by_stripe_session(stripe_session_id: str, tx=None, for_update: b
         """,
         (stripe_session_id,),
         tx=tx,
+    )
+    return rows[0] if rows else None
+
+
+def get_payment_by_stripe_intent(payment_intent_id: str, tx=None, for_update: bool = False) -> Optional[dict]:
+    """Lấy payment theo PaymentIntent để xử lý webhook refund của Stripe."""
+    if not _has_table("payments") or not _has_col("payments", "stripe_payment_intent_id"):
+        return None
+    lock_clause = "FOR UPDATE OF p" if for_update and tx is not None else ""
+    rows = _exec(
+        f"""
+        SELECT p.*, b.status AS booking_status
+        FROM payments p
+        JOIN tour_bookings b ON b.id = p.booking_id
+        WHERE p.stripe_payment_intent_id = %s
+        {lock_clause}
+        """,
+        (payment_intent_id,), tx=tx,
     )
     return rows[0] if rows else None
 
@@ -2145,8 +2282,7 @@ def count_operator_bookings(
 def list_departure_guests_bookings(departure_id: int, tx=None) -> list[dict]:
     """Danh sách các booking thuộc đợt khởi hành phục vụ xuất danh sách khách (Phase 5.5).
 
-    Giả định: Hệ thống hiện tại lưu thông tin khách trên tour_bookings (chưa có bảng booking_passengers).
-    Lấy tất cả booking của departure, sắp xếp theo ID tăng dần.
+    Lấy các booking của departure; dùng cho màn tóm tắt booking, không phải manifest từng khách.
     """
     return _exec(
         """
@@ -2163,8 +2299,9 @@ def list_departure_guests_bookings(departure_id: int, tx=None) -> list[dict]:
 
 def operator_revenue(operator_id: int, tx=None) -> dict:
     """Tổng hợp doanh thu đã thu của một nhà điều hành từ payment SUCCESS."""
+    refund_filter = "AND p.refunded_at IS NULL" if _has_col("payments", "refunded_at") else ""
     rows = _exec(
-        """
+        f"""
         SELECT COALESCE(SUM(p.amount), 0) AS gross_revenue,
                COUNT(DISTINCT p.booking_id) AS paid_bookings,
                COUNT(DISTINCT b.id) FILTER (WHERE b.status = 'CONFIRMED') AS confirmed_bookings
@@ -2172,6 +2309,8 @@ def operator_revenue(operator_id: int, tx=None) -> dict:
         JOIN tour_bookings b ON b.id = p.booking_id
         JOIN tours t ON t.id = b.tour_id
         WHERE t.operator_id = %s AND p.status = 'SUCCESS'
+          AND b.status IN ('PAID', 'CONFIRMED', 'COMPLETED', 'NO_SHOW')
+        {refund_filter}
         """,
         (operator_id,), tx=tx,
     )
@@ -2179,8 +2318,9 @@ def operator_revenue(operator_id: int, tx=None) -> dict:
 
 
 def operator_revenue_by_month(operator_id: int, tx=None) -> list[dict]:
+    refund_filter = "AND p.refunded_at IS NULL" if _has_col("payments", "refunded_at") else ""
     return _exec(
-        """
+        f"""
         SELECT to_char(date_trunc('month', COALESCE(p.confirmed_at, p.created_at)), 'YYYY-MM') AS month,
                COALESCE(SUM(p.amount), 0) AS revenue,
                COUNT(DISTINCT p.booking_id) AS bookings
@@ -2188,6 +2328,8 @@ def operator_revenue_by_month(operator_id: int, tx=None) -> list[dict]:
         JOIN tour_bookings b ON b.id = p.booking_id
         JOIN tours t ON t.id = b.tour_id
         WHERE t.operator_id = %s AND p.status = 'SUCCESS'
+          AND b.status IN ('PAID', 'CONFIRMED', 'COMPLETED', 'NO_SHOW')
+          {refund_filter}
         GROUP BY 1 ORDER BY 1 DESC LIMIT 12
         """,
         (operator_id,), tx=tx,

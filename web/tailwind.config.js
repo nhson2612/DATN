@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Be Vietnam Pro"', "system-ui", "sans-serif"],
+        sans: ['"Playfair Display"', "Georgia", "serif"],
         // Chỉ dùng cho đúng một dòng nhấn ở hero. Không dùng ở chỗ nào khác.
         script: ['"Dancing Script"', "cursive"],
       },
@@ -67,16 +67,17 @@ export default {
       },
 
       fontFamily: {
-        sans: ['"Be Vietnam Pro"', "system-ui", "sans-serif"],
+        sans: ['"Playfair Display"', "Georgia", "serif"],
+        serif: ['"Playfair Display"', "Georgia", "serif"],
         script: ['"Dancing Script"', "cursive"],
-        "headline-sm": ["Be Vietnam Pro", "system-ui", "sans-serif"],
-        "headline-md": ["Be Vietnam Pro", "system-ui", "sans-serif"],
-        "title-md": ["Be Vietnam Pro", "system-ui", "sans-serif"],
-        "body-md": ["Be Vietnam Pro", "system-ui", "sans-serif"],
-        "body-sm": ["Be Vietnam Pro", "system-ui", "sans-serif"],
-        "label-md": ["Be Vietnam Pro", "system-ui", "sans-serif"],
-        "label-lg": ["Be Vietnam Pro", "system-ui", "sans-serif"],
-        "label-caps": ["Be Vietnam Pro", "system-ui", "sans-serif"],
+        "headline-sm": ['"Playfair Display"', "Georgia", "serif"],
+        "headline-md": ['"Playfair Display"', "Georgia", "serif"],
+        "title-md": ['"Playfair Display"', "Georgia", "serif"],
+        "body-md": ['"Playfair Display"', "Georgia", "serif"],
+        "body-sm": ['"Playfair Display"', "Georgia", "serif"],
+        "label-md": ['"Playfair Display"', "Georgia", "serif"],
+        "label-lg": ['"Playfair Display"', "Georgia", "serif"],
+        "label-caps": ['"Playfair Display"', "Georgia", "serif"],
       },
 
       fontSize: {

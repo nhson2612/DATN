@@ -25,7 +25,7 @@ PROVIDER = "serper_v1"
 
 # Field quyết định "có giá trị" — sources một mình không tính (chỉ là chứng cứ).
 _FIELD_CO_GIA_TRI = ("summary", "opening_hours", "rating",
-                     "review_highlights", "images")
+                     "review_highlights", "images", "contact")
 
 
 def _has_value(normalized: dict) -> bool:
@@ -35,7 +35,7 @@ def _has_value(normalized: dict) -> bool:
 def _gop(*phans: dict) -> dict:
     """Gộp nhiều nguồn: nguồn đứng trước thắng ở từng field."""
     ket_qua = {}
-    for field in ("summary", "opening_hours", "rating", "review_highlights", "images"):
+    for field in ("summary", "opening_hours", "rating", "review_highlights", "images", "contact"):
         for phan in phans:
             if phan.get(field):
                 ket_qua[field] = phan[field]
@@ -64,6 +64,7 @@ def _public(row: dict, *, cached: bool) -> dict:
             "rating": row.get("rating"),
             "review_highlights": row.get("review_highlights") or [],
             "images": row.get("images") or [],
+            "contact": row.get("contact") or {},
             "sources": row.get("sources") or [],
             "fetched_at": _iso(row.get("fetched_at")),
         },
@@ -126,6 +127,10 @@ def _normalize_maps(chi_tiet: dict) -> dict:
         "images": ([{"url": anh, "title": chi_tiet.get("name") or "",
                      "description": "", "host": "googleusercontent.com"}]
                    if anh else []),
+        "contact": {
+            "website": chi_tiet.get("website") or "",
+            "phone": chi_tiet.get("dien_thoai") or "",
+        },
         "sources": [],
     }
 

@@ -197,7 +197,7 @@ def confirm_payment(
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Phase 3: Endpoints Stripe-hosted Checkout & Webhook (UC-P01/BR-P1..P5)
+# Stripe Checkout và webhook (UC-P01)
 # ═══════════════════════════════════════════════════════════════════════════
 
 @router.post("/bookings/{booking_id}/checkout")
@@ -206,21 +206,20 @@ def create_stripe_checkout_session(
     data: Optional[CreateStripeCheckoutRequest] = None,
     current_user: dict = Depends(get_current_user),
 ):
-    """Khởi tạo phiên thanh toán Stripe Checkout hosted cho đơn đặt tour (Phase 3.2)."""
+    """Khởi tạo Stripe Checkout cho đơn đặt tour của chính khách hàng."""
     booking = tour_repo.get_booking(booking_id)
     if not booking:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy đơn đặt tour #{booking_id}.")
 
-    # Kiểm tra quyền: chỉ chủ đơn hoặc admin mới được tạo checkout
+    # Chỉ chủ đơn hoặc admin mới được tạo payment URL.
     if booking.get("user_id") and booking["user_id"] != current_user["id"] and current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Bạn không có quyền thanh toán cho đơn hàng này.")
 
-    redirect_base = data.redirect_base if data else None
     try:
         kq = payment_service.tao_checkout_stripe(
             booking_id=booking_id,
             actor_id=current_user["id"],
-            redirect_base=redirect_base,
+            redirect_base=data.redirect_base if data else None,
         )
     except tour_service.BookingNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -254,16 +253,26 @@ def get_booking_payment_status(
     return {"success": True, **kq}
 
 
+@router.post("/bookings/{booking_id}/cancel")
+def cancel_my_booking(booking_id: int, payload: dict | None = None, current_user: dict = Depends(get_current_user)):
+    try:
+        return tour_service.huy_booking_khach(booking_id, current_user["id"], (payload or {}).get("reason", ""))
+    except tour_service.BookingNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.TourPermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except tour_service.PaymentInvalidError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.post("/stripe/webhook")
 async def stripe_webhook(request: Request):
-    """Tiếp nhận và xử lý webhook sự kiện từ cổng thanh toán Stripe (Phase 3.3).
-
-    Yêu cầu: Không dùng Auth header, đọc raw request.body(), lấy header 'stripe-signature'.
-    """
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature", "")
+    """Webhook công khai từ Stripe; chữ ký được xác thực trước khi đổi trạng thái."""
     try:
-        kq = payment_service.xu_ly_stripe_webhook(payload=payload, sig_header=sig_header)
+        kq = payment_service.xu_ly_stripe_webhook(
+            payload=await request.body(),
+            sig_header=request.headers.get("stripe-signature", ""),
+        )
     except tour_service.PaymentGatewayUnavailableError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except tour_service.PaymentInvalidError as e:

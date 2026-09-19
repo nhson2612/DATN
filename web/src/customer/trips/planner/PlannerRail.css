@@ -8,8 +8,14 @@
   height: 100%;
   min-height: 0;
   min-width: 0;
-  background-color: #ffffff;
-  border-right: 1px solid #f1f5f9;
+  background: linear-gradient(
+      180deg,
+      rgba(231, 236, 238, 0.92) 0%,
+      rgba(245, 243, 236, 0.96) 100%
+    ),
+    url("https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=900&q=80")
+      center/cover no-repeat;
+  border-right: 1px solid rgba(20, 26, 31, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -18,7 +24,58 @@
   user-select: none;
 }
 
-/* 1. Nút AI Assistant Gradient ở đỉnh (ảnh w1 - w5) */
+/* 0. Brand Header & Back Button (Chuẩn Voyage) */
+.planner-rail__top {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(20, 26, 31, 0.08);
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.planner-rail__back-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(20, 26, 31, 0.15);
+  background: rgba(255, 255, 255, 0.85);
+  color: #141a1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.planner-rail__back-btn:hover {
+  background: #ffffff;
+  transform: translateX(-2px);
+  border-color: #141a1f;
+}
+
+.planner-rail__brand {
+  font-family: var(--serif, "Playfair Display", Georgia, serif);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #141a1f;
+  cursor: pointer;
+}
+
+.planner-rail__tag {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-left: auto;
+}
+
+/* 1. Nút AI Assistant chuẩn phong cách Voyage: Viền đen, chữ đen, không background */
 .planner-rail__ai-wrap {
   padding: 0.875rem 0.75rem 0.5rem 0.75rem;
   flex-shrink: 0;
@@ -30,27 +87,29 @@
   align-items: center;
   justify-content: flex-start;
   gap: 0.625rem;
-  padding: 0.65rem 1rem;
-  background: linear-gradient(135deg, #e11463 0%, #a855f7 50%, #7c3aed 100%);
-  color: #ffffff;
-  border: none;
+  padding: 0.625rem 1rem;
+  background: transparent;
+  color: #141a1f;
+  border: 1px solid #141a1f;
   border-radius: 9999px; /* Pill shape */
-  font-size: 0.875rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  box-shadow: none;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .planner-rail__ai-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(168, 85, 247, 0.35);
-  opacity: 0.96;
+  background: rgba(20, 26, 31, 0.05);
+  border-color: #141a1f;
+  color: #141a1f;
 }
 
 .planner-rail__ai-btn:active {
   transform: translateY(0);
+  background: rgba(20, 26, 31, 0.09);
 }
 
 .planner-rail__ai-sparkle {
@@ -58,13 +117,14 @@
   align-items: center;
   justify-content: center;
   font-size: 0.95rem;
-  color: #ffffff;
+  color: #141a1f;
 }
 
 .planner-rail__ai-label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #141a1f;
 }
 
 /* 2. Cây danh mục cuộn (Scrollable Tree) */
@@ -106,25 +166,25 @@
   padding: 0.45rem 0.65rem;
   border-radius: 0.5rem;
   cursor: pointer;
-  color: #1e293b;
+  color: #141a1f;
   font-size: 0.875rem;
   font-weight: 700;
   transition: all 0.15s ease;
 }
 
 .planner-rail__group-header:hover {
-  background-color: #f8fafc;
+  background-color: rgba(20, 26, 31, 0.05);
 }
 
-/* Trạng thái Active Pill cho Header (ảnh w1: Overview được chọn pill đen bo tròn) */
+/* Đã bỏ active pill nền đen: giữ nền transparent và chữ đen */
 .planner-rail__group-header--active-pill {
-  background-color: #1e293b !important;
-  color: #ffffff !important;
+  background-color: transparent !important;
+  color: #141a1f !important;
   border-radius: 0.5rem;
 }
 
 .planner-rail__group-header--active-pill .planner-rail__chevron {
-  color: #ffffff;
+  color: #141a1f !important;
 }
 
 .planner-rail__group-title-left {
@@ -136,7 +196,7 @@
 
 .planner-rail__chevron {
   font-size: 0.7rem;
-  color: #64748b;
+  color: #141a1f;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -261,12 +321,12 @@
 /* 3. Phần chân Footer cố định (Support & Hide sidebar) */
 .planner-rail__footer {
   flex-shrink: 0;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid rgba(20, 26, 31, 0.08);
   padding: 0.625rem 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  background-color: #ffffff;
+  background: transparent;
 }
 
 .planner-rail__footer-btn {
@@ -278,7 +338,7 @@
   border-radius: 0.375rem;
   background: transparent;
   border: none;
-  color: #64748b;
+  color: #475569;
   font-size: 0.8125rem;
   font-weight: 500;
   text-align: left;
@@ -287,6 +347,6 @@
 }
 
 .planner-rail__footer-btn:hover {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: rgba(20, 26, 31, 0.05);
+  color: #141a1f;
 }

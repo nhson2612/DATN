@@ -82,24 +82,6 @@ class FavoriteRequest(BaseModel):
     place_id: str
 
 
-class BookingRequest(BaseModel):
-    """Yêu cầu đặt chỗ — KHÔNG có giá và KHÔNG thanh toán.
-
-    CSDL không có giá phòng hay tình trạng phòng trống (cột `price_range` gần
-    như rỗng, `stars` toàn 0), nên hệ thống chỉ nhận yêu cầu rồi để admin liên
-    hệ lại — đúng cách các website du lịch nhỏ ở Việt Nam đang làm.
-    """
-    place_type: str
-    place_id: int
-    full_name: str
-    phone: str
-    email: Optional[str] = None
-    check_in: Optional[date] = None
-    check_out: Optional[date] = None
-    guests: int = 1
-    note: Optional[str] = None
-
-
 class TourBookingRequest(BaseModel):
     """Đặt tour trọn gói — khác BookingRequest (đặt chỗ ở/địa điểm lẻ).
 
@@ -112,7 +94,14 @@ class TourBookingRequest(BaseModel):
     phone: str
     email: Optional[str] = None
     guests: int = 1
+    passengers: List["PassengerRequest"] = []
     note: Optional[str] = None
+
+
+class PassengerRequest(BaseModel):
+    full_name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
 
 
 class CreatePaymentRequest(BaseModel):
@@ -120,6 +109,11 @@ class CreatePaymentRequest(BaseModel):
     method: str = "CHUYEN_KHOAN"  # CHUYEN_KHOAN | TAI_VAN_PHONG | KHAC
     amount: Optional[int] = None   # None = lấy mặc định total_price của booking
     note: Optional[str] = None
+
+
+class CreateStripeCheckoutRequest(BaseModel):
+    """Tuỳ chọn origin trả khách về sau Stripe Checkout."""
+    redirect_base: Optional[str] = None
 
 
 class AdminConfirmPaymentRequest(BaseModel):
@@ -193,8 +187,3 @@ class SaleDepartureRequest(BaseModel):
     sale_price: Optional[int] = None
     sale_starts_at: Optional[datetime] = None
     sale_ends_at: Optional[datetime] = None
-
-
-class CreateStripeCheckoutRequest(BaseModel):
-    """Yêu cầu khởi tạo Stripe-hosted Checkout Session (Phase 3)."""
-    redirect_base: Optional[str] = None

@@ -312,6 +312,33 @@
   font-size: 0.95rem;
 }
 
+.tour-booking-card__cta-pay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+.tour-booking-card__cta-pay-badge:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+}
+
+.tour-booking-card__cta-pay-badge .material-symbols-outlined {
+  font-size: 0.95rem;
+}
+
 .tour-booking-card__badge--pending {
   background: #fff7ed;
   color: #c2410c;
@@ -632,7 +659,7 @@
   }
 }
 
-/* ════════════════════ STRIPE CHECKOUT & NOTICES (PHASE 3) ════════════════════ */
+/* ════════════════════ STRIPE & PAYMENT NOTICES ══════════════════ */
 .tour-booking-card__action-btns {
   display: flex;
   align-items: center;
@@ -668,7 +695,7 @@
   transform: none;
 }
 
-/* Banner thông báo Stripe Checkout */
+/* Banner thông báo thanh toán */
 .tour-my-bookings__notice {
   display: flex;
   align-items: center;

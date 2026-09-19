@@ -1,0 +1,1738 @@
+/* ==========================================================================
+   VOYAGE ACCOUNT PAGE (Phong cách Minimalist Editorial Luxury)
+   ========================================================================== */
+
+:root {
+  --acc-ink: #111827;
+  --acc-muted: #71717a;
+  --acc-line: #e4e4e7;
+  --acc-bg: #ffffff;
+  --acc-card: #ffffff;
+  --acc-accent: #09090b;
+  --acc-radius-card: 12px;
+  --acc-radius-control: 8px;
+  --acc-serif: "Playfair Display", Georgia, serif;
+  --acc-sans: "Inter", "DM Sans", system-ui, -apple-system, sans-serif;
+}
+
+.voyage-account-page {
+  min-height: 100vh;
+  background-color: var(--acc-bg);
+  color: var(--acc-ink);
+  font-family: var(--acc-sans);
+  display: flex;
+  flex-direction: column;
+}
+
+.voyage-account-page * {
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   TOP NAVIGATION BAR
+   ========================================================================== */
+.voyage-account-header {
+  height: 72px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--acc-line);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.voyage-account-header-inner {
+  max-width: 1280px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 clamp(18px, 3vw, 36px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.voyage-account-brand {
+  font-family: var(--acc-serif);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--acc-ink);
+  text-decoration: none;
+}
+
+.voyage-account-nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.voyage-account-nav-link {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #3b4c56;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.voyage-account-nav-link:hover {
+  color: var(--acc-ink);
+}
+
+.voyage-account-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.voyage-account-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--acc-line);
+  background: #ffffff;
+  color: var(--acc-ink);
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.voyage-account-icon-btn:hover {
+  border-color: #bcc8cf;
+  background: #f1f4f6;
+}
+
+.voyage-account-user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  background: #ffffff;
+  border: 1px solid var(--acc-line);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--acc-ink);
+}
+
+.voyage-account-avatar-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--acc-accent);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.voyage-account-name-sm {
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voyage-account-menu-btn {
+  padding: 7px 14px;
+  border: 1px solid var(--acc-line);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--acc-ink);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.voyage-account-menu-btn:hover {
+  border-color: var(--acc-ink);
+}
+
+/* ==========================================================================
+   MAIN CONTAINER & 2-COLUMN LAYOUT (ACCOUNT_PAGE.PNG)
+   ========================================================================== */
+.voyage-account-main {
+  flex: 1;
+  padding: clamp(24px, 4vh, 48px) 0 80px;
+}
+
+.voyage-account-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 48px);
+}
+
+.voyage-account-layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: start;
+}
+
+/* ==========================================================================
+   SIDEBAR ĐIỀU HƯỚNG TỐI GIẢN (NỀN TRẮNG TINH GỌN, TUYỆT ĐỐI KHÔNG VIỀN ĐỎ)
+   ========================================================================== */
+.voyage-account-sidebar {
+  position: sticky;
+  top: 96px;
+}
+
+.voyage-account-sidebar-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: #09090b;
+  margin: 0 0 22px 0;
+  letter-spacing: -0.01em;
+}
+
+.voyage-account-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.voyage-account-sidebar-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: #71717a;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease;
+  font-family: inherit;
+  line-height: 1.3;
+}
+
+.voyage-account-sidebar-link:hover {
+  color: #09090b;
+}
+
+.voyage-account-sidebar-link.is-active {
+  color: #09090b;
+  font-weight: 700;
+}
+
+.voyage-account-sidebar-link--logout {
+  color: #71717a;
+  margin-top: 6px;
+}
+
+.voyage-account-sidebar-link--logout:hover {
+  color: #ef4444;
+}
+
+/* ==========================================================================
+   VÙNG NỘI DUNG BÊN PHẢI (CONTENT AREA)
+   ========================================================================== */
+.voyage-account-content {
+  min-width: 0;
+}
+
+/* Tiêu đề: Hello [Tên] & Signed in as: [email] */
+.voyage-account-welcome-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.voyage-account-welcome-title {
+  font-family: var(--acc-sans);
+  font-size: clamp(26px, 2.5vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #09090b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.voyage-account-signed-in {
+  font-size: 13.5px;
+  color: #52525b;
+}
+
+.voyage-account-signed-email {
+  color: #09090b;
+  font-weight: 600;
+}
+
+.voyage-account-divider {
+  height: 1px;
+  background-color: #f1f1f4;
+  border: none;
+  margin: 20px 0 36px 0;
+}
+
+/* ==========================================================================
+   TAB OVERVIEW: CHỈ SỐ PROFILE % | TOURS BOOKED | ITINERARIES SAVED
+   ========================================================================== */
+.voyage-account-overview-pane {
+  animation: accountFadeIn 0.35s ease both;
+}
+
+.voyage-account-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: clamp(24px, 4vw, 56px);
+  margin-bottom: 48px;
+}
+
+.voyage-account-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.voyage-account-stat-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #09090b;
+  letter-spacing: -0.01em;
+}
+
+.voyage-account-stat-value-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.voyage-account-stat-num {
+  font-size: clamp(34px, 3.5vw, 42px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #09090b;
+}
+
+.voyage-account-stat-unit {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #71717a;
+  text-transform: uppercase;
+}
+
+/* Mục: Recent orders */
+.voyage-account-overview-section {
+  margin-bottom: 44px;
+}
+
+.voyage-account-overview-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.voyage-account-section-subtitle {
+  font-family: var(--acc-sans);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #09090b;
+  margin: 0;
+}
+
+.voyage-account-text-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #09090b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.voyage-account-text-link:hover {
+  color: #2563eb;
+}
+
+.voyage-account-no-recent {
+  font-size: 14px;
+  color: #71717a;
+  margin: 0;
+}
+
+/* Thẻ đơn tour gần nhất trong Overview */
+.voyage-account-recent-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.voyage-account-recent-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border: 1px solid #f1f1f4;
+  border-radius: 10px;
+  background: #fafafa;
+  gap: 16px;
+  transition: all 0.15s ease;
+}
+
+.voyage-account-recent-order-item:hover {
+  background: #f4f4f5;
+  border-color: #e4e4e7;
+}
+
+.voyage-account-recent-code {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.voyage-account-recent-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #09090b;
+  margin: 0 0 6px 0;
+}
+
+.voyage-account-recent-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #71717a;
+  flex-wrap: wrap;
+}
+
+.voyage-account-recent-order-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.voyage-account-btn-sm {
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  color: #18181b;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.voyage-account-btn-sm:hover {
+  background: #18181b;
+  color: #ffffff;
+  border-color: #18181b;
+}
+
+/* Thẻ lịch trình gần nhất */
+.voyage-account-recent-itineraries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.voyage-account-recent-itin-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #fafafa;
+  border: 1px solid #f1f1f4;
+  border-radius: 10px;
+  gap: 16px;
+}
+
+/* ==========================================================================
+   CALL-TO-ACTION (CTA) THANH TOÁN - CHUYỂN TỪ BADGE THÀNH HÀNH ĐỘNG SINH DOANH THU
+   ========================================================================== */
+.voyage-account-cta-pay {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #09090b;
+  color: #ffffff !important;
+  border: 1px solid #09090b;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  font-family: var(--acc-sans);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.voyage-account-cta-pay:hover {
+  background: #18181b;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+
+.voyage-account-cta-pay:active {
+  transform: translateY(0);
+}
+
+.voyage-account-cta-pay .material-symbols-outlined {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* Banner cảnh báo có đơn tour đang chờ thanh toán */
+.voyage-account-pending-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  margin-bottom: 32px;
+  animation: accountFadeIn 0.3s ease both;
+}
+
+.voyage-account-pending-banner-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.voyage-account-pending-banner-text strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 2px;
+}
+
+.voyage-account-pending-banner-text p {
+  font-size: 13px;
+  color: #b45309;
+  margin: 0;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .voyage-account-pending-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ==========================================================================
+   FOOTER: GOT QUESTIONS? & CUSTOMER SERVICE ↗
+   ========================================================================== */
+.voyage-account-footer-divider {
+  height: 1px;
+  background-color: #f1f1f4;
+  border: none;
+  margin: 32px 0 20px 0;
+}
+
+.voyage-account-help-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.voyage-account-help-title {
+  font-family: var(--acc-sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: #09090b;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px 0;
+}
+
+.voyage-account-help-desc {
+  font-size: 13.5px;
+  color: #71717a;
+  margin: 0;
+  max-width: 520px;
+  line-height: 1.4;
+}
+
+.voyage-account-help-link {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #09090b;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.voyage-account-help-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   KHÓA CHIỀU CAO TAB OVERVIEW: 100VH KHÔNG CUỘN (THEO YÊU CẦU NGƯỜI DÙNG)
+   ========================================================================== */
+@media (min-width: 900px) {
+  .voyage-account-page--overview {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+
+  .voyage-account-page--overview .voyage-account-main {
+    height: calc(100vh - 72px);
+    max-height: calc(100vh - 72px);
+    overflow: hidden;
+    padding: clamp(20px, 3vh, 32px) 0 clamp(16px, 2.5vh, 24px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .voyage-account-page--overview .voyage-account-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .voyage-account-page--overview .voyage-account-layout {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 72px);
+    align-items: stretch;
+  }
+
+  .voyage-account-page--overview .voyage-account-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+
+  .voyage-account-page--overview .voyage-account-overview-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 0;
+  }
+
+  .voyage-account-page--overview .voyage-account-divider {
+    margin: 14px 0 24px 0;
+  }
+
+  .voyage-account-page--overview .voyage-account-stats-row {
+    margin-bottom: 24px;
+    gap: 36px;
+  }
+
+  .voyage-account-page--overview .voyage-account-pending-banner {
+    padding: 10px 16px;
+    margin-bottom: 18px;
+  }
+
+  .voyage-account-page--overview .voyage-account-overview-section {
+    margin-bottom: 12px;
+  }
+
+  .voyage-account-page--overview .voyage-account-footer-divider {
+    margin: 16px 0 16px 0;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE CHO MÀN HÌNH NHỎ
+   ========================================================================== */
+@media (max-width: 860px) {
+  .voyage-account-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .voyage-account-sidebar {
+    position: static;
+    border-bottom: 1px solid #f1f1f4;
+    padding-bottom: 20px;
+  }
+
+  .voyage-account-sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+  }
+
+  .voyage-account-sidebar-heading {
+    margin-bottom: 12px;
+  }
+
+  .voyage-account-welcome-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+}
+
+/* ==========================================================================
+   SECTION CONTENT & FILTERS
+   ========================================================================== */
+.voyage-account-section {
+  animation: accountFadeIn 0.35s ease both;
+}
+
+@keyframes accountFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.voyage-account-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.voyage-account-section-title {
+  margin: 0 0 4px;
+  font-family: var(--acc-serif);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--acc-ink);
+}
+
+.voyage-account-section-desc {
+  margin: 0;
+  color: var(--acc-muted);
+  font-size: 14px;
+}
+
+.voyage-account-filter-group {
+  display: inline-flex;
+  background: #ffffff;
+  border: 1px solid var(--acc-line);
+  border-radius: var(--acc-radius-control);
+  padding: 3px;
+  gap: 3px;
+}
+
+.voyage-account-filter-btn {
+  padding: 6px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--acc-muted);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.voyage-account-filter-btn:hover {
+  color: var(--acc-ink);
+}
+
+.voyage-account-filter-btn--active {
+  background: var(--acc-ink);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   BOOKING CARDS LIST
+   ========================================================================== */
+.voyage-account-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.voyage-account-booking-card {
+  background: var(--acc-card);
+  border: 1px solid var(--acc-line);
+  border-radius: var(--acc-radius-card);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.voyage-account-booking-card:hover {
+  border-color: #cbd5dc;
+  box-shadow: 0 6px 20px rgba(15, 42, 56, 0.05);
+}
+
+.voyage-account-booking-cover {
+  width: 100%;
+  height: 100%;
+  min-height: 170px;
+  background: #11222c;
+  overflow: hidden;
+}
+
+.voyage-account-booking-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.voyage-account-booking-card:hover .voyage-account-booking-cover img {
+  transform: scale(1.04);
+}
+
+.voyage-account-booking-no-img {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #8598a4;
+}
+
+.voyage-account-booking-info {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.voyage-account-booking-top-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.voyage-account-booking-code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b4e5a;
+  background: #edf2f5;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.voyage-account-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.voyage-account-countdown--urgent {
+  color: #b91c1c;
+  background: #fee2e2;
+  animation: countdownPulse 1.2s infinite;
+}
+
+@keyframes countdownPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.voyage-account-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2.5px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.voyage-account-badge--success {
+  background: #edf7ed;
+  color: #2e6930;
+}
+
+.voyage-account-badge--warning {
+  background: #fef7e6;
+  color: #8a6100;
+}
+
+.voyage-account-badge--danger,
+.voyage-account-badge--expired {
+  background: #fdeeed;
+  color: #a83232;
+}
+
+.voyage-account-badge--neutral {
+  background: #f0f3f5;
+  color: #4a5c67;
+}
+
+.voyage-account-booking-title {
+  margin: 0;
+  font-family: var(--acc-serif);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.voyage-account-booking-title a {
+  color: var(--acc-ink);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.voyage-account-booking-title a:hover {
+  color: #1a4f6d;
+}
+
+.voyage-account-booking-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  color: var(--acc-muted);
+}
+
+.voyage-account-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.voyage-account-meta-item strong {
+  color: var(--acc-ink);
+  font-weight: 600;
+}
+
+.voyage-account-booking-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  border-top: 1px solid #f0f3f5;
+}
+
+/* ==========================================================================
+   BUTTONS & CONTROLS
+   ========================================================================== */
+.voyage-account-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: var(--acc-radius-control);
+  background: var(--acc-accent);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+
+.voyage-account-btn-primary:hover:not(:disabled) {
+  background: #091f2a;
+  transform: translateY(-1px);
+}
+
+.voyage-account-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--acc-radius-control);
+  background: #ffffff;
+  border: 1px solid var(--acc-line);
+  color: var(--acc-ink);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.voyage-account-btn-outline:hover:not(:disabled) {
+  border-color: #b8c5cc;
+  background: #f7fafb;
+}
+
+.voyage-account-btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--acc-radius-control);
+  background: #0f2430;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.voyage-account-btn-action:hover:not(:disabled) {
+  background: #193849;
+}
+
+.voyage-account-btn-text-danger {
+  border: 0;
+  background: transparent;
+  color: #a83232;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 8px;
+  transition: opacity 0.15s ease;
+}
+
+.voyage-account-btn-text-danger:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.voyage-account-btn-link {
+  font-size: 13px;
+  color: var(--acc-muted);
+  text-decoration: none;
+  margin-left: auto;
+  transition: color 0.15s ease;
+}
+
+.voyage-account-btn-link:hover {
+  color: var(--acc-ink);
+}
+
+.voyage-account-btn-danger {
+  padding: 9px 18px;
+  border-radius: var(--acc-radius-control);
+  background: #b91c1c;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.voyage-account-btn-danger:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.voyage-account-icon-danger-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--acc-line);
+  background: #ffffff;
+  color: #a83232;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.voyage-account-icon-danger-btn:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+/* ==========================================================================
+   ITINERARY GRID CARDS
+   ========================================================================== */
+.voyage-account-itinerary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.voyage-account-itinerary-card {
+  background: var(--acc-card);
+  border: 1px solid var(--acc-line);
+  border-radius: var(--acc-radius-card);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.voyage-account-itinerary-card:hover {
+  border-color: #cbd5dc;
+  box-shadow: 0 8px 24px rgba(15, 42, 56, 0.05);
+  transform: translateY(-2px);
+}
+
+.voyage-account-itinerary-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.voyage-account-itinerary-date {
+  font-size: 12px;
+  color: var(--acc-muted);
+}
+
+.voyage-account-itinerary-title {
+  margin: 0;
+  font-family: var(--acc-serif);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.voyage-account-itinerary-title a {
+  color: var(--acc-ink);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.voyage-account-itinerary-title a:hover {
+  color: #1a4f6d;
+}
+
+.voyage-account-itinerary-desc {
+  margin: 0;
+  color: var(--acc-muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.voyage-account-itinerary-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--acc-muted);
+}
+
+.voyage-account-itinerary-stops-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.voyage-account-stop-pill {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f4f6;
+  color: #3b4e5a;
+  white-space: nowrap;
+}
+
+.voyage-account-stop-pill--more {
+  background: #e5ebee;
+  color: #213540;
+  font-weight: 500;
+}
+
+.voyage-account-itinerary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f3f5;
+}
+
+/* ==========================================================================
+   PROFILE & SECURITY TAB (2-COLUMN GRID)
+   ========================================================================== */
+.voyage-account-grid-2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+}
+
+.voyage-account-form-panel {
+  background: var(--acc-card);
+  border: 1px solid var(--acc-line);
+  border-radius: var(--acc-radius-card);
+  padding: 28px;
+}
+
+.voyage-account-panel-title {
+  margin: 0 0 6px;
+  font-family: var(--acc-serif);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--acc-ink);
+}
+
+.voyage-account-panel-desc {
+  margin: 0 0 22px;
+  color: var(--acc-muted);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.voyage-account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.voyage-account-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.voyage-account-field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #32434d;
+}
+
+.voyage-account-field input,
+.voyage-account-field textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--acc-line);
+  border-radius: var(--acc-radius-control);
+  background: #ffffff;
+  color: var(--acc-ink);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.voyage-account-field input:focus,
+.voyage-account-field textarea:focus {
+  border-color: #8ea1ad;
+  box-shadow: 0 0 0 3px rgba(15, 42, 56, 0.08);
+}
+
+.voyage-account-input-disabled {
+  background: #f7f9fa !important;
+  color: #8595a0 !important;
+  cursor: not-allowed;
+}
+
+.voyage-account-field-hint {
+  font-size: 11.5px;
+  color: #8898a3;
+}
+
+.voyage-account-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.voyage-account-alert--error {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #b91c1c;
+}
+
+.voyage-account-divider-line {
+  height: 1px;
+  background: var(--acc-line);
+  margin: 26px 0 20px;
+}
+
+.voyage-account-preferences {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.voyage-account-pref-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--acc-ink);
+}
+
+.voyage-account-pref-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafb;
+  border-radius: 8px;
+  border: 1px solid #edf1f3;
+}
+
+.voyage-account-pref-item strong {
+  font-size: 13px;
+  color: var(--acc-ink);
+}
+
+.voyage-account-pref-item p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--acc-muted);
+}
+
+/* ==========================================================================
+   EMPTY & LOADING STATES
+   ========================================================================== */
+.voyage-account-empty {
+  background: var(--acc-card);
+  border: 1px dashed #cbd5dc;
+  border-radius: var(--acc-radius-card);
+  padding: 56px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.voyage-account-empty h3 {
+  margin: 4px 0 0;
+  font-family: var(--acc-serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--acc-ink);
+}
+
+.voyage-account-empty p {
+  margin: 0;
+  max-width: 440px;
+  font-size: 14px;
+  color: var(--acc-muted);
+  line-height: 1.5;
+}
+
+.voyage-account-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e3e9ed;
+  border-top-color: var(--acc-ink);
+  border-radius: 50%;
+  animation: accountSpin 0.7s linear infinite;
+}
+
+@keyframes accountSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   UNAUTHENTICATED STATE
+   ========================================================================== */
+.voyage-account-unauth {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.voyage-account-unauth-card {
+  max-width: 480px;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--acc-line);
+  border-radius: 20px;
+  padding: 48px 36px;
+  text-align: center;
+  box-shadow: 0 12px 36px rgba(15, 42, 56, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.voyage-account-unauth-icon {
+  font-size: 48px;
+  color: var(--acc-accent);
+}
+
+.voyage-account-unauth-title {
+  margin: 0;
+  font-family: var(--acc-serif);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--acc-ink);
+}
+
+.voyage-account-unauth-desc {
+  margin: 0 0 10px;
+  font-size: 14.5px;
+  color: var(--acc-muted);
+  line-height: 1.55;
+}
+
+.voyage-account-btn-auth {
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--acc-ink);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.voyage-account-btn-auth:hover {
+  background: #1f3949;
+}
+
+/* ==========================================================================
+   MODALS
+   ========================================================================== */
+.voyage-account-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 25, 35, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modalOverlayIn 0.2s ease both;
+}
+
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.voyage-account-modal {
+  width: min(100%, 620px);
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: modalContentIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.voyage-account-modal--sm {
+  max-width: 460px;
+}
+
+@keyframes modalContentIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.voyage-account-modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--acc-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.voyage-account-modal-header h3 {
+  margin: 0;
+  font-family: var(--acc-serif);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--acc-ink);
+}
+
+.voyage-account-modal-close {
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  color: var(--acc-muted);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.voyage-account-modal-close:hover {
+  color: var(--acc-ink);
+}
+
+.voyage-account-modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.voyage-account-modal-tour-title {
+  font-family: var(--acc-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--acc-ink);
+}
+
+.voyage-account-modal-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+  background: #f8fafb;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1px solid #edf1f3;
+  font-size: 13.5px;
+}
+
+.voyage-account-modal-label {
+  display: block;
+  font-size: 12px;
+  color: var(--acc-muted);
+  margin-bottom: 2px;
+}
+
+.voyage-account-price-highlight {
+  color: #0f2a38;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.voyage-account-payment-guide {
+  border-top: 1px solid var(--acc-line);
+  padding-top: 18px;
+}
+
+.voyage-account-payment-guide-title {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--acc-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.voyage-account-qr-box {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 18px;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--acc-line);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.voyage-account-qr-img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.voyage-account-qr-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #3b4d58;
+}
+
+.voyage-account-qr-info p {
+  margin: 0;
+}
+
+.voyage-account-qr-info code {
+  background: #eef2f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #0e2936;
+}
+
+.voyage-account-modal-pay-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.voyage-account-btn-stripe {
+  padding: 10px 18px;
+  border-radius: var(--acc-radius-control);
+  background: #635bff;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.voyage-account-btn-stripe:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.voyage-account-modal-warning {
+  margin: 0;
+  font-size: 14px;
+  color: #3e4f5a;
+  line-height: 1.5;
+}
+
+.voyage-account-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   TOAST
+   ========================================================================== */
+.voyage-account-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translate(-50%, 0);
+  background: #0f2430;
+  color: #ffffff;
+  padding: 11px 20px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  z-index: 9999;
+  animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 15px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE (TABLET & MOBILE)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .voyage-account-nav {
+    display: none;
+  }
+
+  .voyage-account-bento-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .voyage-account-hero-stats {
+    width: 100%;
+    justify-content: space-around;
+    padding-top: 16px;
+    border-top: 1px solid var(--acc-line);
+  }
+
+  .voyage-account-grid-2col {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .voyage-account-booking-card {
+    grid-template-columns: 1fr;
+  }
+
+  .voyage-account-booking-cover {
+    height: 180px;
+  }
+}
+
+@media (max-width: 600px) {
+  .voyage-account-header-inner {
+    padding: 0 16px;
+  }
+
+  .voyage-account-brand {
+    font-size: 23px;
+  }
+
+  .voyage-account-name-sm {
+    display: none;
+  }
+
+  .voyage-account-bento-hero {
+    padding: 16px;
+  }
+
+  .voyage-account-avatar-lg {
+    width: 52px;
+    height: 52px;
+    font-size: 22px;
+  }
+
+  .voyage-account-user-name {
+    font-size: 18px;
+  }
+
+  .voyage-account-stat-num {
+    font-size: 20px;
+  }
+
+  .voyage-account-itinerary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .voyage-account-qr-box {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .voyage-account-qr-img {
+    margin: 0 auto;
+  }
+}

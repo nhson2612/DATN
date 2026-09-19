@@ -22,7 +22,6 @@ const MENU_GROUPS = [
   {
     tieuDe: "Đơn hàng & Giao dịch",
     items: [
-      { id: "dat-cho", nhan: "Yêu cầu đặt chỗ", icon: "event_seat", desc: "Theo dõi và xử lý các yêu cầu giữ chỗ của khách" },
       { id: "dat-tour", nhan: "Đặt tour", icon: "confirmation_number", desc: "Danh sách đơn đặt tour du lịch trên toàn hệ thống" },
       { id: "thanh-toan", nhan: "Thanh toán & Đối soát", icon: "payments", desc: "Đối soát chuyển khoản ngân hàng và xác nhận giao dịch" },
     ],
@@ -30,8 +29,6 @@ const MENU_GROUPS = [
 ];
 
 const ALL_TABS = MENU_GROUPS.flatMap((g) => g.items);
-
-const TRANG_THAI = { moi: "Mới", da_lien_he: "Đã liên hệ", huy: "Huỷ" };
 
 const FORM_RONG = {
   place_type: "accommodation",
@@ -216,7 +213,6 @@ export default function AdminPage({ user, onLogout, onNeedAuth }) {
           {tabId === "tong-quan" && <TongQuan onMo={mo} />}
           {tabId === "duyet-tour" && <TourApproval />}
           {tabId === "dia-diem" && <DiaDiem />}
-          {tabId === "dat-cho" && <DatCho locBanDau={locTuUrl} />}
           {tabId === "dat-tour" && <DatTour />}
           {tabId === "thanh-toan" && <ThanhToan locBanDau={locTuUrl} />}
         </main>
@@ -278,24 +274,6 @@ function TongQuan({ onMo }) {
       sub: "Tổng tiền đơn thanh toán thành công",
       icon: "payments",
       badgeColor: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    },
-    {
-      nhan: "Yêu cầu đặt chỗ mới",
-      v: tk.dat_cho_moi,
-      tab: "dat-cho",
-      loc: "moi",
-      sub: "Khách vừa gửi yêu cầu giữ phòng",
-      icon: "hotel",
-      badgeColor: "bg-zinc-50 text-zinc-700 border-zinc-200",
-    },
-    {
-      nhan: "Yêu cầu đã liên hệ",
-      v: tk.dat_cho_da_lien_he,
-      tab: "dat-cho",
-      loc: "da_lien_he",
-      sub: "Đã liên hệ tư vấn và xác nhận khách",
-      icon: "contact_phone",
-      badgeColor: "bg-zinc-50 text-zinc-700 border-zinc-200",
     },
     {
       nhan: "Lượt đặt tour",
@@ -787,141 +765,7 @@ function FormDiaDiem({ form, setForm, onXong }) {
   );
 }
 
-/* ── 3. Yêu cầu đặt chỗ ─────────────────────────────────────────────────── */
-
-function DatCho({ locBanDau }) {
-  const [loc, setLoc] = useState(locBanDau || "");
-  const [ds, setDs] = useState(null);
-  const [loi, setLoi] = useState("");
-  const [tin, setTin] = useState("");
-
-  function tai() {
-    setDs(null);
-    api
-      .adminBookings(loc || undefined)
-      .then((d) => setDs(d.bookings || []))
-      .catch((e) => {
-        setLoi(e.message);
-        setDs([]);
-      });
-  }
-  useEffect(tai, [loc]);
-
-  async function doiTrangThai(id, tt) {
-    try {
-      await api.adminSetBookingStatus(id, tt);
-      setTin("Đã cập nhật trạng thái yêu cầu.");
-      tai();
-    } catch (e) {
-      setLoi(e.message);
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      {tin && <Toast message={tin} onClose={() => setTin("")} />}
-      {loi && <Toast message={loi} type="error" onClose={() => setLoi("")} />}
-
-      {/* Filter Tabs Pills */}
-      <div className="flex gap-2 flex-wrap items-center">
-        {[["", "Tất cả yêu cầu"], ...Object.entries(TRANG_THAI)].map(([v, nhan]) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => setLoc(v)}
-            className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all cursor-pointer ${
-              loc === v
-                ? "bg-zinc-900 border-zinc-900 text-white shadow-xs"
-                : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-            }`}
-          >
-            {nhan}
-          </button>
-        ))}
-      </div>
-
-      {ds === null && (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="h-24 bg-white border border-zinc-200 rounded-xl animate-pulse" />
-          ))}
-        </div>
-      )}
-
-      {ds?.length === 0 && (
-        <div className="bg-white border border-zinc-200 rounded-xl p-12 text-center shadow-xs">
-          <div className="w-12 h-12 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto mb-3">
-            <span className="material-symbols-outlined text-2xl">event_seat</span>
-          </div>
-          <h3 className="text-base font-semibold text-zinc-900">Không có yêu cầu đặt chỗ nào</h3>
-          <p className="text-xs text-zinc-500 mt-1">
-            Không có khách nào đang chờ xác nhận giữ chỗ ở trạng thái này.
-          </p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {(ds || []).map((b) => (
-          <div
-            key={b.id}
-            className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs hover:border-zinc-300 transition-colors flex flex-col justify-between gap-4"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-zinc-900 text-sm">{b.full_name}</span>
-                  <span className="text-xs font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">
-                    {b.phone}
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-600 font-medium mt-1">
-                  {b.place_name || tenDiaDiem(b.place_type, b.place_id)}
-                </p>
-                <div className="flex items-center gap-3 text-xs text-zinc-500 mt-2">
-                  {b.check_in && b.check_out && (
-                    <span className="inline-flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm">calendar_month</span>
-                      <span>{b.check_in} → {b.check_out}</span>
-                    </span>
-                  )}
-                  <span className="inline-flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">group</span>
-                    <span>{b.guests} khách</span>
-                  </span>
-                </div>
-                {b.note && (
-                  <p className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-md p-2 mt-2 italic">
-                    “{b.note}”
-                  </p>
-                )}
-              </div>
-
-              <select
-                value={b.status}
-                onChange={(e) => doiTrangThai(b.id, e.target.value)}
-                className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border focus:outline-none cursor-pointer shrink-0 ${
-                  b.status === "moi"
-                    ? "bg-blue-50 text-blue-700 border-blue-200"
-                    : b.status === "da_lien_he"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-zinc-100 text-zinc-600 border-zinc-200"
-                }`}
-              >
-                {Object.entries(TRANG_THAI).map(([v, nhan]) => (
-                  <option key={v} value={v}>
-                    {nhan}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── 4. Thanh toán & Đối soát ────────────────────────────────────────────── */
+/* ── 3. Thanh toán & Đối soát ────────────────────────────────────────────── */
 
 const LOC_THANH_TOAN = [
   ["", "Tất cả giao dịch"],
@@ -938,18 +782,7 @@ const NHAN_THANH_TOAN = {
   FAILED: "Thất bại",
 };
 
-const NHAN_CACH_TRA = { CHUYEN_KHOAN: "Chuyển khoản", STRIPE: "Thẻ Stripe", CARD: "Thẻ" };
-
-const NHAN_BANG = {
-  poi: "Địa điểm",
-  serper: "Địa điểm",
-  trackasia: "Địa điểm",
-  accommodation: "Cơ sở lưu trú",
-};
-
-function tenDiaDiem(bang, id) {
-  return `${NHAN_BANG[bang] || "Điểm đến"} #${id}`;
-}
+const NHAN_CACH_TRA = { CHUYEN_KHOAN: "Chuyển khoản", STRIPE: "Stripe", CARD: "Thẻ" };
 
 function ngay(iso) {
   if (!iso) return "";

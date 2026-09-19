@@ -1,0 +1,216 @@
+/* ==========================================================================
+   BLOCK: .voyage-drawer
+   Slide-out Menu Drawer dùng chung phong cách Medusa.js liquid glass cho toàn app
+   ========================================================================== */
+
+.voyage-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 18px;
+  animation: drawerOverlayIn 0.22s ease-out;
+  box-sizing: border-box;
+}
+
+@keyframes drawerOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.voyage-drawer {
+  position: relative;
+  width: clamp(340px, 28vw, 420px);
+  height: calc(100vh - 36px);
+  background: rgba(3, 7, 18, 0.58);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: -15px 0 60px rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 28px 32px;
+  box-sizing: border-box;
+  animation: drawerSlideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10000;
+}
+
+@keyframes drawerSlideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.voyage-drawer-head {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+}
+
+.voyage-drawer-close {
+  background: none;
+  border: none;
+  outline: none;
+  padding: 4px;
+  margin: -4px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.voyage-drawer-close:hover {
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.voyage-drawer-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.voyage-drawer-link {
+  display: inline-block;
+  font-size: clamp(26px, 2.6vw, 34px);
+  line-height: 1.25;
+  font-weight: 350;
+  color: #ffffff;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease;
+}
+
+.voyage-drawer-link:hover {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.voyage-drawer-link--button {
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+  font-weight: 400 !important;
+  letter-spacing: normal !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-block;
+  text-decoration: none;
+  margin-top: -6px;
+  transition: color 0.15s ease;
+}
+
+.voyage-drawer-link--button:hover {
+  color: #ffffff !important;
+}
+
+.voyage-drawer-link--logout:hover {
+  color: #ef4444 !important;
+}
+
+.voyage-drawer-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 16px;
+}
+
+.voyage-drawer-region {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.voyage-drawer-region:hover {
+  color: #ffffff;
+}
+
+.voyage-drawer-region-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.voyage-drawer-flag {
+  font-size: 14px;
+}
+
+.voyage-drawer-arrow {
+  font-size: 14px;
+  transition: transform 0.15s ease;
+}
+
+.voyage-drawer-region:hover .voyage-drawer-arrow {
+  transform: translateX(3px);
+}
+
+.voyage-drawer-copy {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 960px) {
+  .voyage-drawer-overlay {
+    padding: 12px;
+  }
+
+  .voyage-drawer {
+    height: calc(100vh - 24px);
+    width: min(380px, 85vw);
+  }
+}
+
+@media (max-width: 640px) {
+  .voyage-drawer-overlay {
+    padding: 8px;
+  }
+
+  .voyage-drawer {
+    width: calc(100% - 16px);
+    height: calc(100vh - 16px);
+    border-radius: 12px;
+    padding: 22px 20px;
+  }
+
+  .voyage-drawer-link {
+    font-size: 24px;
+  }
+}

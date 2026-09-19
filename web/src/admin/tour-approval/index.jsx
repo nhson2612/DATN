@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { api } from "../../shared/api";
 import Toast from "../../shared/common/Toast";
+import AdminTourDetailModal from "./AdminTourDetailModal";
 import "./TourApproval.css";
 
 const ngay = (v) => (v ? new Date(v).toLocaleDateString("vi-VN") : "—");
@@ -14,6 +15,7 @@ export default function TourApproval() {
   const [dangTuChoi, setDangTuChoi] = useState(null);
   const [lyDo, setLyDo] = useState("");
   const [loiLyDo, setLoiLyDo] = useState("");
+  const [xemTourId, setXemTourId] = useState(null);
 
   const taiLai = useCallback(() => {
     api
@@ -35,6 +37,28 @@ export default function TourApproval() {
     try {
       await api.adminDuyetTour(tour.id);
       setBao(`Đã duyệt tour "${tour.name}", tour đã được phát hành.`);
+      setXemTourId(null);
+      taiLai();
+    } catch (error) {
+      setLoi(error.message);
+    }
+  };
+
+  const tuChoiVoiLyDo = async (tour, lyDoGui) => {
+    const lyDoTrim = (lyDoGui || "").trim();
+    if (!lyDoTrim) {
+      setLoi("Vui lòng nhập lý do từ chối để nhà điều hành biết và chỉnh sửa.");
+      return;
+    }
+    setLoi("");
+    setBao("");
+    try {
+      await api.adminTuChoiTour(tour.id, lyDoTrim);
+      setBao(`Đã từ chối tour "${tour.name}".`);
+      setDangTuChoi(null);
+      setLyDo("");
+      setLoiLyDo("");
+      setXemTourId(null);
       taiLai();
     } catch (error) {
       setLoi(error.message);
@@ -46,18 +70,7 @@ export default function TourApproval() {
       setLoiLyDo("Vui lòng nhập lý do từ chối để nhà điều hành biết và chỉnh sửa.");
       return;
     }
-    setLoi("");
-    setBao("");
-    try {
-      await api.adminTuChoiTour(tour.id, lyDo.trim());
-      setBao(`Đã từ chối tour "${tour.name}".`);
-      setDangTuChoi(null);
-      setLyDo("");
-      setLoiLyDo("");
-      taiLai();
-    } catch (error) {
-      setLoi(error.message);
-    }
+    await tuChoiVoiLyDo(tour, lyDo);
   };
 
   return (
@@ -97,7 +110,16 @@ export default function TourApproval() {
                 {tours.map((tour) => (
                   <tr key={tour.id} className="hover:bg-zinc-50/70 transition-colors">
                     <td className="py-3.5 px-4 align-top">
-                      <span className="tour-duyet__ten text-zinc-900 font-semibold">{tour.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setXemTourId(tour.id)}
+                        className="text-left group cursor-pointer block"
+                        title="Bấm để xem toàn bộ thông tin chi tiết tour"
+                      >
+                        <span className="tour-duyet__ten text-zinc-900 font-semibold group-hover:text-blue-600 transition-colors">
+                          {tour.name}
+                        </span>
+                      </button>
                       {tour.summary && (
                         <span className="tour-duyet__tom-tat text-zinc-500 text-xs line-clamp-2">
                           {tour.summary}
@@ -115,6 +137,15 @@ export default function TourApproval() {
                     </td>
                     <td className="py-3.5 px-4 align-middle text-right">
                       <div className="tour-duyet__thao-tac">
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-zinc-200 hover:bg-zinc-100 text-zinc-700 text-xs font-medium rounded-lg shadow-xs transition-colors cursor-pointer"
+                          onClick={() => setXemTourId(tour.id)}
+                          title="Xem toàn bộ thông tin chi tiết tour"
+                        >
+                          <span className="material-symbols-outlined text-sm">visibility</span>
+                          <span>Chi tiết</span>
+                        </button>
                         <button
                           type="button"
                           className="inline-flex items-center gap-1 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium rounded-lg shadow-xs transition-colors cursor-pointer"
@@ -174,6 +205,16 @@ export default function TourApproval() {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Modal xem chi tiết tour của Admin */}
+      {xemTourId && (
+        <AdminTourDetailModal
+          tourId={xemTourId}
+          onClose={() => setXemTourId(null)}
+          onApprove={duyet}
+          onReject={tuChoiVoiLyDo}
+        />
       )}
     </div>
   );

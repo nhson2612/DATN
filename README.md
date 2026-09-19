@@ -29,7 +29,6 @@ dữ liệu: **toàn quốc**.
 | **Tìm & lọc** | Lọc theo điểm đến, nhóm, loại, từ khoá; phân trang | `GET /api/places/search` |
 | **Chi tiết địa điểm** | Ảnh, địa chỉ, điện thoại, link trang chính thức, địa điểm lân cận | `GET /api/places/{type}/{id}` |
 | **Yêu thích** | Lưu / bỏ / xem danh sách | `GET/POST/DELETE /api/favorites` |
-| **Yêu cầu đặt chỗ** | Khách gửi yêu cầu, admin xử lý | `POST /api/booking-requests`, `GET`, `PUT /{id}` |
 | Trợ lý AI | Hỏi đáp tiếng Việt → tìm địa điểm → trả lời + hiện lên bản đồ | `POST /api/chat` |
 | **Lịch trình AI** | Gợi ý lịch trình nhiều ngày quanh điểm đến, có tuyến đường | `POST /api/itineraries/recommend` |
 | Lịch trình | Xem, tạo, sửa, xoá lịch trình cá nhân | `GET/POST/PUT/DELETE /api/itineraries` |
@@ -68,7 +67,7 @@ dữ liệu: **toàn quốc**.
 web/                 React 19 + Vite + Tailwind CSS
    ├── src/pages/    Home, Destination, PlaceList, PlaceDetail, Tours, TourDetail,
    │                 Trips, TripPlanner, Assistant, Favorites, Admin
-   ├── src/components/  PlaceCard, Header, AuthModal, BookingForm,
+   ├── src/components/  PlaceCard, Header, AuthModal,
    │                    MiniMap, TripMap, SearchMap
    └── src/api/      client gọi backend
    │  HTTP + JSON
@@ -192,7 +191,7 @@ CSDL `gis_vietnam` — PostgreSQL + PostGIS + pgRouting.
 | `provinces_clean` | 55 | tính từ `boundaries` | Polygon tỉnh đã làm sạch (`ST_MakeValid`) |
 | `province_stats` | 55 | tính sẵn | Số địa điểm mỗi tỉnh — đếm trực tiếp mất 72s, nay 21ms |
 | `users`, `itineraries` | — | ứng dụng | Tài khoản và lịch trình |
-| `favorites`, `booking_requests` | — | ứng dụng | Yêu thích và yêu cầu đặt chỗ |
+| `favorites` | — | ứng dụng | Địa điểm yêu thích |
 | `place_photos` | — | Wikimedia | Ảnh địa điểm (cache, kèm ghi nguồn theo giấy phép) |
 
 **Hai nguồn dữ liệu bổ sung nhau:**

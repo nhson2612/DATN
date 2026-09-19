@@ -152,26 +152,6 @@ CREATE TABLE IF NOT EXISTS favorites (
 );
 CREATE INDEX IF NOT EXISTS favorites_user_idx ON favorites(user_id);
 
--- Yêu cầu đặt chỗ. KHÔNG có thanh toán và KHÔNG có giá: CSDL không có dữ liệu
--- giá phòng hay tình trạng phòng trống, nên hệ thống chỉ nhận yêu cầu rồi để
--- admin liên hệ lại — đúng cách các website du lịch nhỏ ở Việt Nam đang làm.
-CREATE TABLE IF NOT EXISTS booking_requests (
-    id         SERIAL PRIMARY KEY,
-    user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    place_type VARCHAR(20) NOT NULL,
-    place_id   INTEGER NOT NULL,
-    full_name  VARCHAR(255) NOT NULL,
-    phone      VARCHAR(50)  NOT NULL,
-    email      VARCHAR(255),
-    check_in   DATE,
-    check_out  DATE,
-    guests     INTEGER DEFAULT 1,
-    note       TEXT,
-    status     VARCHAR(20) DEFAULT 'moi',   -- moi | da_lien_he | huy
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-CREATE INDEX IF NOT EXISTS booking_requests_status_idx ON booking_requests(status);
-
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Tour trọn gói
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -272,6 +252,17 @@ CREATE TABLE IF NOT EXISTS tour_bookings (
 CREATE INDEX IF NOT EXISTS tour_bookings_status_idx ON tour_bookings(status);
 CREATE INDEX IF NOT EXISTS tour_bookings_code_idx   ON tour_bookings(code);
 
+CREATE TABLE IF NOT EXISTS booking_passengers (
+    id BIGSERIAL PRIMARY KEY,
+    booking_id INTEGER NOT NULL REFERENCES tour_bookings(id) ON DELETE CASCADE,
+    sequence_no INTEGER NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    UNIQUE (booking_id, sequence_no)
+);
+CREATE INDEX IF NOT EXISTS booking_passengers_booking_idx ON booking_passengers(booking_id);
+
 -- Nhật ký chuyển trạng thái booking (BR-L2): lưu vết mọi lần đổi trạng thái.
 CREATE TABLE IF NOT EXISTS booking_status_history (
     id          BIGSERIAL PRIMARY KEY,
@@ -290,7 +281,7 @@ CREATE INDEX IF NOT EXISTS booking_status_history_created_at_idx ON booking_stat
 CREATE TABLE IF NOT EXISTS payments (
     id           BIGSERIAL PRIMARY KEY,
     booking_id   INTEGER NOT NULL REFERENCES tour_bookings(id) ON DELETE CASCADE,
-    method       VARCHAR(30) NOT NULL, -- CHUYEN_KHOAN | TAI_VAN_PHONG | KHAC
+    method       VARCHAR(30) NOT NULL, -- STRIPE | CHUYEN_KHOAN | TAI_VAN_PHONG | KHAC
     amount       BIGINT NOT NULL,      -- VND
     status       VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     txn_ref      VARCHAR(100) UNIQUE,  -- PM-YYYYMMDD-NNNN
@@ -298,10 +289,16 @@ CREATE TABLE IF NOT EXISTS payments (
     confirmed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     confirmed_at TIMESTAMPTZ,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    stripe_session_id VARCHAR(255),
-    stripe_payment_intent_id VARCHAR(255),
+    provider VARCHAR(30),
+    provider_order_id VARCHAR(100),
+    provider_transaction_id VARCHAR(100),
+    provider_request_id VARCHAR(100),
     gateway_payload JSONB,
     needs_refund BOOLEAN NOT NULL DEFAULT FALSE,
+    refunded_at TIMESTAMPTZ,
+    refund_reference VARCHAR(255),
+    refund_request_id VARCHAR(100),
+    refund_payload JSONB,
     CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED', 'MISMATCH')),
     CHECK (amount >= 0)
 );
@@ -310,10 +307,10 @@ CREATE INDEX IF NOT EXISTS payments_status_idx     ON payments(status);
 CREATE UNIQUE INDEX IF NOT EXISTS payments_booking_success_unique_idx
     ON payments(booking_id)
     WHERE status = 'SUCCESS';
-CREATE UNIQUE INDEX IF NOT EXISTS payments_stripe_session_unique_idx
-    ON payments(stripe_session_id) WHERE stripe_session_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS payments_stripe_intent_idx
-    ON payments(stripe_payment_intent_id) WHERE stripe_payment_intent_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS payments_provider_order_unique_idx
+    ON payments(provider, provider_order_id) WHERE provider_order_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS payments_provider_transaction_idx
+    ON payments(provider, provider_transaction_id) WHERE provider_transaction_id IS NOT NULL;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -333,6 +330,7 @@ CREATE TABLE IF NOT EXISTS place_enrichments (
     rating       JSONB,
     review_highlights JSONB NOT NULL DEFAULT '[]'::jsonb,
     images       JSONB NOT NULL DEFAULT '[]'::jsonb,
+    contact      JSONB NOT NULL DEFAULT '{}'::jsonb,
     sources      JSONB NOT NULL DEFAULT '[]'::jsonb,
     raw_response JSONB,
     fetched_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

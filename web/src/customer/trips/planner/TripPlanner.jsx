@@ -501,103 +501,6 @@ export default function TripPlanner({ user, onNeedAuth }) {
 
   return (
     <main className="trip-planner">
-      {/* ====================================================================
-          TOP NAVBAR CHUẨN WANDERLOG (ảnh w1.png - w5.png)
-          ==================================================================== */}
-      <header className="trip-planner__header">
-        <div className="trip-planner__header-left">
-          {/* Logo Wanderlog / Nút quay lại */}
-          <button
-            onClick={() => nav("/chuyen-di")}
-            aria-label="Về danh sách chuyến"
-            className="trip-planner__logo-btn"
-            title="Quay lại danh sách chuyến đi"
-          >
-            <div className="trip-planner__logo-mark">
-              <span className="material-symbols-outlined text-[20px] text-[#ff5a36]">
-                all_inclusive
-              </span>
-            </div>
-          </button>
-
-          {/* Trạng thái SAVED */}
-          <div className="trip-planner__saved-badge">
-            <span>SAVED</span>
-          </div>
-
-          {/* Nút Undo / Redo */}
-          <div className="trip-planner__history-actions">
-            <button
-              type="button"
-              className="trip-planner__history-btn"
-              title="Hoàn tác (Undo)"
-              onClick={() => {}}
-            >
-              <span className="material-symbols-outlined text-[18px]">undo</span>
-              <span>Undo</span>
-            </button>
-            <button
-              type="button"
-              className="trip-planner__history-btn"
-              title="Làm lại (Redo)"
-              onClick={() => {}}
-            >
-              <span className="material-symbols-outlined text-[18px]">redo</span>
-              <span>Redo</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="trip-planner__header-right">
-          {/* Nút Trip plan ▾ */}
-          <button
-            type="button"
-            className="trip-planner__plan-menu-btn"
-            onClick={() => {}}
-          >
-            <span className="material-symbols-outlined text-[18px]">menu_book</span>
-            <span>Trip plan</span>
-            <span className="material-symbols-outlined text-[16px]">arrow_drop_down</span>
-          </button>
-
-          {/* Nút Share đen bo tròn */}
-          <button
-            type="button"
-            onClick={() => {
-              navigator.clipboard?.writeText(window.location.href);
-              alert("Đã sao chép đường dẫn chuyến đi!");
-            }}
-            className="trip-planner__share-btn"
-          >
-            <span className="material-symbols-outlined text-[18px]">reply</span>
-            <span>Share</span>
-          </button>
-
-          {/* Các nút view icons (ảnh, danh sách, menu) */}
-          <button
-            type="button"
-            className="trip-planner__header-icon-btn"
-            title="Bộ sưu tập ảnh"
-          >
-            <span className="material-symbols-outlined text-[19px]">photo_library</span>
-          </button>
-          <button
-            type="button"
-            className="trip-planner__header-icon-btn"
-            title="Dạng danh sách"
-          >
-            <span className="material-symbols-outlined text-[19px]">format_list_bulleted</span>
-          </button>
-          <button
-            type="button"
-            className="trip-planner__header-icon-btn"
-            title="Thao tác khác"
-          >
-            <span className="material-symbols-outlined text-[19px]">more_horiz</span>
-          </button>
-        </div>
-      </header>
-
       {loi && (
         <p className="trip-planner__alert">
           <span>{loi}</span>
@@ -618,7 +521,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
             : `210px ${sidebarWidth}px 12px 1fr`,
         }}
       >
-        {/* 1. PLANNER RAIL: Sidebar điều hướng Wanderlog */}
+        {/* 1. PLANNER RAIL: Sidebar điều hướng */}
         <PlannerRail
           sections={sections}
           theoMuc={theoMuc}
@@ -630,6 +533,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
           onOpenAssistant={() => setOpenAssistantModal(true)}
           onToggleSidebar={() => setIsRailCollapsed(!isRailCollapsed)}
           isCollapsed={isRailCollapsed}
+          nav={nav}
         />
 
         {/* 2. DẢI NỘI DUNG DÀI (Continuous Feed) */}

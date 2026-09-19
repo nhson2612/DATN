@@ -13,12 +13,29 @@ export default function PlannerLodgingPicker({
   ds,
   choNgu,
   diemDen,
+  startDate,
   onDat,
   onBo,
 }) {
   const [mo, setMo] = useState(false);
   const [ganDay, setGanDay] = useState(null);
   const [dangTai, setDangTai] = useState(false);
+
+  const bookingSearchUrl = useMemo(() => {
+    if (!diemDen) return null;
+    const url = new URL("https://www.booking.com/searchresults.html");
+    url.searchParams.set("ss", diemDen);
+    if (startDate) {
+      const checkin = new Date(`${startDate}T00:00:00`);
+      checkin.setDate(checkin.getDate() + ngay - 1);
+      const checkout = new Date(checkin);
+      checkout.setDate(checkout.getDate() + 1);
+      const formatDate = (date) => date.toISOString().slice(0, 10);
+      url.searchParams.set("checkin", formatDate(checkin));
+      url.searchParams.set("checkout", formatDate(checkout));
+    }
+    return url.toString();
+  }, [diemDen, ngay, startDate]);
 
   // Tính tọa độ trung tâm của các địa điểm trong ngày để tìm khách sạn lân cận
   const tam = useMemo(() => {
@@ -109,6 +126,17 @@ export default function PlannerLodgingPicker({
             Đóng
           </button>
         </div>
+
+        {bookingSearchUrl && (
+          <a
+            href={bookingSearchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="planner-lodging-picker__booking-link"
+          >
+            Tìm phòng trên Booking.com
+          </a>
+        )}
 
         {!tam ? (
           <>

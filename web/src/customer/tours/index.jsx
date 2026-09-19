@@ -1,55 +1,116 @@
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../../shared/api";
-import TourCard from "./components/TourCard";
-import TourFilters from "./components/TourFilters";
-import ToursHero from "./components/ToursHero";
-import ToursToolbar from "./components/ToursToolbar";
+import Dropdown from "../../shared/common/Dropdown";
+import VoyageDrawer from "../../shared/layout/VoyageDrawer";
+import "../trips/home/Home.css";
 import "./Tours.css";
 
+function cleanText(str) {
+  if (!str) return "";
+  return String(str).replaceAll("—", " - ").replaceAll("–", "-");
+}
+
+function formatVnDate(dateStr) {
+  if (!dateStr) return "";
+  const parts = String(dateStr).split("T")[0].split("-");
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+}
+
 /**
- * Trang danh sách tour trọn gói (Tours Page).
- * Tách từ .design/Tours.html:
- * - Khối 1: HeroSection (ToursHero) gồm Banner, Search Bar, Trust Badges
- * - Khối 2: FilterSidebar (TourFilters) 3 cột bên trái
- * - Khối 3: TourCatalogSection gồm Toolbar (ToursToolbar) + Lưới thẻ tour (TourCard) 9 cột bên phải
- * Quản lý toàn bộ URL search params, skeleton loading và empty state.
+ * Trang danh sách tour trọn gói (Explore Tours) chuẩn thiết kế index.html
  */
-export default function Tours() {
+export default function Tours({ user, onNeedAuth, onLogout }) {
   const [sp, setSp] = useSearchParams();
   const [provinces, setProvinces] = useState([]);
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [viewMode, setViewMode] = useState("grid");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isNavSearchOpen, setIsNavSearchOpen] = useState(false);
+  const [navSearchQuery, setNavSearchQuery] = useState("");
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isSticky, setIsSticky] = useState(false);
+  const heroRef = useRef(null);
+  const searchbarRef = useRef(null);
+  const navSearchRef = useRef(null);
+  const navSearchInputRef = useRef(null);
+  const screenRef = useRef(null);
+  const rafRef = useRef(null);
 
-  // Đọc các giá trị lọc từ URL search params
+  // Đóng thanh tìm kiếm trên navbar khi click ra ngoài
+  useEffect(() => {
+    function handleNavSearchClickOutside(event) {
+      if (
+        navSearchRef.current &&
+        !navSearchRef.current.contains(event.target)
+      ) {
+        setIsNavSearchOpen(false);
+      }
+    }
+    if (isNavSearchOpen) {
+      document.addEventListener("mousedown", handleNavSearchClickOutside);
+    }
+    return () =>
+      document.removeEventListener("mousedown", handleNavSearchClickOutside);
+  }, [isNavSearchOpen]);
+
+  const handleNavSearchSubmit = (e) => {
+    e?.preventDefault();
+    if (navSearchQuery.trim()) {
+      updateParam("q", navSearchQuery.trim());
+      setIsNavSearchOpen(false);
+    }
+  };
+
+  // Xử lý cuộn mượt mà bằng requestAnimationFrame: loại bỏ hoàn toàn giật rung
+  const handleScroll = () => {
+    const scrollTop = screenRef.current?.scrollTop || 0;
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    rafRef.current = requestAnimationFrame(() => {
+      const threshold = 240;
+      const progress = Math.min(1, Math.max(0, scrollTop / threshold));
+      setScrollProgress(progress);
+      setIsSticky(scrollTop >= threshold);
+    });
+  };
+
+  // Reset scroll về đầu khi vào trang và lắng nghe scroll trên container chính
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (screenRef.current) {
+      screenRef.current.scrollTop = 0;
+    }
+    setScrollProgress(0);
+    setIsSticky(false);
+
+    const el = screenRef.current;
+    if (el) {
+      el.addEventListener("scroll", handleScroll, { passive: true });
+    }
+    return () => {
+      if (el) el.removeEventListener("scroll", handleScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  // Bộ lọc từ URL
   const provinceId = sp.get("province_id") || "";
   const departFrom = sp.get("depart_from") || "";
-  const departTo = sp.get("depart_to") || "";
-  const priceMin = sp.get("price_min") || "";
-  const priceMax = sp.get("price_max") || sp.get("max_price") || "";
   const maxDays = sp.get("max_days") || "";
-  const minDays = sp.get("min_days") || "";
-  const guests = sp.get("guests") || "";
+  const priceMax = sp.get("price_max") || sp.get("max_price") || "";
+  const guests = sp.get("guests") || "2";
   const sort = sp.get("sort") || "";
+  const q = sp.get("q") || "";
 
-  // Gom các filter thành một object để truyền xuống component con
-  const filters = useMemo(
-    () => ({
-      province_id: provinceId,
-      depart_from: departFrom,
-      depart_to: departTo,
-      price_min: priceMin,
-      price_max: priceMax,
-      max_days: maxDays,
-      min_days: minDays,
-      guests: guests,
-    }),
-    [provinceId, departFrom, departTo, priceMin, priceMax, maxDays, minDays, guests]
-  );
 
-  // Tải danh sách tỉnh/thành có tour phục vụ bộ lọc
+
+
+  // Tải danh sách tỉnh/thành
   useEffect(() => {
     let mounted = true;
     api.tourProvinces()
@@ -64,19 +125,17 @@ export default function Tours() {
     };
   }, []);
 
-  // Tải danh sách tour theo bộ lọc từ backend
+  // Tải danh sách tour
   useEffect(() => {
     setIsLoading(true);
     const queryParams = {
       province_id: provinceId,
       depart_from: departFrom,
-      depart_to: departTo,
-      price_min: priceMin,
-      price_max: priceMax,
       max_days: maxDays,
-      min_days: minDays,
+      price_max: priceMax,
       guests: guests,
       sort: sort,
+      q: q,
     };
 
     api.tours(queryParams)
@@ -89,172 +148,426 @@ export default function Tours() {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [provinceId, departFrom, departTo, priceMin, priceMax, maxDays, minDays, guests, sort]);
+  }, [provinceId, departFrom, maxDays, priceMax, guests, sort, q]);
 
-  // Đếm số lượng điều kiện lọc đang được kích hoạt
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (provinceId) count++;
-    if (departFrom) count++;
-    if (departTo) count++;
-    if (priceMin || priceMax) count++;
-    if (maxDays || minDays) count++;
-    if (guests && guests !== "1") count++;
-    return count;
-  }, [provinceId, departFrom, departTo, priceMin, priceMax, maxDays, minDays, guests]);
-
-  // Cập nhật bộ lọc lên URL
-  const handleUpdateFilter = (updates) => {
+  const updateParam = (key, value) => {
     const next = Object.fromEntries(sp);
-    Object.entries(updates).forEach(([key, val]) => {
-      if (val === "" || val == null) {
-        delete next[key];
-        if (key === "price_max") delete next["max_price"];
-      } else {
-        next[key] = String(val);
-        if (key === "price_max") delete next["max_price"];
-      }
-    });
-    setSp(next);
-  };
-
-  // Gỡ bỏ một hoặc nhiều điều kiện lọc cụ thể
-  const handleRemoveFilter = (keys) => {
-    const next = Object.fromEntries(sp);
-    keys.forEach((k) => {
-      delete next[k];
-      if (k === "price_max") delete next["max_price"];
-    });
-    setSp(next);
-  };
-
-  // Cập nhật sắp xếp
-  const handleSortChange = (newSort) => {
-    const next = Object.fromEntries(sp);
-    if (!newSort) {
-      delete next.sort;
+    if (!value) {
+      delete next[key];
     } else {
-      next.sort = newSort;
+      next[key] = String(value);
     }
     setSp(next);
   };
 
-  // Đặt lại toàn bộ bộ lọc
-  const handleResetFilters = () => {
-    const next = {};
-    if (sort) next.sort = sort;
-    setSp(next);
+  const handleSearchSubmit = (e) => {
+    e?.preventDefault();
+    // Search is reactive through sp state
+  };
+
+  const totalTours = data?.total || data?.items?.length || 0;
+
+  // Hiệu ứng mờ dần từ dưới lên khi cuộn chuột
+  const maskGradient =
+    scrollProgress > 0.02
+      ? (() => {
+          const maskBottom = Math.min(100, Math.max(0, scrollProgress * 115 - 15));
+          const maskTop = Math.min(100, maskBottom + 30);
+          return `linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,0) ${maskBottom.toFixed(1)}%, rgba(0,0,0,1) ${maskTop.toFixed(1)}%, rgba(0,0,0,1) 100%)`;
+        })()
+      : undefined;
+
+  const heroBgStyle = {
+    opacity: Math.max(0, 1 - scrollProgress * 1.05),
+    filter: scrollProgress > 0.02 ? `blur(${(scrollProgress * 6).toFixed(1)}px)` : undefined,
+    transform: scrollProgress > 0.01 ? `translateY(${(scrollProgress * 16).toFixed(1)}px)` : undefined,
+    ...(maskGradient ? { WebkitMaskImage: maskGradient, maskImage: maskGradient } : {}),
+    visibility: scrollProgress >= 1 ? "hidden" : "visible",
+  };
+
+  const heroOverlayStyle = {
+    opacity: Math.max(0, 1 - scrollProgress * 1.15),
+    ...(maskGradient ? { WebkitMaskImage: maskGradient, maskImage: maskGradient } : {}),
+    visibility: scrollProgress >= 1 ? "hidden" : "visible",
+  };
+
+  const navFadeStyle = {
+    opacity: Math.max(0, 1 - scrollProgress * 1.3),
+    transform: scrollProgress > 0.01 ? `translateY(${(-scrollProgress * 14).toFixed(1)}px)` : undefined,
+    visibility: scrollProgress >= 0.95 ? "hidden" : "visible",
+  };
+
+  const heroContentStyle = {
+    opacity: Math.max(0, 1 - scrollProgress * 1.5),
+    transform: scrollProgress > 0.01 ? `translateY(${(-scrollProgress * 20).toFixed(1)}px)` : undefined,
+    visibility: scrollProgress >= 0.75 ? "hidden" : "visible",
   };
 
   return (
-    <div className="tours-page">
-      {/* KHỐI 1: HERO SECTION theo .design/Tours.html (dòng 50-81) */}
-      <div className="tours-page__hero-pane">
-        <ToursHero
-          provinces={provinces}
-          selectedProvinceId={provinceId}
-          onSelectProvince={(pId) => handleUpdateFilter({ province_id: pId })}
-        />
-      </div>
+    <section className="tours-screen" ref={screenRef} onScroll={handleScroll}>
+      {/* 1. Khối Hero Banner tích hợp Navbar chuẩn Homepage & Hero Copy cùng mờ dần khi cuộn */}
+      <div
+        className="page-hero"
+        ref={heroRef}
+        style={{
+          visibility: scrollProgress >= 1 ? "hidden" : "visible",
+          pointerEvents: scrollProgress >= 0.9 ? "none" : "auto",
+        }}
+      >
+          <div
+            className="page-hero-bg"
+            style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=2000&q=88')",
+              ...heroBgStyle,
+            }}
+          />
+          <div className="page-hero-overlay" style={heroOverlayStyle} />
 
-      {/* KHỐI 2 & 3: FILTER CỐ ĐỊNH + DANH SÁCH TOUR CUỘN RIÊNG */}
-      <div className="tours-page__body">
-        <TourFilters
-          filters={filters}
-          provinces={provinces}
-          onFilterChange={handleUpdateFilter}
-          onReset={handleResetFilters}
-          activeCount={activeFilterCount}
-          isOpenMobile={isMobileFilterOpen}
-          onCloseMobile={() => setIsMobileFilterOpen(false)}
-        />
+          <div className="page-hero-inner tours-shell">
+            {/* 1. Header Navigation Bar chuẩn Homepage (cũng mờ dần khi cuộn) */}
+            <header className="voyage-nav" style={navFadeStyle}>
+              <Link to="/" className="voyage-brand">
+                Voyage
+              </Link>
 
-        <main id="tours-catalog" className="tours-page__scroll">
-          <div className="tours-page__container">
-            {/* THANH CÔNG CỤ: Số lượng, Sắp xếp, View mode, Active tags */}
-            <ToursToolbar
-              total={data?.total || data?.items?.length || 0}
-              isLoading={isLoading}
-              sort={sort}
-              onSortChange={handleSortChange}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              filters={filters}
-              provinces={provinces}
-              onRemoveFilter={handleRemoveFilter}
-              onReset={handleResetFilters}
-              onOpenMobileFilters={() => setIsMobileFilterOpen(true)}
-              activeCount={activeFilterCount}
-            />
+              <nav className="voyage-navlinks">
+                <Link to="/" className="voyage-navlink">
+                  Destinations
+                </Link>
+                <Link to="/tour" className="voyage-navlink voyage-navlink--active">
+                  Tours
+                </Link>
+                <Link to="/chuyen-di" className="voyage-navlink">
+                  Experiences
+                </Link>
+              </nav>
 
-            {/* Trạng thái tải: Skeleton Loading */}
-            {isLoading && (
-              <div className="tours-page__grid" aria-busy="true">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="tours-skeleton-card">
-                    <div className="tours-skeleton-media" />
-                    <div className="tours-skeleton-body">
-                      <div className="tours-skeleton-line-title" />
-                      <div className="tours-skeleton-line-feature" />
-                      <div
-                        className="tours-skeleton-line-feature"
-                        style={{ width: "50%" }}
-                      />
-                    </div>
-                    <div className="tours-skeleton-footer">
-                      <div className="tours-skeleton-price" />
-                      <div className="tours-skeleton-btn" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Trạng thái rỗng (Empty state) */}
-            {!isLoading && (!data?.items || data.items.length === 0) && (
-              <div className="tours-empty">
-                <div className="w-16 h-16 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-500 mb-4">
-                  <i className="fa-solid fa-compass text-3xl" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">
-                  Không tìm thấy tour phù hợp
-                </h3>
-                <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed mb-6">
-                  Không có chuyến đi nào thoả mãn toàn bộ tiêu chí lọc hiện tại.
-                  Bạn hãy thử nới lỏng khoảng ngày, mức ngân sách hoặc chọn điểm đến khác nhé.
-                </p>
-                {activeFilterCount > 0 && (
+              <div className="voyage-actions">
+                {/* Expandable Search Bar extending left */}
+                <div
+                  className={`voyage-nav-search ${
+                    isNavSearchOpen ? "voyage-nav-search--open" : ""
+                  }`}
+                  ref={navSearchRef}
+                >
                   <button
                     type="button"
-                    onClick={handleResetFilters}
-                    className="px-6 py-2.5 bg-[#ea580c] hover:bg-orange-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-2 shadow-sm"
+                    className="voyage-nav-search-trigger"
+                    onClick={() => {
+                      if (!isNavSearchOpen) {
+                        setIsNavSearchOpen(true);
+                        setTimeout(() => navSearchInputRef.current?.focus(), 100);
+                      } else if (navSearchQuery.trim()) {
+                        handleNavSearchSubmit();
+                      } else {
+                        navSearchInputRef.current?.focus();
+                      }
+                    }}
+                    title="Search destinations & tours"
+                    aria-label="Search"
                   >
-                    <i className="fa-solid fa-rotate-left" />
-                    <span>Xóa toàn bộ bộ lọc</span>
+                    <span className="material-symbols-outlined text-[19px]">
+                      search
+                    </span>
                   </button>
-                )}
+
+                  <form
+                    className="voyage-nav-search-form"
+                    onSubmit={handleNavSearchSubmit}
+                  >
+                    <input
+                      ref={navSearchInputRef}
+                      type="text"
+                      className="voyage-nav-search-input"
+                      placeholder="Search destinations, tours..."
+                      value={navSearchQuery}
+                      onChange={(e) => setNavSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          setIsNavSearchOpen(false);
+                        }
+                      }}
+                      tabIndex={isNavSearchOpen ? 0 : -1}
+                    />
+                    {isNavSearchOpen && (
+                      <button
+                        type="button"
+                        className="voyage-nav-search-close"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsNavSearchOpen(false);
+                          setNavSearchQuery("");
+                        }}
+                        aria-label="Close search"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </form>
+                </div>
+
+                {/* Menu Hamburger */}
+                <button
+                  type="button"
+                  className="voyage-iconbtn"
+                  onClick={() => setIsDrawerOpen(true)}
+                  aria-label="Open menu"
+                  title="Menu"
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    menu
+                  </span>
+                </button>
+              </div>
+            </header>
+
+            {/* Hero Copy */}
+            <div className="page-hero-content" style={heroContentStyle}>
+              <h1>Explore tours</h1>
+              <p>Curated journeys to extraordinary places.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Floating Sticky Searchbar: Ghim luôn tại đỉnh khi hero & nav biến mất */}
+        <div
+          ref={searchbarRef}
+          className={`searchbar-sticky-outer ${isSticky ? "is-sticky" : ""}`}
+        >
+          <div className="tours-shell">
+            <form className="searchbar" onSubmit={handleSearchSubmit}>
+              {/* Destination */}
+              <div className="searchfield">
+                <Dropdown
+                  variant="searchfield"
+                  label="Destination"
+                  prefixIcon="⌖"
+                  value={provinceId}
+                  options={[
+                    { value: "", label: "Where to? (Tất cả)" },
+                    ...provinces.map((p) => ({
+                      value: String(p.id),
+                      label: p.name,
+                    })),
+                  ]}
+                  placeholder="Where to? (Tất cả)"
+                  onChange={(val) => updateParam("province_id", val)}
+                />
+              </div>
+
+              {/* Dates */}
+              <div className="searchfield">
+                <Dropdown
+                  variant="searchfield"
+                  label="Dates"
+                  prefixIcon="▣"
+                  value={departFrom}
+                  options={[
+                    { value: "", label: "Any dates (Tất cả)" },
+                    { value: "2026-04", label: "Tháng 4, 2026" },
+                    { value: "2026-05", label: "Tháng 5, 2026" },
+                    { value: "2026-06", label: "Tháng 6, 2026" },
+                    { value: "2026-07", label: "Tháng 7, 2026" },
+                  ]}
+                  placeholder="Any dates (Tất cả)"
+                  onChange={(val) => updateParam("depart_from", val)}
+                />
+              </div>
+
+              {/* Travellers */}
+              <div className="searchfield">
+                <Dropdown
+                  variant="searchfield"
+                  label="Travellers"
+                  prefixIcon="♙"
+                  value={guests}
+                  options={[
+                    { value: "1", label: "1 traveller" },
+                    { value: "2", label: "2 travellers" },
+                    { value: "3", label: "3 travellers" },
+                    { value: "4", label: "4+ travellers" },
+                  ]}
+                  placeholder="2 travellers"
+                  onChange={(val) => updateParam("guests", val)}
+                />
+              </div>
+
+              <button type="submit" className="searchbtn" aria-label="Search tours">
+                <span className="material-symbols-outlined">search</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* 3. Tour Content Area: Cuộn mượt mà bên dưới thanh search đã ghim */}
+        <div className="tours-shell">
+          <div className="tours-content">
+          {/* Minimalist Editorial Filterbar (No pills/chips) */}
+          <div className="filterbar">
+            <div className="filterbar-group">
+              {/* Duration */}
+              <Dropdown
+                variant="minimal"
+                value={maxDays}
+                placeholder="Duration"
+                options={[
+                  { value: "", label: "Duration (Tất cả)" },
+                  { value: "3", label: "Dưới 3 ngày" },
+                  { value: "5", label: "Dưới 5 ngày" },
+                  { value: "7", label: "Dưới 7 ngày" },
+                ]}
+                onChange={(val) => updateParam("max_days", val)}
+              />
+
+              {/* Budget */}
+              <Dropdown
+                variant="minimal"
+                value={priceMax}
+                placeholder="Budget"
+                options={[
+                  { value: "", label: "Budget (Tất cả)" },
+                  { value: "3000000", label: "Dưới 3 triệu" },
+                  { value: "6000000", label: "Dưới 6 triệu" },
+                  { value: "10000000", label: "Dưới 10 triệu" },
+                ]}
+                onChange={(val) => updateParam("price_max", val)}
+              />
+
+              {/* Sort by */}
+              <Dropdown
+                variant="minimal"
+                value={sort}
+                placeholder="Sort by"
+                options={[
+                  { value: "", label: "Sort by (Mặc định)" },
+                  { value: "price_asc", label: "Giá: Thấp đến cao" },
+                  { value: "price_desc", label: "Giá: Cao đến thấp" },
+                  { value: "newest", label: "Mới nhất" },
+                ]}
+                onChange={(val) => updateParam("sort", val)}
+              />
+
+              {(provinceId || departFrom || maxDays || priceMax || sort || q) && (
+                <button
+                  type="button"
+                  className="filter-reset-btn"
+                  onClick={() => setSp({})}
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+
+            <div className="filterbar-count">
+              <span>{totalTours}</span> {totalTours === 1 ? "tour" : "tours"}
+            </div>
+          </div>
+
+          {/* Tour List */}
+          <div className="tour-list">
+            {/* Loading Skeleton */}
+            {isLoading &&
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="tour-row-skeleton" aria-busy="true">
+                  <div className="skeleton-img" />
+                  <div className="skeleton-content">
+                    <div className="skeleton-line-title" />
+                    <div className="skeleton-line-meta" />
+                    <div className="skeleton-line-desc" />
+                  </div>
+                  <div className="skeleton-price" />
+                  <div className="skeleton-btn" />
+                </div>
+              ))}
+
+            {/* Empty State */}
+            {!isLoading && (!data?.items || data.items.length === 0) && (
+              <div className="tours-empty-box">
+                <h3>Không tìm thấy tour phù hợp</h3>
+                <p>
+                  Hiện không có tour nào khớp với bộ lọc đã chọn. Hãy thử chọn điểm
+                  đến hoặc khoảng thời gian khác.
+                </p>
+                <button
+                  type="button"
+                  className="chip active"
+                  onClick={() => setSp({})}
+                >
+                  Xem tất cả tour
+                </button>
               </div>
             )}
 
-            {/* Lưới / Danh sách các thẻ tour */}
-            {!isLoading && data?.items?.length > 0 && (
-              <div
-                className={
-                  viewMode === "list" ? "tours-page__list" : "tours-page__grid"
-                }
-              >
-                {data.items.map((tour) => (
-                  <TourCard
+            {/* Real Tour Rows */}
+            {!isLoading &&
+              data?.items?.map((tour) => {
+                const cleanProvince =
+                  tour.province_name?.replace(/^(Thành phố|Tỉnh)\s+/, "") ||
+                  "Việt Nam";
+                const durationText = tour.duration_days
+                  ? `${tour.duration_days} Days`
+                  : "Flexible";
+                const departureText = tour.ngay_gan_nhat
+                  ? `Khởi hành: ${formatVnDate(tour.ngay_gan_nhat)}`
+                  : "Khởi hành hàng tuần";
+                const priceFormatted = Number(tour.price_from || 0).toLocaleString(
+                  "vi-VN"
+                );
+
+                return (
+                  <Link
                     key={tour.id}
-                    tour={tour}
-                    viewMode={viewMode}
-                  />
-                ))}
-              </div>
-            )}
+                    to={`/tour/${tour.slug || tour.id}`}
+                    className="tour-row"
+                  >
+                    <img
+                      src={
+                        tour.cover_url ||
+                        "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=600&q=80"
+                      }
+                      alt={cleanText(tour.name)}
+                      loading="lazy"
+                    />
+
+                    <div>
+                      <h3>{cleanText(tour.name)}</h3>
+                      <div className="tour-meta">
+                        <span>{cleanProvince}</span>
+                        <span>·</span>
+                        <span>{durationText}</span>
+                        <span>·</span>
+                        <span>{departureText}</span>
+                      </div>
+                      <div className="tour-desc">
+                        {cleanText(tour.summary || tour.description) ||
+                          "Khám phá cảnh sắc ngoạn mục và những trải nghiệm văn hóa bản địa độc đáo cùng chuyến đi được thiết kế kỹ lưỡng."}
+                      </div>
+                    </div>
+
+                    <div className="price">
+                      {priceFormatted}đ
+                      <small>per person</small>
+                    </div>
+
+                    <div className="round-go">
+                      <span className="material-symbols-outlined">arrow_forward</span>
+                    </div>
+                  </Link>
+                );
+              })}
           </div>
-        </main>
+        </div>
       </div>
-    </div>
+
+      {/* 5. Slide-out Menu Drawer dùng chung */}
+      <VoyageDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        user={user}
+        onNeedAuth={onNeedAuth}
+        onLogout={onLogout}
+      />
+    </section>
   );
 }

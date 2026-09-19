@@ -25,6 +25,7 @@ export default function TourBookingWizard({
   // Đợt khởi hành và số khách
   const [selectedDeparture, setSelectedDeparture] = useState(null);
   const [guests, setGuests] = useState(initialGuests || 1);
+  const [passengers, setPassengers] = useState([]);
 
   // Thông tin liên hệ
   const [contact, setContact] = useState({
@@ -47,7 +48,7 @@ export default function TourBookingWizard({
   const [bookingResult, setBookingResult] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
 
-  // State thanh toán Stripe / Thủ công (Phase 3)
+  // State thanh toán Stripe / chuyển khoản
   const [checkoutError, setCheckoutError] = useState("");
   const [isCreatingStripe, setIsCreatingStripe] = useState(false);
   const [isCreatingManual, setIsCreatingManual] = useState(false);
@@ -61,6 +62,7 @@ export default function TourBookingWizard({
     if (!open || !tour) return;
 
     setStep(1);
+    setPassengers(Array.from({ length: Math.max(1, Number(initialGuests) || 1) }, () => ({ full_name: "", phone: "", email: "" })));
     setErrorMessage("");
     setIsSoldOutError(false);
     setPriceAlert(null);
@@ -162,6 +164,7 @@ export default function TourBookingWizard({
     const max = selectedDeparture ? selectedDeparture.seats_left : 20;
     const next = Math.max(1, Math.min(max, guests + delta));
     setGuests(next);
+    setPassengers((prev) => Array.from({ length: next }, (_, index) => prev[index] || ({ full_name: "", phone: "", email: "" })));
   };
 
   const handleInputChange = (field) => (e) => {
@@ -196,6 +199,10 @@ export default function TourBookingWizard({
     }
     if (!/^[0-9+\s\-()]{8,15}$/.test(cleanPhone)) {
       setErrorMessage("Số điện thoại không hợp lệ, vui lòng kiểm tra lại.");
+      return;
+    }
+    if (passengers.length !== guests || passengers.some((p) => !p.full_name.trim())) {
+      setErrorMessage("Vui lòng nhập họ tên cho từng hành khách.");
       return;
     }
 
@@ -252,6 +259,7 @@ export default function TourBookingWizard({
         phone: contact.phone.trim(),
         email: contact.email?.trim() || null,
         guests: Number(guests) || 1,
+        passengers: passengers.map((p) => ({ ...p, full_name: p.full_name.trim(), phone: p.phone.trim() || null, email: p.email.trim() || null })),
         note: contact.note?.trim() || null,
       };
 
@@ -277,7 +285,6 @@ export default function TourBookingWizard({
     }
   };
 
-  // Xử lý thanh toán thẻ qua Stripe Checkout (Phase 3)
   const handlePayByStripe = async () => {
     if (!bookingResult?.id) return;
     setCheckoutError("");
@@ -287,10 +294,10 @@ export default function TourBookingWizard({
       if (res?.checkout_url) {
         window.location.assign(res.checkout_url);
       } else {
-        setCheckoutError("Không nhận được đường dẫn thanh toán từ Stripe.");
+        setCheckoutError("Không nhận được liên kết thanh toán Stripe.");
       }
     } catch (err) {
-      setCheckoutError(err.message || "Không thể kết nối cổng thanh toán Stripe. Vui lòng thử lại hoặc chọn chuyển khoản.");
+      setCheckoutError(err.message || "Không thể kết nối Stripe. Vui lòng thử lại hoặc chọn chuyển khoản.");
     } finally {
       setIsCreatingStripe(false);
     }
@@ -346,19 +353,16 @@ export default function TourBookingWizard({
 
   return (
     <div
-      className="tour-booking-wizard__backdrop"
+      className="voyage-drawer-overlay tour-booking-wizard__backdrop"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
       aria-labelledby="wizard-title"
     >
-      <div className="tour-booking-wizard">
+      <div className="voyage-drawer tour-booking-wizard">
         {/* Header Wizard */}
         <header className="tour-booking-wizard__header">
           <div className="tour-booking-wizard__header-main">
-            <span className="material-symbols-outlined tour-booking-wizard__header-icon">
-              luggage
-            </span>
             <div className="tour-booking-wizard__header-text">
               <h2 id="wizard-title" className="tour-booking-wizard__title">
                 {step === 4 ? "Đặt tour thành công" : "Đặt tour du lịch"}
@@ -368,11 +372,11 @@ export default function TourBookingWizard({
           </div>
           <button
             type="button"
-            className="tour-booking-wizard__close-btn"
+            className="voyage-drawer-close tour-booking-wizard__close-btn"
             onClick={onClose}
             aria-label="Đóng cửa sổ đặt tour"
           >
-            <span className="material-symbols-outlined">close</span>
+            ×
           </button>
         </header>
 
@@ -452,11 +456,14 @@ export default function TourBookingWizard({
                       const hasSale = lPrice > effPrice;
 
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={dep.id}
                           className={`tour-booking-wizard__dep-card ${
                             isSelected ? "tour-booking-wizard__dep-card--selected" : ""
                           } ${isSoldOut ? "tour-booking-wizard__dep-card--disabled" : ""}`}
+                          aria-pressed={isSelected}
+                          disabled={isSoldOut}
                           onClick={() => {
                             if (!isSoldOut) {
                               setSelectedDeparture(dep);
@@ -496,7 +503,7 @@ export default function TourBookingWizard({
                               </span>
                             )}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -519,7 +526,7 @@ export default function TourBookingWizard({
                       disabled={guests <= 1}
                       aria-label="Giảm 1 khách"
                     >
-                      <span className="material-symbols-outlined">remove</span>
+                      −
                     </button>
                     <span className="tour-booking-wizard__stepper-value">{guests}</span>
                     <button
@@ -529,7 +536,7 @@ export default function TourBookingWizard({
                       disabled={!selectedDeparture || guests >= selectedDeparture.seats_left}
                       aria-label="Tăng 1 khách"
                     >
-                      <span className="material-symbols-outlined">add</span>
+                      +
                     </button>
                   </div>
                   <div className="tour-booking-wizard__guests-note">
@@ -621,6 +628,16 @@ export default function TourBookingWizard({
                     value={contact.email}
                     onChange={handleInputChange("email")}
                   />
+                </div>
+
+                <div className="tour-booking-wizard__field tour-booking-wizard__field--full">
+                  <label className="tour-booking-wizard__label">Danh sách hành khách</label>
+                  {passengers.map((passenger, index) => (
+                    <div className="tour-booking-wizard__form-grid" key={index}>
+                      <input className="tour-booking-wizard__input" placeholder={`Họ tên khách ${index + 1}`} value={passenger.full_name} onChange={(e) => setPassengers((prev) => prev.map((p, i) => i === index ? { ...p, full_name: e.target.value } : p))} />
+                      <input className="tour-booking-wizard__input" placeholder="Số điện thoại (nếu có)" value={passenger.phone} onChange={(e) => setPassengers((prev) => prev.map((p, i) => i === index ? { ...p, phone: e.target.value } : p))} />
+                    </div>
+                  ))}
                 </div>
 
                 <div className="tour-booking-wizard__field tour-booking-wizard__field--full">
@@ -844,8 +861,8 @@ export default function TourBookingWizard({
                         </>
                       ) : (
                         <>
-                          <span className="material-symbols-outlined">credit_card</span>
-                          <span>Thanh toán bằng thẻ qua Stripe</span>
+                          <span className="material-symbols-outlined">account_balance_wallet</span>
+                          <span>Thanh toán qua Stripe</span>
                         </>
                       )}
                     </button>

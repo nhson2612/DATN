@@ -32,6 +32,8 @@ backend/logs/
 *.pdf
 *.csv
 operator-live-dom.html
+/index.html
+/login.html
 backend/uploads/
 
 # Exclude screenshot images and downloaded assets
