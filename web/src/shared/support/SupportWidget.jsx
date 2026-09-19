@@ -22,7 +22,9 @@ function formatDate(dateStr) {
   if (!dateStr) return "";
   try {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    return `${day}-${month}`;
   } catch {
     return "";
   }
@@ -192,7 +194,6 @@ export default function SupportWidget({ user, onNeedAuth }) {
               ) : (
                 <div className="sp-header__avatar">
                   <span className="material-symbols-outlined text-white text-xl">headset_mic</span>
-                  <span className="sp-header__online-dot" />
                 </div>
               )}
 
@@ -280,9 +281,6 @@ export default function SupportWidget({ user, onNeedAuth }) {
                       className="sp-conversation-card"
                       onClick={() => setActive(item)}
                     >
-                      <div className="sp-conversation-card__icon">
-                        <span className="material-symbols-outlined text-blue-600 text-lg">forum</span>
-                      </div>
                       <div className="sp-conversation-card__main min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <strong className="sp-conversation-card__subject truncate">
@@ -297,15 +295,15 @@ export default function SupportWidget({ user, onNeedAuth }) {
                         <p className="sp-conversation-card__preview truncate">
                           {item.preview || "Chưa có tin nhắn nào"}
                         </p>
-                        {item.company_name && (
+                        <div className="sp-conversation-card__footer">
                           <span className="sp-conversation-card__tag">
-                            {item.company_name}
+                            {item.company_name || "Hỗ trợ khách hàng"}
                           </span>
-                        )}
+                          <span className="material-symbols-outlined sp-conversation-card__arrow" aria-hidden="true">
+                            arrow_forward
+                          </span>
+                        </div>
                       </div>
-                      <span className="material-symbols-outlined text-zinc-300 text-lg group-hover:text-blue-600 transition-colors">
-                        chevron_right
-                      </span>
                     </button>
                   ))}
                 </div>

@@ -146,17 +146,6 @@
   shrink: 0;
 }
 
-.sp-header__online-dot {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
-  background-color: #22c55e;
-  border: 2px solid #1d4ed8;
-}
-
 .sp-header__info {
   min-width: 0;
   flex: 1;
@@ -191,19 +180,19 @@
   height: 32px;
   border-radius: 10px;
   border: 0;
-  background: rgba(255, 255, 255, 0.16);
+  background: transparent;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s ease;
-  shrink: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
 }
 
 .sp-header__back-btn:hover,
 .sp-header__close-btn:hover {
-  background: rgba(255, 255, 255, 0.28);
+  opacity: 0.8;
 }
 
 /* 4. Thông báo lỗi */
@@ -273,69 +262,81 @@
 .sp-conversations {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .sp-conversation-card {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: block;
   padding: 12px 14px;
-  background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
   text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;
+  background: transparent;
 }
 
 .sp-conversation-card:hover {
-  border-color: #93c5fd;
-  background: #eff6ff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.08);
+  background: #f8fafc;
 }
 
-.sp-conversation-card__icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: #dbeafe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  shrink: 0;
+.sp-conversation-card__main {
+  width: 100%;
 }
 
 .sp-conversation-card__subject {
   display: block;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   color: #0f172a;
+  line-height: 1.3;
 }
 
 .sp-conversation-card__date {
   font-size: 11px;
   color: #94a3b8;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .sp-conversation-card__preview {
-  margin: 3px 0 0;
+  margin: 4px 0 8px;
   font-size: 12px;
+  line-height: 1.45;
   color: #64748b;
+}
+
+.sp-conversation-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .sp-conversation-card__tag {
   display: inline-block;
-  margin-top: 4px;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 600;
   color: #2563eb;
-  background: #eff6ff;
-  padding: 1px 6px;
   border-radius: 4px;
+  max-width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-conversation-card__arrow {
+  font-size: 16px;
+  color: #94a3b8;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.sp-conversation-card:hover .sp-conversation-card__arrow {
+  color: #2563eb;
+  transform: translateX(3px);
 }
 
 /* 8. Form tạo yêu cầu mới */
