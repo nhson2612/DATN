@@ -5,7 +5,7 @@ export default function RequirementChecklist({ tieuDe, muc }) {
       <span className="op-wizard__check-title">{tieuDe}</span>
       <ul className="op-wizard__check-list">
         {muc.map(({ nhan, dat }) => (
-          <li className={`op-wizard__check-item ${dat ? "op-wizard__check-item--done" : ""}`} key={nhan}>
+          <li className={`op-wizard__check-item    ${dat ? "op-wizard__check-item--done" : ""}`} key={nhan}>
             <span className="material-symbols-outlined">
               {dat ? "check_circle" : "radio_button_unchecked"}
             </span>

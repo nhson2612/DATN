@@ -121,21 +121,21 @@ export default function ToursScreen() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="op-tours__div-1">
       {/* 1. Tiêu đề trang chuẩn Shadcn Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+      <div className="op-tours__div-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Tour của tôi</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="op-tours__text-3">Tour của tôi</h1>
+          <p className="op-tours__text-4">
             Quản lý danh sách tour du lịch, theo dõi tiến độ duyệt và cấu hình thông tin mở bán.
           </p>
         </div>
         <button
           type="button"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white text-sm font-semibold rounded-lg shadow-sm transition-all cursor-pointer w-fit"
+          className="op-tours__button-5"
           onClick={() => setSearchParams({ action: "create" })}
         >
-          <span className="material-symbols-outlined text-lg">add</span>
+          <span className="material-symbols-outlined op-tours__span-6">add</span>
           <span>Tạo tour mới</span>
         </button>
       </div>
@@ -144,82 +144,82 @@ export default function ToursScreen() {
       <Toast message={message} onClose={() => setMessage("")} />
 
       {/* 2. Thẻ số liệu đo lường chuẩn Shadcn Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+      <div className="op-tours__div-7">
+        <div className="op-tours__div-8 op-tours__div-1">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng số tour</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{thongKe.tong}</p>
-            <p className="text-xs text-slate-400 mt-0.5">Tất cả tour trong hệ thống</p>
+            <p className="op-tours__text-9">Tổng số tour</p>
+            <p className="op-tours__text-10">{thongKe.tong}</p>
+            <p className="op-tours__text-11">Tất cả tour trong hệ thống</p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600">
-            <span className="material-symbols-outlined text-xl">map</span>
+          <div className="op-tours__div-12 op-tours__div-2">
+            <span className="material-symbols-outlined op-tours__span-13">map</span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="op-tours__div-14 op-tours__div-3">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Đã duyệt / Đang bán</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{thongKe.daDuyet}</p>
-            <p className="text-xs text-slate-400 mt-0.5">Sẵn sàng mở đợt khởi hành</p>
+            <p className="op-tours__text-15">Đã duyệt / Đang bán</p>
+            <p className="op-tours__text-16">{thongKe.daDuyet}</p>
+            <p className="op-tours__text-17">Sẵn sàng mở đợt khởi hành</p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-            <span className="material-symbols-outlined text-xl">verified</span>
+          <div className="op-tours__div-18 op-tours__div-4">
+            <span className="material-symbols-outlined op-tours__span-19">verified</span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="op-tours__div-20 op-tours__div-5">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Chờ duyệt</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{thongKe.choDuyet}</p>
-            <p className="text-xs text-slate-400 mt-0.5">Đang chờ ban quản trị xét duyệt</p>
+            <p className="op-tours__text-21">Chờ duyệt</p>
+            <p className="op-tours__text-22">{thongKe.choDuyet}</p>
+            <p className="op-tours__text-23">Đang chờ ban quản trị xét duyệt</p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
-            <span className="material-symbols-outlined text-xl">pending_actions</span>
+          <div className="op-tours__div-24 op-tours__div-6">
+            <span className="material-symbols-outlined op-tours__span-25">pending_actions</span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="op-tours__div-26 op-tours__div-7">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Bản nháp / Cần sửa</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{thongKe.canSua}</p>
-            <p className="text-xs text-slate-400 mt-0.5">Chưa gửi hoặc bị từ chối</p>
+            <p className="op-tours__text-27">Bản nháp / Cần sửa</p>
+            <p className="op-tours__text-28">{thongKe.canSua}</p>
+            <p className="op-tours__text-29">Chưa gửi hoặc bị từ chối</p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600">
-            <span className="material-symbols-outlined text-xl">edit_document</span>
+          <div className="op-tours__div-30 op-tours__div-8">
+            <span className="material-symbols-outlined op-tours__span-31">edit_document</span>
           </div>
         </div>
       </div>
 
       {/* 3. Thanh công cụ tìm kiếm và lọc (Shadcn Data Table Toolbar) */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
-        <div className="flex flex-wrap items-center gap-2.5 flex-1">
+      <div className="op-tours__div-32 op-tours__div-9">
+        <div className="op-tours__div-33">
           {/* Ô tìm kiếm từ khóa */}
-          <div className="relative flex-1 min-w-[220px] max-w-sm">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">
+          <div className="op-tours__div-34">
+            <span className="material-symbols-outlined op-tours__span-35">
               search
             </span>
             <input
               type="text"
               placeholder="Tìm theo tên tour, tóm tắt..."
-              className="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-800 transition"
+              className="op-tours__input-36 op-tours__input-10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
               <button
                 type="button"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                className="op-tours__button-37"
                 onClick={() => setSearch("")}
                 title="Xoá tìm kiếm"
               >
-                <span className="material-symbols-outlined text-sm">close</span>
+                <span className="material-symbols-outlined op-tours__span-38">close</span>
               </button>
             )}
           </div>
 
           {/* Lọc theo trạng thái */}
           <select
-            className="px-3 py-2 text-sm bg-slate-50 hover:bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-700 cursor-pointer"
+            className="op-tours__select-39 op-tours__select-11"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -233,7 +233,7 @@ export default function ToursScreen() {
 
           {/* Lọc theo điểm đến */}
           <select
-            className="px-3 py-2 text-sm bg-slate-50 hover:bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-700 cursor-pointer max-w-[200px]"
+            className="op-tours__select-40 op-tours__select-12"
             value={provinceFilter}
             onChange={(e) => setProvinceFilter(e.target.value)}
           >
@@ -248,7 +248,7 @@ export default function ToursScreen() {
           {(search || statusFilter || provinceFilter) && (
             <button
               type="button"
-              className="px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              className="op-tours__button-41"
               onClick={() => {
                 setSearch("");
                 setStatusFilter("");
@@ -260,68 +260,68 @@ export default function ToursScreen() {
           )}
         </div>
 
-        <div className="text-xs font-medium text-slate-500 whitespace-nowrap self-center">
-          Hiển thị <span className="font-semibold text-slate-800">{filteredTours.length}</span> / {tours.length} tour
+        <div className="op-tours__div-42">
+          Hiển thị <span className="op-tours__span-43">{filteredTours.length}</span> / {tours.length} tour
         </div>
       </div>
 
       {/* 4. Bảng dữ liệu chuẩn Shadcn Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
+      <div className="op-tours__div-44 op-tours__div-13">
+        <div className="op-tours__div-45">
+          <table className="op-tours__table-46">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                <th className="py-3 px-4 min-w-[280px]">Tour</th>
-                <th className="py-3 px-4 min-w-[140px]">Điểm đến</th>
-                <th className="py-3 px-4 min-w-[110px]">Thời lượng</th>
-                <th className="py-3 px-4 min-w-[110px]">Ngày tạo</th>
-                <th className="py-3 px-4 min-w-[130px]">Trạng thái</th>
-                <th className="py-3 px-4 text-right min-w-[180px]">Thao tác</th>
+              <tr className="op-tours__tr-47">
+                <th className="op-tours__th-48">Tour</th>
+                <th className="op-tours__th-49">Điểm đến</th>
+                <th className="op-tours__th-50">Thời lượng</th>
+                <th className="op-tours__th-51">Ngày tạo</th>
+                <th className="op-tours__th-52">Trạng thái</th>
+                <th className="op-tours__th-53">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="op-tours__table-body">
               {filteredTours.map((tour) => {
                 const ngayTao = tour.created_at
                   ? new Date(tour.created_at).toLocaleDateString("vi-VN")
                   : "—";
 
                 return (
-                  <tr key={tour.id} className="hover:bg-slate-50/70 transition-colors">
+                  <tr key={tour.id} className="op-tours__tr-54">
                     {/* Cột 1: Thông tin Tour + Thumbnail */}
-                    <td className="py-3.5 px-4 align-top">
-                      <div className="flex items-start gap-3">
+                    <td className="align-top op-tours__td-55">
+                      <div className="op-tours__div-56">
                         {tour.cover_url ? (
                           <img
                             src={tour.cover_url}
                             alt={tour.name}
-                            className="w-12 h-12 rounded-lg object-cover bg-slate-100 border border-slate-200 shrink-0"
+                            className="op-tours__img-57 op-tours__img-14"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.style.display = "none";
                             }}
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
-                            <span className="material-symbols-outlined text-xl">image</span>
+                          <div className="op-tours__div-58 op-tours__div-15">
+                            <span className="material-symbols-outlined op-tours__span-59">image</span>
                           </div>
                         )}
-                        <div className="min-w-0">
+                        <div className="op-tours__div-60">
                           <button
                             type="button"
-                            className="font-semibold text-slate-900 hover:text-blue-600 transition-colors text-left block truncate max-w-md cursor-pointer"
+                            className="op-tours__button-61"
                             onClick={() => moSua(tour)}
                             title={tour.name}
                           >
                             {tour.name}
                           </button>
                           {tour.summary && (
-                            <p className="text-xs text-slate-500 line-clamp-1 max-w-md mt-0.5" title={tour.summary}>
+                            <p className="op-tours__text-62" title={tour.summary}>
                               {tour.summary}
                             </p>
                           )}
                           {tour.status === "REJECTED" && tour.reject_reason && (
-                            <div className="inline-flex items-center gap-1 text-xs text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 mt-1 font-medium">
-                              <span className="material-symbols-outlined text-xs">info</span>
+                            <div className="op-tours__div-63 op-tours__div-16">
+                              <span className="material-symbols-outlined op-tours__span-64">info</span>
                               <span>Từ chối: {tour.reject_reason}</span>
                             </div>
                           )}
@@ -330,86 +330,86 @@ export default function ToursScreen() {
                     </td>
 
                     {/* Cột 2: Điểm đến */}
-                    <td className="py-3.5 px-4 align-middle">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium">
-                        <span className="material-symbols-outlined text-xs text-slate-500">location_on</span>
+                    <td className="align-middle op-tours__td-65">
+                      <span className="op-tours__span-66">
+                        <span className="material-symbols-outlined op-tours__span-67">location_on</span>
                         <span>{tenTinh(tour.province_id)}</span>
                       </span>
                     </td>
 
                     {/* Cột 3: Thời lượng */}
-                    <td className="py-3.5 px-4 align-middle">
-                      <span className="inline-flex items-center gap-1 text-slate-700 font-medium text-xs">
-                        <span className="material-symbols-outlined text-xs text-slate-400">schedule</span>
+                    <td className="align-middle op-tours__td-68">
+                      <span className="op-tours__span-69">
+                        <span className="material-symbols-outlined op-tours__span-70">schedule</span>
                         <span>{tour.duration_days} ngày</span>
                       </span>
                     </td>
 
                     {/* Cột 4: Ngày tạo */}
-                    <td className="py-3.5 px-4 align-middle text-xs text-slate-500">
+                    <td className="align-middle op-tours__td-71">
                       {ngayTao}
                     </td>
 
                     {/* Cột 5: Trạng thái chuẩn Shadcn Badge */}
-                    <td className="py-3.5 px-4 align-middle">
+                    <td className="align-middle op-tours__td-72">
                       {tour.status === "APPROVED" && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span className="op-tours__span-73 op-tours__span-17">
+                          <span className="op-tours__span-74"></span>
                           <span>Đã duyệt</span>
                         </span>
                       )}
                       {tour.status === "ACTIVE" && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span className="op-tours__span-75 op-tours__span-18">
+                          <span className="op-tours__span-76"></span>
                           <span>Đang bán</span>
                         </span>
                       )}
                       {tour.status === "PENDING_APPROVAL" && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                        <span className="op-tours__span-77 op-tours__span-19">
+                          <span className="op-tours__span-78"></span>
                           <span>Chờ duyệt</span>
                         </span>
                       )}
                       {tour.status === "DRAFT" && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                        <span className="op-tours__span-79 op-tours__span-20">
+                          <span className="op-tours__span-80"></span>
                           <span>Bản nháp</span>
                         </span>
                       )}
                       {tour.status === "REJECTED" && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                        <span className="op-tours__span-81 op-tours__span-21">
+                          <span className="op-tours__span-82"></span>
                           <span>Bị từ chối</span>
                         </span>
                       )}
                       {!["APPROVED", "ACTIVE", "PENDING_APPROVAL", "DRAFT", "REJECTED"].includes(tour.status) && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="op-tours__span-83 op-tours__span-22">
                           <span>{tour.status}</span>
                         </span>
                       )}
                     </td>
 
                     {/* Cột 6: Nhóm nút hành động */}
-                    <td className="py-3.5 px-4 align-middle text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="align-middle op-tours__td-84">
+                      <div className="op-tours__div-85">
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-md transition-colors shadow-xs cursor-pointer"
+                          className="op-tours__button-86 op-tours__button-23"
                           onClick={() => moSua(tour)}
                           title="Chỉnh sửa thông tin và lịch trình tour"
                         >
-                          <span className="material-symbols-outlined text-sm">edit</span>
+                          <span className="material-symbols-outlined op-tours__span-87">edit</span>
                           <span>Sửa</span>
                         </button>
 
                         {(tour.status === "DRAFT" || tour.status === "REJECTED") && (
                           <button
                             type="button"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors shadow-xs cursor-pointer"
+                            className="op-tours__button-88"
                             onClick={() => guiDuyet(tour)}
                             title="Gửi ban quản trị phê duyệt"
                           >
-                            <span className="material-symbols-outlined text-sm">send</span>
+                            <span className="material-symbols-outlined op-tours__span-89">send</span>
                             <span>Gửi duyệt</span>
                           </button>
                         )}
@@ -417,10 +417,10 @@ export default function ToursScreen() {
                         {(tour.status === "APPROVED" || tour.status === "ACTIVE") && (
                           <Link
                             to={`/nha-dieu-hanh/departures?tour_id=${tour.id}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                            className="op-tours__link-90 op-tours__link-24"
                             title="Mở và cấu hình đợt khởi hành cho tour này"
                           >
-                            <span className="material-symbols-outlined text-sm">calendar_month</span>
+                            <span className="material-symbols-outlined op-tours__span-91">calendar_month</span>
                             <span>Mở đợt</span>
                           </Link>
                         )}
@@ -435,12 +435,12 @@ export default function ToursScreen() {
 
         {/* Trạng thái trống (Shadcn Empty State) */}
         {filteredTours.length === 0 && (
-          <div className="text-center py-16 px-4">
-            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
-              <span className="material-symbols-outlined text-2xl">search_off</span>
+          <div className="op-tours__div-92">
+            <div className="op-tours__div-93">
+              <span className="material-symbols-outlined op-tours__span-94">search_off</span>
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Không tìm thấy tour nào</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+            <h3 className="op-tours__text-95">Không tìm thấy tour nào</h3>
+            <p className="op-tours__text-96">
               {search || statusFilter || provinceFilter
                 ? "Không có tour nào khớp với bộ lọc tìm kiếm hiện tại của bạn."
                 : "Bạn chưa có tour du lịch nào. Hãy bắt đầu tạo tour đầu tiên của bạn."}
@@ -448,7 +448,7 @@ export default function ToursScreen() {
             {search || statusFilter || provinceFilter ? (
               <button
                 type="button"
-                className="mt-4 px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+                className="op-tours__button-97 op-tours__button-25"
                 onClick={() => {
                   setSearch("");
                   setStatusFilter("");
@@ -460,7 +460,7 @@ export default function ToursScreen() {
             ) : (
               <button
                 type="button"
-                className="mt-4 px-4 py-2 text-xs font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                className="op-tours__button-98"
                 onClick={() => setSearchParams({ action: "create" })}
               >
                 + Tạo tour đầu tiên

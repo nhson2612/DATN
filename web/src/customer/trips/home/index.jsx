@@ -1,102 +1,91 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { api } from "../../../shared/api";
 import VoyageDrawer from "../../../shared/layout/VoyageDrawer";
 import "./Home.css";
 
-const SLIDES = [
-  {
-    id: 1,
-    url: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2000&q=90",
-    location: "Positano, Amalfi Coast",
-    country: "Italy",
-    weather: "22°C · Golden Hour",
-  },
-  {
-    id: 2,
-    url: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=2000&q=90",
-    location: "Ha Long Bay, Quang Ninh",
-    country: "Vietnam",
-    weather: "26°C · Emerald Waters",
-  },
-  {
-    id: 3,
-    url: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=2000&q=88",
-    location: "Mu Cang Chai, Yen Bai",
-    country: "Vietnam",
-    weather: "20°C · Misty Terraces",
-  },
-];
+function formatPrice(val) {
+  return Number(val || 0).toLocaleString("vi-VN");
+}
 
-const TRENDING_DESTINATIONS = [
-  "Ha Long Bay",
-  "Ninh Binh",
-  "Sapa",
-  "Da Nang",
-  "Phu Quoc",
-  "Kyoto",
-];
-
-const POPULAR_DESTINATIONS = [
-  "Ha Long Bay",
-  "Ninh Binh",
-  "Sapa",
-  "Da Nang & Hoi An",
-  "Phu Quoc",
-  "Kyoto, Japan",
-  "Bali, Indonesia",
-];
-
+/**
+ * Trang chủ tuân thủ nghiêm ngặt chuẩn kiến trúc BEM (.aura-home và .aura-search)
+ * Hiệu ứng chuyển cảnh so le (Staggered Animation) và thu phóng chuẩn 100% mockup
+ */
 export default function HomePage({ user, onNeedAuth, onLogout }) {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchView, setIsSearchView] = useState(false);
+  const [isSearchStaggered, setIsSearchStaggered] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isNavSearchOpen, setIsNavSearchOpen] = useState(false);
-  const [navSearchQuery, setNavSearchQuery] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const navSearchRef = useRef(null);
-  const navSearchInputRef = useRef(null);
+  const [toursData, setToursData] = useState([]);
+  const searchInputRef = useRef(null);
   const navigate = useNavigate();
-  const location = useLocation();
-  const isFromLogin = !!location.state?.fromLoginTransition;
 
-  // Slide transition timer
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
-    }, 10000);
-    return () => clearInterval(timer);
+    let isMounted = true;
+    api
+      .tours({ limit: 40 })
+      .then((res) => {
+        if (isMounted && res?.items) {
+          setToursData(res.items);
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi tải tour trang chủ:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Close nav search bar on outside click
-  useEffect(() => {
-    function handleNavSearchClickOutside(event) {
-      if (
-        navSearchRef.current &&
-        !navSearchRef.current.contains(event.target)
-      ) {
-        setIsNavSearchOpen(false);
-      }
-    }
-    if (isNavSearchOpen) {
-      document.addEventListener("mousedown", handleNavSearchClickOutside);
-    }
-    return () =>
-      document.removeEventListener("mousedown", handleNavSearchClickOutside);
-  }, [isNavSearchOpen]);
+  const popularSearchTours = useMemo(() => {
+    const list = [...toursData];
+    list.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0) || Number(b.view_count || 0) - Number(a.view_count || 0));
+    return list.slice(0, 4);
+  }, [toursData]);
 
-  const handleNavSearchSubmit = (e) => {
-    e?.preventDefault();
-    if (navSearchQuery.trim()) {
-      setIsNavSearchOpen(false);
-      navigate(`/tour?q=${encodeURIComponent(navSearchQuery.trim())}`);
-    } else {
-      navSearchInputRef.current?.focus();
-    }
+  const liveSearchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.trim().toLowerCase();
+    return toursData.filter((t) => {
+      const title = (t.title || t.name || "").toLowerCase();
+      const prov = (t.province_name || "").toLowerCase();
+      const desc = (t.overview || t.description || "").toLowerCase();
+      const tags = Array.isArray(t.tags) ? t.tags.join(" ").toLowerCase() : "";
+      return title.includes(q) || prov.includes(q) || desc.includes(q) || tags.includes(q);
+    });
+  }, [searchQuery, toursData]);
+
+  const openSearch = () => {
+    setIsSearchView(true);
+    setIsSearchStaggered(false);
+    setTimeout(() => {
+      setIsSearchStaggered(true);
+      searchInputRef.current?.focus();
+    }, 80);
   };
+
+  const closeSearch = () => {
+    setIsSearchStaggered(false);
+    setIsSearchView(false);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (isDrawerOpen) {
+          setIsDrawerOpen(false);
+        } else if (isSearchView) {
+          closeSearch();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDrawerOpen, isSearchView]);
 
   const handleSearchSubmit = (e) => {
     e?.preventDefault();
-    setIsSearchOpen(false);
     if (searchQuery.trim()) {
       navigate(`/tour?q=${encodeURIComponent(searchQuery.trim())}`);
     } else {
@@ -104,266 +93,416 @@ export default function HomePage({ user, onNeedAuth, onLogout }) {
     }
   };
 
-  const handlePillClick = (dest) => {
-    setIsSearchOpen(false);
-    navigate(`/tour?q=${encodeURIComponent(dest)}`);
-  };
-
-  const activeSlideData = SLIDES[currentSlide] || SLIDES[0];
-
   return (
-    <div className={`voyage-home ${isFromLogin ? "voyage-home--from-login" : ""}`}>
-      {/* Background Slides Frame */}
-      <div className="voyage-bg">
-        {SLIDES.map((slide, idx) => (
-          <div
-            key={slide.id}
-            className={`voyage-bg-img ${
-              currentSlide === idx ? "voyage-bg-img--active" : ""
-            }`}
-            style={{ backgroundImage: `url(${slide.image || slide.url})` }}
-            aria-hidden={currentSlide !== idx}
-          />
-        ))}
-      </div>
+    <div className="aura-home">
+      <main className="aura-home__container">
+        {/* =================================================== */}
+        {/* VIEW 1: Split-Screen Editorial Home                */}
+        {/* =================================================== */}
+        <div
+          className={`aura-home__split-view ${
+            isSearchView ? "aura-home__split-view--hidden" : "aura-home__split-view--active"
+          }`}
+          id="homeView"
+        >
+          {/* CỘT TRÁI: Editorial Typography, Brand & Nav */}
+          <section className="aura-home__col-left">
+            {/* Header trên cùng: Brand Pin + Nút tìm kiếm */}
+            <header className="aura-home__header">
+              <Link to="/" className="aura-home__brand" aria-label="Aura Brand Logo">
+                <svg
+                  className="aura-home__brand-icon"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
+                </svg>
+              </Link>
 
-      {/* Foreground Container */}
-      <div className="voyage-shell voyage-inner">
-        {/* Navigation Bar */}
-        <header className="voyage-nav">
-          <Link to="/" className="voyage-brand">
-            Voyage
-          </Link>
-
-          <nav className="voyage-navlinks">
-            <Link to="/" className="voyage-navlink">
-              Destinations
-            </Link>
-            <Link to="/tour" className="voyage-navlink">
-              Tours
-            </Link>
-            <Link to="/chuyen-di" className="voyage-navlink">
-              Experiences
-            </Link>
-          </nav>
-
-          <div className="voyage-actions">
-            {/* Expandable Search Bar extending left */}
-            <div
-              className={`voyage-nav-search ${
-                isNavSearchOpen ? "voyage-nav-search--open" : ""
-              }`}
-              ref={navSearchRef}
-            >
               <button
                 type="button"
-                className="voyage-nav-search-trigger"
-                onClick={() => {
-                  if (!isNavSearchOpen) {
-                    setIsNavSearchOpen(true);
-                    setTimeout(() => navSearchInputRef.current?.focus(), 100);
-                  } else if (navSearchQuery.trim()) {
-                    handleNavSearchSubmit();
-                  } else {
-                    navSearchInputRef.current?.focus();
-                  }
-                }}
-                title="Search destinations & tours"
-                aria-label="Search"
+                className="aura-home__search-btn"
+                onClick={openSearch}
+                aria-label="Find tour"
               >
-                <span className="material-symbols-outlined text-[19px]">
-                  search
-                </span>
+                <svg
+                  className="aura-home__search-btn-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span>Find tour</span>
               </button>
+            </header>
 
-              <form
-                className="voyage-nav-search-form"
-                onSubmit={handleNavSearchSubmit}
-              >
-                <input
-                  ref={navSearchInputRef}
-                  type="text"
-                  className="voyage-nav-search-input"
-                  placeholder="Search destinations, tours..."
-                  value={navSearchQuery}
-                  onChange={(e) => setNavSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      setIsNavSearchOpen(false);
-                    }
-                  }}
-                  tabIndex={isNavSearchOpen ? 0 : -1}
-                />
-                {isNavSearchOpen && (
-                  <button
-                    type="button"
-                    className="voyage-nav-search-close"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsNavSearchOpen(false);
-                      setNavSearchQuery("");
-                    }}
-                    aria-label="Close search"
-                  >
-                    ✕
-                  </button>
-                )}
-              </form>
+            {/* Khối tiêu đề chính Editorial Headline */}
+            <div className="aura-home__editorial">
+              <h1 className="aura-home__title">
+                Discover <em>the</em> beauty <br />
+                of the world around
+              </h1>
+              <p className="aura-home__desc">
+                Escape the ordinary and find inspiration in the most breathtaking corners of
+                the globe. We curate unique travel experiences tailored to your rhythm and spirit.
+              </p>
             </div>
 
-            {/* Menu Hamburger Button */}
+            {/* Điều hướng dọc phía dưới */}
+            <nav className="aura-home__nav" aria-label="Main Editorial Navigation">
+              <span className="aura-home__nav-link aura-home__nav-link--active">
+                <span>/ About</span>
+              </span>
+              <Link to="/tour" className="aura-home__nav-link">
+                <span>Tours</span>
+                <span>→</span>
+              </Link>
+              <Link to="/chuyen-di" className="aura-home__nav-link">
+                <span>Experiences</span>
+                <span>→</span>
+              </Link>
+              <Link to="/tai-khoan" className="aura-home__nav-link">
+                <span>Account</span>
+                <span>→</span>
+              </Link>
+            </nav>
+          </section>
+
+          {/* CỘT PHẢI: Khung ảnh cảnh sắc & Card nổi */}
+          <section className="aura-home__col-right">
+            <div className="aura-home__visual-wrap">
+              <img
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwajCfd2fjh7xH4MeiBvxCn9LqlCN64lAXHa70tcgUFYdonz0SZ8PxA06DzKgwQR3XNej0a5_eEclB3_zYuMYHwt71efiDox1elXKpNVjeZdZcKo7Tq_HH4h_EmgZ9FBzCqDcpGd13B5NO2VC9HqkXSbdfVR6ARTA3MKJMJhbAtIcAUzSTnHTG9hOxpkoB4iaVJDnq98nvbxtUkXe0dFjF_WbsaD74I5w547ZU6P2BVoMrZOpHD5lc_Q"
+                alt="Breathtaking alpine green valley and jagged sunlit mountain peaks"
+                className="aura-home__visual-img"
+              />
+            </div>
+
+            {/* Nút Hamburger mở Drawer phong cách Aura */}
             <button
               type="button"
-              className="voyage-iconbtn"
+              className="aura-home__menu-btn"
               onClick={() => setIsDrawerOpen(true)}
-              title="Open menu"
-              aria-label="Menu"
+              aria-label="Open Navigation Menu"
             >
-              <span className="material-symbols-outlined text-[20px]">menu</span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="17" x2="20" y2="17" />
+              </svg>
             </button>
-          </div>
-        </header>
 
-        {/* Hero Copy with Trending Chips */}
-        <div className="voyage-hero-copy">
-          <h1 className="voyage-hero-title">
-            Two ways<br />to see the world
-          </h1>
-          <p className="voyage-hero-desc">
-            Same curiosity. Different journeys.
-          </p>
-
-          {/* Trending Destinations Row */}
-          <div className="voyage-trending-row">
-            <span className="voyage-trending-label">Trending:</span>
-            {TRENDING_DESTINATIONS.map((dest) => (
-              <button
-                key={dest}
-                type="button"
-                className="voyage-trending-chip"
-                onClick={() => handlePillClick(dest)}
-              >
-                {dest}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* The Two Choice Cards */}
-        <div className="voyage-choices">
-          {/* Choice 1: Explore tours */}
-          <Link to="/tour" className="voyage-choice-card">
-            <h2 className="voyage-choice-title">Explore tours</h2>
-            <p className="voyage-choice-desc">
-              Handpicked trips, ready for you.
-            </p>
-            <div className="voyage-choice-action">
-              <span>Explore tours</span>
-              <span className="voyage-choice-arrow">→</span>
-            </div>
-            <img
-              src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=85"
-              alt="Majestic mountain landscape"
-              className="voyage-choice-img"
-            />
-          </Link>
-
-          {/* Choice 2: Plan your own trip */}
-          <Link to="/chuyen-di" className="voyage-choice-card">
-            <h2 className="voyage-choice-title">Plan your own trip</h2>
-            <p className="voyage-choice-desc">
-              Get personalised recommendations with AI.
-            </p>
-            <div className="voyage-choice-action">
-              <span>Start planning</span>
-              <span className="voyage-choice-arrow">→</span>
-            </div>
-            <img
-              src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1400&q=85"
-              alt="Picturesque coastal village at dusk"
-              className="voyage-choice-img"
-            />
-          </Link>
-        </div>
-
-        {/* Footer Row */}
-        <footer className="voyage-footer">
-          <div className="voyage-footer-quote">Travel differently</div>
-
-          <div className="voyage-slides-nav">
-            {SLIDES.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className={`voyage-slide-dash ${
-                  currentSlide === idx ? "voyage-slide-dash--active" : ""
-                }`}
-                onClick={() => setCurrentSlide(idx)}
-                aria-label={`Slide ${idx + 1}`}
-              />
-            ))}
-          </div>
-        </footer>
-      </div>
-
-      {/* Search Modal */}
-      {isSearchOpen && (
-        <div
-          className="voyage-modal-overlay"
-          onClick={() => setIsSearchOpen(false)}
-        >
-          <div
-            className="voyage-search-dialog"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="voyage-search-header">
-              <h3 className="voyage-search-title">Where do you want to go?</h3>
-              <button
-                type="button"
-                className="voyage-search-close"
-                onClick={() => setIsSearchOpen(false)}
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form className="voyage-search-body" onSubmit={handleSearchSubmit}>
-              <div className="voyage-search-input-wrap">
-                <span className="material-symbols-outlined text-[#7a858d]">
-                  search
-                </span>
-                <input
-                  type="text"
-                  className="voyage-search-input"
-                  placeholder="e.g. Ha Long Bay, Sapa, Da Nang, Japan..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  autoFocus
+            {/* Card nổi tuyển chọn: "Hidden Gems" */}
+            <aside className="aura-home__floating-card">
+              <div className="aura-home__card-thumb">
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxS7MoATvg0pAoqJPQquwTaycAvVwpbBL1tIqaLV3A1iOOOhEVi2ZBkXsAPEghtF5E4828OKrJZMTcetZQ0aAsKfguWG3es_ds8heWZAyBf9IHG00Z_rpexckS445vqfHvusSNFu2eHPch3QmKDeVIAc_3frqLonz0jj2axeJPk-G5-8aQ2sk1qlZHt3818in67JsVieNdw2Rtxv75ca81i_vTNnL3nb67UJfPMqdsX5_oaK0kOR_sXA"
+                  alt="Alpine wooden cottage in secluded meadow"
+                  className="aura-home__card-img"
                 />
               </div>
-
-              <div className="voyage-search-pills">
-                {POPULAR_DESTINATIONS.map((dest) => (
-                  <button
-                    key={dest}
-                    type="button"
-                    className="voyage-search-pill"
-                    onClick={() => handlePillClick(dest)}
-                  >
-                    {dest}
-                  </button>
-                ))}
+              <div className="aura-home__card-body">
+                <div>
+                  <h3 className="aura-home__card-title">Hidden Gems</h3>
+                  <p className="aura-home__card-text">
+                    Explore our handpicked collection of authentic stays and secluded retreats,
+                    where nature meets comfort in perfect harmony.
+                  </p>
+                </div>
+                <div className="aura-home__card-actions">
+                  <Link to="/tour" className="aura-home__card-btn">
+                    Explore More
+                  </Link>
+                  <div aria-label="Carousel dots" className="flex items-center space-x-1.5 pr-1">
+                    <span className="aura-home__card-dot aura-home__card-dot--active" />
+                    <span className="aura-home__card-dot" />
+                    <span className="aura-home__card-dot" />
+                  </div>
+                </div>
               </div>
+            </aside>
+          </section>
+        </div>
 
-              <button type="submit" className="voyage-search-submit">
-                <span>Explore destinations & tours</span>
-                <span>→</span>
+        {/* =================================================== */}
+        {/* VIEW 3: In-Container Search View (Staggered BEM)    */}
+        {/* =================================================== */}
+        <section
+          className={`aura-search ${
+            isSearchView ? "aura-search--active" : "aura-search--hidden"
+          } ${isSearchStaggered ? "aura-search--stagger-active" : ""}`}
+          id="searchView"
+        >
+          {/* Header: Back to home + Close button (Stagger 1: delay 0.05s) */}
+          <header className="aura-search__header aura-search__stagger aura-search__stagger--header">
+            <div className="aura-search__header-left">
+              <button
+                type="button"
+                className="aura-search__logo-btn"
+                onClick={closeSearch}
+                aria-label="Back to Aura Home"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
+                </svg>
               </button>
+              <button
+                type="button"
+                className="aura-search__back-btn"
+                onClick={closeSearch}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to home
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="aura-search__close-btn"
+              onClick={closeSearch}
+              aria-label="Close search"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </header>
+
+          {/* Huge Center Search Input (Stagger 2: delay 0.12s) */}
+          <div className="aura-search__input-wrap aura-search__stagger aura-search__stagger--title">
+            <form onSubmit={handleSearchSubmit} className="aura-search__input-box">
+              <span className="aura-search__caret" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="aura-search__input"
+                placeholder="Find your tour"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="aura-search__clear-btn"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              )}
             </form>
           </div>
-        </div>
-      )}
+
+          {/* Dynamic Content (Stagger 3: delay 0.20s) */}
+          <div className="aura-search__content aura-search__stagger aura-search__stagger--content">
+            {!searchQuery ? (
+              <>
+                <div className="aura-search__subhead">
+                  <span className="aura-search__subhead-title">Tour thịnh hành</span>
+                  <span className="aura-search__subhead-desc">Hành trình chọn lọc tại Việt Nam</span>
+                </div>
+
+                <div className="aura-search__grid">
+                  {popularSearchTours.map((t, idx) => {
+                    const heroImage =
+                      t.primary_image ||
+                      t.cover_image ||
+                      (t.images && t.images[0]) ||
+                      "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80";
+                    return (
+                      <article
+                        key={t.id || t.slug || idx}
+                        className="aura-search__card"
+                        onClick={() => navigate(`/tour/${t.slug || t.id}`)}
+                      >
+                        <div className="aura-search__card-thumb">
+                          <img
+                            src={heroImage}
+                            alt={t.title || t.name}
+                            className="aura-search__card-img"
+                          />
+                          <span className="aura-search__card-duration">
+                            {t.duration_days || 1} Days
+                          </span>
+                        </div>
+                        <h4 className="aura-search__card-title">{t.title || t.name}</h4>
+                        <p className="aura-search__card-price">{formatPrice(t.price_from)}₫</p>
+                      </article>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="aura-search__subhead">
+                  <div className="aura-search__subhead-title">
+                    <span>Kết quả tìm kiếm</span>
+                    <span className="aura-search__badge">
+                      {liveSearchResults.length} {liveSearchResults.length === 1 ? "tour" : "tours"}
+                    </span>
+                  </div>
+                  <span className="aura-search__subhead-desc">Khớp với từ khóa "{searchQuery}"</span>
+                </div>
+
+                {liveSearchResults.length > 0 ? (
+                  <>
+                    <div className="aura-search__grid">
+                      {liveSearchResults.slice(0, 8).map((t, idx) => {
+                        const heroImage =
+                          t.primary_image ||
+                          t.cover_image ||
+                          (t.images && t.images[0]) ||
+                          "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80";
+                        return (
+                          <article
+                            key={t.id || t.slug || idx}
+                            className="aura-search__card"
+                            onClick={() => navigate(`/tour/${t.slug || t.id}`)}
+                          >
+                            <div className="aura-search__card-thumb">
+                              <img
+                                src={heroImage}
+                                alt={t.title || t.name}
+                                className="aura-search__card-img"
+                              />
+                              <span className="aura-search__card-duration">
+                                {t.duration_days || 1} Days
+                              </span>
+                            </div>
+                            <h4 className="aura-search__card-title">{t.title || t.name}</h4>
+                            <p className="aura-search__card-price">{formatPrice(t.price_from)}₫</p>
+                          </article>
+                        );
+                      })}
+                    </div>
+
+                    {/* Bespoke CTA Banner */}
+                    <div className="aura-search__cta">
+                      <div className="aura-search__cta-left">
+                        <div className="aura-search__cta-icon">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="M12 4v16m8-8H4" strokeLinecap="round" />
+                          </svg>
+                        </div>
+                        <div className="aura-search__cta-text">
+                          <h5 className="aura-search__cta-title">
+                            Xem tất cả kết quả trên trang Tour
+                          </h5>
+                          <p className="aura-search__cta-desc">
+                            Xem danh sách đầy đủ {liveSearchResults.length} tour và lọc chi tiết theo khoảng giá, ngày khởi hành.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="aura-search__cta-btn"
+                        onClick={handleSearchSubmit}
+                      >
+                        Khám phá tour →
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="aura-search__empty-box">
+                    <p className="aura-search__empty-title">
+                      Không tìm thấy tour phù hợp với "{searchQuery}"
+                    </p>
+                    <p className="aura-search__empty-desc">
+                      Thử tìm kiếm theo tỉnh thành hoặc địa danh nổi tiếng:
+                    </p>
+                    <div className="aura-search__quick-tags">
+                      {["Hạ Long", "Hà Nội", "Sài Gòn", "Đà Nẵng", "Ninh Bình", "Đà Lạt", "Phú Quốc"].map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          className="aura-search__tag-chip"
+                          onClick={() => setSearchQuery(tag)}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Bottom Nav Footer (Stagger 4: delay 0.32s) */}
+          <footer className="aura-search__footer aura-search__stagger aura-search__stagger--footer">
+            <nav className="aura-search__footer-nav">
+              <button
+                type="button"
+                className="aura-search__footer-link"
+                onClick={() => setIsSearchView(false)}
+              >
+                About
+              </button>
+              <Link to="/tour" className="aura-search__footer-link">
+                Tours
+              </Link>
+              <span className="aura-search__footer-link aura-search__footer-link--active">
+                / Destinations
+              </span>
+              <Link to="/chuyen-di" className="aura-search__footer-link">
+                Booking
+              </Link>
+              <a href="#faq" className="aura-search__footer-link">
+                FAQ
+              </a>
+              <Link to="/tai-khoan" className="aura-search__footer-link">
+                Account
+              </Link>
+            </nav>
+          </footer>
+        </section>
+      </main>
 
       {/* Slide-out Menu Drawer dùng chung */}
       <VoyageDrawer

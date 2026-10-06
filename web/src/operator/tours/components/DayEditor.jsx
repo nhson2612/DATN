@@ -75,6 +75,24 @@ function layPhanLoaiDiaDiem(diem) {
 // Cache danh sách gợi ý địa điểm theo tỉnh dùng chung cho toàn bộ các ngày trong tour
 const cacheGoiYTheoTinh = new Map();
 
+function DragHandle({ onDragStart, onDragEnd }) {
+  return (
+    <button
+      type="button"
+      className="op-wizard__drag-handle"
+      title="Kéo để đổi vị trí"
+      aria-label="Kéo để đổi vị trí"
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+    >
+      <span className="op-wizard__drag-dots" aria-hidden="true">
+        {Array.from({ length: 6 }, (_, dotIndex) => <span key={dotIndex} />)}
+      </span>
+    </button>
+  );
+}
+
 /**
  * Một ngày trong lịch trình — Thiết kế chuẩn nền sáng Wanderlog (ảnh 5.png)
  */
@@ -85,6 +103,8 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
   const [hienGoiY, setHienGoiY] = useState(true);
   const [nhapChecklistTam, setNhapChecklistTam] = useState({});
   const [moPreMade, setMoPreMade] = useState({});
+  const [dangKeoId, setDangKeoId] = useState(null);
+  const [viTriTha, setViTriTha] = useState(null);
 
   // Khởi tạo timeline từ dữ liệu hiện có
   const timeline = useMemo(() => {
@@ -186,6 +206,70 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
     capNhatTimeline(moi);
   };
 
+  const batDauKeo = (event, itemId) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(itemId));
+    const row = event.currentTarget.closest(".op-wizard__timeline-row");
+    if (row && event.dataTransfer.setDragImage) {
+      event.dataTransfer.setDragImage(row, 24, 18);
+    }
+    setDangKeoId(itemId);
+  };
+
+  const ketThucKeo = () => {
+    setDangKeoId(null);
+    setViTriTha(null);
+  };
+
+  const keoQuaItem = (event, itemId) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    if (!dangKeoId || dangKeoId === itemId) {
+      setViTriTha(null);
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    const position = event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+    setViTriTha((current) => (
+      current?.itemId === itemId && current?.position === position
+        ? current
+        : { itemId, position }
+    ));
+  };
+
+  const thaVaoItem = (event, targetId) => {
+    event.preventDefault();
+    const sourceId = dangKeoId || event.dataTransfer.getData("text/plain");
+    const position = viTriTha?.itemId === targetId ? viTriTha.position : "before";
+    if (!sourceId || sourceId === targetId) {
+      ketThucKeo();
+      return;
+    }
+
+    const sourceItem = timeline.find((it) => String(it.id) === String(sourceId));
+    if (!sourceItem) {
+      ketThucKeo();
+      return;
+    }
+    const withoutSource = timeline.filter((it) => String(it.id) !== String(sourceId));
+    const targetIndex = withoutSource.findIndex((it) => String(it.id) === String(targetId));
+    if (targetIndex < 0) {
+      ketThucKeo();
+      return;
+    }
+    const insertIndex = targetIndex + (position === "after" ? 1 : 0);
+    const reordered = [...withoutSource];
+    reordered.splice(insertIndex, 0, sourceItem);
+    capNhatTimeline(reordered);
+    ketThucKeo();
+  };
+
+  const classNameHangKeo = (itemId) => [
+    "op-wizard__timeline-row",
+    dangKeoId === itemId ? "op-wizard__timeline-row--dragging" : "",
+    viTriTha?.itemId === itemId ? `op-wizard__timeline-row--drop-${viTriTha.position}` : "",
+  ].filter(Boolean).join(" ");
+
   // Sửa nội dung ghi chú
   const suaGhiChu = (itemId, text) => {
     const moi = timeline.map((it) => (it.id === itemId ? { ...it, text } : it));
@@ -226,6 +310,18 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
       };
     });
     capNhatTimeline(moi);
+  };
+
+  // Tiêu đề checklist nằm ngay trên item timeline để giữ đúng thứ tự và được
+  // lưu cùng checklist. Cho phép xoá tạm khi đang gõ, nhưng không lưu title rỗng.
+  const suaTieuDeChecklist = (itemId, title) => {
+    const moi = timeline.map((it) => (it.id === itemId ? { ...it, title } : it));
+    capNhatTimeline(moi);
+  };
+
+  const chuanHoaTieuDeChecklist = (itemId, title) => {
+    if (title.trim()) return;
+    suaTieuDeChecklist(itemId, "Check list");
   };
 
   // Đánh dấu đã ghé thăm
@@ -379,7 +475,7 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
   let demDiem = 0;
 
   return (
-    <section className={`op-wizard__day ${loi ? "op-wizard__day--invalid" : ""}`}>
+    <section className={`op-wizard__day    ${loi ? "op-wizard__day--invalid" : ""}`}>
       {/* Header ngày: mũi tên thu gọn + Tiêu đề ngày; bên dưới là tiêu đề phụ (ảnh 5.png) */}
       <header className="op-wizard__day-head">
         <div className="op-wizard__day-title-row">
@@ -404,7 +500,7 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
 
         <div className="op-wizard__day-sub-wrap">
           <input
-            className={`op-wizard__day-sub ${loi ? "op-wizard__day-sub--invalid" : ""}`}
+            className={`op-wizard__day-sub    ${loi ? "op-wizard__day-sub--invalid" : ""}`}
             placeholder="Thêm tiêu đề phụ (ví dụ: Khám phá phố cổ và văn hoá ẩm thực)"
             value={day.title || ""}
             onChange={(event) => setField("title", event.target.value)}
@@ -428,7 +524,12 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
                   const phanLoai = layPhanLoaiDiaDiem(diem);
 
                   return (
-                    <div key={item.id} className="op-wizard__timeline-row">
+                    <div
+                      key={item.id}
+                      className={classNameHangKeo(item.id)}
+                      onDragOver={(event) => keoQuaItem(event, item.id)}
+                      onDrop={(event) => thaVaoItem(event, item.id)}
+                    >
                       {/* Cột marker bên trái: Huy hiệu số tròn màu xanh ngọc (cyan) */}
                       <div className="op-wizard__marker-col">
                         <span className="op-wizard__place-badge">{sttHienTai}</span>
@@ -439,6 +540,10 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
                       <div className="op-wizard__timeline-body">
                         <div className="op-wizard__place-card">
                           <div className="op-wizard__place-card-top">
+                            <DragHandle
+                              onDragStart={(event) => batDauKeo(event, item.id)}
+                              onDragEnd={ketThucKeo}
+                            />
                             <div className="op-wizard__place-card-info">
                               <div className="op-wizard__place-card-head-row">
                                 <span className="op-wizard__place-card-name">{diem.name}</span>
@@ -474,13 +579,13 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
                           <div className="op-wizard__place-actions-row">
                             <button
                               type="button"
-                              className={`op-wizard__place-action-btn ${
+                              className={`op-wizard__place-action-btn    ${
                                 diem.visited ? "op-wizard__place-action-btn--active" : ""
                               }`}
                               onClick={() => toggleVisitedDiem(item.id)}
                               title={diem.visited ? "Đã đánh dấu ghé thăm" : "Đánh dấu đã ghé thăm"}
                             >
-                              <span className="material-symbols-outlined text-[15px]">
+                              <span className="material-symbols-outlined op-day-editor__span-1">
                                 {diem.visited ? "check_circle" : "check"}
                               </span>
                               <span>Mark as visited</span>
@@ -509,7 +614,12 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
 
                 if (item.type === "note") {
                   return (
-                    <div key={item.id} className="op-wizard__timeline-row">
+                    <div
+                      key={item.id}
+                      className={classNameHangKeo(item.id)}
+                      onDragOver={(event) => keoQuaItem(event, item.id)}
+                      onDrop={(event) => thaVaoItem(event, item.id)}
+                    >
                       {/* Cột marker bên trái: Huy hiệu xám trung tính (ảnh 5.png) */}
                       <div className="op-wizard__marker-col">
                         <span className="op-wizard__note-badge">
@@ -521,6 +631,10 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
                       {/* Thẻ ô nhập ghi chú nền sáng xám nhạt trung tính */}
                       <div className="op-wizard__timeline-body">
                         <div className="op-wizard__note-card">
+                          <DragHandle
+                            onDragStart={(event) => batDauKeo(event, item.id)}
+                            onDragEnd={ketThucKeo}
+                          />
                           <span className="material-symbols-outlined op-wizard__note-card-icon">
                             edit_note
                           </span>
@@ -550,7 +664,12 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
                   const moSuggestions = !!moPreMade[item.id];
 
                   return (
-                    <div key={item.id} className="op-wizard__timeline-row">
+                    <div
+                      key={item.id}
+                      className={classNameHangKeo(item.id)}
+                      onDragOver={(event) => keoQuaItem(event, item.id)}
+                      onDrop={(event) => thaVaoItem(event, item.id)}
+                    >
                       {/* Cột marker bên trái: Huy hiệu xám trung tính */}
                       <div className="op-wizard__marker-col">
                         <span className="op-wizard__checklist-badge">
@@ -564,8 +683,26 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
                         <div className="op-wizard__checklist-card">
                           <div className="op-wizard__checklist-head">
                             <div className="op-wizard__checklist-head-title">
+                              <DragHandle
+                                onDragStart={(event) => batDauKeo(event, item.id)}
+                                onDragEnd={ketThucKeo}
+                              />
                               <span className="material-symbols-outlined">task_alt</span>
-                              <span className="op-wizard__checklist-title">Check list</span>
+                              <input
+                                type="text"
+                                className="op-wizard__checklist-title"
+                                aria-label="Tiêu đề checklist"
+                                title="Nhấp để sửa tiêu đề"
+                                value={item.title ?? "Check list"}
+                                onChange={(e) => suaTieuDeChecklist(item.id, e.target.value)}
+                                onBlur={(e) => chuanHoaTieuDeChecklist(item.id, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    e.currentTarget.blur();
+                                  }
+                                }}
+                              />
                               <span className="op-wizard__checklist-count-badge">
                                 {subItems.filter((s) => s.checked).length}/{subItems.length}
                               </span>
@@ -586,13 +723,13 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
                               {subItems.map((sub) => (
                                 <div
                                   key={sub.id}
-                                  className={`op-wizard__checklist-row ${
+                                  className={`op-wizard__checklist-row    ${
                                     sub.checked ? "op-wizard__checklist-row--checked" : ""
                                   }`}
                                 >
                                   <button
                                     type="button"
-                                    className={`op-wizard__circle-check ${
+                                    className={`op-wizard__circle-check    ${
                                       sub.checked ? "op-wizard__circle-check--active" : ""
                                     }`}
                                     onClick={() => toggleMucChecklist(item.id, sub.id)}

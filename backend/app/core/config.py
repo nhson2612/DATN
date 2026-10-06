@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     )
 
     # ---- Cơ sở dữ liệu ----
+    # Khi đổi DATABASE_URL trong .env, khởi động lại backend để pool kết nối
+    # được tạo lại với địa chỉ mới.
     database_url: str = Field(
         default="postgresql://postgres:postgres@localhost:5432/gis_tourism",
         description="DSN PostGIS. Đổi sang gis_vietnam để dùng dữ liệu toàn quốc.",

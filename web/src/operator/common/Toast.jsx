@@ -39,26 +39,26 @@ export default function Toast({ message, type, duration = 4000, onClose }) {
 
   return (
     <div
-      className={`fixed bottom-5 right-5 z-50 max-w-md min-w-[320px] flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border shadow-2xl transition-all duration-250 ease-out bg-zinc-950/95 backdrop-blur text-white border-zinc-800 ${
-        visible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95 pointer-events-none"
+      className={`op-toast__div-3 op-toast__div-1  ${
+        visible ? "op-toast__div-1--variant-1" : "op-toast__div-2--variant-2"
       }`}
       role="alert"
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="op-toast__div-4">
         <span
-          className={`material-symbols-outlined text-xl shrink-0 ${
-            isError ? "text-rose-400" : "text-emerald-400"
+          className={`material-symbols-outlined op-toast__span-7 op-toast__span-2  ${
+            isError ? "op-toast__span-5--variant-1" : "op-toast__span-6--variant-2"
           }`}
         >
           {isError ? "error" : "check_circle"}
         </span>
-        <span className="text-sm font-medium text-zinc-100 leading-snug break-words">
+        <span className="op-toast__span-8">
           {message}
         </span>
       </div>
       <button
         type="button"
-        className="text-zinc-400 hover:text-white transition-colors cursor-pointer p-1 rounded-md hover:bg-zinc-800/80 shrink-0"
+        className="op-toast__button-9 op-toast__button-3"
         onClick={() => {
           setVisible(false);
           if (onClose) {
@@ -67,7 +67,7 @@ export default function Toast({ message, type, duration = 4000, onClose }) {
         }}
         title="Đóng"
       >
-        <span className="material-symbols-outlined text-base">close</span>
+        <span className="material-symbols-outlined op-toast__span-10">close</span>
       </button>
     </div>
   );

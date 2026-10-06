@@ -15,6 +15,7 @@ diện im lặng hiển thị sai chứ không báo lỗi:
 
 import os
 import unittest
+from datetime import date, timedelta
 
 os.environ.setdefault("JWT_SECRET", "test-secret-key-for-unittest-only")
 
@@ -123,34 +124,66 @@ class TestQuanTri(unittest.TestCase):
         self.H = _token(self.c, settings.seed_user_email, settings.seed_user_password)
 
     def test_thong_ke_du_khoa_va_deu_la_so(self):
-        """Bảng tổng quan chỉ được chứa số liệu vận hành được.
-
-        Không có bộ đếm nội bộ kiểu "số ảnh đã cache" hay "số POI": người quản
-        trị không làm gì được với chúng.
-        """
-        tk = self.c.get("/api/admin/stats", headers=self.AH).json()["stats"]
-        for k in ("doanh_thu", "cho_xac_nhan", "lech_tien", "dat_cho_moi",
-                  "dat_cho_da_lien_he", "dat_tour", "tour_dang_mo", "nguoi_dung",
-                  "lich_trinh", "luu_tru"):
+        """Tổng quan chỉ trả KPI vận hành trong khoảng thời gian đã chọn."""
+        payload = self.c.get("/api/admin/stats", headers=self.AH).json()
+        tk = payload["stats"]
+        self.assertEqual(
+            payload["range"],
+            {"from": date.today().replace(day=1).isoformat(), "to": date.today().isoformat()},
+        )
+        keys = {"doanh_thu", "dat_tour", "so_khach", "gia_tri_don_tb"}
+        self.assertEqual(set(tk), keys)
+        self.assertEqual(set(payload["comparison"]), keys)
+        for k in keys:
             self.assertIsInstance(tk[k], int, f"khoá {k}")
             self.assertGreaterEqual(tk[k], 0, f"khoá {k}")
+        self.assertEqual(len(payload["series"]), date.today().day)
+        self.assertEqual(payload["series"][0]["ngay"], date.today().replace(day=1).isoformat())
 
-    def test_so_dia_diem_dung_chinh_xac(self):
-        """Phải khớp COUNT(*) chứ không phải ước lượng.
-
-        Bản đầu đếm bằng `reltuples` của pg_class cho nhanh; đo lại thì con số
-        đó lệch 15,6% ở bảng accommodation (60.180 so với 52.046 thật) vì bảng
-        chưa ANALYZE sau lần import cuối.
-        """
+    def test_thong_ke_khop_du_lieu_trong_khoang_ngay(self):
+        """Doanh thu và booking không được tính các bản ghi ngoài khoảng ngày."""
         from app.core.database import execute_query
-        tk = self.c.get("/api/admin/stats", headers=self.AH).json()["stats"]
-        that = execute_query("SELECT count(*) AS n FROM accommodation")[0]["n"]
-        self.assertEqual(tk["luu_tru"], that, "luu_tru lệch so với COUNT(*)")
-        # Doanh thu phải là tiền thật đã thu, không phải số đơn hay số tiền hứa.
+
+        ngay_cuoi = date.today()
+        ngay_dau = ngay_cuoi - timedelta(days=6)
+        ngay_cuoi_loai_tru = ngay_cuoi + timedelta(days=1)
+        payload = self.c.get(
+            f"/api/admin/stats?from={ngay_dau.isoformat()}&to={ngay_cuoi.isoformat()}",
+            headers=self.AH,
+        ).json()
+        tk = payload["stats"]
         tien = execute_query(
             "SELECT coalesce(sum(amount), 0)::bigint AS n FROM payments "
-            "WHERE status = 'SUCCESS'")[0]["n"]
-        self.assertEqual(tk["doanh_thu"], tien, "doanh_thu phải bằng tổng payment SUCCESS")
+            "WHERE status = 'SUCCESS' "
+            "AND coalesce(confirmed_at, created_at) >= %s "
+            "AND coalesce(confirmed_at, created_at) < %s",
+            (ngay_dau, ngay_cuoi_loai_tru),
+        )[0]["n"]
+        booking = execute_query(
+            "SELECT count(*) AS n FROM tour_bookings "
+            "WHERE created_at >= %s AND created_at < %s",
+            (ngay_dau, ngay_cuoi_loai_tru),
+        )[0]["n"]
+        self.assertEqual(tk["doanh_thu"], tien)
+        self.assertEqual(tk["dat_tour"], booking)
+        self.assertEqual(len(payload["series"]), 7)
+        self.assertEqual(
+            payload["comparison_range"],
+            {
+                "from": (ngay_dau - timedelta(days=7)).isoformat(),
+                "to": (ngay_dau - timedelta(days=1)).isoformat(),
+            },
+        )
+
+    def test_thong_ke_tu_choi_khoang_ngay_khong_hop_le(self):
+        self.assertEqual(
+            self.c.get("/api/admin/stats?from=2026-10-04&to=2026-10-03", headers=self.AH).status_code,
+            422,
+        )
+        self.assertEqual(
+            self.c.get("/api/admin/stats?from=2025-01-01&to=2026-01-02", headers=self.AH).status_code,
+            422,
+        )
 
     def test_nguoi_dung_thuong_khong_xem_duoc(self):
         self.assertEqual(self.c.get("/api/admin/stats", headers=self.H).status_code, 403)

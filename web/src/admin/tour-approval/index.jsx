@@ -74,122 +74,122 @@ export default function TourApproval() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="admin-approval">
       {/* Toast thông báo */}
       {bao && <Toast message={bao} onClose={() => setBao("")} />}
       {loi && <Toast message={loi} type="error" onClose={() => setLoi("")} />}
 
       {tours === null ? (
-        <div className="bg-white border border-zinc-200 rounded-xl p-12 text-center shadow-xs">
-          <p className="text-zinc-500 text-sm">Đang tải danh sách tour chờ duyệt...</p>
+        <div className="tour-approval__div-2 tour-approval__div-1">
+          <p className="tour-approval__text-3">Đang tải danh sách tour chờ duyệt...</p>
         </div>
       ) : tours.length === 0 ? (
-        <div className="bg-white border border-zinc-200 rounded-xl p-12 text-center shadow-xs">
-          <div className="w-12 h-12 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto mb-3">
-            <span className="material-symbols-outlined text-2xl">verified</span>
+        <div className="tour-approval__div-4 tour-approval__div-2">
+          <div className="tour-approval__div-5">
+            <span className="material-symbols-outlined tour-approval__span-6">verified</span>
           </div>
-          <h3 className="text-base font-semibold text-zinc-900">Không có tour nào chờ duyệt</h3>
-          <p className="text-xs text-zinc-500 mt-1">
+          <h3 className="tour-approval__text-7">Không có tour nào chờ duyệt</h3>
+          <p className="tour-approval__text-8">
             Tất cả yêu cầu phê duyệt tour từ các nhà điều hành đã được xử lý xong.
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
+        <div className="admin-data-card admin-approval__results">
+          <div className="admin-data-card__scroll">
+            <table className="admin-data-table tour-approval__table-11">
               <thead>
-                <tr className="border-b border-zinc-200 bg-zinc-50/80 text-zinc-500 text-xs font-semibold uppercase tracking-wider">
-                  <th className="py-3 px-4 min-w-[280px]">Tour</th>
-                  <th className="py-3 px-4 min-w-[160px]">Nhà điều hành</th>
-                  <th className="py-3 px-4 min-w-[110px] hidden sm:table-cell">Thời lượng</th>
-                  <th className="py-3 px-4 min-w-[110px] hidden md:table-cell">Gửi ngày</th>
-                  <th className="py-3 px-4 text-right min-w-[180px]">Thao tác</th>
+                <tr className="tour-approval__tr-12">
+                  <th className="tour-approval__th-13">Tour</th>
+                  <th className="tour-approval__th-14">Nhà điều hành</th>
+                  <th className="tour-approval__th-15">Thời lượng</th>
+                  <th className="tour-approval__th-16">Gửi ngày</th>
+                  <th className="tour-approval__th-17">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="tour-approval__table-body">
                 {tours.map((tour) => (
-                  <tr key={tour.id} className="hover:bg-zinc-50/70 transition-colors">
-                    <td className="py-3.5 px-4 align-top">
+                  <tr key={tour.id} className="tour-approval__tr-18">
+                    <td className="tour-approval__td-19">
                       <button
                         type="button"
                         onClick={() => setXemTourId(tour.id)}
-                        className="text-left group cursor-pointer block"
+                        className="tour-approval__button-20"
                         title="Bấm để xem toàn bộ thông tin chi tiết tour"
                       >
-                        <span className="tour-duyet__ten text-zinc-900 font-semibold group-hover:text-blue-600 transition-colors">
+                        <span className="tour-duyet__ten tour-approval__span-21">
                           {tour.name}
                         </span>
                       </button>
                       {tour.summary && (
-                        <span className="tour-duyet__tom-tat text-zinc-500 text-xs line-clamp-2">
+                        <span className="tour-duyet__tom-tat tour-approval__span-22">
                           {tour.summary}
                         </span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 align-middle font-medium text-zinc-800">
+                    <td className="tour-approval__td-23">
                       {tour.company_name || "—"}
                     </td>
-                    <td className="py-3.5 px-4 align-middle hidden sm:table-cell text-zinc-600 text-xs">
+                    <td className="tour-approval__td-24">
                       {tour.duration_days} ngày
                     </td>
-                    <td className="py-3.5 px-4 align-middle hidden md:table-cell text-zinc-500 text-xs tabular-nums">
+                    <td className="tour-approval__td-25">
                       {ngay(tour.created_at)}
                     </td>
-                    <td className="py-3.5 px-4 align-middle text-right">
+                    <td className="tour-approval__td-26">
                       <div className="tour-duyet__thao-tac">
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-zinc-200 hover:bg-zinc-100 text-zinc-700 text-xs font-medium rounded-lg shadow-xs transition-colors cursor-pointer"
+                          className="tour-approval__button-27 tour-approval__button-4"
                           onClick={() => setXemTourId(tour.id)}
                           title="Xem toàn bộ thông tin chi tiết tour"
                         >
-                          <span className="material-symbols-outlined text-sm">visibility</span>
+                          <span className="material-symbols-outlined tour-approval__span-28">visibility</span>
                           <span>Chi tiết</span>
                         </button>
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-medium rounded-lg shadow-xs transition-colors cursor-pointer"
+                          className="tour-approval__button-29"
                           onClick={() => duyet(tour)}
                         >
-                          <span className="material-symbols-outlined text-sm">check</span>
+                          <span className="material-symbols-outlined tour-approval__span-30">check</span>
                           <span>Duyệt</span>
                         </button>
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-zinc-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-zinc-700 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                          className="tour-approval__button-31 tour-approval__button-5"
                           onClick={() => {
                             setDangTuChoi((prev) => (prev === tour.id ? null : tour.id));
                             setLyDo("");
                             setLoiLyDo("");
                           }}
                         >
-                          <span className="material-symbols-outlined text-sm">close</span>
+                          <span className="material-symbols-outlined tour-approval__span-32">close</span>
                           <span>Từ chối</span>
                         </button>
                       </div>
 
                       {dangTuChoi === tour.id && (
-                        <div className="mt-3 p-3 bg-zinc-50 border border-zinc-200 rounded-lg text-left">
-                          <p className="text-xs font-semibold text-zinc-700 mb-1.5">Lý do từ chối tour:</p>
-                          <div className="flex gap-2">
+                        <div className="tour-approval__div-33 tour-approval__div-6">
+                          <p className="tour-approval__text-34">Lý do từ chối tour:</p>
+                          <div className="tour-approval__div-35">
                             <input
                               autoFocus
                               type="text"
                               placeholder="Ví dụ: Hình ảnh chưa rõ ràng, lịch trình thiếu điểm..."
                               value={lyDo}
                               onChange={(event) => setLyDo(event.target.value)}
-                              className="flex-1 bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
+                              className="tour-approval__element-36 tour-approval__element-7"
                             />
                             <button
                               type="button"
-                              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shrink-0"
+                              className="tour-approval__button-37 tour-approval__button-8"
                               onClick={() => tuChoi(tour)}
                             >
                               Xác nhận từ chối
                             </button>
                             <button
                               type="button"
-                              className="px-2.5 py-1.5 bg-white border border-zinc-200 hover:bg-zinc-100 text-zinc-600 text-xs font-medium rounded-md transition-colors cursor-pointer shrink-0"
+                              className="tour-approval__button-38 tour-approval__button-9"
                               onClick={() => setDangTuChoi(null)}
                             >
                               Đóng

@@ -28,6 +28,12 @@ def _thieu_gi(tour: dict) -> list:
         thieu.append("điểm đến chính (tỉnh, thành)")
     if not (tour.get("duration_days") or 0) >= 1:
         thieu.append("số ngày")
+    if not (tour.get("departure_location") or "").strip():
+        thieu.append("địa điểm khởi hành")
+    if not tour.get("transportation"):
+        thieu.append("phương tiện di chuyển")
+    if not tour.get("tags"):
+        thieu.append("tag tour")
     if not (tour.get("cover_url") or "").strip():
         thieu.append("ảnh bìa")
     if not tour.get("cancellation_policy"):

@@ -144,7 +144,12 @@ export const api = {
     request("/route", { method: "POST", body: JSON.stringify(body), ...options }),
 
   // Quản trị
-  adminStats: () => request("/admin/stats"),
+  adminStats: (params = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params).filter(([, value]) => value != null && value !== "")
+    );
+    return request(`/admin/stats${qs.size ? `?${qs}` : ""}`);
+  },
   adminTourBookings: () => request("/tours/admin/bookings"),
   adminPayments: (status) =>
     request(`/tours/admin/payments${status ? `?status=${status}` : ""}`),

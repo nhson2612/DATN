@@ -1,1091 +1,919 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom";
 import { api } from "../../shared/api";
 import DetailSkeleton from "../../shared/skeletons/DetailSkeleton";
 import TourBookingWizard from "../booking/TourBookingWizard";
 import VoyageDrawer from "../../shared/layout/VoyageDrawer";
 import "./TourDetail.css";
 
-const WEEKDAYS = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
-
 function cleanText(str) {
   if (!str) return "";
   return String(str).replaceAll("—", " - ").replaceAll("–", "-");
 }
 
-function getWeekday(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return WEEKDAYS[d.getDay()] || "";
-}
-
-function formatFullDate(dateStr) {
+function formatVnDate(dateStr) {
   if (!dateStr) return "";
   const parts = String(dateStr).split("T")[0].split("-");
   if (parts.length === 3) {
-    const weekday = getWeekday(dateStr);
-    return `${weekday}, ${parts[2]}/${parts[1]}/${parts[0]}`;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
   return dateStr;
 }
 
-function getDayTimeline(day) {
-  if (Array.isArray(day?.timeline) && day.timeline.length > 0) {
-    return day.timeline;
-  }
-
-  const places = (day?.places || []).map((place, index) => ({
-    id: `place-${place?.id || index}`,
-    type: "place",
-    place,
-  }));
-  const note = day?.description ? [{ id: "day-note", type: "note", text: day.description }] : [];
-  const checklist = day?.checklist?.length
-    ? [{ id: "day-checklist", type: "checklist", items: day.checklist }]
-    : [];
-  return [...places, ...note, ...checklist];
-}
-
-function getPlaceNote(day, place) {
-  const saved = day?.place_notes?.[place?.id];
-  if (typeof saved === "string") return saved;
-  if (saved && typeof saved === "object") return saved.note || saved.text || "";
-  return place?.note || "";
-}
-
-function TourTimelineContent({ day }) {
-  const timeline = getDayTimeline(day);
-
-  return (
-    <div className="tour-detail__timeline-detail">
-      {timeline.map((item, index) => {
-        if (item.type === "place") {
-          const place = item.place || {};
-          const time = place.time_range || [place.time_start, place.time_end].filter(Boolean).join(" – ");
-          const note = getPlaceNote(day, place);
-          return (
-            <article key={item.id || `place-${index}`} className="tour-detail__timeline-place">
-              <span className="material-symbols-outlined">location_on</span>
-              <div>
-                <div className="tour-detail__timeline-place-head">
-                  <strong>{cleanText(place.name) || "Điểm tham quan"}</strong>
-                  {time && <time>{time}</time>}
-                </div>
-                {place.dia_chi && <p>{cleanText(place.dia_chi)}</p>}
-                {note && <p className="tour-detail__timeline-place-note">{cleanText(note)}</p>}
-              </div>
-            </article>
-          );
-        }
-
-        if (item.type === "note") {
-          return (
-            <aside key={item.id || `note-${index}`} className="tour-detail__timeline-note">
-              <span className="material-symbols-outlined">sticky_note_2</span>
-              <p>{cleanText(item.text)}</p>
-            </aside>
-          );
-        }
-
-        if (item.type === "checklist") {
-          const items = item.items || [];
-          return (
-            <section key={item.id || `checklist-${index}`} className="tour-detail__timeline-checklist">
-              <div>
-                <span className="material-symbols-outlined">checklist</span>
-                <strong>Danh sách việc cần làm</strong>
-              </div>
-              <ul>
-                {items.map((check, checkIndex) => {
-                  const text = typeof check === "string" ? check : check?.text;
-                  const checked = typeof check === "object" && Boolean(check?.checked);
-                  return (
-                    <li key={check?.id || `${item.id || "check"}-${checkIndex}`} className={checked ? "tour-detail__timeline-check--done" : ""}>
-                      <span className="material-symbols-outlined">{checked ? "check_circle" : "radio_button_unchecked"}</span>
-                      {cleanText(text)}
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          );
-        }
-
-        return null;
-      })}
-    </div>
-  );
-}
-
 export default function TourDetail({ user, onNeedAuth, onLogout }) {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
   const nav = useNavigate();
 
-  // Trạng thái dữ liệu tour
   const [tour, setTour] = useState(null);
+  const [similarTours, setSimilarTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedDeparture, setSelectedDeparture] = useState(null);
-  const [isBookingDrawerOpen, setIsBookingDrawerOpen] = useState(false);
-  const [heroImageIndex, setHeroImageIndex] = useState(0);
+  const [adults] = useState(2);
+  const [openDays, setOpenDays] = useState({ 0: true, 1: true });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isNavSearchOpen, setIsNavSearchOpen] = useState(false);
-  const [navSearchQuery, setNavSearchQuery] = useState("");
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const navSearchRef = useRef(null);
-  const navSearchInputRef = useRef(null);
-  const detailScreenRef = useRef(null);
-  const scrollFrameRef = useRef(null);
+  const [isBookingWizardOpen, setIsBookingWizardOpen] = useState(
+    () => searchParams.get("book") === "1"
+  );
+  const [isSaved, setIsSaved] = useState(false);
+  const [heroPhotoIdx, setHeroPhotoIdx] = useState(0);
+  const [activeSection, setActiveSection] = useState("overview");
+  const mainContentRef = useRef(null);
 
-  // Số lượng khách
-  const [adults, setAdults] = useState(2);
-  const [activeTab, setActiveTab] = useState("overview");
-
-  // Tour tương tự
-  const [relatedTours, setRelatedTours] = useState([]);
-
-  // Modal Lightbox xem trọn bộ ảnh
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-
-  const [openItineraryDays, setOpenItineraryDays] = useState({});
-
-  // Accordion mở/đóng các mục lưu ý
-  const [openAccordion, setOpenAccordion] = useState({
-    included: true,
-    excluded: false,
-    childPrice: false,
-    paymentTerms: false,
-    bookingTerms: false,
-    cancellation: false,
-    forceMajeure: false,
-    contact: false,
-  });
-
-  const toggleAccordion = (key) => {
-    setOpenAccordion((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
+  // Khi người dùng lăn chuột ở khu vực sidebar bên trái, chuyển tiếp cuộn sang cột nội dung bên phải
   useEffect(() => {
-    const handleNavSearchClickOutside = (event) => {
-      if (navSearchRef.current && !navSearchRef.current.contains(event.target)) {
-        setIsNavSearchOpen(false);
+    const sidebar = document.querySelector(".aura-detail__sidebar");
+    const onWheel = (e) => {
+      if (mainContentRef.current) {
+        mainContentRef.current.scrollTop += e.deltaY;
       }
     };
-    document.addEventListener("mousedown", handleNavSearchClickOutside);
-    return () => document.removeEventListener("mousedown", handleNavSearchClickOutside);
-  }, []);
-
-  const handleNavSearchSubmit = (event) => {
-    event?.preventDefault();
-    if (!navSearchQuery.trim()) {
-      navSearchInputRef.current?.focus();
-      return;
+    if (sidebar) {
+      sidebar.addEventListener("wheel", onWheel, { passive: true });
     }
-    setIsNavSearchOpen(false);
-    nav(`/tour?q=${encodeURIComponent(navSearchQuery.trim())}`);
-  };
-
-  useEffect(() => {
-    const screen = detailScreenRef.current;
-    if (!screen) return undefined;
-
-    const handleScroll = () => {
-      const scrollTop = screen.scrollTop;
-      if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-      scrollFrameRef.current = requestAnimationFrame(() => {
-        setScrollProgress(Math.min(1, Math.max(0, scrollTop / 240)));
-      });
-    };
-
-    screen.scrollTop = 0;
-    setScrollProgress(0);
-    screen.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
-      screen.removeEventListener("scroll", handleScroll);
-      if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-    };
-  }, [slug]);
-
-  // Lọc tháng cho đợt khởi hành
-  const [selectedMonthKey, setSelectedMonthKey] = useState("");
-  const departuresSectionRef = useRef(null);
-
-  // Tải các tour gợi ý tương tự thật từ API
-  const fetchRelatedTours = useCallback(async (currentTour) => {
-    try {
-      let toursRes = await api.tours({ province_id: currentTour.province_id, limit: 6 });
-      let list = (toursRes?.items || []).filter((item) => item.slug !== currentTour.slug);
-
-      if (list.length < 3) {
-        const fallbackRes = await api.tours({ limit: 8 });
-        const fallbackList = (fallbackRes?.items || []).filter(
-          (item) => item.slug !== currentTour.slug && !list.some((existing) => existing.id === item.id)
-        );
-        list = [...list, ...fallbackList];
+      if (sidebar) {
+        sidebar.removeEventListener("wheel", onWheel);
       }
-
-      setRelatedTours(list.slice(0, 4));
-    } catch {
-      setRelatedTours([]);
-    }
+    };
   }, []);
 
-  // Tải chi tiết tour từ backend
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setError("");
 
-    api.tour(slug)
+    api
+      .tour(slug)
       .then((data) => {
         if (!isMounted) return;
-        const t = data.tour;
-        setTour(t);
-        setError("");
-        setAdults(2);
-        setActiveTab("overview");
-        setHeroImageIndex(0);
-        // Chọn đợt khởi hành đầu tiên còn chỗ
-        const firstAvailable = t.departures?.find((d) => d.status === "OPEN" && d.seats_left > 0);
-        const initDep = firstAvailable || t.departures?.[0] || null;
-        setSelectedDeparture(initDep);
-
-        // Khởi tạo tháng được chọn từ đợt khởi hành đầu tiên
-        if (initDep?.depart_date) {
-          const d = new Date(initDep.depart_date);
-          setSelectedMonthKey(`${d.getFullYear()}-${d.getMonth() + 1}`);
+        const tourData = data?.tour || data;
+        setTour(tourData);
+        if (tourData.departures && tourData.departures.length > 0) {
+          setSelectedDeparture(tourData.departures[0]);
         }
-
-        fetchRelatedTours(t);
         setLoading(false);
+
+        // Tải các tour tương tự hoặc cùng địa phương
+        api
+          .tours({ limit: 12 })
+          .then((res) => {
+            if (!isMounted) return;
+            const all = res?.tours || res?.items || (Array.isArray(res) ? res : []);
+            const filtered = all.filter((t) => t.slug !== slug && t.id !== tourData.id);
+            // Ưu tiên tour cùng tỉnh thành
+            const sameProv = filtered.filter((t) => t.province_id === tourData.province_id);
+            const otherProv = filtered.filter((t) => t.province_id !== tourData.province_id);
+            const combined = [...sameProv, ...otherProv].slice(0, 3);
+            setSimilarTours(combined);
+          })
+          .catch((err) => {
+            console.warn("Không thể tải tour tương tự:", err);
+          });
       })
       .catch((err) => {
         if (!isMounted) return;
+        console.error("Lỗi tải chi tiết tour:", err);
         setError(err.message || "Không thể tải thông tin tour.");
-        setTour(null);
-        setRelatedTours([]);
         setLoading(false);
       });
 
     return () => {
       isMounted = false;
     };
-  }, [slug, fetchRelatedTours]);
+  }, [slug]);
 
-  // Danh sách ảnh hợp lệ
-  const galleryImages = useMemo(() => {
+  const toggleDay = (idx) => {
+    setOpenDays((prev) => ({ ...prev, [idx]: !prev[idx] }));
+  };
+
+  const images = useMemo(() => {
+    if (!tour) return [];
     const list = [];
-    if (tour?.cover_url) list.push(tour.cover_url);
-    if (Array.isArray(tour?.images)) {
+    if (tour.cover_url) list.push(tour.cover_url);
+    if (Array.isArray(tour.images)) {
       tour.images.forEach((img) => {
-        if (img && !list.includes(img)) list.push(img);
+        const url = typeof img === "string" ? img : img?.url;
+        if (url && !list.includes(url)) list.push(url);
       });
+    }
+    const fallbacks = [
+      "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=1600&q=80",
+      "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+    ];
+    let fbIdx = 0;
+    while (list.length < 3) {
+      list.push(fallbacks[fbIdx % fallbacks.length]);
+      fbIdx++;
     }
     return list;
   }, [tour]);
 
-  // Ảnh hero trôi và chuyển cảnh như trang Home.
-  useEffect(() => {
-    if (galleryImages.length < 2) return undefined;
-    const timer = window.setInterval(() => {
-      setHeroImageIndex((current) => (current + 1) % galleryImages.length);
-    }, 9000);
-    return () => window.clearInterval(timer);
-  }, [galleryImages]);
-
-  // Phân nhóm các đợt khởi hành theo tháng
-  const departuresByMonth = useMemo(() => {
-    const deps = tour?.departures || [];
-    const map = new Map();
-
-    deps.forEach((dep) => {
-      if (!dep.depart_date) return;
-      const d = new Date(dep.depart_date);
-      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-      const label = `Tháng ${d.getMonth() + 1} ${d.getFullYear()}`;
-
-      if (!map.has(key)) {
-        map.set(key, { key, label, list: [] });
-      }
-      map.get(key).list.push(dep);
-    });
-
-    return Array.from(map.values());
-  }, [tour?.departures]);
-
-  // Cập nhật selectedMonthKey nếu chưa có
-  useEffect(() => {
-    if (departuresByMonth.length > 0 && !selectedMonthKey) {
-      setSelectedMonthKey(departuresByMonth[0].key);
+  // Gallery 4 ảnh ngang
+  const galleryStripPhotos = useMemo(() => {
+    const list = [...images];
+    const defaultPhotos = [
+      "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+    ];
+    let dIdx = 0;
+    while (list.length < 4) {
+      list.push(defaultPhotos[dIdx % defaultPhotos.length]);
+      dIdx++;
     }
-  }, [departuresByMonth, selectedMonthKey]);
+    return list.slice(0, 4);
+  }, [images]);
 
-  // Danh sách đợt khởi hành của tháng đang chọn
-  const currentMonthDepartures = useMemo(() => {
-    if (!selectedMonthKey) return tour?.departures || [];
-    const found = departuresByMonth.find((m) => m.key === selectedMonthKey);
-    return found ? found.list : tour?.departures || [];
-  }, [departuresByMonth, selectedMonthKey, tour?.departures]);
+  const unitPrice = useMemo(() => {
+    if (selectedDeparture?.price) return Number(selectedDeparture.price);
+    if (tour?.price_from) return Number(tour.price_from);
+    return 0;
+  }, [selectedDeparture, tour]);
 
-  // Giá hiệu lực và giá gốc
-  const effectiveUnitPrice = useMemo(() => {
-    if (selectedDeparture) {
-      return selectedDeparture.effective_price || selectedDeparture.price || 0;
+  const nextHeroPhoto = () => {
+    if (images.length > 0) {
+      setHeroPhotoIdx((prev) => (prev + 1) % images.length);
     }
-    return tour?.price_from || 0;
-  }, [selectedDeparture, tour?.price_from]);
-
-  const originalUnitPrice = useMemo(() => {
-    if (selectedDeparture) {
-      return selectedDeparture.list_price || 0;
-    }
-    return tour?.original_price || 0;
-  }, [selectedDeparture, tour?.original_price]);
-
-  // Cuộn tới phần chọn ngày khởi hành
-  const handleScrollToDepartures = () => {
-    setActiveTab("departures");
-    requestAnimationFrame(() => {
-      departuresSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
   };
 
-  // Lightbox keyboard navigation
-  useEffect(() => {
-    if (!isLightboxOpen) return;
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") setIsLightboxOpen(false);
-      if (e.key === "ArrowRight") {
-        setLightboxIndex((prev) => (prev + 1) % galleryImages.length);
+  const prevHeroPhoto = () => {
+    if (images.length > 0) {
+      setHeroPhotoIdx((prev) => (prev - 1 + images.length) % images.length);
+    }
+  };
+
+  const handleSelectTab = (sectionId) => {
+    setActiveSection(sectionId);
+    setTimeout(() => {
+      const tabWrap = document.querySelector(".aura-detail__tab-wrapper");
+      if (mainContentRef.current && tabWrap) {
+        const targetScroll = Math.max(0, tabWrap.offsetTop - 40);
+        if (mainContentRef.current.scrollTop < targetScroll - 80) {
+          mainContentRef.current.scrollTo({ top: targetScroll, behavior: "smooth" });
+        }
       }
-      if (e.key === "ArrowLeft") {
-        setLightboxIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLightboxOpen, galleryImages.length]);
+    }, 40);
+  };
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#f4f6f8] py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="aura-detail">
+        <main className="aura-detail__container">
           <DetailSkeleton />
-        </div>
-      </main>
+        </main>
+      </div>
     );
   }
 
   if (error || !tour) {
     return (
-      <main className="min-h-screen bg-[#f4f6f8] flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-sm border border-zinc-200">
-          <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
-            <span className="material-symbols-outlined text-2xl">error</span>
+      <div className="aura-detail">
+        <main className="aura-detail__container aura-detail__container--empty">
+          <div className="aura-detail__empty-box">
+            <div className="aura-detail__empty-icon">✕</div>
+            <h2 className="aura-detail__empty-title">Không tìm thấy thông tin tour</h2>
+            <p className="aura-detail__empty-desc">
+              {cleanText(error) || "Tour không tồn tại hoặc đã tạm dừng nhận khách."}
+            </p>
+            <button
+              type="button"
+              className="aura-detail__empty-btn"
+              onClick={() => nav("/tour")}
+            >
+              Quay lại danh sách tour
+            </button>
           </div>
-          <h2 className="text-lg font-bold text-zinc-900 mb-2">Không tìm thấy thông tin tour</h2>
-          <p className="text-xs text-zinc-500 mb-6">{cleanText(error) || "Tour không tồn tại hoặc đã ngừng hoạt động."}</p>
-          <button
-            type="button"
-            onClick={() => nav("/tour")}
-            className="w-full py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-full transition-colors cursor-pointer"
-          >
-            Quay lại danh sách tour
-          </button>
-        </div>
-      </main>
+        </main>
+      </div>
     );
   }
 
-  // Mã tour định danh
-  const tourCode = tour.slug ? tour.slug.slice(0, 8).toUpperCase() : `TOUR#${tour.id}`;
-  const heroFade = Math.max(0, 1 - scrollProgress * 1.1);
-  const heroMask = scrollProgress > 0.02
-    ? `linear-gradient(to top, transparent 0%, transparent ${Math.max(0, scrollProgress * 115 - 15).toFixed(1)}%, #000 ${Math.min(100, scrollProgress * 115 + 15).toFixed(1)}%, #000 100%)`
-    : undefined;
-  const heroBackgroundStyle = {
-    opacity: heroFade,
-    filter: scrollProgress > 0.02 ? `blur(${(scrollProgress * 6).toFixed(1)}px)` : undefined,
-    transform: scrollProgress > 0.01 ? `translateY(${(scrollProgress * 16).toFixed(1)}px)` : undefined,
-    ...(heroMask ? { WebkitMaskImage: heroMask, maskImage: heroMask } : {}),
-  };
-  const heroForegroundStyle = {
-    opacity: heroFade,
-    transform: scrollProgress > 0.01 ? `translateY(${(-scrollProgress * 18).toFixed(1)}px)` : undefined,
-  };
+  const durationDays = tour.duration_days || 1;
+  const durationBadge =
+    durationDays > 1 ? `${durationDays} Days` : "1 Day";
+  const cleanProvince =
+    tour.province_name?.replace(/^(Thành phố|Tỉnh)\s+/, "") || "Việt Nam";
+
+  // Tính toán giá hiển thị
+  const curDep = selectedDeparture || (tour.departures && tour.departures[0]);
+  const curSalePrice = curDep?.sale_price && curDep?.effective_price ? Number(curDep.effective_price) : Number(unitPrice);
+  const priceFormatted = Number(curSalePrice).toLocaleString("vi-VN");
+
+  // Xử lý tiêu đề thành 2 dòng (Tên chính + Phong cách / Điểm nhấn)
+  const rawTourName = cleanText(tour.name);
+  const tourNameParts = rawTourName.split(" - ");
+  const tourTitleMain = tourNameParts[0] || rawTourName;
+  const tourTitleAccent = tourNameParts[1] || "Discovery";
 
   return (
-    <main className="tour-detail" ref={detailScreenRef}>
-      <section className="tour-detail__hero" style={{ pointerEvents: scrollProgress >= 0.9 ? "none" : "auto" }}>
-        <div className="tour-detail__hero-background" style={heroBackgroundStyle} aria-hidden="true">
-          {(galleryImages.length ? galleryImages : [tour.cover_url || "/assets/images/placeholder.jpg"]).map((image, index) => (
-            <div
-              key={image || index}
-              className={`tour-detail__hero-image ${heroImageIndex === index ? "tour-detail__hero-image--active" : ""}`}
-              style={{ backgroundImage: `url(${image})` }}
-            />
-          ))}
-        </div>
-        <div className="tour-detail__hero-overlay" style={heroForegroundStyle} />
-        <header className="tour-detail__nav voyage-nav tour-detail__shell" style={heroForegroundStyle}>
-          <Link to="/" className="voyage-brand">Voyage</Link>
-          <nav className="voyage-navlinks" aria-label="Điều hướng chính">
-            <Link to="/" className="voyage-navlink">Destinations</Link>
-            <Link to="/tour" className="voyage-navlink voyage-navlink--active">Tours</Link>
-            <Link to="/chuyen-di" className="voyage-navlink">Experiences</Link>
-          </nav>
-          <div className="voyage-actions">
-            <div className={`voyage-nav-search ${isNavSearchOpen ? "voyage-nav-search--open" : ""}`} ref={navSearchRef}>
-              <button
-                type="button"
-                className="voyage-nav-search-trigger"
-                onClick={() => {
-                  if (!isNavSearchOpen) {
-                    setIsNavSearchOpen(true);
-                    setTimeout(() => navSearchInputRef.current?.focus(), 100);
-                  } else if (navSearchQuery.trim()) {
-                    handleNavSearchSubmit();
-                  } else {
-                    navSearchInputRef.current?.focus();
-                  }
-                }}
-                title="Search destinations & tours"
-                aria-label="Search"
-              >
-                <span className="material-symbols-outlined text-[19px]">search</span>
-              </button>
-              <form className="voyage-nav-search-form" onSubmit={handleNavSearchSubmit}>
-                <input
-                  ref={navSearchInputRef}
-                  type="text"
-                  className="voyage-nav-search-input"
-                  placeholder="Search destinations, tours..."
-                  value={navSearchQuery}
-                  onChange={(event) => setNavSearchQuery(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") setIsNavSearchOpen(false);
-                  }}
-                  tabIndex={isNavSearchOpen ? 0 : -1}
-                />
-                {isNavSearchOpen && (
-                  <button type="button" className="voyage-nav-search-close" onClick={() => { setIsNavSearchOpen(false); setNavSearchQuery(""); }} aria-label="Close search">✕</button>
-                )}
-              </form>
-            </div>
-            <button
-              type="button"
-              className="voyage-iconbtn"
-              onClick={() => setIsDrawerOpen(true)}
-              aria-label="Open menu"
-              title="Menu"
-            >
-              <span className="material-symbols-outlined text-[20px]">menu</span>
-            </button>
-          </div>
-        </header>
-        <div className="tour-detail__hero-content tour-detail__shell" style={heroForegroundStyle}>
-          <div className="tour-detail__kicker">
-            <span className="material-symbols-outlined">location_on</span>
-            {tour.province_name || "Việt Nam"}
-          </div>
-          <h1>{tour.name}</h1>
-          <div className="tour-detail__hero-meta">
-            <p>
-              {tour.duration_days > 1 ? `${tour.duration_days} ngày ${tour.duration_days - 1} đêm` : "Trong ngày"}
-              {tour.operator_name ? ` · ${tour.operator_name}` : ""}
-            </p>
-            {galleryImages.length > 1 && (
-              <div className="tour-detail__hero-indicators" aria-label="Chọn ảnh tour">
-                {galleryImages.map((image, index) => (
-                  <button
-                    key={image || index}
-                    type="button"
-                    className={`tour-detail__hero-indicator ${heroImageIndex === index ? "tour-detail__hero-indicator--active" : ""}`}
-                    onClick={() => setHeroImageIndex(index)}
-                    aria-label={`Ảnh ${index + 1}`}
-                    aria-current={heroImageIndex === index ? "true" : undefined}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <nav className="tour-detail__tabs" aria-label="Điều hướng nội dung tour">
-        <div className="tour-detail__shell" role="tablist" aria-label="Thông tin tour">
-          {[
-            ["overview", "Tổng quan"],
-            ["departures", "Khởi hành"],
-            ["services", "Bao gồm & không bao gồm"],
-            ["information", "Thông tin tour"],
-          ].map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === id}
-              aria-controls={`tour-panel-${id}`}
-              className={`tour-detail__tab ${activeTab === id ? "tour-detail__tab--active" : ""}`}
-              onClick={() => setActiveTab(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      <div className="tour-detail__content tour-detail__shell">
-
-        {/* 3. Hero Section (Cột trái ảnh lớn + Cột phải widget tóm tắt & Đặt tour - Chuẩn ảnh 123.png) */}
-        {activeTab === "overview" && (
-        <div id="tour-panel-overview" role="tabpanel" className="tour-detail__panel">
-        <section className="tour-detail__overview">
-          <div className="tour-detail__overview-copy">
-            <h2>{tour.name}</h2>
-            {tour.summary && <p>{cleanText(tour.summary)}</p>}
-          </div>
-          <dl className="tour-detail__overview-facts">
-            <div>
-              <dt>Thời lượng</dt>
-              <dd>{tour.duration_days > 1 ? `${tour.duration_days} ngày ${tour.duration_days - 1} đêm` : "Trong ngày"}</dd>
-            </div>
-            <div>
-              <dt>Giá từ</dt>
-              <dd>{effectiveUnitPrice.toLocaleString("vi-VN")}₫ <small>/ khách</small></dd>
-            </div>
-            <div>
-              <dt>Khởi hành</dt>
-              <dd>{selectedDeparture ? formatFullDate(selectedDeparture.depart_date) : "Đang cập nhật"}</dd>
-            </div>
-          </dl>
-        </section>
-        </div>
-        )}
-
-        {/* 4. Section "Lịch trình khởi hành" (Departures Picker - Chuẩn ảnh 123.png) */}
-        {activeTab === "departures" && (
-        <section id="tour-panel-departures" role="tabpanel" ref={departuresSectionRef} className="tour-detail__panel tour-detail__section tour-detail__departures">
-          <h2>Lịch trình khởi hành</h2>
-
-          {departuresByMonth.length > 0 ? (
-            <div className="tour-detail__departures-content">
-              {/* Tabs chọn tháng */}
-              <div className="tour-detail__month-tabs" role="tablist" aria-label="Chọn tháng khởi hành">
-                {departuresByMonth.map((m) => {
-                  const isActive = selectedMonthKey === m.key;
-                  return (
-                    <button
-                      key={m.key}
-                      type="button"
-                      onClick={() => setSelectedMonthKey(m.key)}
-                      className={`tour-detail__month-tab ${
-                        isActive
-                          ? "tour-detail__month-tab--active"
-                          : ""
-                      }`}
-                    >
-                      {m.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Danh sách các đợt khởi hành trong tháng */}
-              <div className="tour-detail__departure-grid">
-                {currentMonthDepartures.map((d) => {
-                  const isSelected = selectedDeparture?.id === d.id;
-                  const isAvailable = d.seats_left > 0 && d.status === "OPEN";
-                  const price = d.effective_price || d.price || 0;
-
-                  return (
-                    <button
-                      key={d.id}
-                      type="button"
-                      disabled={!isAvailable}
-                      onClick={() => {
-                        if (isAvailable) setSelectedDeparture(d);
-                      }}
-                      className={`tour-detail__departure-card ${
-                        isSelected
-                          ? "tour-detail__departure-card--selected"
-                          : isAvailable
-                          ? ""
-                          : "tour-detail__departure-card--unavailable"
-                      }`}
-                    >
-                      <span className="tour-detail__departure-copy">
-                        <span className="tour-detail__departure-date">
-                          <span className="material-symbols-outlined">event</span>
-                          <strong>
-                            {formatFullDate(d.depart_date)}
-                          </strong>
-                        </span>
-                        <span className="tour-detail__departure-price">
-                          <strong>{price.toLocaleString("vi-VN")}₫</strong>
-                          {d.list_price && d.list_price > price && (
-                            <span>
-                              {d.list_price.toLocaleString("vi-VN")}₫
-                            </span>
-                          )}
-                        </span>
-                        <span className={`tour-detail__departure-seats ${isAvailable ? "tour-detail__departure-seats--available" : ""}`}>
-                          {isAvailable ? `Còn ${d.seats_left} chỗ` : "Hết chỗ"}
-                        </span>
-                      </span>
-
-                      <span className="tour-detail__departure-state">
-                        {isSelected ? (
-                          <span className="tour-detail__departure-check">
-                            <span className="material-symbols-outlined">check</span>
-                          </span>
-                        ) : isAvailable ? (
-                          <span className="tour-detail__departure-select">
-                            Chọn
-                          </span>
-                        ) : null}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="tour-detail__empty-state">
-              Hiện chưa có đợt khởi hành nào được mở bán. Vui lòng liên hệ để được hỗ trợ.
-            </div>
-          )}
-
-          {selectedDeparture?.seats_left > 0 && selectedDeparture.status === "OPEN" && (
-            <div className="tour-detail__departure-action">
-              <p>
-                Đang chọn <strong>{formatFullDate(selectedDeparture.depart_date)}</strong>
-                <span> · Còn {selectedDeparture.seats_left} chỗ</span>
-              </p>
-              <button type="button" onClick={() => setIsBookingDrawerOpen(true)}>
-                Đặt tour
-                <span className="material-symbols-outlined">arrow_forward</span>
-              </button>
-            </div>
-          )}
-        </section>
-        )}
-
-        {activeTab === "overview" && (
-        <div className="tour-detail__panel">
-        <section className="tour-detail__section tour-detail__highlights">
-          <h2>Điểm nhấn chương trình</h2>
-          <div className="tour-detail__highlights-content">
-            {Array.isArray(tour.highlights) && tour.highlights.length > 0 ? (
-              <ul className="tour-detail__highlights-list">
-                {tour.highlights.map((hl, idx) => (
-                  <li key={idx}>
-                    <span aria-hidden="true">{String(idx + 1).padStart(2, "0")}</span>
-                    <span>{cleanText(hl)}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            {tour.description && (
-              <p className="tour-detail__highlights-description">
-                {cleanText(tour.description)}
-              </p>
-            )}
-          </div>
-        </section>
-        </div>
-        )}
-
-        {/* 7. Section "Lịch trình" (Itinerary Cards - Chuẩn ảnh 345.png & 567.png) */}
-        {activeTab === "overview" && (
-        <section className="tour-detail__panel tour-detail__section space-y-4">
-          <h2 className="text-xl font-bold text-zinc-900">Lịch trình</h2>
-          {Array.isArray(tour.itinerary) && tour.itinerary.length > 0 ? (
-            <div className="tour-detail__timeline">
-              {tour.itinerary.map((dayItem, dIdx) => (
-                <article
-                  key={dIdx}
-                  className="tour-detail__timeline-day"
+    <div className="aura-detail">
+      <main className="aura-detail__container">
+        <div className="aura-detail__layout-grid">
+          {/* ========================================================= */}
+          {/* CỘT TRÁI: SIDEBAR DỌC (Logo + Nav dùng chung + Anchor tabs) */}
+          {/* ========================================================= */}
+          <aside className="aura-detail__sidebar">
+            <div className="aura-detail__sidebar-top">
+              <Link to="/" className="aura-home__brand" aria-label="Aura Voyage">
+                <svg
+                  className="aura-home__brand-icon"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <div className="tour-detail__day-label">Ngày {dayItem.day || dIdx + 1}</div>
-                  <div className="tour-detail__timeline-body">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const dayKey = dayItem.day || dIdx + 1;
-                        setOpenItineraryDays((previous) => ({
-                          ...previous,
-                          [dayKey]: !previous[dayKey],
-                        }));
-                      }}
-                      className="tour-detail__timeline-item"
-                      aria-expanded={Boolean(openItineraryDays[dayItem.day || dIdx + 1])}
-                    >
-                      <span className="tour-detail__timeline-dot" aria-hidden="true" />
-                      <img
-                        src={dayItem.places?.[0]?.anh || tour.cover_url || "/assets/images/placeholder.jpg"}
-                        alt={dayItem.title || `Hành trình ngày ${dayItem.day || dIdx + 1}`}
-                      />
-                      <span className="tour-detail__timeline-copy">
-                        <strong>{dayItem.title || "Hành trình chi tiết"}</strong>
-                        <span>
-                          {cleanText(dayItem.description) ||
-                            `${dayItem.places?.length || 0} điểm tham quan trong ngày`}
-                        </span>
-                      </span>
-                      <span className={`material-symbols-outlined tour-detail__timeline-arrow ${openItineraryDays[dayItem.day || dIdx + 1] ? "tour-detail__timeline-arrow--open" : ""}`} aria-hidden="true">
-                        keyboard_arrow_down
-                      </span>
-                    </button>
-                    {openItineraryDays[dayItem.day || dIdx + 1] && (
-                      <TourTimelineContent day={dayItem} />
-                    )}
-                  </div>
-                </article>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
+                </svg>
+              </Link>
+
+              {/* Dùng chung bộ nav hệ thống */}
+              <nav className="aura-home__nav" aria-label="Main Editorial Navigation">
+                <Link to="/" className="aura-home__nav-link">
+                  <span>About</span>
+                  <span>→</span>
+                </Link>
+                <Link to="/tour" className="aura-home__nav-link aura-home__nav-link--active">
+                  <span>/ Tours</span>
+                </Link>
+                <Link to="/chuyen-di" className="aura-home__nav-link">
+                  <span>Experiences</span>
+                  <span>→</span>
+                </Link>
+                <Link to="/tai-khoan" className="aura-home__nav-link">
+                  <span>Account</span>
+                  <span>→</span>
+                </Link>
+              </nav>
+            </div>
+
+            <div className="aura-detail__sidebar-middle">
+              <Link to="/tour" className="aura-detail__back-link">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Back to tours</span>
+              </Link>
+            </div>
+
+            {/* In-page Anchor Navigation theo đúng mockup */}
+            <nav className="aura-detail__page-nav" aria-label="Section Navigation">
+              {[
+                { id: "overview", label: "Overview" },
+                { id: "highlights", label: "Highlights" },
+                { id: "itinerary", label: "Itinerary" },
+                { id: "included", label: "What's included" },
+                { id: "reviews", label: "Reviews" },
+                { id: "faq", label: "FAQ" },
+              ].map((sec) => (
+                <button
+                  key={sec.id}
+                  type="button"
+                  className={`aura-detail__page-nav-item ${
+                    activeSection === sec.id ? "aura-detail__page-nav-item--active" : ""
+                  }`}
+                  onClick={() => handleSelectTab(sec.id)}
+                >
+                  {sec.label}
+                </button>
               ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl p-6 text-center text-zinc-500 text-xs border border-zinc-100">
-              Lịch trình chi tiết đang được cập nhật.
-            </div>
-          )}
-        </section>
-        )}
+            </nav>
+          </aside>
 
-        {activeTab === "services" && (
-          <section id="tour-panel-services" role="tabpanel" className="tour-detail__section space-y-4">
-            <h2 className="text-xl font-bold text-zinc-900">Bao gồm & không bao gồm</h2>
-            <div className="bg-white rounded-2xl shadow-xs border border-zinc-100 overflow-hidden divide-y divide-zinc-100">
-              <div className="overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => toggleAccordion("included")}
-                  className="w-full py-4 px-6 text-left flex items-center justify-between hover:bg-zinc-50 transition-colors cursor-pointer"
-                >
-                  <span className="text-xs sm:text-sm font-bold text-zinc-900">Giá tour bao gồm</span>
-                  <span className={`material-symbols-outlined text-zinc-500 transition-transform duration-200 ${openAccordion.included ? "rotate-180" : ""}`}>keyboard_arrow_down</span>
-                </button>
-                {openAccordion.included && (
-                  <div className="px-6 pb-5 pt-1 text-xs text-zinc-700 space-y-2">
-                    {Array.isArray(tour.included) && tour.included.length > 0 ? (
-                      <ul className="space-y-1.5">
-                        {tour.included.map((item, idx) => (
-                          <li key={idx} className="flex items-start gap-2">
-                            <span className="material-symbols-outlined text-sm text-emerald-600 shrink-0 mt-0.5">check_circle</span>
-                            <span>{cleanText(item)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : <p className="text-zinc-500">Chưa có thông tin.</p>}
+          {/* ========================================================= */}
+          {/* CỘT PHẢI: NỘI DUNG CHÍNH (Hero cắt chéo + Gallery + Booking + Details) */}
+          {/* ========================================================= */}
+          <div className="aura-detail__main-content" ref={mainContentRef}>
+            {/* 1. TOP HERO SECTION */}
+            <section className="aura-detail__hero">
+              {/* Cột trái Hero: Breadcrumbs + Title + Description + Meta tags */}
+              <div className="aura-detail__hero-text">
+                <div className="aura-detail__breadcrumbs">
+                  <Link to="/tour">Tours</Link>
+                  <span className="aura-detail__bread-sep">/</span>
+                  <span>{cleanProvince}</span>
+                  <span className="aura-detail__bread-sep">/</span>
+                  <span className="aura-detail__bread-current">{tourTitleMain}</span>
+                </div>
+
+                <h1 className="aura-detail__hero-title">
+                  <span className="aura-detail__hero-title-main">{tourTitleMain}</span>
+                  <span className="aura-detail__hero-title-sub">{tourTitleAccent}</span>
+                </h1>
+
+                <p className="aura-detail__hero-lead">
+                  {cleanText(tour.summary || tour.description) ||
+                    `A ${durationDays}-day journey through ${cleanProvince}'s most iconic destinations — charming towns, stunning natural views, and authentic cultural experiences.`}
+                </p>
+
+                {/* Hàng badge thông số với icon theo mockup */}
+                <div className="aura-detail__hero-meta-row">
+                  <div className="aura-detail__hero-meta-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <span>{cleanProvince}</span>
                   </div>
-                )}
-              </div>
-              <div className="overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => toggleAccordion("excluded")}
-                  className="w-full py-4 px-6 text-left flex items-center justify-between hover:bg-zinc-50 transition-colors cursor-pointer"
-                >
-                  <span className="text-xs sm:text-sm font-bold text-zinc-900">Giá tour không bao gồm</span>
-                  <span className={`material-symbols-outlined text-zinc-500 transition-transform duration-200 ${openAccordion.excluded ? "rotate-180" : ""}`}>keyboard_arrow_down</span>
-                </button>
-                {openAccordion.excluded && (
-                  <div className="px-6 pb-5 pt-1 text-xs text-zinc-700 space-y-2">
-                    {Array.isArray(tour.excluded) && tour.excluded.length > 0 ? (
-                      <ul className="space-y-1.5">
-                        {tour.excluded.map((item, idx) => (
-                          <li key={idx} className="flex items-start gap-2">
-                            <span className="material-symbols-outlined text-sm text-rose-600 shrink-0 mt-0.5">cancel</span>
-                            <span>{cleanText(item)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : <p className="text-zinc-500">Chưa có thông tin.</p>}
+
+                  <div className="aura-detail__hero-meta-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/>
+                      <line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span>{durationBadge}</span>
                   </div>
-                )}
+
+                  <div className="aura-detail__hero-meta-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>Small group</span>
+                  </div>
+
+                  <div className="aura-detail__hero-meta-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                    </svg>
+                    <span>Leisure</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </section>
-        )}
 
-        {/* 8. Section "Những thông tin cần lưu ý" (Accordion - Chuẩn ảnh 567.png & 890.png) */}
-        {activeTab === "information" && (
-        <>
-        <section className="tour-detail__section space-y-4">
-          <h2 className="text-xl font-bold text-zinc-900">Những thông tin cần lưu ý</h2>
-          <div className="bg-white rounded-2xl shadow-xs border border-zinc-100 overflow-hidden divide-y divide-zinc-100">
-            {/* 3. Lưu ý giá trẻ em */}
-            <div className="overflow-hidden">
-              <button
-                type="button"
-                onClick={() => toggleAccordion("childPrice")}
-                className="w-full py-4 px-6 text-left flex items-center justify-between hover:bg-zinc-50 transition-colors cursor-pointer"
-              >
-                <span className="text-xs sm:text-sm font-bold text-zinc-900">Lưu ý giá trẻ em</span>
-                <span className={`material-symbols-outlined text-zinc-500 transition-transform duration-200 ${openAccordion.childPrice ? "rotate-180" : ""}`}>
-                  keyboard_arrow_down
-                </span>
-              </button>
-              {openAccordion.childPrice && (
-                <div className="px-6 pb-5 pt-1 text-xs text-zinc-700 space-y-2">
-                  <p>• Trẻ em dưới 5 tuổi: Miễn phí giá tour (cha mẹ tự túc các chi phí phát sinh nếu có).</p>
-                  <p>• Trẻ em từ 5 đến 11 tuổi: Tính 75% giá tour người lớn, ngủ chung giường với bố mẹ.</p>
-                  <p>• Trẻ em từ 12 tuổi trở lên: Tính giá như người lớn, hưởng đầy đủ dịch vụ tiêu chuẩn.</p>
-                </div>
-              )}
-            </div>
+              {/* Cột phải Hero: Banner cắt chéo + Nút tròn điều khiển + Slider indicator */}
+              <div className="aura-detail__hero-banner-wrap">
+                <div className="aura-detail__hero-banner">
+                  <img
+                    src={images[heroPhotoIdx] || images[0]}
+                    alt={cleanText(tour.name)}
+                    className="aura-detail__hero-img"
+                  />
 
-            {/* 4. Điều kiện thanh toán */}
-            <div className="overflow-hidden">
-              <button
-                type="button"
-                onClick={() => toggleAccordion("paymentTerms")}
-                className="w-full py-4 px-6 text-left flex items-center justify-between hover:bg-zinc-50 transition-colors cursor-pointer"
-              >
-                <span className="text-xs sm:text-sm font-bold text-zinc-900">Điều kiện thanh toán</span>
-                <span className={`material-symbols-outlined text-zinc-500 transition-transform duration-200 ${openAccordion.paymentTerms ? "rotate-180" : ""}`}>
-                  keyboard_arrow_down
-                </span>
-              </button>
-              {openAccordion.paymentTerms && (
-                <div className="px-6 pb-5 pt-1 text-xs text-zinc-700 space-y-2">
-                  <p>• Thanh toán giữ chỗ: Đặt cọc 50% tổng giá trị tour ngay khi xác nhận đặt tour.</p>
-                  <p>• Thanh toán phần còn lại: Hoàn tất 100% trước ngày khởi hành tối thiểu 3 ngày.</p>
-                  <p>• Hình thức thanh toán: Chuyển khoản ngân hàng trực tiếp (hỗ trợ VietQR quét mã tức thì) hoặc thẻ thanh toán quốc tế.</p>
-                </div>
-              )}
-            </div>
+                  {/* Top-Right Circle Controls (Search & Drawer Menu) */}
+                  <div className="aura-detail__hero-controls">
+                    <button
+                      type="button"
+                      className="aura-detail__circle-btn"
+                      onClick={() => nav("/tour")}
+                      aria-label="Tìm kiếm tour"
+                    >
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="aura-detail__circle-btn"
+                      onClick={() => setIsDrawerOpen(true)}
+                      aria-label="Mở Menu"
+                    >
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <line x1="4" y1="7" x2="20" y2="7" />
+                        <line x1="4" y1="12" x2="20" y2="12" />
+                        <line x1="4" y1="17" x2="20" y2="17" />
+                      </svg>
+                    </button>
+                  </div>
 
-            {/* 5. Điều kiện đăng ký */}
-            <div className="overflow-hidden">
-              <button
-                type="button"
-                onClick={() => toggleAccordion("bookingTerms")}
-                className="w-full py-4 px-6 text-left flex items-center justify-between hover:bg-zinc-50 transition-colors cursor-pointer"
-              >
-                <span className="text-xs sm:text-sm font-bold text-zinc-900">Điều kiện đăng ký</span>
-                <span className={`material-symbols-outlined text-zinc-500 transition-transform duration-200 ${openAccordion.bookingTerms ? "rotate-180" : ""}`}>
-                  keyboard_arrow_down
-                </span>
-              </button>
-              {openAccordion.bookingTerms && (
-                <div className="px-6 pb-5 pt-1 text-xs text-zinc-700 space-y-2">
-                  <p>• Khách hàng vui lòng mang theo Căn cước công dân (CCCD) hoặc Hộ chiếu bản gốc còn hạn khi tham gia tour.</p>
-                  <p>• Trẻ em dưới 14 tuổi cần mang theo Giấy khai sinh bản sao trích lục hoặc Hộ chiếu.</p>
-                </div>
-              )}
-            </div>
-
-            {/* 6. Chính sách hoàn hủy tour */}
-            <div className="overflow-hidden">
-              <button
-                type="button"
-                onClick={() => toggleAccordion("cancellation")}
-                className="w-full py-4 px-6 text-left flex items-center justify-between hover:bg-zinc-50 transition-colors cursor-pointer"
-              >
-                <span className="text-xs sm:text-sm font-bold text-zinc-900">Lưu ý về chuyển hoặc hủy tour</span>
-                <span className={`material-symbols-outlined text-zinc-500 transition-transform duration-200 ${openAccordion.cancellation ? "rotate-180" : ""}`}>
-                  keyboard_arrow_down
-                </span>
-              </button>
-              {openAccordion.cancellation && (
-                <div className="px-6 pb-5 pt-1 text-xs text-zinc-700 space-y-3">
-                  {Array.isArray(tour.cancellation_policy) && tour.cancellation_policy.length > 0 ? (
-                    <div className="border border-zinc-200 rounded-xl overflow-hidden">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-zinc-50 font-semibold text-zinc-600 border-b border-zinc-200">
-                          <tr>
-                            <th className="py-2.5 px-4">Thời gian thông báo hủy</th>
-                            <th className="py-2.5 px-4 text-right">Tỷ lệ hoàn tiền</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100">
-                          {tour.cancellation_policy.map((moc, idx) => (
-                            <tr key={idx}>
-                              <td className="py-2 px-4">Từ {moc.days_before} ngày trước khởi hành</td>
-                              <td className="py-2 px-4 text-right font-bold text-blue-700">{moc.refund_percent}%</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  {/* Bottom-Right Slider Indicator & Arrows */}
+                  <div className="aura-detail__hero-slider-bar">
+                    <div className="aura-detail__hero-track">
+                      <div
+                        className="aura-detail__hero-track-fill"
+                        style={{
+                          width: `${((heroPhotoIdx + 1) / Math.max(1, images.length)) * 100}%`,
+                        }}
+                      />
                     </div>
-                  ) : (
-                    <p>• Hủy trước 7 ngày khởi hành: Hoàn 100% chi phí.</p>
+                    <span className="aura-detail__hero-count">
+                      {String(heroPhotoIdx + 1).padStart(2, "0")} / {String(Math.max(1, images.length)).padStart(2, "0")}
+                    </span>
+
+                    <div className="aura-detail__hero-arrows">
+                      <button
+                        type="button"
+                        className="aura-detail__arrow-btn"
+                        onClick={prevHeroPhoto}
+                        aria-label="Ảnh trước"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                          <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        className="aura-detail__arrow-btn"
+                        onClick={nextHeroPhoto}
+                        aria-label="Ảnh sau"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                          <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* 2. DẢI 4 ẢNH GALLERY NGANG (Middle Photo Gallery Strip) */}
+            <section className="aura-detail__gallery-strip">
+              {galleryStripPhotos.map((photoUrl, pIdx) => (
+                <div
+                  key={pIdx}
+                  className="aura-detail__gallery-strip-item"
+                  onClick={() => setHeroPhotoIdx(pIdx % images.length)}
+                >
+                  <img
+                    src={photoUrl}
+                    alt={`${cleanText(tour.name)} - view ${pIdx + 1}`}
+                    className="aura-detail__gallery-strip-img"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </section>
+
+            {/* 3. KHU VỰC THÔNG TIN CHÍNH + FLOATING BOOKING CARD */}
+            <div className="aura-detail__content-split">
+              <div className="aura-detail__left-flow">
+                {/* Nội dung hiển thị riêng theo từng tab được chọn ở sidebar */}
+                <div className="aura-detail__tab-wrapper" key={activeSection}>
+                  {/* TAB 1: OVERVIEW */}
+                  {activeSection === "overview" && (
+                    <div className="aura-detail__tab-panel">
+                      <span className="aura-detail__section-label">OVERVIEW</span>
+                      <h2 className="aura-detail__section-heading">
+                        {tour.tagline || `A coastal paradise of timeless beauty`}
+                      </h2>
+                      <div className="aura-detail__section-desc">
+                        <p>
+                          {cleanText(tour.description || tour.summary) ||
+                            `Khám phá vẻ đẹp kỳ vĩ của ${cleanProvince}, nơi giao thoa giữa thiên nhiên tráng lệ và di sản văn hóa đặc sắc. Tận hưởng kỳ nghỉ thư thái, thưởng thức ẩm thực bản địa và lưu giữ những khoảnh khắc đáng nhớ.`}
+                        </p>
+                        <p>
+                          Chuyến đi được thiết kế theo phong cách thư thả (leisure), tôn trọng không gian riêng tư của từng du khách, mang đến trải nghiệm tiếp cận sâu sắc các giá trị văn hóa và phong cảnh độc đáo.
+                        </p>
+                      </div>
+
+                      {/* Các điểm nhấn tóm tắt của Overview */}
+                      <div className="aura-detail__overview-badges">
+                        <div className="aura-detail__overview-badge">
+                          <span className="aura-detail__badge-num">100%</span>
+                          <span className="aura-detail__badge-txt">Cam kết khởi hành đúng lịch</span>
+                        </div>
+                        <div className="aura-detail__overview-badge">
+                          <span className="aura-detail__badge-num">&lt; 12</span>
+                          <span className="aura-detail__badge-txt">Số lượng khách giới hạn mỗi đoàn</span>
+                        </div>
+                        <div className="aura-detail__overview-badge">
+                          <span className="aura-detail__badge-num">4.9★</span>
+                          <span className="aura-detail__badge-txt">Đánh giá xuất sắc từ du khách</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 2: HIGHLIGHTS */}
+                  {activeSection === "highlights" && (
+                    <div className="aura-detail__tab-panel">
+                      <span className="aura-detail__section-label">HIGHLIGHTS</span>
+                      <h2 className="aura-detail__section-heading">Điểm nhấn chuyến đi</h2>
+                      <div className="aura-detail__highlights-editorial">
+                        {Array.isArray(tour.highlights) && tour.highlights.length > 0 ? (
+                          tour.highlights.map((hl, hlIdx) => (
+                            <div key={hlIdx} className="aura-detail__hl-row">
+                              <span className="aura-detail__hl-dash">—</span>
+                              <span className="aura-detail__hl-text">{cleanText(hl)}</span>
+                            </div>
+                          ))
+                        ) : (
+                          [
+                            `Trải nghiệm những danh lam thắng cảnh biểu tượng của ${cleanProvince}`,
+                            "Hành trình bằng thuyền thưởng ngoạn trọn vẹn cảnh sắc kỳ vĩ",
+                            "Thưởng thức tinh hoa ẩm thực và đặc sản truyền thống",
+                            "Khám phá các di tích lịch sử và văn hóa bản địa độc đáo",
+                            "Thời gian tự do thư giãn và cảm nhận nhịp sống thư thái",
+                          ].map((hl, hlIdx) => (
+                            <div key={hlIdx} className="aura-detail__hl-row">
+                              <span className="aura-detail__hl-dash">—</span>
+                              <span className="aura-detail__hl-text">{hl}</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: ITINERARY */}
+                  {activeSection === "itinerary" && (
+                    <div className="aura-detail__tab-panel">
+                      <div className="aura-detail__tab-head-row">
+                        <div>
+                          <span className="aura-detail__section-label">ITINERARY</span>
+                          <h2 className="aura-detail__section-heading">Lịch trình chi tiết từng ngày</h2>
+                        </div>
+                        {Array.isArray(tour.itinerary) && tour.itinerary.length > 1 && (
+                          <button
+                            type="button"
+                            className="aura-detail__expand-toggle-btn"
+                            onClick={() => {
+                              const allOpen = tour.itinerary.every((_, i) => openDays[i]);
+                              const next = {};
+                              tour.itinerary.forEach((_, i) => {
+                                next[i] = !allOpen;
+                              });
+                              setOpenDays(next);
+                            }}
+                          >
+                            {tour.itinerary.every((_, i) => openDays[i]) ? "Thu gọn tất cả" : "Mở rộng tất cả"}
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="aura-detail__itinerary-list">
+                        {Array.isArray(tour.itinerary) && tour.itinerary.length > 0 ? (
+                          tour.itinerary.map((day, idx) => {
+                            const isOpen = Boolean(openDays[idx]);
+                            const dayNum = String(day.day || idx + 1).padStart(2, "0");
+                            const dayTitle = day.title || `Ngày ${day.day || idx + 1}`;
+                            const dayPlaces = Array.isArray(day.places) ? day.places : [];
+                            const dayChecklist = Array.isArray(day.checklist) ? day.checklist : [];
+
+                            return (
+                              <div key={idx} className={`aura-detail__day-card ${isOpen ? "aura-detail__day-card--open" : ""}`}>
+                                <button
+                                  type="button"
+                                  className="aura-detail__day-header"
+                                  onClick={() => toggleDay(idx)}
+                                  aria-expanded={isOpen}
+                                >
+                                  <div className="aura-detail__day-title-wrap">
+                                    <span className="aura-detail__day-badge">NGÀY {dayNum}</span>
+                                    <h3 className="aura-detail__day-name">{cleanText(dayTitle)}</h3>
+                                  </div>
+                                  <span className="aura-detail__day-icon">{isOpen ? "−" : "+"}</span>
+                                </button>
+
+                                {isOpen && (
+                                  <div className="aura-detail__day-body">
+                                    {/* Mô tả chi tiết hành trình trong ngày */}
+                                    {day.description && (
+                                      <p className="aura-detail__day-p">{cleanText(day.description)}</p>
+                                    )}
+
+                                    {/* Danh sách các điểm dừng chân & tham quan */}
+                                    {dayPlaces.length > 0 && (
+                                      <div className="aura-detail__day-places-section">
+                                        <h4 className="aura-detail__day-subhead">
+                                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                            <circle cx="12" cy="10" r="3" />
+                                          </svg>
+                                          <span>Điểm tham quan & dừng chân ({dayPlaces.length})</span>
+                                        </h4>
+                                        <div className="aura-detail__day-places-grid">
+                                          {dayPlaces.map((pl, pIdx) => (
+                                            <div key={pIdx} className="aura-detail__day-place-chip">
+                                              <span className="aura-detail__place-order">0{pIdx + 1}</span>
+                                              <div className="aura-detail__place-details">
+                                                <div className="aura-detail__place-title-row">
+                                                  <span className="aura-detail__place-name">{cleanText(pl.name)}</span>
+                                                  {pl.category && (
+                                                    <span className="aura-detail__place-cat">{cleanText(pl.category)}</span>
+                                                  )}
+                                                </div>
+                                                {pl.dia_chi && (
+                                                  <span className="aura-detail__place-address">{cleanText(pl.dia_chi)}</span>
+                                                )}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Checklist lưu ý trong ngày */}
+                                    {dayChecklist.length > 0 && (
+                                      <div className="aura-detail__day-checklist-box">
+                                        <span className="aura-detail__checklist-title">Lưu ý chuẩn bị:</span>
+                                        <ul className="aura-detail__checklist-items">
+                                          {dayChecklist.map((chk, cIdx) => (
+                                            <li key={cIdx} className="aura-detail__checklist-item">
+                                              <span className="aura-detail__checklist-dot">•</span>
+                                              <span>{cleanText(chk)}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="aura-detail__day-card aura-detail__day-card--open">
+                            <div className="aura-detail__day-header">
+                              <div className="aura-detail__day-title-wrap">
+                                <span className="aura-detail__day-badge">NGÀY 01</span>
+                                <h3 className="aura-detail__day-name">Khởi hành & Chạm ngõ miền di sản</h3>
+                              </div>
+                            </div>
+                            <div className="aura-detail__day-body">
+                              <p className="aura-detail__day-p">
+                                Xe đưa đón chất lượng cao tại điểm hẹn, bắt đầu hành trình khám phá những điểm đến tráng lệ nhất.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 4: WHAT'S INCLUDED */}
+                  {activeSection === "included" && (
+                    <div className="aura-detail__tab-panel">
+                      <span className="aura-detail__section-label">WHAT'S INCLUDED</span>
+                      <h2 className="aura-detail__section-heading">Dịch vụ & Quyền lợi trọn gói</h2>
+                      <div className="aura-detail__inclusions-grid">
+                        <div className="aura-detail__inclusions-col">
+                          <h4 className="aura-detail__inclusions-subhead">Bao gồm trong giá</h4>
+                          <ul className="aura-detail__check-list">
+                            {(Array.isArray(tour.included) && tour.included.length > 0
+                              ? tour.included
+                              : [
+                                  "Khách sạn và resort nghỉ dưỡng tiêu chuẩn 4-5 sao",
+                                  "Toàn bộ bữa ăn chính theo phong cách ẩm thực địa phương",
+                                  "Xe đưa đón chất lượng cao suốt hành trình",
+                                  "Vé tham quan tất cả các điểm đến trong lịch trình",
+                                  "Hướng dẫn viên chuyên nghiệp đồng hành",
+                                  "Bảo hiểm du lịch trọn gói",
+                                ]
+                            ).map((inc, iIdx) => (
+                              <li key={iIdx}>
+                                <span className="aura-detail__check-icon">✓</span>
+                                <span>{cleanText(inc)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="aura-detail__inclusions-col">
+                          <h4 className="aura-detail__inclusions-subhead">Không bao gồm</h4>
+                          <ul className="aura-detail__check-list aura-detail__check-list--excluded">
+                            {(Array.isArray(tour.excluded) && tour.excluded.length > 0
+                              ? tour.excluded
+                              : [
+                                  "Chi phí phát sinh cá nhân (giặt ủi, đồ uống ngoài menu)",
+                                  "Tiền tip cho hướng dẫn viên và tài xế",
+                                  "Các hoạt động tự do ngoài chương trình",
+                                ]
+                            ).map((exc, eIdx) => (
+                              <li key={eIdx}>
+                                <span className="aura-detail__dash-icon">—</span>
+                                <span>{cleanText(exc)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 5: REVIEWS */}
+                  {activeSection === "reviews" && (
+                    <div className="aura-detail__tab-panel">
+                      <span className="aura-detail__section-label">REVIEWS</span>
+                      <h2 className="aura-detail__section-heading">Đánh giá từ du khách</h2>
+
+                      <div className="aura-detail__reviews-box">
+                        <div className="aura-detail__reviews-score-card">
+                          <div className="aura-detail__score-main">4.9</div>
+                          <div className="aura-detail__score-stars">★★★★★</div>
+                          <div className="aura-detail__score-caption">Dựa trên 128 đánh giá được xác thực</div>
+                        </div>
+
+                        <div className="aura-detail__reviews-list">
+                          {[
+                            {
+                              author: "Minh Anh, Hà Nội",
+                              rating: 5,
+                              date: "Tháng 9, 2026",
+                              content:
+                                "Chuyến đi tuyệt vời hơn cả mong đợi. Lịch trình thong thả, không bị gấp gáp, khách sạn đẹp và đồ ăn địa phương rất chuẩn vị.",
+                            },
+                            {
+                              author: "Hoàng Long, TP. Hồ Chí Minh",
+                              rating: 5,
+                              date: "Tháng 8, 2026",
+                              content:
+                                "Hướng dẫn viên am hiểu sâu sắc về văn hóa bản địa. Xe đưa đón êm ái, đoàn nhỏ dưới 10 người nên mọi người gắn kết rất vui vẻ.",
+                            },
+                            {
+                              author: "Thanh Trúc, Đà Nẵng",
+                              rating: 5,
+                              date: "Tháng 7, 2026",
+                              content:
+                                "Góc chụp ảnh nào cũng mê ly. Dịch vụ chăm sóc trước và trong chuyến đi cực kỳ chu đáo và chuyên nghiệp.",
+                            },
+                          ].map((rev, rIdx) => (
+                            <div key={rIdx} className="aura-detail__review-item">
+                              <div className="aura-detail__review-head">
+                                <span className="aura-detail__review-author">{rev.author}</span>
+                                <span className="aura-detail__review-date">{rev.date}</span>
+                              </div>
+                              <div className="aura-detail__review-stars">{"★".repeat(rev.rating)}</div>
+                              <p className="aura-detail__review-text">{rev.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 6: FAQ */}
+                  {activeSection === "faq" && (
+                    <div className="aura-detail__tab-panel">
+                      <span className="aura-detail__section-label">FAQ</span>
+                      <h2 className="aura-detail__section-heading">Câu hỏi thường gặp</h2>
+                      <div className="aura-detail__faq-list">
+                        {[
+                          {
+                            q: "Tour có bao gồm đưa đón tận nơi không?",
+                            a: "Có, chúng tôi hỗ trợ đón và trả khách tại các khách sạn trung tâm hoặc điểm hẹn thuận tiện đã xác nhận trước chuyến đi.",
+                          },
+                          {
+                            q: "Chính sách hoàn hủy như thế nào?",
+                            a: "Quý khách được hoàn 100% khi thông báo trước 15 ngày khởi hành, hoàn 50% trước 7 ngày, và theo quy định chi tiết trong hợp đồng dịch vụ.",
+                          },
+                          {
+                            q: "Đoàn tối đa bao nhiêu người?",
+                            a: "Chúng tôi giới hạn đoàn nhỏ dưới 12 khách để đảm bảo trải nghiệm riêng tư, chu đáo và cá nhân hóa nhất cho mỗi hành khách.",
+                          },
+                        ].map((faqItem, fIdx) => (
+                          <div key={fIdx} className="aura-detail__faq-item">
+                            <h4 className="aura-detail__faq-q">{faqItem.q}</h4>
+                            <p className="aura-detail__faq-a">{faqItem.a}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* 7. Trường hợp bất khả kháng */}
-            <div className="overflow-hidden">
-              <button
-                type="button"
-                onClick={() => toggleAccordion("forceMajeure")}
-                className="w-full py-4 px-6 text-left flex items-center justify-between hover:bg-zinc-50 transition-colors cursor-pointer"
-              >
-                <span className="text-xs sm:text-sm font-bold text-zinc-900">Trường hợp bất khả kháng</span>
-                <span className={`material-symbols-outlined text-zinc-500 transition-transform duration-200 ${openAccordion.forceMajeure ? "rotate-180" : ""}`}>
-                  keyboard_arrow_down
-                </span>
-              </button>
-              {openAccordion.forceMajeure && (
-                <div className="px-6 pb-5 pt-1 text-xs text-zinc-700 space-y-2">
-                  <p>Trong trường hợp bất khả kháng do thiên tai, bão lũ, dịch bệnh hoặc lệnh cấm từ cơ quan chức năng, hai bên sẽ phối hợp dời ngày khởi hành hoặc hoàn lại 100% tiền tour theo quy định.</p>
-                </div>
-              )}
-            </div>
-
-            {/* 8. Liên hệ */}
-            <div className="overflow-hidden">
-              <button
-                type="button"
-                onClick={() => toggleAccordion("contact")}
-                className="w-full py-4 px-6 text-left flex items-center justify-between hover:bg-zinc-50 transition-colors cursor-pointer"
-              >
-                <span className="text-xs sm:text-sm font-bold text-zinc-900">Liên hệ</span>
-                <span className={`material-symbols-outlined text-zinc-500 transition-transform duration-200 ${openAccordion.contact ? "rotate-180" : ""}`}>
-                  keyboard_arrow_down
-                </span>
-              </button>
-              {openAccordion.contact && (
-                <div className="px-6 pb-5 pt-1 text-xs text-zinc-700 space-y-2">
-                  <p>• Hotline chăm sóc khách hàng 24/7: <strong className="text-blue-700">1900 6868</strong></p>
-                  <p>• Email hỗ trợ: <strong className="text-blue-700">hotro@dulichvietnam.vn</strong></p>
-                  <p>• Địa chỉ văn phòng giao dịch tại các thành phố lớn trên toàn quốc.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* 9. Section "Các chương trình khác" (Related Tours - Chuẩn ảnh 890.png) */}
-        {relatedTours.length > 0 && (
-          <section className="tour-detail__section space-y-4 pt-4">
-            <h2 className="text-xl font-bold text-zinc-900">Các chương trình khác</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {relatedTours.map((rTour) => {
-                const rPrice = rTour.price_from || rTour.price || 0;
-                return (
-                  <div
-                    key={rTour.id}
-                    className="bg-white rounded-2xl overflow-hidden shadow-xs border border-zinc-100 flex flex-col group hover:shadow-md transition-all"
-                  >
-                    {/* Ảnh tour */}
-                    <div className="relative aspect-16/10 overflow-hidden bg-zinc-100">
-                      <img
-                        src={rTour.cover_url || "/assets/images/placeholder.jpg"}
-                        alt={rTour.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <span className="absolute top-2.5 left-2.5 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                        Giá tốt
-                      </span>
-                      <Link
-                        to={`/tour/${rTour.slug}`}
-                        className="absolute bottom-2.5 right-2.5 bg-black/60 hover:bg-black/80 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-xs flex items-center gap-1 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-xs">visibility</span>
-                        <span>Xem nhanh</span>
-                      </Link>
-                    </div>
-
-                    {/* Nội dung card */}
-                    <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                      <div>
-                        <Link
-                          to={`/tour/${rTour.slug}`}
-                          className="font-bold text-xs sm:text-sm text-zinc-900 group-hover:text-blue-700 transition-colors line-clamp-2"
-                        >
-                          {rTour.name}
-                        </Link>
-                        <div className="flex items-center gap-3 text-[11px] text-zinc-500 mt-2">
-                          <span className="flex items-center gap-0.5">
-                            <span className="material-symbols-outlined text-xs text-zinc-400">pin_drop</span>
-                            {rTour.province_name || "Việt Nam"}
-                          </span>
-                          <span className="flex items-center gap-0.5">
-                            <span className="material-symbols-outlined text-xs text-zinc-400">schedule</span>
-                            {rTour.duration_days > 1 ? `${rTour.duration_days} ngày` : "Trong ngày"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
-                        <div>
-                          <span className="block text-[10px] text-zinc-400">Giá từ:</span>
-                          <strong className="text-sm font-extrabold text-blue-700">
-                            {rPrice.toLocaleString("vi-VN")}₫
-                          </strong>
-                        </div>
-                        <Link
-                          to={`/tour/${rTour.slug}`}
-                          className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-[11px] font-bold rounded-full transition-colors"
-                        >
-                          Xem chi tiết
-                        </Link>
-                      </div>
-                    </div>
+              {/* ========================================================= */}
+              {/* THẺ ĐẶT TOUR NỔI THEO MOCKUP (Floating Booking Card)        */}
+              {/* ========================================================= */}
+              <div className="aura-detail__booking-card-wrap">
+                <div className="aura-detail__booking-card">
+                  <span className="aura-detail__card-from">From</span>
+                  <div className="aura-detail__card-price-row">
+                    <span className="aura-detail__card-price">{priceFormatted}đ</span>
+                    <span className="aura-detail__card-unit">/ person</span>
                   </div>
-                );
-              })}
+
+                  <button
+                    type="button"
+                    className="aura-detail__book-now-btn"
+                    onClick={() => setIsBookingWizardOpen(true)}
+                  >
+                    <span>Book now</span>
+                    <span className="aura-detail__btn-arrow">→</span>
+                  </button>
+
+                  <div className="aura-detail__card-fields">
+                    {/* Select date */}
+                    <button
+                      type="button"
+                      className="aura-detail__card-field-row"
+                      onClick={() => setIsBookingWizardOpen(true)}
+                    >
+                      <div className="aura-detail__field-left">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        <div className="aura-detail__field-texts">
+                          <span className="aura-detail__field-label">Select date</span>
+                          <span className="aura-detail__field-value">
+                            {curDep?.depart_date ? formatVnDate(curDep.depart_date) : "Oct 13, 2026"}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="aura-detail__field-chevron">›</span>
+                    </button>
+
+                    {/* Travelers */}
+                    <button
+                      type="button"
+                      className="aura-detail__card-field-row"
+                      onClick={() => setIsBookingWizardOpen(true)}
+                    >
+                      <div className="aura-detail__field-left">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                          <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <div className="aura-detail__field-texts">
+                          <span className="aura-detail__field-label">Travelers</span>
+                          <span className="aura-detail__field-value">{adults} adults</span>
+                        </div>
+                      </div>
+                      <span className="aura-detail__field-chevron">›</span>
+                    </button>
+                  </div>
+
+                  <div className="aura-detail__card-divider" />
+
+                  {/* Save to wishlist */}
+                  <button
+                    type="button"
+                    className={`aura-detail__wishlist-btn ${isSaved ? "aura-detail__wishlist-btn--active" : ""}`}
+                    onClick={() => setIsSaved(!isSaved)}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>{isSaved ? "Saved in wishlist" : "Save to wishlist"}</span>
+                  </button>
+                </div>
+              </div>
             </div>
-          </section>
-        )}
-        </>
-        )}
-      </div>
 
-      {/* Modal Lightbox phóng to ảnh */}
-      {isLightboxOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
-          onClick={() => setIsLightboxOpen(false)}
-        >
-          <button
-            type="button"
-            onClick={() => setIsLightboxOpen(false)}
-            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center cursor-pointer transition-colors"
-          >
-            <span className="material-symbols-outlined text-2xl">close</span>
-          </button>
+            {/* 4. TOUR TƯƠNG TỰ PHÍA DƯỚI CÙNG */}
+            {similarTours.length > 0 && (
+              <section className="aura-detail__similar-section">
+                <div className="aura-detail__similar-head">
+                  <h3 className="aura-detail__similar-title">Tour tương tự bạn có thể thích</h3>
+                  <Link to="/tour" className="aura-detail__similar-more">
+                    Xem tất cả tour →
+                  </Link>
+                </div>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
-            }}
-            className="absolute left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center cursor-pointer transition-colors"
-          >
-            <span className="material-symbols-outlined text-2xl">arrow_back</span>
-          </button>
+                <div className="aura-detail__similar-cards">
+                  {similarTours.map((simTour) => {
+                    const simCover =
+                      simTour.cover_url ||
+                      (Array.isArray(simTour.images) &&
+                        (typeof simTour.images[0] === "string" ? simTour.images[0] : simTour.images[0]?.url)) ||
+                      "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=800&q=80";
+                    const simPriceVal = Number(simTour.price_from || 0);
 
-          <img
-            src={galleryImages[lightboxIndex]}
-            alt={`Ảnh tour ${lightboxIndex + 1}`}
-            className="max-h-[85vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxIndex((prev) => (prev + 1) % galleryImages.length);
-            }}
-            className="absolute right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center cursor-pointer transition-colors"
-          >
-            <span className="material-symbols-outlined text-2xl">arrow_forward</span>
-          </button>
-
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/60 text-white text-xs font-semibold">
-            {lightboxIndex + 1} / {galleryImages.length}
+                    return (
+                      <Link
+                        key={simTour.id || simTour.slug}
+                        to={`/tour/${simTour.slug || simTour.id}`}
+                        className="aura-detail__sim-card"
+                      >
+                        <div className="aura-detail__sim-thumb">
+                          <img src={simCover} alt={cleanText(simTour.name)} loading="lazy" />
+                          <span className="aura-detail__sim-badge">{simTour.duration_days || 1} Days</span>
+                        </div>
+                        <h4 className="aura-detail__sim-title">{cleanText(simTour.name)}</h4>
+                        <p className="aura-detail__sim-price">{simPriceVal.toLocaleString("vi-VN")}₫</p>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </div>
         </div>
-      )}
+      </main>
 
-      {/* Menu Drawer dùng chung */}
+      {/* Global Voyage Menu Drawer */}
       <VoyageDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -1094,16 +922,17 @@ export default function TourDetail({ user, onNeedAuth, onLogout }) {
         onLogout={onLogout}
       />
 
-      {/* Drawer đặt tour */}
+      {/* Tour Booking Wizard */}
       <TourBookingWizard
-        open={isBookingDrawerOpen}
-        onClose={() => setIsBookingDrawerOpen(false)}
+        open={isBookingWizardOpen}
+        onClose={() => setIsBookingWizardOpen(false)}
         tour={tour}
         initialDeparture={selectedDeparture}
         initialGuests={adults}
         user={user}
         onNeedAuth={onNeedAuth}
       />
-    </main>
+    </div>
   );
 }
+

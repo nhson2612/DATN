@@ -185,61 +185,61 @@ export default function ProvincePicker({
     : "";
 
   return (
-    <div className="space-y-2" ref={containerRef}>
+    <div className="op-province-picker__div-1" ref={containerRef}>
       {/* Combobox Trigger Box */}
-      <div className="relative">
+      <div className="op-province-picker__div-2">
         <button
           type="button"
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={listboxId}
           onClick={() => setOpen(!open)}
-          className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 min-h-[48px] bg-white border rounded-md text-left transition-all cursor-pointer shadow-2xs ${
+          className={`op-province-picker__element-6 op-province-picker__element-1  ${
             error
-              ? "border-rose-500 focus:ring-1 focus:ring-rose-500"
+              ? "op-province-picker__element-3--variant-1"
               : open
-              ? "border-zinc-900 ring-2 ring-zinc-900/10"
-              : "border-zinc-300 hover:border-zinc-400"
+              ? "op-province-picker__element-4--variant-2"
+              : "op-province-picker__element-5--variant-3"
           }`}
         >
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="op-province-picker__div-7">
             <span
-              className={`material-symbols-outlined text-[20px] shrink-0 ${
-                selectedProvince ? "text-zinc-900" : "text-zinc-400"
+              className={`material-symbols-outlined op-province-picker__span-10 op-province-picker__span-2  ${
+                selectedProvince ? "op-province-picker__span-8--variant-1" : "op-province-picker__span-9--variant-2"
               }`}
             >
               pin_drop
             </span>
             {selectedProvince ? (
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-900 text-white truncate">
+              <div className="op-province-picker__div-11">
+                <span className="op-province-picker__span-12">
                   {cleanSelectedName}
                 </span>
-                <span className="text-xs text-zinc-500 truncate hidden sm:inline">
+                <span className="op-province-picker__span-13">
                   ({selectedProvince.name})
                 </span>
               </div>
             ) : (
-              <span className="text-sm text-zinc-400 truncate">
+              <span className="op-province-picker__span-14">
                 Tìm hoặc chọn tỉnh/thành phố điểm đến...
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="op-province-picker__div-15 op-province-picker__div-3">
             {selectedProvince && (
               <button
                 type="button"
                 onClick={handleClear}
                 title="Xóa lựa chọn"
-                className="p-1 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors"
+                className="op-province-picker__button-16"
               >
-                <span className="material-symbols-outlined text-[16px] block">
+                <span className="material-symbols-outlined op-province-picker__span-17">
                   close
                 </span>
               </button>
             )}
-            <span className="material-symbols-outlined text-[20px] text-zinc-400">
+            <span className="material-symbols-outlined op-province-picker__icon-18">
               unfold_more
             </span>
           </div>
@@ -251,11 +251,11 @@ export default function ProvincePicker({
             id={listboxId}
             role="listbox"
             tabIndex={-1}
-            className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-zinc-200 rounded-lg shadow-xl z-50 p-2 animate-in fade-in zoom-in-95 duration-150"
+            className="fade-in op-province-picker__div-19 op-province-picker__div-4"
           >
             {/* Input Search Box */}
-            <div className="relative mb-2">
-              <span className="material-symbols-outlined text-[18px] text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="op-province-picker__div-20">
+              <span className="material-symbols-outlined op-province-picker__span-21">
                 search
               </span>
               <input
@@ -264,22 +264,22 @@ export default function ProvincePicker({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Gõ tên tỉnh thành hoặc địa danh (VD: Phú Quốc, Sa Pa, Đà Nẵng...)"
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-md pl-9 pr-8 py-2 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:bg-white"
+                className="op-province-picker__element-22 op-province-picker__element-5"
               />
               {search && (
                 <button
                   type="button"
                   onClick={() => setSearch("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 p-0.5 rounded cursor-pointer"
+                  className="op-province-picker__button-23 op-province-picker__button-6"
                 >
-                  <span className="material-symbols-outlined text-sm block">close</span>
+                  <span className="material-symbols-outlined op-province-picker__span-24">close</span>
                 </button>
               )}
             </div>
 
             {/* Region Tabs (Ẩn khi đang gõ search) */}
             {!search.trim() && (
-              <div className="flex items-center gap-1 pb-2 border-b border-zinc-100 overflow-x-auto">
+              <div className="op-province-picker__div-25">
                 {REGIONS.map((region) => {
                   const isActive = activeRegion === region.id;
                   return (
@@ -287,10 +287,10 @@ export default function ProvincePicker({
                       key={region.id}
                       type="button"
                       onClick={() => setActiveRegion(region.id)}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors shrink-0 cursor-pointer ${
+                      className={`op-province-picker__button-28 op-province-picker__button-7  ${
                         isActive
-                          ? "bg-zinc-900 text-white font-semibold"
-                          : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                          ? "op-province-picker__button-26--variant-1"
+                          : "op-province-picker__button-27--variant-2"
                       }`}
                     >
                       {region.label}
@@ -301,16 +301,16 @@ export default function ProvincePicker({
             )}
 
             {/* Provinces Results Grid */}
-            <div className="max-h-[260px] overflow-y-auto pt-1.5 space-y-0.5">
+            <div className="op-province-picker__div-29">
               {filteredProvinces.length === 0 ? (
-                <div className="py-6 text-center text-xs text-zinc-400">
-                  <span className="material-symbols-outlined text-2xl mb-1 text-zinc-300 block">
+                <div className="op-province-picker__div-30">
+                  <span className="material-symbols-outlined op-province-picker__span-31">
                     search_off
                   </span>
                   Không tìm thấy tỉnh thành hoặc địa danh phù hợp
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                <div className="op-province-picker__div-32">
                   {filteredProvinces.map((province) => {
                     const isSelected = String(province.id) === String(value);
                     const cleanName = province.name.replace(
@@ -328,24 +328,24 @@ export default function ProvincePicker({
                         role="option"
                         aria-selected={isSelected}
                         onClick={() => handleSelect(province.id)}
-                        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs text-left transition-colors cursor-pointer ${
+                        className={`op-province-picker__element-35   ${
                           isSelected
-                            ? "bg-zinc-900 text-white font-semibold"
-                            : "hover:bg-zinc-100 text-zinc-800"
+                            ? "op-province-picker__element-33--variant-1"
+                            : "op-province-picker__element-34--variant-2"
                         }`}
                       >
-                        <div className="min-w-0 flex items-baseline gap-1.5 truncate">
-                          <span className="font-medium truncate">{cleanName}</span>
+                        <div className="op-province-picker__div-36">
+                          <span className="op-province-picker__span-37">{cleanName}</span>
                           <span
-                            className={`text-[10px] shrink-0 ${
-                              isSelected ? "text-zinc-300" : "text-zinc-600"
+                            className={`op-province-picker__span-40 op-province-picker__span-8  ${
+                              isSelected ? "op-province-picker__span-38--variant-1" : "op-province-picker__span-39--variant-2"
                             }`}
                           >
                             {prefix}
                           </span>
                         </div>
                         {isSelected && (
-                          <span className="material-symbols-outlined text-sm shrink-0 text-white">
+                          <span className="material-symbols-outlined op-province-picker__span-41 op-province-picker__span-9">
                             check
                           </span>
                         )}
@@ -357,9 +357,9 @@ export default function ProvincePicker({
             </div>
 
             {/* Footer đếm số lượng */}
-            <div className="pt-2 mt-1 border-t border-zinc-100 flex items-center justify-between text-[11px] text-zinc-600 px-1">
+            <div className="op-province-picker__div-42">
               <span>{filteredProvinces.length} / {provinces.length} tỉnh thành</span>
-              <span className="italic text-[10px]">Hỗ trợ tìm theo tên thành phố, đảo, thắng cảnh</span>
+              <span className="op-province-picker__span-43">Hỗ trợ tìm theo tên thành phố, đảo, thắng cảnh</span>
             </div>
           </div>
         )}
@@ -367,8 +367,8 @@ export default function ProvincePicker({
 
       {/* Thanh chọn nhanh (Quick-Pick Chips) */}
       {quickPicks.length > 0 && (
-        <div className="flex items-center flex-wrap gap-1.5 pt-0.5">
-          <span className="text-[11px] font-semibold text-zinc-600 uppercase tracking-wider mr-1">
+        <div className="op-province-picker__div-44">
+          <span className="op-province-picker__span-45">
             Gợi ý nhanh:
           </span>
           {quickPicks.map((province) => {
@@ -379,10 +379,10 @@ export default function ProvincePicker({
                 type="button"
                 key={province.id}
                 onClick={() => onChange(String(province.id))}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs transition-all cursor-pointer border ${
+                className={`op-province-picker__button-48 op-province-picker__button-10  ${
                   isSelected
-                    ? "bg-zinc-900 border-zinc-900 text-white font-semibold shadow-2xs"
-                    : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100 hover:border-zinc-300"
+                    ? "op-province-picker__button-46--variant-1"
+                    : "op-province-picker__button-47--variant-2"
                 }`}
               >
                 <span>+</span>

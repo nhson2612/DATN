@@ -38,5 +38,8 @@ backend/uploads/
 
 # Exclude screenshot images and downloaded assets
 /*.png
+/test.html
+/*.dc.html
+/ocean-sailing.svg
 web/public/assets/images/provinces/
 web/public/assets/images/tours-hero-bg.jpg

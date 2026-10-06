@@ -42,6 +42,9 @@ const rong = () => ({
   cover_url: "",
   images: [""],
   highlights: [""],
+  transportation: [],
+  departure_location: "",
+  tags: [],
   included: [""],
   excluded: [""],
   cancellation_policy: MOC_MAC_DINH.map((moc) => ({ ...moc })),
@@ -59,6 +62,9 @@ const tuTour = (tour) => ({
   cover_url: tour.cover_url || "",
   images: tour.images?.length ? tour.images : [""],
   highlights: tour.highlights?.length ? tour.highlights : [""],
+  transportation: Array.isArray(tour.transportation) ? tour.transportation : [],
+  departure_location: tour.departure_location || "",
+  tags: Array.isArray(tour.tags) ? tour.tags : [],
   included: tour.included?.length ? tour.included : [""],
   excluded: tour.excluded?.length ? tour.excluded : [""],
   cancellation_policy: tour.cancellation_policy?.length
@@ -131,6 +137,9 @@ export default function TourWizard({ tour, provinces, onSaved, onCancel }) {
     summary: "tourSummary",
     province_id: "tourProvince",
     duration_days: "tourDuration",
+    departure_location: "tourDepartureLocation",
+    transportation: "tourTransportation",
+    tags: "tourTags",
     cover_url: "tourCover",
   };
 
@@ -193,6 +202,9 @@ export default function TourWizard({ tour, provinces, onSaved, onCancel }) {
       cover_url: form.cover_url.trim() || null,
       images: gon(form.images),
       highlights: gon(form.highlights),
+      transportation: gon(form.transportation),
+      departure_location: form.departure_location.trim(),
+      tags: gon(form.tags),
       included: gon(form.included),
       excluded: gon(form.excluded),
       cancellation_policy: form.cancellation_policy

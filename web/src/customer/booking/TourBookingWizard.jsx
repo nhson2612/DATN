@@ -353,30 +353,41 @@ export default function TourBookingWizard({
 
   return (
     <div
-      className="voyage-drawer-overlay tour-booking-wizard__backdrop"
+      className="aura-drawer__overlay tour-wizard__overlay"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
       aria-labelledby="wizard-title"
     >
-      <div className="voyage-drawer tour-booking-wizard">
-        {/* Header Wizard */}
-        <header className="tour-booking-wizard__header">
-          <div className="tour-booking-wizard__header-main">
-            <div className="tour-booking-wizard__header-text">
-              <h2 id="wizard-title" className="tour-booking-wizard__title">
-                {step === 4 ? "Đặt tour thành công" : "Đặt tour du lịch"}
-              </h2>
-              <p className="tour-booking-wizard__tour-name">{tour.name}</p>
-            </div>
+      <aside className="aura-drawer__panel tour-wizard__panel" onClick={(e) => e.stopPropagation()}>
+        {/* Header Wizard chuẩn Aura Drawer */}
+        <header className="tour-wizard__header">
+          <div className="tour-wizard__header-main">
+            <span className="tour-wizard__header-tag">Aura Tour Booking</span>
+            <h2 id="wizard-title" className="tour-wizard__title">
+              {step === 4 ? "Đặt tour thành công" : "Đặt tour du lịch"}
+            </h2>
+            <p className="tour-wizard__tour-name">{tour.name}</p>
           </div>
           <button
             type="button"
-            className="voyage-drawer-close tour-booking-wizard__close-btn"
+            className="aura-drawer__close"
             onClick={onClose}
             aria-label="Đóng cửa sổ đặt tour"
           >
-            ×
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </header>
 
@@ -1147,7 +1158,7 @@ export default function TourBookingWizard({
             </>
           )}
         </footer>
-      </div>
+      </aside>
     </div>
   );
 }

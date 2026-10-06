@@ -12,7 +12,7 @@ const docAnh = (file) => new Promise((resolve, reject) => {
 });
 
 function PreviewAnh({ src, alt, className }) {
-  return src ? <img className={className} src={src} alt={alt} /> : <span className={`${className} op-media-step__empty`}><span className="material-symbols-outlined">add_photo_alternate</span></span>;
+  return src ? <img className={className} src={src} alt={alt} /> : <span className={`${className}    op-media-step__empty`}><span className="material-symbols-outlined">add_photo_alternate</span></span>;
 }
 
 export default function ImagesStep({ form, setForm, loi = {}, hienLoi = false }) {
@@ -146,7 +146,7 @@ export default function ImagesStep({ form, setForm, loi = {}, hienLoi = false })
         }}
       />
 
-      <div className={`op-media-step__cover ${thieuAnh ? "op-media-step__cover--invalid" : ""}`}>
+      <div className={`op-media-step__cover    ${thieuAnh ? "op-media-step__cover--invalid" : ""}`}>
         <div className="op-media-step__head">
           <div>
             <h2>Ảnh bìa</h2>
@@ -180,7 +180,7 @@ export default function ImagesStep({ form, setForm, loi = {}, hienLoi = false })
         ) : (
           <div className="op-yandex-dropzone">
             <div
-              className={`op-yandex-dropzone__inner ${dangKeoAnhBia ? "op-yandex-dropzone__inner--dragging" : ""}`}
+              className={`op-yandex-dropzone__inner    ${dangKeoAnhBia ? "op-yandex-dropzone__inner--dragging" : ""}`}
               tabIndex={0}
               role="region"
               aria-label="Vùng tải ảnh bìa phong cách Yandex"

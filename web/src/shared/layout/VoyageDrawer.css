@@ -1,24 +1,21 @@
 /* ==========================================================================
-   BLOCK: .voyage-drawer
-   Slide-out Menu Drawer dùng chung phong cách Medusa.js liquid glass cho toàn app
+   BLOCK: .aura-drawer
+   Slide-out Menu Drawer phong cách Aura Journal (#0E1116) tuân thủ chuẩn BEM
    ========================================================================== */
 
-.voyage-drawer-overlay {
+.aura-drawer__overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 9999;
   display: flex;
   justify-content: flex-end;
-  align-items: flex-start;
-  padding: 18px;
-  animation: drawerOverlayIn 0.22s ease-out;
-  box-sizing: border-box;
+  animation: auraDrawerFadeIn 0.22s ease-out;
 }
 
-@keyframes drawerOverlayIn {
+@keyframes auraDrawerFadeIn {
   from {
     opacity: 0;
   }
@@ -27,190 +24,227 @@
   }
 }
 
-.voyage-drawer {
-  position: relative;
-  width: clamp(340px, 28vw, 420px);
-  height: calc(100vh - 36px);
-  background: rgba(3, 7, 18, 0.58);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  box-shadow: -15px 0 60px rgba(0, 0, 0, 0.65);
+.aura-drawer__panel {
+  width: 100%;
+  max-width: 440px;
+  height: 100vh;
+  background-color: #0E1116;
   color: #ffffff;
+  box-shadow: -16px 0 50px rgba(0, 0, 0, 0.6);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 28px 32px;
+  padding: 32px 36px;
   box-sizing: border-box;
-  animation: drawerSlideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 10000;
+  animation: auraDrawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
 }
 
-@keyframes drawerSlideInRight {
+@keyframes auraDrawerSlideIn {
   from {
     transform: translateX(100%);
-    opacity: 0.5;
   }
   to {
     transform: translateX(0);
-    opacity: 1;
   }
 }
 
-.voyage-drawer-head {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
-}
-
-.voyage-drawer-close {
-  background: none;
-  border: none;
-  outline: none;
-  padding: 4px;
-  margin: -4px;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s ease, transform 0.15s ease;
-}
-
-.voyage-drawer-close:hover {
-  color: #ffffff;
-  transform: scale(1.1);
-}
-
-.voyage-drawer-nav {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.voyage-drawer-link {
-  display: inline-block;
-  font-size: clamp(26px, 2.6vw, 34px);
-  line-height: 1.25;
-  font-weight: 350;
-  color: #ffffff;
-  text-decoration: none;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-  letter-spacing: -0.01em;
-  transition: color 0.15s ease;
-}
-
-.voyage-drawer-link:hover {
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.voyage-drawer-link--button {
-  font-size: 15px !important;
-  line-height: 1.4 !important;
-  font-weight: 400 !important;
-  letter-spacing: normal !important;
-  color: rgba(255, 255, 255, 0.65) !important;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: inline-block;
-  text-decoration: none;
-  margin-top: -6px;
-  transition: color 0.15s ease;
-}
-
-.voyage-drawer-link--button:hover {
-  color: #ffffff !important;
-}
-
-.voyage-drawer-link--logout:hover {
-  color: #ef4444 !important;
-}
-
-.voyage-drawer-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding-top: 16px;
-}
-
-.voyage-drawer-region {
+/* Header */
+.aura-drawer__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s ease;
+  width: 100%;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.voyage-drawer-region:hover {
+.aura-drawer__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.aura-drawer__brand-icon {
+  width: 20px;
+  height: 20px;
   color: #ffffff;
 }
 
-.voyage-drawer-region-text {
+.aura-drawer__brand-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.aura-drawer__close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
-.voyage-drawer-flag {
-  font-size: 14px;
+.aura-drawer__close:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.05);
 }
 
-.voyage-drawer-arrow {
-  font-size: 14px;
-  transition: transform 0.15s ease;
+/* Nav */
+.aura-drawer__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: auto 0;
+  padding: 28px 0;
 }
 
-.voyage-drawer-region:hover .voyage-drawer-arrow {
-  transform: translateX(3px);
+.aura-drawer__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-size: 32px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
-.voyage-drawer-copy {
-  margin: 0;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 400;
-  letter-spacing: 0.01em;
+.aura-drawer__link:hover {
+  color: #ffffff;
+  transform: translateX(6px);
 }
 
-@media (max-width: 960px) {
-  .voyage-drawer-overlay {
-    padding: 12px;
-  }
+.aura-drawer__link-num {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.3);
+  font-mono: monospace;
+}
 
-  .voyage-drawer {
-    height: calc(100vh - 24px);
-    width: min(380px, 85vw);
-  }
+.aura-drawer__link:hover .aura-drawer__link-num {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.aura-drawer__auth-action {
+  margin-top: 10px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.aura-drawer__auth-btn {
+  font-size: 13px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.aura-drawer__auth-btn--logout {
+  color: #f87171;
+}
+
+.aura-drawer__auth-btn--logout:hover {
+  opacity: 0.8;
+}
+
+.aura-drawer__auth-btn--login {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.aura-drawer__auth-btn--login:hover {
+  color: #ffffff;
+}
+
+/* Footer & Curated Feature */
+.aura-drawer__footer {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.aura-drawer__feature {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.aura-drawer__feature-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.aura-drawer__feature-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.aura-drawer__feature-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.aura-drawer__feature-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.aura-drawer__feature-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 2px 0 0;
+}
+
+.aura-drawer__feature-link {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-top: 2px;
+  transition: color 0.15s ease;
+}
+
+.aura-drawer__feature-link:hover {
+  color: #ffffff;
 }
 
 @media (max-width: 640px) {
-  .voyage-drawer-overlay {
-    padding: 8px;
+  .aura-drawer__panel {
+    max-width: 100%;
+    padding: 24px 20px;
   }
 
-  .voyage-drawer {
-    width: calc(100% - 16px);
-    height: calc(100vh - 16px);
-    border-radius: 12px;
-    padding: 22px 20px;
-  }
-
-  .voyage-drawer-link {
-    font-size: 24px;
+  .aura-drawer__link {
+    font-size: 26px;
   }
 }

@@ -1,5 +1,7 @@
 """Truy vấn yêu thích. Chỉ SQL, không nghiệp vụ."""
 
+from datetime import date
+
 from app.core.database import execute_query
 
 BANG_HOP_LE = ("trackasia", "serper", "accommodation")
@@ -54,30 +56,102 @@ def remove_favorite(user_id: int, place_type: str, place_id: int):
 
 # ── Thống kê cho trang quản trị ──────────────────────────────────────────────
 
-def thong_ke():
-    """Số liệu cho trang quản trị: việc phải xử lý và tiền đã thu.
+def thong_ke(
+    ngay_dau: date,
+    ngay_cuoi_loai_tru: date,
+    ngay_dau_ky_truoc: date,
+):
+    """KPI kinh doanh, kỳ so sánh và chuỗi doanh thu theo ngày.
 
-    Chỉ đưa ra con số mà người vận hành phải hành động dựa vào: đơn chờ xử lý,
-    tiền đã thu, thanh toán chờ xác nhận, tour đang mở. Các bộ đếm nội bộ
-    (số ảnh đã cache, số POI của nhà cung cấp) đã bỏ — chúng chỉ nói về cách
-    hệ thống lưu dữ liệu, không nói được gì về việc kinh doanh.
-
-    Đếm bằng COUNT(*), không dùng `reltuples` của bộ lập kế hoạch: bản cũ lệch
-    15,6% ở bảng accommodation (60.180 ước lượng / 52.046 thật) khi bảng chưa
-    ANALYZE sau lần import cuối.
+    Không quét lịch sử toàn hệ thống. Booking và payment đều được giới hạn theo
+    khoảng ngày; các index tương ứng nằm trong migration 011.
     """
     rows = execute_query(
         """
         SELECT
-          (SELECT count(*) FROM accommodation)                                     AS luu_tru,
-          (SELECT count(*) FROM users)                                             AS nguoi_dung,
-          (SELECT count(*) FROM itineraries)                                       AS lich_trinh,
-          (SELECT count(*) FROM tours WHERE status = 'ACTIVE')                     AS tour_dang_mo,
-          (SELECT count(*) FROM tour_bookings)                                     AS dat_tour,
+          (SELECT count(*) FROM tour_bookings
+            WHERE created_at >= %s AND created_at < %s)                            AS dat_tour,
+          (SELECT coalesce(sum(guests), 0)::bigint FROM tour_bookings
+            WHERE created_at >= %s AND created_at < %s)                            AS so_khach,
           (SELECT coalesce(sum(amount), 0)::bigint FROM payments
-            WHERE status = 'SUCCESS')                                              AS doanh_thu,
-          (SELECT count(*) FROM payments WHERE status = 'PENDING')                 AS cho_xac_nhan,
-          (SELECT count(*) FROM payments WHERE status = 'MISMATCH')                AS lech_tien
-        """
+            WHERE status = 'SUCCESS'
+              AND coalesce(confirmed_at, created_at) >= %s
+              AND coalesce(confirmed_at, created_at) < %s)                         AS doanh_thu,
+          (SELECT coalesce(avg(amount), 0)::bigint FROM payments
+            WHERE status = 'SUCCESS'
+              AND coalesce(confirmed_at, created_at) >= %s
+              AND coalesce(confirmed_at, created_at) < %s)                         AS gia_tri_don_tb,
+          (SELECT count(*) FROM tour_bookings
+            WHERE created_at >= %s AND created_at < %s)                            AS dat_tour_truoc,
+          (SELECT coalesce(sum(guests), 0)::bigint FROM tour_bookings
+            WHERE created_at >= %s AND created_at < %s)                            AS so_khach_truoc,
+          (SELECT coalesce(sum(amount), 0)::bigint FROM payments
+            WHERE status = 'SUCCESS'
+              AND coalesce(confirmed_at, created_at) >= %s
+              AND coalesce(confirmed_at, created_at) < %s)                         AS doanh_thu_truoc,
+          (SELECT coalesce(avg(amount), 0)::bigint FROM payments
+            WHERE status = 'SUCCESS'
+              AND coalesce(confirmed_at, created_at) >= %s
+              AND coalesce(confirmed_at, created_at) < %s)                         AS gia_tri_don_tb_truoc
+        """,
+        (
+            ngay_dau, ngay_cuoi_loai_tru,
+            ngay_dau, ngay_cuoi_loai_tru,
+            ngay_dau, ngay_cuoi_loai_tru,
+            ngay_dau, ngay_cuoi_loai_tru,
+            ngay_dau_ky_truoc, ngay_dau,
+            ngay_dau_ky_truoc, ngay_dau,
+            ngay_dau_ky_truoc, ngay_dau,
+            ngay_dau_ky_truoc, ngay_dau,
+        ),
     )
-    return rows[0] if rows else {}
+    row = rows[0] if rows else {}
+    hien_tai = {
+        "doanh_thu": row.get("doanh_thu", 0),
+        "dat_tour": row.get("dat_tour", 0),
+        "so_khach": row.get("so_khach", 0),
+        "gia_tri_don_tb": row.get("gia_tri_don_tb", 0),
+    }
+    ky_truoc = {
+        "doanh_thu": row.get("doanh_thu_truoc", 0),
+        "dat_tour": row.get("dat_tour_truoc", 0),
+        "so_khach": row.get("so_khach_truoc", 0),
+        "gia_tri_don_tb": row.get("gia_tri_don_tb_truoc", 0),
+    }
+
+    chuoi = execute_query(
+        """
+        WITH ngay AS (
+          SELECT generate_series(%s::date, %s::date - 1, interval '1 day')::date AS ngay
+        ),
+        dat AS (
+          SELECT created_at::date AS ngay,
+                 count(*)::bigint AS dat_tour
+          FROM tour_bookings
+          WHERE created_at >= %s AND created_at < %s
+          GROUP BY created_at::date
+        ),
+        thu AS (
+          SELECT coalesce(confirmed_at, created_at)::date AS ngay,
+                 coalesce(sum(amount), 0)::bigint AS doanh_thu
+          FROM payments
+          WHERE status = 'SUCCESS'
+            AND coalesce(confirmed_at, created_at) >= %s
+            AND coalesce(confirmed_at, created_at) < %s
+          GROUP BY coalesce(confirmed_at, created_at)::date
+        )
+        SELECT to_char(n.ngay, 'YYYY-MM-DD') AS ngay,
+               coalesce(t.doanh_thu, 0)::bigint AS doanh_thu,
+               coalesce(d.dat_tour, 0)::bigint AS dat_tour
+        FROM ngay n
+        LEFT JOIN thu t USING (ngay)
+        LEFT JOIN dat d USING (ngay)
+        ORDER BY n.ngay
+        """,
+        (
+            ngay_dau, ngay_cuoi_loai_tru,
+            ngay_dau, ngay_cuoi_loai_tru,
+            ngay_dau, ngay_cuoi_loai_tru,
+        ),
+    )
+    return {"stats": hien_tai, "comparison": ky_truoc, "series": chuoi}

@@ -416,6 +416,15 @@ def get_tour(slug: str):
     elif not isinstance(cp, list):
         tour["cancellation_policy"] = []
 
+    for field in ("transportation", "tags"):
+        raw = tour.get(field)
+        if isinstance(raw, str):
+            try:
+                raw = json.loads(raw)
+            except Exception:
+                raw = []
+        tour[field] = _normalize_text_list(raw, max_items=10)
+
     raw_deps = tour_repo.departures(tour["id"])
     enriched_deps = [lam_giau_thong_tin_gia(d) for d in raw_deps]
     tour["departures"] = enriched_deps
@@ -1690,6 +1699,24 @@ def _normalize_json_obj(val):
         return val
 
 
+def _normalize_text_list(value, max_items: int = 20) -> list[str]:
+    """Chuẩn hóa danh sách chuỗi từ API, giữ nguyên thứ tự và bỏ phần tử trùng/rỗng."""
+    if not isinstance(value, list):
+        return []
+    result = []
+    seen = set()
+    for raw in value:
+        text = str(raw or "").strip()
+        key = text.casefold()
+        if not text or key in seen:
+            continue
+        result.append(text)
+        seen.add(key)
+        if len(result) >= max_items:
+            break
+    return result
+
+
 def tao_tour_operator(data: dict, current_user: dict) -> dict:
     """Tạo tour mới dành cho Operator hoặc Admin (UC-T01).
 
@@ -1741,6 +1768,9 @@ def tao_tour_operator(data: dict, current_user: dict) -> dict:
     tour_dict["name"] = name
     tour_dict["duration_days"] = duration_days
     tour_dict["operator_id"] = operator_id
+    tour_dict["transportation"] = _normalize_text_list(data.get("transportation"), max_items=10)
+    tour_dict["departure_location"] = (data.get("departure_location") or "").strip()
+    tour_dict["tags"] = _normalize_text_list(data.get("tags"), max_items=10)
     if "status" not in tour_dict or not tour_dict["status"]:
         tour_dict["status"] = "DRAFT"
 
@@ -1871,6 +1901,12 @@ def cap_nhat_tour_operator(tour_id: int, data: dict, current_user: dict) -> dict
 
     update_payload = dict(data)
     update_payload["duration_days"] = duration_days
+    if "transportation" in data:
+        update_payload["transportation"] = _normalize_text_list(data.get("transportation"), max_items=10)
+    if "departure_location" in data:
+        update_payload["departure_location"] = (data.get("departure_location") or "").strip()
+    if "tags" in data:
+        update_payload["tags"] = _normalize_text_list(data.get("tags"), max_items=10)
 
     # Giữ nguyên operator_id của tour, trừ phi admin chỉ định đổi
     if not is_admin:

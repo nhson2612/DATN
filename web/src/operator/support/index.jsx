@@ -185,27 +185,27 @@ export default function SupportScreen() {
   };
 
   return (
-    <div className="space-y-4 font-sans text-zinc-900">
+    <div className="op-support__div-1">
       {/* 1. Header & Segmented Tabs chuẩn Shadcn */}
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
+      <header className="op-support__header-2">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">
+          <h1 className="op-support__text-3">
             Hỗ trợ khách hàng
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
+          <p className="op-support__text-4">
             Tiếp nhận và phản hồi thắc mắc của khách hàng theo thời gian thực.
           </p>
         </div>
 
         {/* Tabs lọc trạng thái theo chuẩn Shadcn Tabs */}
-        <div className="inline-flex p-1 bg-zinc-100 rounded-lg border border-zinc-200 self-start sm:self-auto shrink-0">
+        <div className="op-support__div-5 op-support__div-1">
           <button
             type="button"
             onClick={() => setFilter("OPEN")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+            className={`op-support__button-8   ${
               filter === "OPEN"
-                ? "bg-white text-zinc-900 shadow-xs"
-                : "text-zinc-600 hover:text-zinc-900"
+                ? "op-support__button-6--variant-2"
+                : "op-support__button-7--variant-3"
             }`}
           >
             Đang chờ
@@ -213,10 +213,10 @@ export default function SupportScreen() {
           <button
             type="button"
             onClick={() => setFilter("PENDING")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+            className={`op-support__button-11   ${
               filter === "PENDING"
-                ? "bg-white text-zinc-900 shadow-xs"
-                : "text-zinc-600 hover:text-zinc-900"
+                ? "op-support__button-9--variant-2"
+                : "op-support__button-10--variant-3"
             }`}
           >
             Đã phản hồi
@@ -224,10 +224,10 @@ export default function SupportScreen() {
           <button
             type="button"
             onClick={() => setFilter("CLOSED")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+            className={`op-support__button-14   ${
               filter === "CLOSED"
-                ? "bg-white text-zinc-900 shadow-xs"
-                : "text-zinc-600 hover:text-zinc-900"
+                ? "op-support__button-12--variant-2"
+                : "op-support__button-13--variant-3"
             }`}
           >
             Đã đóng
@@ -235,10 +235,10 @@ export default function SupportScreen() {
           <button
             type="button"
             onClick={() => setFilter("")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+            className={`op-support__button-17   ${
               filter === ""
-                ? "bg-white text-zinc-900 shadow-xs"
-                : "text-zinc-600 hover:text-zinc-900"
+                ? "op-support__button-15--variant-1"
+                : "op-support__button-16--variant-2"
             }`}
           >
             Tất cả
@@ -248,29 +248,29 @@ export default function SupportScreen() {
 
       {/* Thông báo lỗi nếu có */}
       {error && (
-        <div className="flex items-center justify-between gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="material-symbols-outlined text-base shrink-0">error</span>
-            <span className="truncate">{error}</span>
+        <div className="op-support__div-18 op-support__div-2">
+          <div className="op-support__div-19">
+            <span className="material-symbols-outlined op-support__span-20 op-support__span-3">error</span>
+            <span className="op-support__icon-21">{error}</span>
           </div>
           <button
             type="button"
             onClick={() => setError("")}
-            className="text-rose-500 hover:text-rose-800 p-0.5 rounded cursor-pointer"
+            className="op-support__button-22 op-support__button-4"
           >
-            <span className="material-symbols-outlined text-sm">close</span>
+            <span className="material-symbols-outlined op-support__span-23">close</span>
           </button>
         </div>
       )}
 
       {/* 2. Main Desk Card: Split 2 pane (Inbox list + Chat detail) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 border border-zinc-200 rounded-xl bg-white shadow-xs overflow-hidden h-[calc(100vh-210px)] min-h-[580px]">
+      <div className="op-support__div-24 op-support__div-5">
         {/* Cột trái: Inbox Danh sách cuộc trò chuyện */}
-        <aside className="lg:col-span-4 xl:col-span-4 border-b lg:border-b-0 lg:border-r border-zinc-200 flex flex-col bg-zinc-50/50">
+        <aside className="op-support__aside-25">
           {/* Search bar */}
-          <div className="p-3 border-b border-zinc-200 bg-white">
-            <div className="relative flex items-center">
-              <span className="material-symbols-outlined absolute left-3 text-zinc-400 text-lg pointer-events-none">
+          <div className="op-support__div-26">
+            <div className="op-support__div-27">
+              <span className="material-symbols-outlined op-support__span-28">
                 search
               </span>
               <input
@@ -278,16 +278,16 @@ export default function SupportScreen() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Tìm theo tên khách hoặc chủ đề..."
-                className="w-full pl-9 pr-3 py-1.5 bg-zinc-50 border border-zinc-200 rounded-lg text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 transition-colors"
+                className="op-support__element-29 op-support__element-6"
               />
             </div>
           </div>
 
           {/* List items */}
-          <div className="flex-1 overflow-y-auto divide-y divide-zinc-100">
+          <div className="op-support__conversation-list op-support__div-30">
             {filteredItems.length === 0 ? (
-              <div className="p-8 text-center text-zinc-500 text-xs">
-                <span className="material-symbols-outlined text-2xl text-zinc-300 block mb-1">
+              <div className="op-support__div-31">
+                <span className="material-symbols-outlined op-support__span-32">
                   inbox
                 </span>
                 Không có cuộc hội thoại nào.
@@ -295,12 +295,12 @@ export default function SupportScreen() {
             ) : (
               filteredItems.map((item) => {
                 const isSelected = activeId === item.id;
-                const statusColor =
+                const statusTone =
                   item.status === "OPEN"
-                    ? "bg-amber-100 text-amber-800 border-amber-200"
+                    ? "open"
                     : item.status === "PENDING"
-                    ? "bg-blue-50 text-blue-700 border-blue-200"
-                    : "bg-zinc-100 text-zinc-600 border-zinc-200";
+                    ? "pending"
+                    : "closed";
 
                 const statusLabel =
                   item.status === "OPEN"
@@ -314,43 +314,43 @@ export default function SupportScreen() {
                     key={item.id}
                     type="button"
                     onClick={() => loadMessages(item.id)}
-                    className={`w-full p-3.5 text-left transition-colors flex items-start gap-3 cursor-pointer group ${
+                    className={`op-support__button-35 ${
                       isSelected
-                        ? "bg-zinc-100/90 border-l-3 border-zinc-900"
-                        : "hover:bg-zinc-100/50 bg-white"
+                        ? "op-support__button-33--variant-1"
+                        : "op-support__button-34--variant-2"
                     }`}
                   >
                     {/* Avatar Initials */}
-                    <div className="w-9 h-9 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-700 font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-white transition-colors">
+                    <div className="op-support__div-36 op-support__div-7">
                       {getInitials(item.customer_name)}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1.5">
-                        <strong className="text-xs font-bold text-zinc-900 truncate">
+                    <div className="op-support__div-37">
+                      <div className="op-support__div-38">
+                        <strong className="op-support__text-39">
                           {item.customer_name || "Khách hàng"}
                         </strong>
-                        <span className="text-[10px] text-zinc-400 shrink-0 tabular-nums">
+                        <span className="op-support__span-40 op-support__span-8">
                           {formatDate(item.updated_at)}
                         </span>
                       </div>
 
-                      <p className="text-xs font-semibold text-zinc-700 truncate mt-0.5">
+                      <p className="op-support__text-41">
                         {item.subject}
                       </p>
 
-                      <p className="text-xs text-zinc-500 truncate mt-0.5">
+                      <p className="op-support__text-42">
                         {item.preview || "Chưa có tin nhắn..."}
                       </p>
 
-                      <div className="flex items-center justify-between gap-2 mt-2">
-                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${statusColor}`}>
+                      <div className="op-support__div-43">
+                        <span className={`op-support__span-44 op-support__status op-support__status--${statusTone}`}>
                           {statusLabel}
                         </span>
 
                         {item.unread_count > 0 && (
-                          <span className="px-1.5 py-0.2 rounded-full bg-zinc-900 text-white text-[10px] font-bold">
+                          <span className="op-support__span-45">
                             {item.unread_count} mới
                           </span>
                         )}
@@ -364,40 +364,40 @@ export default function SupportScreen() {
         </aside>
 
         {/* Cột phải: Chat Area chi tiết */}
-        <main className="lg:col-span-8 xl:col-span-8 flex flex-col bg-white">
+        <main className="op-support__main-46">
           {active ? (
             <>
               {/* Header chi tiết khách hàng */}
-              <div className="p-3.5 sm:px-5 border-b border-zinc-200 flex items-center justify-between gap-3 bg-white">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-zinc-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+              <div className="op-support__div-47">
+                <div className="op-support__div-48">
+                  <div className="op-support__div-49 op-support__div-10">
                     {getInitials(active.customer_name)}
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm font-bold text-zinc-900 truncate">
+                  <div className="op-support__div-50">
+                    <div className="op-support__div-51">
+                      <h2 className="op-support__text-52">
                         {active.customer_name}
                       </h2>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 text-zinc-700 border border-zinc-200">
+                      <span className="op-support__span-53 op-support__span-11">
                         {active.status}
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-500 truncate mt-0.5">
+                    <p className="op-support__text-54">
                       {active.customer_email || "Khách hàng"} • Vấn đề:{" "}
-                      <strong className="text-zinc-700">{active.subject}</strong>
+                      <strong className="op-support__text-55">{active.subject}</strong>
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="op-support__div-56 op-support__div-12">
                   {active.ai_auto_reply && (
                     <button
                       type="button"
                       onClick={takeOver}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
+                      className="op-support__button-57"
                       title="Nhận hội thoại và tắt AI trả lời tự động"
                     >
-                      <span className="material-symbols-outlined text-sm">front_hand</span>
+                      <span className="material-symbols-outlined op-support__span-58">front_hand</span>
                       <span>Nhận hội thoại</span>
                     </button>
                   )}
@@ -405,19 +405,19 @@ export default function SupportScreen() {
                     <button
                       type="button"
                       onClick={() => toggleStatus("CLOSED")}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-zinc-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-zinc-700 text-xs font-medium rounded-lg transition-colors cursor-pointer shadow-xs"
+                      className="op-support__button-59 op-support__button-13"
                       title="Đóng phiên hỗ trợ này"
                     >
-                      <span className="material-symbols-outlined text-sm">check_circle</span>
+                      <span className="material-symbols-outlined op-support__span-60">check_circle</span>
                       <span>Đóng hội thoại</span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={() => toggleStatus("OPEN")}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-zinc-200 hover:bg-zinc-100 text-zinc-700 text-xs font-medium rounded-lg transition-colors cursor-pointer shadow-xs"
+                      className="op-support__button-61 op-support__button-14"
                     >
-                      <span className="material-symbols-outlined text-sm">replay</span>
+                      <span className="material-symbols-outlined op-support__span-62">replay</span>
                       <span>Mở lại hội thoại</span>
                     </button>
                   )}
@@ -425,16 +425,16 @@ export default function SupportScreen() {
               </div>
 
               {active.ai_auto_reply && (
-                <div className="flex items-center gap-2 px-4 sm:px-5 py-2 bg-emerald-50 border-b border-emerald-100 text-xs text-emerald-800">
-                  <span className="material-symbols-outlined text-base">smart_toy</span>
+                <div className="op-support__div-63">
+                  <span className="material-symbols-outlined op-support__span-64">smart_toy</span>
                   AI đang trả lời tự động. Bấm “Nhận hội thoại” để chuyển hẳn sang người trực.
                 </div>
               )}
 
               {/* Danh sách tin nhắn */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-zinc-50/40">
+              <div className="op-support__div-65">
                 {messages.length === 0 ? (
-                  <div className="py-12 text-center text-zinc-400 text-xs">
+                  <div className="op-support__div-66">
                     Chưa có tin nhắn nào trong hội thoại này.
                   </div>
                 ) : (
@@ -444,26 +444,26 @@ export default function SupportScreen() {
                     return (
                       <div
                         key={message.id}
-                        className={`flex flex-col ${isOperator ? "items-end" : "items-start"}`}
+                        className={`op-support__div-69   ${isOperator ? "op-support__div-67--variant-1" : "op-support__div-68--variant-2"}`}
                       >
-                        <div className="flex items-center gap-1.5 mb-1 px-1">
-                          <span className="text-[10px] font-semibold text-zinc-400">
+                        <div className="op-support__div-70">
+                          <span className="op-support__span-71">
                             {isOperator ? "Bạn (Điều hành)" : isAssistant ? "Trợ lý AI" : active.customer_name}
                           </span>
                           {message.created_at && (
-                            <span className="text-[10px] text-zinc-400 tabular-nums">
+                            <span className="op-support__span-72">
                               • {formatTime(message.created_at)}
                             </span>
                           )}
                         </div>
 
                         <div
-                          className={`max-w-[82%] sm:max-w-[70%] p-3 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
+                          className={`op-support__div-76   ${
                             isOperator
-                              ? "bg-zinc-900 text-white rounded-2xl rounded-tr-xs shadow-xs"
+                              ? "op-support__div-73--variant-1"
                               : isAssistant
-                              ? "bg-emerald-50 text-emerald-950 border border-emerald-200 rounded-2xl rounded-tl-xs shadow-xs"
-                              : "bg-white text-zinc-900 border border-zinc-200/80 rounded-2xl rounded-tl-xs shadow-xs"
+                              ? "op-support__div-74--variant-2 op-support__div-15--variant-2"
+                              : "op-support__div-75--variant-3 op-support__div-16--variant-3"
                           }`}
                         >
                           {message.body}
@@ -476,8 +476,8 @@ export default function SupportScreen() {
               </div>
 
               {/* Soạn thảo phản hồi */}
-              <div className="p-3 sm:p-4 border-t border-zinc-200 bg-white">
-                <form onSubmit={send} className="space-y-2.5">
+              <div className="op-support__div-77">
+                <form onSubmit={send} className="op-support__form-78">
                   <textarea
                     ref={textareaRef}
                     value={text}
@@ -485,34 +485,34 @@ export default function SupportScreen() {
                     onKeyDown={handleKeyDown}
                     rows={3}
                     placeholder="Nhập nội dung phản hồi khách hàng (Enter để gửi, Shift+Enter xuống dòng)..."
-                    className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs sm:text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 transition-colors resize-none"
+                    className="op-support__element-79 op-support__element-17"
                   />
 
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="op-support__div-80">
                     {/* Nút AI Draft gợi ý phản hồi */}
                     <button
                       type="button"
                       onClick={draft}
                       disabled={drafting}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors cursor-pointer disabled:opacity-50"
+                      className="op-support__button-81 op-support__button-18"
                       title="Sử dụng AI để tự động soạn câu trả lời mẫu dựa trên bối cảnh và lịch sử đặt tour của khách"
                     >
-                      <span className="material-symbols-outlined text-sm">
+                      <span className="material-symbols-outlined op-support__span-82">
                         {drafting ? "progress_activity" : "auto_awesome"}
                       </span>
                       <span>{drafting ? "AI đang soạn..." : "AI gợi ý câu trả lời"}</span>
                     </button>
 
-                    <div className="flex items-center gap-2">
-                      <span className="hidden sm:inline text-[11px] text-zinc-400">
+                    <div className="op-support__div-83">
+                      <span className="op-support__span-84">
                         Nhấn <strong>Enter</strong> để gửi
                       </span>
                       <button
                         type="submit"
                         disabled={!text.trim() || sending}
-                        className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-40 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                        className="op-support__button-85"
                       >
-                        <span className="material-symbols-outlined text-sm">send</span>
+                        <span className="material-symbols-outlined op-support__span-86">send</span>
                         <span>{sending ? "Đang gửi..." : "Gửi phản hồi"}</span>
                       </button>
                     </div>
@@ -522,12 +522,12 @@ export default function SupportScreen() {
             </>
           ) : (
             /* Empty state khi chưa chọn cuộc trò chuyện */
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-400 flex items-center justify-center mb-3 shadow-xs">
-                <span className="material-symbols-outlined text-2xl">chat</span>
+            <div className="op-support__div-87">
+              <div className="op-support__div-88 op-support__div-19">
+                <span className="material-symbols-outlined op-support__span-89">chat</span>
               </div>
-              <h3 className="text-sm font-bold text-zinc-900">Chưa chọn cuộc hội thoại</h3>
-              <p className="text-xs text-zinc-500 max-w-sm mt-1">
+              <h3 className="op-support__text-90">Chưa chọn cuộc hội thoại</h3>
+              <p className="op-support__text-91">
                 Chọn một khách hàng từ danh sách bên trái để xem nội dung và gửi phản hồi hỗ trợ.
               </p>
             </div>

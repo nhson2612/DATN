@@ -1,585 +1,1382 @@
-/* Tour detail follows the editorial Voyage prototype in /index.html. */
-.tour-detail {
-  --detail-ink: #141a1f;
-  --detail-muted: #66717a;
-  --detail-line: #dfe3e6;
-  --detail-paper: #f7f6f2;
-  --detail-white: #ffffff;
-  --detail-shadow: 0 22px 70px rgba(18, 27, 34, 0.14);
-  --detail-serif: "Playfair Display", Georgia, "Times New Roman", serif;
-  --detail-sans: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, sans-serif;
-  height: 100dvh;
-  overflow-x: hidden;
+/* ==========================================================================
+   BLOCK: .aura-detail
+   Trang chi tiết Tour chuẩn phong cách Aura Editorial từ 4cd5a1a0-6d23-46a2-8034-31377ed3cf07.png
+   - Khung chứa bo góc 40px, nền #F6F4EE, cuộn ẩn thanh scrollbar
+   - Cột Sidebar trái: Logo + Menu + Back button + Section tabs
+   - Cột phải: Hero cắt chéo + Dải Gallery 4 ảnh + Floating Booking Card + Nội dung chi tiết
+   ========================================================================== */
+
+.aura-detail {
+  background-color: #B8ACA2;
+  color: #141619;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  padding: 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.aura-detail__container {
+  width: 100%;
+  height: calc(100vh - 24px);
+  min-height: calc(100vh - 24px);
+  max-height: calc(100vh - 24px);
+  background-color: #F6F4EE;
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: none;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 36px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   0. MAIN LAYOUT GRID (Sidebar trái cố định + Cột phải cuộn độc lập)
+   -------------------------------------------------------------------------- */
+.aura-detail__layout-grid {
+  display: flex;
+  gap: 36px;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .aura-detail__layout-grid {
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+  }
+}
+
+/* SIDEBAR DỌC BÊN TRÁI - CỐ ĐỊNH HOÀN TOÀN KHÔNG CUỘN */
+.aura-detail__sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.aura-detail__sidebar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.aura-detail__sidebar .aura-home__nav {
+  margin-top: 4px;
+  gap: 10px;
+}
+
+.aura-detail__sidebar-middle {
+  margin: 32px 0 24px;
+}
+
+.aura-detail__back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #52525B;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.aura-detail__back-link:hover {
+  color: #141619;
+}
+
+/* In-page Anchor Navigation */
+.aura-detail__page-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.aura-detail__page-nav-item {
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  padding: 5px 0 5px 12px;
+  text-align: left;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #71717A;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1.4;
+}
+
+.aura-detail__page-nav-item:hover {
+  color: #141619;
+  transform: translateX(3px);
+}
+
+.aura-detail__page-nav-item--active {
+  border-left-color: #141619;
+  color: #141619;
+  font-weight: 700;
+  transform: translateX(4px);
+}
+
+/* CỘT PHẢI: NỘI DUNG CHÍNH (Cuộn độc lập, ẩn scrollbar, sidebar bên trái đứng yên) */
+.aura-detail__main-content {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  max-height: 100%;
   overflow-y: auto;
-  box-sizing: border-box;
-  color: var(--detail-ink);
-  background: var(--detail-paper);
-  font-family: var(--detail-sans);
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  display: flex;
+  flex-direction: column;
+  margin-top: -24px;
+  margin-right: -36px;
+  padding-top: 0;
+  padding-right: 36px;
+  padding-bottom: 48px;
+}
+
+.aura-detail__main-content::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* --------------------------------------------------------------------------
+   1. HERO SECTION (Tiêu đề + Banner cắt chéo)
+   -------------------------------------------------------------------------- */
+.aura-detail__hero {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 28px;
+  width: calc(100% + 36px);
+  margin-top: 0;
+  margin-right: -36px;
+  margin-bottom: 20px;
+  min-height: 380px;
+  align-items: stretch;
+}
+
+@media (max-width: 1200px) {
+  .aura-detail__hero {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .aura-detail__hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    width: 100%;
+    margin-top: 0;
+    margin-right: 0;
+  }
+}
+
+.aura-detail__hero-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0 12px;
+}
+
+.aura-detail__breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #71717A;
+  margin-bottom: 16px;
+}
+
+.aura-detail__breadcrumbs a {
+  color: #52525B;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.aura-detail__breadcrumbs a:hover {
+  color: #141619;
+}
+
+.aura-detail__bread-sep {
+  color: #A1A1AA;
+}
+
+.aura-detail__bread-current {
+  color: #141619;
+  font-weight: 600;
+}
+
+.aura-detail__hero-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 54px;
+  line-height: 0.95;
+  color: #141619;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.02em;
+}
+
+.aura-detail__hero-title-main {
+  display: block;
+  font-weight: 600;
+}
+
+.aura-detail__hero-title-sub {
+  display: block;
+  color: #A39B8E;
+  font-weight: 400;
+  font-size: 48px;
+}
+
+.aura-detail__hero-lead {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #71717A;
+  max-width: 380px;
+  margin: 0 0 22px 0;
+}
+
+.aura-detail__hero-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  font-size: 12.5px;
+  color: #52525B;
+  font-weight: 500;
+}
+
+.aura-detail__hero-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Banner cắt chéo */
+.aura-detail__hero-banner-wrap {
   position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
 }
 
-.tour-detail *,
-.tour-detail *::before,
-.tour-detail *::after {
-  box-sizing: border-box;
-}
-
-.tour-detail__shell {
-  width: min(1240px, calc(100% - 48px));
-  margin: 0 auto;
-}
-
-.tour-detail__hero {
+.aura-detail__hero-banner {
   position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  overflow: hidden;
+  background: #141619;
+  clip-path: polygon(55px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+@media (max-width: 1024px) {
+  .aura-detail__hero-banner {
+    clip-path: none;
+    border-radius: 24px;
+    min-height: 300px;
+  }
+}
+
+.aura-detail__hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+.aura-detail__hero-banner:hover .aura-detail__hero-img {
+  transform: scale(1.02);
+}
+
+.aura-detail__hero-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+.aura-detail__circle-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #141619;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.aura-detail__circle-btn:hover {
+  background: #FFFFFF;
+  transform: scale(1.06);
+}
+
+.aura-detail__hero-slider-bar {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 10;
+}
+
+.aura-detail__hero-track {
+  width: 90px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.aura-detail__hero-track-fill {
+  height: 100%;
+  background: #FFFFFF;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.aura-detail__hero-count {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.05em;
+}
+
+.aura-detail__hero-arrows {
+  display: flex;
+  gap: 8px;
+}
+
+.aura-detail__arrow-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.aura-detail__arrow-btn:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: scale(1.08);
+}
+
+/* --------------------------------------------------------------------------
+   2. MIDDLE PHOTO GALLERY STRIP (Dải 4 ảnh ngang sát mép chuẩn mockup)
+   -------------------------------------------------------------------------- */
+.aura-detail__gallery-strip {
+  display: flex;
+  gap: 0;
+  width: calc(100% + 36px);
+  margin-right: -36px;
+  height: 210px;
+  min-height: 210px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.aura-detail__gallery-strip-item {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  background-color: #E7E3DC;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.aura-detail__gallery-strip-item:last-child {
+  border-right: none;
+}
+
+.aura-detail__gallery-strip-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.aura-detail__gallery-strip-item:hover .aura-detail__gallery-strip-img {
+  transform: scale(1.06);
+}
+
+/* --------------------------------------------------------------------------
+   3. CONTENT SPLIT LAYOUT (Cột thông tin chính + Cột Booking Sticky)
+   -------------------------------------------------------------------------- */
+.aura-detail__content-split {
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+  width: 100%;
+  position: relative;
+  margin-bottom: 48px;
+}
+
+@media (max-width: 1100px) {
+  .aura-detail__content-split {
+    flex-direction: column-reverse;
+    gap: 32px;
+  }
+}
+
+.aura-detail__left-flow {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --------------------------------------------------------------------------
+   3. TAB CONTENT ANIMATION & TRANSITIONS (Hiệu ứng chữ xuất hiện khi đổi tab)
+   -------------------------------------------------------------------------- */
+@keyframes auraTabFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auraTextReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    letter-spacing: -0.04em;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: -0.01em;
+  }
+}
+
+.aura-detail__tab-wrapper {
+  width: 100%;
+  min-height: 400px;
+}
+
+.aura-detail__tab-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  animation: auraTabFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.aura-detail__tab-panel .aura-detail__section-label {
+  animation: auraTabFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.aura-detail__tab-panel .aura-detail__section-heading {
+  animation: auraTextReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
+}
+
+.aura-detail__tab-panel .aura-detail__section-desc,
+.aura-detail__tab-panel .aura-detail__overview-badges,
+.aura-detail__tab-panel .aura-detail__highlights-editorial,
+.aura-detail__tab-panel .aura-detail__itinerary-list,
+.aura-detail__tab-panel .aura-detail__inclusions-grid,
+.aura-detail__tab-panel .aura-detail__reviews-box,
+.aura-detail__tab-panel .aura-detail__faq-list {
+  animation: auraTabFadeIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+/* Stagger cascade animation cho từng dòng phần tử con */
+.aura-detail__tab-panel .aura-detail__hl-row:nth-child(1) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.aura-detail__tab-panel .aura-detail__hl-row:nth-child(2) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.13s both; }
+.aura-detail__tab-panel .aura-detail__hl-row:nth-child(3) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
+.aura-detail__tab-panel .aura-detail__hl-row:nth-child(4) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.23s both; }
+.aura-detail__tab-panel .aura-detail__hl-row:nth-child(5) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both; }
+
+.aura-detail__tab-panel .aura-detail__day-card:nth-child(1) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.aura-detail__tab-panel .aura-detail__day-card:nth-child(2) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both; }
+.aura-detail__tab-panel .aura-detail__day-card:nth-child(3) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.20s both; }
+
+.aura-detail__tab-panel .aura-detail__review-item:nth-child(1) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.aura-detail__tab-panel .aura-detail__review-item:nth-child(2) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.aura-detail__tab-panel .aura-detail__review-item:nth-child(3) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+
+.aura-detail__tab-panel .aura-detail__faq-item:nth-child(1) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.aura-detail__tab-panel .aura-detail__faq-item:nth-child(2) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.aura-detail__tab-panel .aura-detail__faq-item:nth-child(3) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+
+/* Overview Extra Badges */
+.aura-detail__overview-badges {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 680px) {
+  .aura-detail__overview-badges {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aura-detail__overview-badge {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aura-detail__badge-num {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #192D23;
+  line-height: 1;
+}
+
+.aura-detail__badge-txt {
+  font-size: 12.5px;
+  color: #71717A;
+  font-weight: 500;
+}
+
+/* Reviews Tab Styling */
+.aura-detail__reviews-box {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.aura-detail__reviews-score-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.aura-detail__score-main {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 44px;
+  font-weight: 700;
+  color: #192D23;
+  line-height: 1;
+}
+
+.aura-detail__score-stars {
+  color: #F59E0B;
+  font-size: 18px;
+  letter-spacing: 2px;
+}
+
+.aura-detail__score-caption {
+  font-size: 13px;
+  color: #71717A;
+  font-weight: 500;
+}
+
+.aura-detail__reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aura-detail__review-item {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 18px 22px;
+}
+
+.aura-detail__review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.aura-detail__review-author {
+  font-size: 14px;
+  font-weight: 600;
+  color: #141619;
+}
+
+.aura-detail__review-date {
+  font-size: 12px;
+  color: #A1A1AA;
+}
+
+.aura-detail__review-stars {
+  color: #F59E0B;
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.aura-detail__review-text {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #52525B;
+  margin: 0;
+}
+
+/* Section Common Styling */
+.aura-detail__section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8C827A;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.aura-detail__section-heading {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: #141619;
+  line-height: 1.2;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.01em;
+}
+
+.aura-detail__section-desc {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #52525B;
+  max-width: 720px;
+}
+
+.aura-detail__section-desc p {
+  margin: 0 0 12px 0;
+}
+
+.aura-detail__section-desc p:last-child {
+  margin-bottom: 0;
+}
+
+/* Highlights Editorial List */
+.aura-detail__highlights-editorial {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.aura-detail__hl-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #27272A;
+}
+
+.aura-detail__hl-dash {
+  color: #A39B8E;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.aura-detail__hl-text {
+  flex: 1;
+}
+
+/* Itinerary Daily Accordion */
+.aura-detail__itinerary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.aura-detail__day-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.aura-detail__day-card--open {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+.aura-detail__day-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.aura-detail__day-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.aura-detail__day-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #1E3A2B;
+  background: #EAF2EC;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.aura-detail__day-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #141619;
+  margin: 0;
+}
+
+.aura-detail__day-icon {
+  font-size: 20px;
+  font-weight: 300;
+  color: #71717A;
+  line-height: 1;
+}
+
+/* Tab Header Row (Tiêu đề tab + Nút mở rộng/thu gọn) */
+.aura-detail__tab-head-row {
   display: flex;
   align-items: flex-end;
-  min-height: 430px;
-  overflow: hidden;
-  color: var(--detail-white);
-  background: #111a20;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
-.tour-detail__hero-background {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  will-change: transform, opacity, filter, -webkit-mask-image, mask-image;
+.aura-detail__expand-toggle-btn {
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #52525B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 16px;
 }
 
-.tour-detail__hero-image {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  background-position: center;
-  background-size: cover;
-  transform: scale(1.03);
-  transition: opacity 1.2s ease-in-out;
+.aura-detail__expand-toggle-btn:hover {
+  background: #FFFFFF;
+  color: #141619;
+  border-color: #141619;
 }
 
-.tour-detail__hero-image--active {
-  opacity: 1;
-  animation: tourDetailHeroZoom 16s ease-in-out infinite alternate;
+.aura-detail__day-body {
+  padding: 0 20px 20px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
 }
 
-@keyframes tourDetailHeroZoom {
-  from { transform: scale(1.03); }
-  to { transform: scale(1.09); }
+.aura-detail__day-p {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #52525B;
+  margin: 14px 0 16px 0;
 }
 
-.tour-detail__hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(5, 10, 13, 0.08), rgba(5, 10, 13, 0.76));
-  will-change: transform, opacity, -webkit-mask-image, mask-image;
+/* Danh sách điểm tham quan trong ngày */
+.aura-detail__day-places-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
 }
 
-.tour-detail__nav {
-  position: absolute !important;
-  z-index: 3 !important;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.tour-detail__nav .voyage-navlink--active::after { width: 100%; }
-
-.tour-detail__hero-content {
-  position: relative;
-  z-index: 1;
-  padding: 2rem 0 2.5rem;
-}
-
-.tour-detail__kicker {
+.aura-detail__day-subhead {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.78);
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #192D23;
+  margin: 0 0 12px 0;
 }
 
-.tour-detail__kicker { margin-bottom: 0.55rem; }
-.tour-detail__kicker .material-symbols-outlined { font-size: 1rem; }
-
-.tour-detail__hero h1 {
-  max-width: 900px;
-  margin: 0 0 0.55rem;
-  font-family: var(--detail-serif);
-  font-size: clamp(2.6rem, 5.15vw, 4.35rem);
-  font-weight: 500;
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-  text-wrap: balance;
+.aura-detail__day-places-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.tour-detail__hero p {
+.aura-detail__day-place-chip {
+  background: #FAF9F6;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.aura-detail__day-place-chip:hover {
+  background: #F4F1EA;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.aura-detail__place-order {
+  font-size: 11px;
+  font-weight: 700;
+  color: #192D23;
+  background: #EAF2EC;
+  padding: 3px 7px;
+  border-radius: 6px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.aura-detail__place-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.aura-detail__place-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aura-detail__place-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #141619;
+}
+
+.aura-detail__place-cat {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #71717A;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.aura-detail__place-address {
+  font-size: 12px;
+  color: #71717A;
+  line-height: 1.4;
+}
+
+/* Checklist lưu ý trong ngày */
+.aura-detail__day-checklist-box {
+  margin-top: 14px;
+  background: #F8FAFC;
+  border-radius: 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.aura-detail__checklist-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #475569;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.aura-detail__checklist-items {
+  list-style: none;
+  padding: 0;
   margin: 0;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.tour-detail__hero-meta {
+.aura-detail__checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748B;
+}
+
+.aura-detail__checklist-dot {
+  color: #16A34A;
+  font-weight: 700;
+}
+
+/* Inclusions Grid */
+.aura-detail__inclusions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .aura-detail__inclusions-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.aura-detail__inclusions-subhead {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #141619;
+  margin: 0 0 12px 0;
+}
+
+.aura-detail__check-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aura-detail__check-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #3F3F46;
+}
+
+.aura-detail__check-icon {
+  color: #16A34A;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.aura-detail__dash-icon {
+  color: #A1A1AA;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* FAQ List */
+.aura-detail__faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.aura-detail__faq-item {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  padding: 18px 22px;
+}
+
+.aura-detail__faq-q {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #141619;
+  margin: 0 0 8px 0;
+}
+
+.aura-detail__faq-a {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #52525B;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   4. FLOATING BOOKING CARD (Thẻ đặt tour nổi bên phải)
+   -------------------------------------------------------------------------- */
+.aura-detail__booking-card-wrap {
+  width: 320px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 20px;
+  margin-top: -65px;
+  z-index: 5;
+  align-self: flex-start;
+}
+
+@media (max-width: 1100px) {
+  .aura-detail__booking-card-wrap {
+    width: 100%;
+    margin-top: 0;
+    position: static;
+  }
+}
+
+.aura-detail__booking-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 24px 22px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.aura-detail__card-from {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8C827A;
+  margin-bottom: 4px;
+}
+
+.aura-detail__card-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.aura-detail__card-price {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #141619;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.aura-detail__card-unit {
+  font-size: 13px;
+  color: #71717A;
+  font-weight: 500;
+}
+
+.aura-detail__book-now-btn {
+  background: #192D23;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 9999px;
+  padding: 15px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-}
-
-.tour-detail__tab:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-
-.tour-detail__hero-indicators {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.tour-detail__hero-indicator {
-  width: 1.75rem;
-  height: 0.18rem;
-  border: 0;
-  border-radius: 999px;
-  padding: 0;
-  background: rgba(255, 255, 255, 0.38);
-  cursor: pointer;
-  transition: width 220ms ease, background 220ms ease;
-}
-
-.tour-detail__hero-indicator:hover { background: rgba(255, 255, 255, 0.7); }
-.tour-detail__hero-indicator--active { width: 2.75rem; background: #ffffff; }
-
-.tour-detail__tabs {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  border-bottom: 1px solid var(--detail-line);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(16px);
-}
-
-.tour-detail__tabs > .tour-detail__shell {
-  display: flex;
-  gap: clamp(1.25rem, 3vw, 2.2rem);
-  overflow-x: auto;
-}
-
-.tour-detail__tab {
-  flex: 0 0 auto;
-  border-top: 0;
-  border-right: 0;
-  border-left: 0;
-  border-bottom: 2px solid transparent;
-  padding: 1rem 0 0.9rem;
-  color: #6f7880;
-  background: transparent;
-  font-family: var(--detail-sans);
-  font-size: 0.8rem;
+  font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: color 180ms ease, border-color 180ms ease;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-bottom: 20px;
 }
 
-.tour-detail__tab:hover,
-.tour-detail__tab--active {
-  color: var(--detail-ink);
-  border-bottom-color: var(--detail-ink);
+.aura-detail__book-now-btn:hover {
+  background: #112019;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(25, 45, 35, 0.25);
 }
 
-.tour-detail__content {
-  display: grid;
-  gap: clamp(4rem, 7vw, 6.5rem);
-  padding-top: 2.5rem;
-  padding-bottom: 5rem;
+.aura-detail__btn-arrow {
+  font-size: 16px;
+  transition: transform 0.2s ease;
 }
 
-.tour-detail__panel {
-  display: grid;
-  gap: 2.7rem;
+.aura-detail__book-now-btn:hover .aura-detail__btn-arrow {
+  transform: translateX(4px);
 }
 
-.tour-detail__overview {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
-  gap: clamp(2rem, 6vw, 6rem);
+.aura-detail__card-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.aura-detail__card-field-row {
+  background: #FAF9F6;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
   align-items: center;
-  scroll-margin-top: 5rem;
+  justify-content: space-between;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.15s ease;
 }
-.tour-detail__section { scroll-margin-top: 5rem; }
 
-.tour-detail__overview-copy { max-width: 42rem; }
+.aura-detail__card-field-row:hover {
+  background: #F4F1EA;
+  border-color: rgba(0, 0, 0, 0.1);
+}
 
-.tour-detail__overview h2 {
-  margin: 0 0 0.8rem;
-  font-family: var(--detail-serif);
-  font-size: clamp(2rem, 3.5vw, 3rem);
-  font-weight: 500;
+.aura-detail__field-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #52525B;
+}
+
+.aura-detail__field-texts {
+  display: flex;
+  flex-direction: column;
+}
+
+.aura-detail__field-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8C827A;
+}
+
+.aura-detail__field-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #141619;
+  margin-top: 1px;
+}
+
+.aura-detail__field-chevron {
+  font-size: 18px;
+  color: #A1A1AA;
   line-height: 1;
-  letter-spacing: -0.04em;
 }
 
-.tour-detail__overview-copy p {
-  max-width: 40rem;
-  margin: 0;
-  color: var(--detail-muted);
-  font-size: 0.94rem;
-  line-height: 1.7;
+.aura-detail__card-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin-bottom: 14px;
 }
 
-.tour-detail__overview-facts {
-  display: grid;
-  gap: 0;
-  margin: 0;
-  border-top: 1px solid var(--detail-line);
-}
-
-.tour-detail__overview-facts > div {
-  display: grid;
-  grid-template-columns: 7rem 1fr;
-  gap: 1rem;
-  border-bottom: 1px solid var(--detail-line);
-  padding: 0.8rem 0;
-}
-
-.tour-detail__overview-facts dt {
-  color: var(--detail-muted);
-  font-size: 0.75rem;
-}
-
-.tour-detail__overview-facts dd {
-  margin: 0;
-  color: var(--detail-ink);
-  font-size: 0.83rem;
-  font-weight: 700;
-  text-align: right;
-}
-
-.tour-detail__overview-facts small { color: var(--detail-muted); font-weight: 500; }
-
-.tour-detail__departures-content { display: grid; gap: 1.25rem; }
-
-.tour-detail__month-tabs {
-  display: flex;
-  gap: 0.65rem;
-  overflow-x: auto;
-  padding-bottom: 0.2rem;
-}
-
-.tour-detail__month-tab {
-  flex: 0 0 auto;
-  border: 1px solid var(--detail-line);
-  border-radius: 5px;
-  padding: 0.68rem 0.9rem;
-  color: var(--detail-muted);
-  background: #ffffff;
-  font: 700 0.78rem/1 var(--detail-sans);
-  cursor: pointer;
-  transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
-}
-
-.tour-detail__month-tab:hover,
-.tour-detail__month-tab--active {
-  border-color: var(--detail-ink);
-  color: #ffffff;
-  background: var(--detail-ink);
-}
-
-.tour-detail__departure-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
-}
-
-.tour-detail__departure-card {
+.aura-detail__wishlist-btn {
+  background: none;
+  border: none;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #71717A;
+  cursor: pointer;
+  padding: 6px;
+  transition: color 0.15s ease;
   width: 100%;
-  min-height: 8.2rem;
-  border: 1px solid var(--detail-line);
-  border-radius: 7px;
-  padding: 1rem;
-  color: var(--detail-ink);
-  background: #ffffff;
-  font-family: var(--detail-sans);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
-.tour-detail__departure-card:hover:not(:disabled) {
-  transform: translateY(-2px);
-  border-color: #7f8a91;
-  box-shadow: 0 10px 24px rgba(18, 27, 34, 0.08);
+.aura-detail__wishlist-btn:hover {
+  color: #141619;
 }
 
-.tour-detail__departure-card--selected {
-  border-color: var(--detail-ink);
-  box-shadow: inset 0 0 0 1px var(--detail-ink);
+.aura-detail__wishlist-btn--active {
+  color: #DC2626;
 }
 
-.tour-detail__departure-card--unavailable { opacity: 0.48; cursor: not-allowed; }
-.tour-detail__departure-copy { display: grid; gap: 0.36rem; min-width: 0; }
-.tour-detail__departure-date { display: flex; align-items: center; gap: 0.38rem; font-size: 0.78rem; }
-.tour-detail__departure-date .material-symbols-outlined { color: var(--detail-muted); font-size: 1rem; }
-.tour-detail__departure-date strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tour-detail__departure-price { display: flex; align-items: center; gap: 0.45rem; font-size: 0.76rem; }
-.tour-detail__departure-price strong { font-size: 0.92rem; }
-.tour-detail__departure-price span { color: var(--detail-muted); text-decoration: line-through; }
-.tour-detail__departure-seats { color: var(--detail-muted); font-size: 0.72rem; font-weight: 600; }
-.tour-detail__departure-seats--available { color: #25714e; }
-.tour-detail__departure-state { flex: 0 0 auto; }
-.tour-detail__departure-check { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; color: #ffffff; background: var(--detail-ink); }
-.tour-detail__departure-check .material-symbols-outlined { font-size: 1rem; }
-.tour-detail__departure-select { display: inline-block; border-bottom: 1px solid currentColor; padding-bottom: 0.1rem; font-size: 0.75rem; font-weight: 700; }
-.tour-detail__empty-state { border: 1px solid var(--detail-line); padding: 2rem; color: var(--detail-muted); background: #ffffff; font-size: 0.82rem; text-align: center; }
+/* --------------------------------------------------------------------------
+   5. SIMILAR TOURS SECTION (Cuối trang)
+   -------------------------------------------------------------------------- */
+.aura-detail__similar-section {
+  padding-top: 36px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  width: 100%;
+}
 
-.tour-detail__departure-action {
+.aura-detail__similar-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  border-top: 1px solid var(--detail-line);
-  padding-top: 1.25rem;
+  margin-bottom: 20px;
 }
 
-.tour-detail__departure-action p { margin: 0; color: var(--detail-muted); font-size: 0.8rem; }
-.tour-detail__departure-action strong { color: var(--detail-ink); }
-.tour-detail__departure-action button {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.55rem;
-  border: 0;
-  border-radius: 999px;
-  padding: 0.82rem 1.05rem;
-  color: #ffffff;
-  background: var(--detail-ink);
-  font: 700 0.82rem/1 var(--detail-sans);
-  cursor: pointer;
-  transition: transform 180ms ease, background 180ms ease;
-}
-.tour-detail__departure-action button:hover { transform: translateY(-2px); background: #29343a; }
-.tour-detail__departure-action .material-symbols-outlined { font-size: 1rem; }
-
-.tour-detail__section > h2 {
+.aura-detail__similar-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: #141619;
   margin: 0;
-  font-family: var(--detail-serif);
-  font-size: clamp(1.8rem, 3vw, 2.25rem) !important;
-  font-weight: 500 !important;
-  letter-spacing: -0.035em;
-  color: var(--detail-ink) !important;
 }
 
-.tour-detail__highlights { display: grid; gap: 1rem; }
-.tour-detail__highlights-content {
+.aura-detail__similar-more {
+  font-size: 13px;
+  font-weight: 600;
+  color: #52525B;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.aura-detail__similar-more:hover {
+  color: #141619;
+}
+
+.aura-detail__similar-cards {
   display: grid;
-  gap: 1rem;
-  border-top: 1px solid var(--detail-line);
-  border-bottom: 1px solid var(--detail-line);
-  padding: 1rem 0;
-}
-.tour-detail__highlights-list { display: grid; gap: 0.7rem; margin: 0; padding: 0; list-style: none; }
-.tour-detail__highlights-list li { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); gap: 0.65rem; color: var(--detail-ink); font-size: 0.9rem; line-height: 1.55; }
-.tour-detail__highlights-list li > span:first-child { color: var(--detail-muted); font: 700 0.68rem/1 var(--detail-sans); letter-spacing: 0.1em; padding-top: 0.28rem; }
-.tour-detail__highlights-description { margin: 0; color: var(--detail-muted); font-size: 0.88rem; line-height: 1.7; white-space: pre-line; }
-
-.tour-detail .text-blue-700,
-.tour-detail .text-blue-600,
-.tour-detail .text-sky-800 { color: var(--detail-ink) !important; }
-
-.tour-detail .bg-blue-600,
-.tour-detail .bg-blue-700,
-.tour-detail .bg-blue-800,
-.tour-detail .bg-red-600 { background-color: var(--detail-ink) !important; }
-
-.tour-detail .hover\:bg-blue-800:hover,
-.tour-detail .hover\:bg-red-700:hover { background-color: #29343a !important; }
-
-.tour-detail .border-blue-600,
-.tour-detail .border-blue-400,
-.tour-detail .border-blue-300,
-.tour-detail .border-blue-200 { border-color: #9ca7ad !important; }
-
-.tour-detail .bg-blue-50,
-.tour-detail .bg-sky-50,
-.tour-detail .bg-sky-100\/70 { background-color: #eff1ef !important; }
-
-.tour-detail .ring-blue-600\/20,
-.tour-detail .ring-blue-600\/30 { --tw-ring-color: rgba(20, 26, 31, 0.18) !important; }
-
-.tour-detail__section .grid.grid-cols-2 > div {
-  border-color: var(--detail-line) !important;
-  border-radius: 7px !important;
-  box-shadow: none !important;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
-.tour-detail__section .group:hover { transform: translateX(4px); }
-.tour-detail__section .group { transition: transform 180ms ease; }
-
-.tour-detail__timeline {
-  display: grid;
-  gap: 1.35rem;
+@media (max-width: 900px) {
+  .aura-detail__similar-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.tour-detail__timeline-day {
-  display: grid;
-  grid-template-columns: 5.6rem minmax(0, 1fr);
-  gap: 1.2rem;
+@media (max-width: 600px) {
+  .aura-detail__similar-cards {
+    grid-template-columns: 1fr;
+  }
 }
 
-.tour-detail__timeline-body { min-width: 0; }
-
-.tour-detail__day-label {
-  padding-top: 0.2rem;
-  color: var(--detail-ink);
-  font-size: 0.83rem;
-  font-weight: 700;
+.aura-detail__sim-card {
+  background: #FFFFFF;
+  border-radius: 18px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.tour-detail__timeline-item {
+.aura-detail__sim-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.aura-detail__sim-thumb {
   position: relative;
-  display: grid;
-  grid-template-columns: 6.25rem minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 1.1rem;
   width: 100%;
-  min-height: 5.3rem;
-  border: 0;
-  border-bottom: 1px solid var(--detail-line);
-  padding: 0 0 1.35rem 1.65rem;
-  color: var(--detail-ink);
-  background: transparent;
-  font-family: var(--detail-sans);
-  text-align: left;
-  cursor: pointer;
+  height: 140px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #E7E3DC;
 }
 
-.tour-detail__timeline-item::before {
-  position: absolute;
-  top: 0.8rem;
-  bottom: -1.35rem;
-  left: 0.25rem;
-  width: 1px;
-  background: #cfd4d7;
-  content: "";
-}
-
-.tour-detail__timeline-day:last-child .tour-detail__timeline-item::before { bottom: 1.5rem; }
-
-.tour-detail__timeline-dot {
-  position: absolute;
-  z-index: 1;
-  top: 0.7rem;
-  left: 0;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: var(--detail-ink);
-  box-shadow: 0 0 0 4px var(--detail-paper);
-}
-
-.tour-detail__timeline-item img {
-  width: 6.25rem;
-  height: 4.25rem;
-  border-radius: 4px;
+.aura-detail__sim-thumb img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
-.tour-detail__timeline-copy {
-  display: grid;
-  gap: 0.3rem;
-  min-width: 0;
+.aura-detail__sim-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(20, 22, 25, 0.75);
+  backdrop-filter: blur(6px);
+  color: #FFFFFF;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
 }
 
-.tour-detail__timeline-copy strong {
-  overflow: hidden;
-  font-size: 0.93rem;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tour-detail__timeline-copy > span {
+.aura-detail__sim-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #141619;
+  margin: 12px 0 6px 0;
   display: -webkit-box;
-  overflow: hidden;
-  color: var(--detail-muted);
-  font-size: 0.76rem;
-  line-height: 1.45;
-  -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
 }
 
-.tour-detail__timeline-arrow {
-  font-size: 1.05rem;
-  transition: transform 180ms ease;
+.aura-detail__sim-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E3A2B;
+  margin-top: auto;
 }
 
-.tour-detail__timeline-item:hover .tour-detail__timeline-arrow { transform: translateY(2px); }
-.tour-detail__timeline-arrow--open { transform: rotate(180deg); }
-.tour-detail__timeline-item:hover .tour-detail__timeline-arrow--open { transform: rotate(180deg) translateY(2px); }
-.tour-detail__timeline-item:focus-visible { outline: 2px solid var(--detail-ink); outline-offset: 4px; }
+/* --------------------------------------------------------------------------
+   6. RESPONSIVE MOBILE ADAPTATIONS
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .aura-detail {
+    padding: 0;
+    height: auto;
+    min-height: 100vh;
+  }
 
-.tour-detail__timeline-detail {
-  display: grid;
-  gap: 0.7rem;
-  margin: -0.2rem 0 0 1.65rem;
-  border-bottom: 1px solid var(--detail-line);
-  padding: 0 0 1.35rem;
-  color: var(--detail-muted);
-  font-size: 0.82rem;
-  line-height: 1.6;
-}
+  .aura-detail__container {
+    height: auto;
+    min-height: 100vh;
+    border-radius: 0;
+    padding: 20px 16px 40px;
+  }
 
-.tour-detail__timeline-place,
-.tour-detail__timeline-note,
-.tour-detail__timeline-checklist {
-  border-left: 1px solid var(--detail-line);
-  padding: 0.25rem 0 0.25rem 0.9rem;
-  background: transparent;
-}
+  .aura-detail__sidebar {
+    width: 100%;
+    min-height: auto;
+    position: static;
+  }
 
-.tour-detail__timeline-place,
-.tour-detail__timeline-note {
-  display: grid;
-  grid-template-columns: 1.2rem minmax(0, 1fr);
-  align-items: center;
-  gap: 0.65rem;
-}
-.tour-detail__timeline-place > .material-symbols-outlined,
-.tour-detail__timeline-note > .material-symbols-outlined { color: var(--detail-ink); font-size: 1rem; }
-.tour-detail__timeline-place-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.7rem; }
-.tour-detail__timeline-place-head strong { color: var(--detail-ink); font-size: 0.82rem; }
-.tour-detail__timeline-place-head time { flex: 0 0 auto; color: var(--detail-muted); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
-.tour-detail__timeline-place p,
-.tour-detail__timeline-note p { margin: 0.22rem 0 0; font-size: 0.76rem; }
-.tour-detail__timeline-place-note { color: var(--detail-ink); font-style: italic; }
-.tour-detail__timeline-checklist > div { display: flex; align-items: center; gap: 0.45rem; color: var(--detail-ink); }
-.tour-detail__timeline-checklist > div .material-symbols-outlined { font-size: 1rem; }
-.tour-detail__timeline-checklist strong { font-size: 0.8rem; }
-.tour-detail__timeline-checklist ul { display: grid; gap: 0.38rem; margin: 0.65rem 0 0; padding: 0; list-style: none; }
-.tour-detail__timeline-checklist li { display: flex; align-items: flex-start; gap: 0.42rem; font-size: 0.76rem; }
-.tour-detail__timeline-checklist li .material-symbols-outlined { flex: 0 0 auto; margin-top: 0.08rem; font-size: 0.9rem; }
-.tour-detail__timeline-check--done { color: #718078; text-decoration: line-through; }
+  .aura-detail__hero-title {
+    font-size: 38px;
+  }
 
-@media (max-width: 760px) {
-  .tour-detail__shell { width: min(100% - 32px, 1240px); }
-  .tour-detail__hero { min-height: 390px; }
-  .tour-detail__hero-content { padding-bottom: 2rem; }
-  .tour-detail__hero h1 { font-size: clamp(2.4rem, 11vw, 3.5rem); }
-  .tour-detail__content { gap: 2.1rem; padding-top: 2rem; }
-  .tour-detail__overview { grid-template-columns: 1fr; gap: 1.75rem; }
-  .tour-detail__timeline-day { grid-template-columns: 1fr; gap: 0.4rem; }
-  .tour-detail__day-label { padding-top: 0; }
-  .tour-detail__departure-action { align-items: flex-start; flex-direction: column; }
-}
+  .aura-detail__hero-title-sub {
+    font-size: 34px;
+  }
 
-@media (max-width: 480px) {
-  .tour-detail__shell { width: min(100% - 24px, 1240px); }
-  .tour-detail__hero { min-height: 360px; }
-  .tour-detail__tabs > .tour-detail__shell { gap: 1.25rem; }
-  .tour-detail__timeline-item { grid-template-columns: 5.3rem minmax(0, 1fr) auto; gap: 0.8rem; }
-  .tour-detail__timeline-item img { width: 5.3rem; height: 3.8rem; }
+  .aura-detail__gallery-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

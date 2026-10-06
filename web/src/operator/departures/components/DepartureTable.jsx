@@ -24,12 +24,12 @@ export default function DepartureTable({
 }) {
   if (!departures || departures.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-zinc-200 p-12 text-center shadow-2xs">
-        <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center mx-auto mb-3 text-zinc-400">
-          <span className="material-symbols-outlined text-2xl">event_busy</span>
+      <div className="op-departure-table__div-1 op-departure-table__div-1">
+        <div className="op-departure-table__div-2">
+          <span className="material-symbols-outlined op-departure-table__span-3">event_busy</span>
         </div>
-        <h4 className="text-base font-semibold text-zinc-900 mb-1">Chưa có đợt khởi hành nào</h4>
-        <p className="text-sm text-zinc-500 max-w-sm mx-auto">
+        <h4 className="op-departure-table__text-4">Chưa có đợt khởi hành nào</h4>
+        <p className="op-departure-table__text-5">
           Tour này hiện chưa mở ngày khởi hành nào. Hãy bấm &quot;Mở đợt&quot; để thiết lập ngày chạy và giá bán.
         </p>
       </div>
@@ -37,20 +37,20 @@ export default function DepartureTable({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-zinc-200 overflow-hidden shadow-2xs">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-sm">
+    <div className="op-departure-table__div-6 op-departure-table__div-2">
+      <div className="op-departure-table__div-7">
+        <table className="op-departure-table__table-8">
           <thead>
-            <tr className="border-b border-zinc-200 bg-zinc-50/75 text-xs font-semibold text-zinc-600 uppercase tracking-wider">
-              <th className="py-3 px-4">Ngày khởi hành</th>
-              <th className="py-3 px-4">Giá bán hiệu lực</th>
-              <th className="py-3 px-4">Tình trạng chỗ</th>
-              <th className="py-3 px-4">Quy mô đoàn</th>
-              <th className="py-3 px-4">Trạng thái</th>
-              <th className="py-3 px-4 text-right">Thao tác</th>
+            <tr className="op-departure-table__tr-9">
+              <th className="op-departure-table__th-10">Ngày khởi hành</th>
+              <th className="op-departure-table__th-11">Giá bán hiệu lực</th>
+              <th className="op-departure-table__th-12">Tình trạng chỗ</th>
+              <th className="op-departure-table__th-13">Quy mô đoàn</th>
+              <th className="op-departure-table__th-14">Trạng thái</th>
+              <th className="op-departure-table__th-15">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-200/80">
+          <tbody className="op-departure-table__body">
             {departures.map((departure) => {
               const soldSeats = departure.sold_seats || 0;
               const totalSeats = departure.seats_total || 20;
@@ -62,48 +62,48 @@ export default function DepartureTable({
                 : 0;
 
               return (
-                <tr key={departure.id} className="hover:bg-zinc-50/60 transition-colors">
+                <tr key={departure.id} className="op-departure-table__tr-16">
                   {/* Ngày khởi hành */}
-                  <td className="py-3.5 px-4">
-                    <div className="font-semibold text-zinc-900">{date(departure.depart_date)}</div>
+                  <td className="op-departure-table__td-17">
+                    <div className="op-departure-table__div-18">{date(departure.depart_date)}</div>
                     {weekday && (
-                      <div className="text-xs text-zinc-500 capitalize">{weekday}</div>
+                      <div className="op-departure-table__div-19">{weekday}</div>
                     )}
                   </td>
 
                   {/* Giá bán & Giá gốc */}
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="font-bold text-zinc-900">
+                  <td className="op-departure-table__td-20">
+                    <div className="op-departure-table__div-21">
+                      <span className="op-departure-table__span-22">
                         {money(departure.effective_price || departure.sale_price || departure.list_price)}
                       </span>
                       {isSale && discountPct > 0 && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <span className="op-departure-table__span-23 op-departure-table__span-3">
                           -{discountPct}%
                         </span>
                       )}
                     </div>
                     {isSale && departure.list_price && (
-                      <div className="text-xs text-zinc-600 line-through">
+                      <div className="line-through op-departure-table__div-24">
                         Gốc: {money(departure.list_price)}
                       </div>
                     )}
                   </td>
 
                   {/* Chỗ ngồi */}
-                  <td className="py-3.5 px-4 min-w-[150px]">
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-medium text-zinc-700">
+                  <td className="op-departure-table__td-25">
+                    <div className="op-departure-table__div-26">
+                      <span className="op-departure-table__span-27">
                         {soldSeats}/{totalSeats} chỗ
                       </span>
-                      <span className={departure.seats_left === 0 ? "font-bold text-rose-600" : "text-zinc-500"}>
+                      <span className={departure.seats_left === 0 ? "op-departure-table__span-28--variant-1" : "op-departure-table__span-29--variant-2"}>
                         {departure.seats_left === 0 ? "Hết chỗ" : `Còn ${departure.seats_left} chỗ`}
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/50">
+                    <div className="op-departure-table__div-30 op-departure-table__div-4">
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          fillPct >= 90 ? "bg-rose-500" : fillPct >= 50 ? "bg-amber-500" : "bg-zinc-800"
+                        className={`op-departure-table__div-34   ${
+                          fillPct >= 90 ? "op-departure-table__div-31--variant-1" : fillPct >= 50 ? "op-departure-table__div-32--variant-2" : "op-departure-table__div-33--variant-3"
                         }`}
                         style={{ width: `${fillPct}%` }}
                       />
@@ -111,32 +111,32 @@ export default function DepartureTable({
                   </td>
 
                   {/* Quy mô đoàn */}
-                  <td className="py-3.5 px-4">
-                    <span className="inline-flex items-center gap-1 text-xs text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
-                      <span className="material-symbols-outlined text-xs">group</span>
+                  <td className="op-departure-table__td-35">
+                    <span className="op-departure-table__span-36 op-departure-table__span-5">
+                      <span className="material-symbols-outlined op-departure-table__span-37">group</span>
                       Tối thiểu {departure.min_pax || 1} khách
                     </span>
                   </td>
 
                   {/* Trạng thái */}
-                  <td className="py-3.5 px-4">
+                  <td className="op-departure-table__td-38">
                     <StatusTag value={departure.status} />
                   </td>
 
                   {/* Thao tác */}
-                  <td className="py-3.5 px-4 text-right">
+                  <td className="op-departure-table__td-39">
                     {renderActions ? (
                       renderActions(departure)
                     ) : (
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="op-departure-table__div-40">
                         {onEditSale && (
                           <button
                             type="button"
                             onClick={() => onEditSale(departure)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors shadow-2xs"
+                            className="op-departure-table__button-41 op-departure-table__button-6"
                             title="Đặt hoặc sửa giá khuyến mãi"
                           >
-                            <span className="material-symbols-outlined text-sm">percent</span>
+                            <span className="material-symbols-outlined op-departure-table__span-42">percent</span>
                             {isSale ? "Sửa sale" : "Đặt sale"}
                           </button>
                         )}
@@ -144,10 +144,10 @@ export default function DepartureTable({
                           <button
                             type="button"
                             onClick={() => onExportGuests(departure.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors shadow-2xs"
+                            className="op-departure-table__button-43 op-departure-table__button-7"
                             title="Xuất file CSV danh sách khách"
                           >
-                            <span className="material-symbols-outlined text-sm">download</span>
+                            <span className="material-symbols-outlined op-departure-table__span-44">download</span>
                             Xuất CSV
                           </button>
                         )}
@@ -155,10 +155,10 @@ export default function DepartureTable({
                           <button
                             type="button"
                             onClick={() => onCancelDeparture(departure)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition-colors shadow-2xs"
+                            className="op-departure-table__button-45 op-departure-table__button-8"
                             title="Huỷ đợt khởi hành này"
                           >
-                            <span className="material-symbols-outlined text-sm">event_busy</span>
+                            <span className="material-symbols-outlined op-departure-table__span-46">event_busy</span>
                             Huỷ đợt
                           </button>
                         )}

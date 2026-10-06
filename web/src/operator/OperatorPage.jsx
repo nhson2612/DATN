@@ -8,6 +8,7 @@ import ToursScreen from "./tours";
 import SupportScreen from "./support";
 import "./Operator.css";
 import "./OperatorShell.css";
+import "./OperatorBem.css";
 
 /** Năm màn của khu nhà điều hành, nhóm theo việc. Đường dẫn con, biểu tượng và tên
  *  trên menu lấy từ đây; thêm màn mới thì thêm một dòng. */
@@ -107,7 +108,7 @@ export default function OperatorPage({ user, onLogout, onNeedAuth }) {
           </div>
 
           <Link to="/nha-dieu-hanh/tours?action=create" className="op-shell__quick-create">
-            <span className="material-symbols-outlined text-base">add</span>
+            <span className="material-symbols-outlined op-shell__span-1">add</span>
             <span>Tạo tour mới</span>
           </Link>
 
@@ -153,7 +154,7 @@ export default function OperatorPage({ user, onLogout, onNeedAuth }) {
               onClick={onLogout}
               title="Đăng xuất"
             >
-              <span className="material-symbols-outlined text-lg">logout</span>
+              <span className="material-symbols-outlined op-shell__span-2">logout</span>
             </button>
           </div>
         </div>
@@ -163,7 +164,7 @@ export default function OperatorPage({ user, onLogout, onNeedAuth }) {
         <header className="op-shell__header">
           <div className="op-shell__header-left">
             <div className="op-shell__header-sidebar-btn" title="Khu nhà điều hành">
-              <span className="material-symbols-outlined text-lg">space_dashboard</span>
+              <span className="material-symbols-outlined op-shell__span-3">space_dashboard</span>
             </div>
             <div className="op-shell__header-divider"></div>
             <div className="op-shell__crumb">

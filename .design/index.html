@@ -1,0 +1,1479 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Aura — Curated World Travel Experiences</title>
+<!-- Google Fonts: Plus Jakarta Sans & Cormorant Garamond -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              canvas: '#B8ACA2',
+              cream: '#F6F4EE',
+              charcoal: '#141619',
+              darkDrawer: '#0D1117',
+              muted: '#7C7974',
+              softBorder: '#E5E1D8'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Cormorant Garamond"', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-layout">
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .cursor-caret {
+      animation: blink 1.1s infinite;
+    }
+
+    /* Stagger transitions for Search and Tours views */
+    .stagger-item {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .search-active .stagger-header,
+    .tours-active .stagger-header {
+      opacity: 1;
+      transform: translateY(0);
+      transition-delay: 0.05s;
+    }
+    .search-active .stagger-title,
+    .tours-active .stagger-title {
+      opacity: 1;
+      transform: translateY(0);
+      transition-delay: 0.12s;
+    }
+    .search-active .stagger-content,
+    .tours-active .stagger-content {
+      opacity: 1;
+      transform: translateY(0);
+      transition-delay: 0.20s;
+    }
+    .search-active .stagger-footer,
+    .tours-active .stagger-footer {
+      opacity: 1;
+      transform: translateY(0);
+      transition-delay: 0.32s;
+    }
+  </style>
+</head>
+<body class="bg-[#B8ACA2] text-brand-charcoal font-sans antialiased min-h-screen flex items-center justify-center p-3 select-none relative overflow-hidden">
+<!-- ========================================== -->
+<!-- UNIFIED MASTER CONTAINER (Fixed 12px Edge Padding) -->
+<!-- ========================================== -->
+<main class="w-full bg-brand-cream rounded-[36px] sm:rounded-[44px] overflow-hidden shadow-2xl relative border border-black/5" style="height: calc(100vh - 24px); min-height: calc(100vh - 24px);">
+<!-- ========================================== -->
+<!-- VIEW 1: Split-Screen Editorial Home        -->
+<!-- ========================================== -->
+<div class="w-full h-full flex flex-col lg:flex-row absolute inset-0 transition-all duration-500 ease-out z-10 opacity-0 scale-95 pointer-events-none" id="homeView">
+<!-- LEFT COLUMN: Typography, Branding & Nav -->
+<div class="w-full lg:w-1/2 p-8 sm:p-12 lg:p-16 flex flex-col justify-between relative bg-[#F6F4EE] z-10 h-full">
+<!-- Top Bar: Location Pin Brand Mark + Search Trigger -->
+<header class="flex items-center justify-between w-full">
+<a aria-label="Aura Brand Logo" class="group flex items-center space-x-2 focus:outline-none" href="#">
+<svg class="w-5 h-5 sm:w-6 sm:h-6 text-brand-charcoal transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+</svg>
+</a>
+<!-- Interactive Search Icon Trigger -> Switches directly to Search View inside container -->
+<button aria-label="Open search view" class="p-2 -mr-2 rounded-full text-brand-charcoal/70 hover:text-black hover:bg-black/5 transition-all flex items-center space-x-2 group focus:outline-none" onclick="showSearchView()" type="button">
+<svg class="w-5 h-5 text-brand-charcoal transition-transform group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-xs font-medium text-brand-muted hidden sm:inline-block tracking-tight group-hover:text-brand-charcoal transition-colors">Find tour</span>
+</button>
+</header>
+<!-- Main Editorial Headline & Body Copy -->
+<div class="my-6 lg:my-0 max-w-xl">
+<h1 class="text-4xl sm:text-5xl lg:text-[62px] xl:text-[68px] font-normal tracking-[-0.035em] leading-[1.08] text-brand-charcoal">
+          Discover <span class="font-normal">the</span> beauty <br>
+<span class="font-normal text-brand-charcoal/85">of the world around</span>
+</h1>
+<p class="mt-8 text-xs sm:text-[13px] text-brand-muted leading-relaxed font-normal max-w-md">
+          Escape the ordinary and find inspiration in the most breathtaking corners of the globe. We curate unique travel experiences tailored to your rhythm and spirit.
+        </p>
+</div>
+<!-- Bottom Vertical Navigation List -->
+<nav aria-label="Main Editorial Navigation" class="flex flex-col space-y-1.5 text-xs text-brand-charcoal/80 font-medium">
+<a class="text-brand-charcoal font-semibold hover:text-black transition-colors flex items-center" href="#about">
+<span class="mr-1.5 opacity-80 text-brand-charcoal font-bold">/</span> About
+        </a>
+<button class="text-left hover:text-black transition-colors focus:outline-none" onclick="showToursView()">
+          Tours</button>
+<a class="hover:text-black transition-colors" href="#booking">Experiences</a>
+<a class="hover:text-black transition-colors" href="#faq">FAQ</a>
+<a class="hover:text-black transition-colors" href="#account">Account</a>
+</nav>
+</div>
+<!-- RIGHT COLUMN: Scenic Mountain Imagery + Floating Card -->
+<div class="w-full lg:w-1/2 relative min-h-[460px] lg:min-h-full overflow-hidden bg-stone-300">
+<!-- High Resolution Dolomite/Alpine Mountain Image -->
+<img alt="Breathtaking alpine green valley and jagged sunlit mountain peaks" class="absolute inset-0 w-full h-full object-cover object-center filter brightness-[0.98] transition-transform duration-700 ease-out hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwajCfd2fjh7xH4MeiBvxCn9LqlCN64lAXHa70tcgUFYdonz0SZ8PxA06DzKgwQR3XNej0a5_eEclB3_zYuMYHwt71efiDox1elXKpNVjeZdZcKo7Tq_HH4h_EmgZ9FBzCqDcpGd13B5NO2VC9HqkXSbdfVR6ARTA3MKJMJhbAtIcAUzSTnHTG9hOxpkoB4iaVJDnq98nvbxtUkXe0dFjF_WbsaD74I5w547ZU6P2BVoMrZOpHD5lc_Q">
+<!-- Top Right Hamburger Menu Button -->
+<div class="absolute top-6 right-6 sm:top-10 sm:right-10 z-20">
+<button aria-label="Open Navigation Menu" class="w-10 h-10 rounded-full bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/40 transition-all duration-200 shadow-md group focus:outline-none" onclick="openMenuDrawer()" type="button">
+<svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewBox="0 0 24 24">
+<line x1="4" x2="20" y1="7" y2="7"></line>
+<line x1="4" x2="20" y1="12" y2="12"></line>
+<line x1="4" x2="20" y1="17" y2="17"></line>
+</svg>
+</button>
+</div>
+<!-- Floating Inset Card: "Hidden Gems" -->
+<aside class="absolute bottom-6 left-6 right-6 sm:left-auto sm:right-8 sm:max-w-[420px] bg-white/95 backdrop-blur-md rounded-[28px] p-3.5 sm:p-4 shadow-2xl border border-white/60 z-20 flex flex-col sm:flex-row gap-3.5 items-center">
+<!-- Thumbnail -->
+<div class="w-full sm:w-28 h-28 sm:h-28 rounded-2xl overflow-hidden flex-shrink-0 bg-stone-200">
+<img alt="Alpine wooden cottage in secluded meadow" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxS7MoATvg0pAoqJPQquwTaycAvVwpbBL1tIqaLV3A1iOOOhEVi2ZBkXsAPEghtF5E4828OKrJZMTcetZQ0aAsKfguWG3es_ds8heWZAyBf9IHG00Z_rpexckS445vqfHvusSNFu2eHPch3QmKDeVIAc_3frqLonz0jj2axeJPk-G5-8aQ2sk1qlZHt3818in67JsVieNdw2Rtxv75ca81i_vTNnL3nb67UJfPMqdsX5_oaK0kOR_sXA">
+</div>
+<!-- Text & Action -->
+<div class="flex flex-col justify-between w-full">
+<div>
+<h3 class="text-xs sm:text-sm font-bold text-brand-charcoal tracking-tight">Hidden Gems</h3>
+<p class="text-[10.5px] leading-tight text-brand-muted mt-1 font-normal">
+              Explore our handpicked collection of authentic stays and secluded retreats, where nature meets comfort in perfect harmony.
+            </p>
+</div>
+<div class="mt-3 flex items-center justify-between">
+<button class="bg-brand-charcoal text-white hover:bg-black text-[10px] font-medium py-1 px-3.5 rounded-full transition-all shadow-sm hover:scale-105 active:scale-95" onclick="showToursView()">
+              Explore More
+            </button>
+<div aria-label="Carousel dots" class="flex items-center space-x-1.5 pr-1">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-charcoal"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-brand-charcoal/25"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-brand-charcoal/25"></span>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</div>
+<!-- ========================================== -->
+<!-- VIEW 2: In-Container Tour Listing View    -->
+<!-- ========================================== -->
+<div class="w-full h-full absolute inset-0 bg-brand-cream p-5 sm:p-8 lg:p-10 flex flex-col justify-between overflow-y-auto hide-scrollbar transition-all duration-500 ease-out z-20 opacity-100 scale-100 pointer-events-auto tours-active" id="toursView">
+<!-- Tours Header: Logo + Back button + Actions + Hamburger -->
+<header class="flex items-center justify-between w-full stagger-item stagger-header pb-4 border-b border-brand-charcoal/10 flex-shrink-0">
+<div class="flex items-center space-x-4">
+<!-- Logo returns to Home -->
+<button aria-label="Aura Brand Logo - Back to Home" class="group flex items-center space-x-2 focus:outline-none" onclick="showHomeView()" type="button">
+<svg class="w-5 h-5 sm:w-6 sm:h-6 text-brand-charcoal transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+</svg>
+<span class="font-serif text-lg font-medium tracking-tight text-brand-charcoal hidden sm:inline">Aura Voyage</span>
+</button>
+<div class="h-4 w-[1px] bg-brand-charcoal/20 hidden sm:block"></div>
+<!-- Clear Back Button -->
+<button class="inline-flex items-center text-xs font-semibold text-brand-charcoal/80 hover:text-black transition-colors group focus:outline-none" onclick="showHomeView()" type="button">
+<svg class="w-3.5 h-3.5 mr-1.5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+        Trang chủ
+      </button>
+</div>
+<!-- Header Right: Filter & Search Trigger + Hamburger -->
+<div class="flex items-center space-x-2 sm:space-x-3">
+<button aria-label="Tìm kiếm tour" class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-black/5 hover:bg-black/10 text-brand-charcoal text-xs font-medium transition-all" onclick="showSearchView()" type="button">
+<svg class="w-3.5 h-3.5 text-brand-charcoal" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Tìm kiếm</span>
+</button>
+<button aria-label="Open Navigation Menu" class="w-9 h-9 rounded-full bg-black/10 hover:bg-black/15 text-brand-charcoal flex items-center justify-center transition-all duration-200 shadow-sm focus:outline-none" onclick="openMenuDrawer()" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewBox="0 0 24 24">
+<line x1="4" x2="20" y1="7" y2="7"></line>
+<line x1="4" x2="20" y1="12" y2="12"></line>
+<line x1="4" x2="20" y1="17" y2="17"></line>
+</svg>
+</button>
+</div>
+</header>
+<!-- Headline & Filter Subheader -->
+<div class="mt-4 sm:mt-6 mb-4 stagger-item stagger-title flex flex-col sm:flex-row sm:items-end justify-between gap-3 flex-shrink-0">
+<div>
+<div class="flex items-center space-x-2 text-[11px] uppercase tracking-widest text-brand-muted font-semibold mb-1">
+<span class="w-1 h-1 rounded-full bg-brand-charcoal/40"></span>
+</div>
+<h2 class="text-2xl sm:text-3xl lg:text-4xl font-normal tracking-[-0.03em] text-brand-charcoal">Tours&nbsp;<span class="font-serif italic text-brand-charcoal/70 text-xl sm:text-2xl font-light">/ Curated Journeys</span>
+</h2>
+</div>
+<!-- Quick Filter Pills -->
+<div class="flex items-center space-x-1.5 overflow-x-auto hide-scrollbar py-0.5 text-xs">
+<span class="px-3 py-1 rounded-full bg-brand-charcoal text-white font-medium shadow-sm whitespace-nowrap cursor-pointer">Tất cả (5)</span>
+<span class="px-3 py-1 rounded-full bg-white/70 hover:bg-white text-brand-charcoal/80 font-medium border border-black/5 whitespace-nowrap cursor-pointer transition-colors">Miền Bắc</span>
+<span class="px-3 py-1 rounded-full bg-white/70 hover:bg-white text-brand-charcoal/80 font-medium border border-black/5 whitespace-nowrap cursor-pointer transition-colors">Miền Trung</span>
+<span class="px-3 py-1 rounded-full bg-white/70 hover:bg-white text-brand-charcoal/80 font-medium border border-black/5 whitespace-nowrap cursor-pointer transition-colors">Miền Nam</span>
+</div>
+</div>
+<!-- Tour Cards Grid / List (Strict details: Tên, Địa điểm, Thời gian, Giờ khởi hành, Giá, Mô tả) -->
+<div class="w-full flex-1 stagger-item stagger-content space-y-4 pb-4"><!-- Tour Card 1: TP. Hồ Chí Minh -->
+<article class="bg-white/40 hover:bg-white/70 border border-brand-charcoal/10 hover:border-brand-charcoal/20 rounded-[24px] sm:rounded-[28px] overflow-hidden transition-all duration-300 flex flex-col md:flex-row group cursor-pointer" onclick="showTourDetailView()">
+<div class="w-full md:w-56 lg:w-64 h-48 md:h-auto overflow-hidden flex-shrink-0 relative bg-stone-200">
+<img alt="Thành phố Hồ Chí Minh - Hòn ngọc Viễn Đông" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida/AEtjO1Vy4EEXvzAXCd_6KQWi8qINO8BuRdeT6eHc2ZR0SCOMVZDzFQWatLdixbAwIniLXB6ocGiDDOnyaIkc39dYbFTSHK1n4_ZLz5UZxdhsUEPgAl3FJ2uo5yoXEw4b1vMEVVOUz0m8VoLyKa7PV2vM3km_zgEPi_IlZJlywKVveHtVM13iaCwCzFoL1FYmcdaMamyXK6Q561PbKed4iSzpZ4b-CWs1b-a_Cgk0GAPugdZIaLjj8IG41Dw5zx2n">
+<span class="absolute top-3 left-3 bg-white text-black text-[10px] font-medium px-2.5 py-1 rounded-full shadow-sm">2 Ngày 1 Đêm</span>
+</div>
+<div class="flex-1 p-4 sm:p-5 flex flex-col lg:flex-row items-center gap-4 lg:gap-5 justify-between">
+<!-- Left 6-part (proportional 2/3 info area) -->
+<div class="flex-1 w-full lg:w-[68%] flex flex-col justify-between">
+<div>
+<div class="flex items-center space-x-1.5 text-brand-muted text-[11px] font-medium mb-1">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/70 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+</svg>
+<span class="text-brand-charcoal font-semibold">Địa điểm:</span>
+<span class="">TP. Hồ Chí Minh</span>
+</div>
+<h3 class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight group-hover:text-black leading-snug">
+          Khám phá Thành phố Hồ Chí Minh — Hòn ngọc Viễn Đông
+        </h3>
+<p class="mt-1.5 text-xs text-brand-muted leading-relaxed font-normal">
+          Trải nghiệm nhịp sống phồn hoa với xe limousine riêng, thưởng ngoạn hoàng hôn trên du thuyền sông Sài Gòn và khám phá nét văn hóa giao thoa tại Chợ Lớn.
+        </p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-brand-charcoal/10 flex items-center text-xs text-brand-muted">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/60 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+<span class=""><strong class="font-medium text-brand-charcoal">Khởi hành:</strong> 08:00 sáng Thứ Bảy &amp; Chủ Nhật</span>
+</div>
+</div>
+<!-- Vertical Partial Height Divider Line -->
+<div class="hidden lg:block w-[1px] h-28 bg-brand-charcoal/10 self-center flex-shrink-0"></div>
+<!-- Right 3-part (proportional 1/3 pricing & actions) -->
+<div class="w-full lg:w-[28%] flex lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-brand-charcoal/10 flex-shrink-0"><div class="flex items-center space-x-1.5 text-xs lg:text-right mb-0.5"><div class="flex" style="color: #F59E0B;"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current opacity-30" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg></div><span class="font-bold text-brand-charcoal text-[11px]">4.9</span><span class="text-[10.5px] text-brand-muted">(128)</span></div><div class="text-right lg:my-1"><span class="text-[10px] uppercase tracking-wider text-brand-muted block font-medium">Giá tour trọn gói</span><span class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight">1.990.000₫ <span class="text-xs font-normal text-brand-muted">/ khách</span></span></div><button aria-label="Xem chi tiết tour" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-brand-charcoal text-white hover:bg-black text-xs font-medium group-hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm" onclick="event.stopPropagation(); showTourDetailView()"><span class="">Chi tiết</span><svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
+</div>
+</article>
+<!-- Tour Card 2: Hà Nội & Hồ Tây -->
+<article class="bg-white/40 hover:bg-white/70 border border-brand-charcoal/10 hover:border-brand-charcoal/20 rounded-[24px] sm:rounded-[28px] overflow-hidden transition-all duration-300 flex flex-col md:flex-row group cursor-pointer">
+<div class="w-full md:w-56 lg:w-64 h-48 md:h-auto overflow-hidden flex-shrink-0 relative bg-stone-200">
+<img alt="Hà Nội &amp; Hồ Tây thanh bình ngàn năm văn hiến" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida/AEtjO1WDU0_6zVXYQC87o_5dYDS3NmqOc0iWj_59xImvxaDRmkZvnZLMq09I7cXcqnPy3Df3zD7UMIb6nKG4Fz8-Dp1qCyDHFCNArXGbnP5PtkzGRssYueLw3XHMqp7P4qEldiCBu30Go4AF8shyVThcYFLDiPU1jiaYFGTVAH5iyZwMYODSvfzGz-zukfUFGv4ka5FRlBzyiFItrniuGUK4p51HVLTEPf5wC_iqSJEqxYDSd30I7sC28gR7Ne-W">
+<span class="absolute top-3 left-3 bg-white text-black text-[10px] font-medium px-2.5 py-1 rounded-full shadow-sm">2 Ngày 1 Đêm</span>
+</div>
+<div class="flex-1 p-4 sm:p-5 flex flex-col lg:flex-row items-center gap-4 lg:gap-5 justify-between">
+<div class="flex-1 w-full lg:w-[68%] flex flex-col justify-between">
+<div>
+<div class="flex items-center space-x-1.5 text-brand-muted text-[11px] font-medium mb-1">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/70 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+</svg>
+<span class="text-brand-charcoal font-semibold">Địa điểm:</span>
+<span class="">Hà Nội &amp; Vùng phụ cận</span>
+</div>
+<h3 class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight group-hover:text-black leading-snug">
+          Nét thu ngàn năm — Hà Nội &amp; Hồ Tây thanh bình
+        </h3>
+<p class="mt-1.5 text-xs text-brand-muted leading-relaxed font-normal">
+          Chạm vào chiều sâu văn hóa thủ đô, thưởng thức trà sen ướp sớm Hồ Tây, tản bộ 36 phố phường cổ kính và chiêm ngưỡng di sản tại Bảo tàng Mỹ thuật Việt Nam.
+        </p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-brand-charcoal/10 flex items-center text-xs text-brand-muted">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/60 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+<span class=""><strong class="font-medium text-brand-charcoal">Khởi hành:</strong> 07:30 sáng hàng ngày</span>
+</div>
+</div>
+<div class="hidden lg:block w-[1px] h-28 bg-brand-charcoal/10 self-center flex-shrink-0"></div>
+<div class="w-full lg:w-[28%] flex lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-brand-charcoal/10 flex-shrink-0"><div class="flex items-center space-x-1.5 text-xs lg:text-right mb-0.5"><div class="flex" style="color: #F59E0B;"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg></div><span class="font-bold text-brand-charcoal text-[11px]">5.0</span><span class="text-[10.5px] text-brand-muted">(96)</span></div><div class="text-right lg:my-1"><span class="text-[10px] uppercase tracking-wider text-brand-muted block font-medium">Giá tour trọn gói</span><span class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight">2.190.000₫ <span class="text-xs font-normal text-brand-muted">/ khách</span></span></div><button aria-label="Xem chi tiết tour" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-brand-charcoal text-white hover:bg-black text-xs font-medium group-hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm"><span class="">Chi tiết</span><svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
+</div>
+</article>
+<!-- Tour Card 3: Đà Nẵng & Hội An -->
+<article class="bg-white/40 hover:bg-white/70 border border-brand-charcoal/10 hover:border-brand-charcoal/20 rounded-[24px] sm:rounded-[28px] overflow-hidden transition-all duration-300 flex flex-col md:flex-row group cursor-pointer">
+<div class="w-full md:w-56 lg:w-64 h-48 md:h-auto overflow-hidden flex-shrink-0 relative bg-stone-200">
+<img alt="Phố cổ Hội An hoài niệm và đèn lồng hoa đăng" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida/AEtjO1WnM9dwWjGNfHejMhCqY5R87iAqI95JgDEUmEWmTJWZvwz8N4GQAl1hQsbymQO7LqFvQWwo2uc8u0eJGavKO2hD-7HqHn7i6p2hv6YbsuAiIkl5dgDbKDsiOCMp9Il1LOlJyiyzaL9_y91hi5XbBve3YGxFo696S8Ge88nEOzEKs0Pw4_fKOmG0-OV90RnmUnQlYukFfpcyGVqrroWo91KrMmxNWWqYsPsSFgHhWTfpw4rWDOY20ErmMOM">
+<span class="absolute top-3 left-3 bg-white text-black text-[10px] font-medium px-2.5 py-1 rounded-full shadow-sm">3 Ngày 2 Đêm</span>
+</div>
+<div class="flex-1 p-4 sm:p-5 flex flex-col lg:flex-row items-center gap-4 lg:gap-5 justify-between">
+<div class="flex-1 w-full lg:w-[68%] flex flex-col justify-between">
+<div>
+<div class="flex items-center space-x-1.5 text-brand-muted text-[11px] font-medium mb-1">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/70 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+</svg>
+<span class="text-brand-charcoal font-semibold">Địa điểm:</span>
+<span class="">Đà Nẵng &amp; Hội An, Quảng Nam</span>
+</div>
+<h3 class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight group-hover:text-black leading-snug">
+          Miền di sản Đà Nẵng — Phố cổ Hội An hoài niệm
+        </h3>
+<p class="mt-1.5 text-xs text-brand-muted leading-relaxed font-normal">
+          Nghỉ dưỡng resort boutique ven biển Mỹ Khê, ngắm hoàng hôn buông trên dòng sông Hoài với đèn hoa đăng lung linh và khám phá thiên nhiên bán đảo Sơn Trà.
+        </p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-brand-charcoal/10 flex items-center text-xs text-brand-muted">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/60 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+<span class=""><strong class="font-medium text-brand-charcoal">Khởi hành:</strong> 08:30 sáng Thứ Sáu hàng tuần</span>
+</div>
+</div>
+<div class="hidden lg:block w-[1px] h-28 bg-brand-charcoal/10 self-center flex-shrink-0"></div>
+<div class="w-full lg:w-[28%] flex lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-brand-charcoal/10 flex-shrink-0"><div class="flex items-center space-x-1.5 text-xs lg:text-right mb-0.5"><div class="flex" style="color: #F59E0B;"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current opacity-30" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg></div><span class="font-bold text-brand-charcoal text-[11px]">4.8</span><span class="text-[10.5px] text-brand-muted">(210)</span></div><div class="text-right lg:my-1"><span class="text-[10px] uppercase tracking-wider text-brand-muted block font-medium">Giá tour trọn gói</span><span class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight">3.490.000₫ <span class="text-xs font-normal text-brand-muted">/ khách</span></span></div><button aria-label="Xem chi tiết tour" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-brand-charcoal text-white hover:bg-black text-xs font-medium group-hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm"><span class="">Chi tiết</span><svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
+</div>
+</article>
+<!-- Tour Card 4: Nha Trang -->
+<article class="bg-white/40 hover:bg-white/70 border border-brand-charcoal/10 hover:border-brand-charcoal/20 rounded-[24px] sm:rounded-[28px] overflow-hidden transition-all duration-300 flex flex-col md:flex-row group cursor-pointer">
+<div class="w-full md:w-56 lg:w-64 h-48 md:h-auto overflow-hidden flex-shrink-0 relative bg-stone-200">
+<img alt="Vịnh biển Nha Trang ngọc ngà nước xanh biếc" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida/AEtjO1UkYCzc8a3moyzD37oz32vXoKwLT7W5cJy-E2USEGxJiymPUBHYFlG2tWwrnrk_-Em7nh2Uvir0ykAx02NlYdRu2-TzxkiaTc9FEhup1NuX7KhKGVT-C7hmq_ki6Ugt3SAR9vLJC7G9qXsloyVjcZdKyBJ9cjA7fgmSx5ddYYfCTFgyLBDJsMNr7_QGpXje-mzBWaXtATOq3QDIfREup8lrWYIgFED6oh4xePduj3_3yLdLW3rxRQ_gtddI">
+<span class="absolute top-3 left-3 bg-white text-black text-[10px] font-medium px-2.5 py-1 rounded-full shadow-sm">3 Ngày 2 Đêm</span>
+</div>
+<div class="flex-1 p-4 sm:p-5 flex flex-col lg:flex-row items-center gap-4 lg:gap-5 justify-between">
+<div class="flex-1 w-full lg:w-[68%] flex flex-col justify-between">
+<div>
+<div class="flex items-center space-x-1.5 text-brand-muted text-[11px] font-medium mb-1">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/70 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+</svg>
+<span class="text-brand-charcoal font-semibold">Địa điểm:</span>
+<span class="">Nha Trang, Khánh Hòa</span>
+</div>
+<h3 class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight group-hover:text-black leading-snug">
+          Vịnh biển Nha Trang — Kỳ quan vịnh ngọc
+        </h3>
+<p class="mt-1.5 text-xs text-brand-muted leading-relaxed font-normal">
+          Khởi hành cano riêng ngắm dải san hô rực rỡ Hòn Mun, thư giãn tại biệt thự hướng biển riêng tư và thưởng thức tiệc hải sản tươi sống đánh bắt trong ngày.
+        </p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-brand-charcoal/10 flex items-center text-xs text-brand-muted">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/60 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+<span class=""><strong class="font-medium text-brand-charcoal">Khởi hành:</strong> 09:00 sáng Thứ Năm &amp; Thứ Bảy</span>
+</div>
+</div>
+<div class="hidden lg:block w-[1px] h-28 bg-brand-charcoal/10 self-center flex-shrink-0"></div>
+<div class="w-full lg:w-[28%] flex lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-brand-charcoal/10 flex-shrink-0"><div class="flex items-center space-x-1.5 text-xs lg:text-right mb-0.5"><div class="flex" style="color: #F59E0B;"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current opacity-30" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg></div><span class="font-bold text-brand-charcoal text-[11px]">4.9</span><span class="text-[10.5px] text-brand-muted">(175)</span></div><div class="text-right lg:my-1"><span class="text-[10px] uppercase tracking-wider text-brand-muted block font-medium">Giá tour trọn gói</span><span class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight">3.890.000₫ <span class="text-xs font-normal text-brand-muted">/ khách</span></span></div><button aria-label="Xem chi tiết tour" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-brand-charcoal text-white hover:bg-black text-xs font-medium group-hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm"><span class="">Chi tiết</span><svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
+</div>
+</article>
+<!-- Tour Card 5: Đà Lạt sương mờ -->
+<article class="bg-white/40 hover:bg-white/70 border border-brand-charcoal/10 hover:border-brand-charcoal/20 rounded-[24px] sm:rounded-[28px] overflow-hidden transition-all duration-300 flex flex-col md:flex-row group cursor-pointer">
+<div class="w-full md:w-56 lg:w-64 h-48 md:h-auto overflow-hidden flex-shrink-0 relative bg-stone-200">
+<img alt="Đà Lạt sương mờ và đồi chè Cầu Đất" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxS7MoATvg0pAoqJPQquwTaycAvVwpbBL1tIqaLV3A1iOOOhEVi2ZBkXsAPEghtF5E4828OKrJZMTcetZQ0aAsKfguWG3es_ds8heWZAyBf9IHG00Z_rpexckS445vqfHvusSNFu2eHPch3QmKDeVIAc_3frqLonz0jj2axeJPk-G5-8aQ2sk1qlZHt3818in67JsVieNdw2Rtxv75ca81i_vTNnL3nb67UJfPMqdsX5_oaK0kOR_sXA">
+<span class="absolute top-3 left-3 bg-white text-black text-[10px] font-medium px-2.5 py-1 rounded-full shadow-sm">4 Ngày 3 Đêm</span>
+</div>
+<div class="flex-1 p-4 sm:p-5 flex flex-col lg:flex-row items-center gap-4 lg:gap-5 justify-between">
+<div class="flex-1 w-full lg:w-[68%] flex flex-col justify-between">
+<div>
+<div class="flex items-center space-x-1.5 text-brand-muted text-[11px] font-medium mb-1">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/70 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+</svg>
+<span class="text-brand-charcoal font-semibold">Địa điểm:</span>
+<span class="">Đà Lạt, Lâm Đồng</span>
+</div>
+<h3 class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight group-hover:text-black leading-snug">
+          Đà Lạt sương mờ — Cao nguyên mộng mơ &amp; Đồi chè Cầu Đất
+        </h3>
+<p class="mt-1.5 text-xs text-brand-muted leading-relaxed font-normal">
+          Săn mây bình minh giữa biển sương Cầu Đất, nghỉ dưỡng giữa rừng thông hồ Tuyền Lâm, thưởng thức cà phê Arabica thượng hạng và tiệc nướng BBQ ấm cúng.
+        </p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-brand-charcoal/10 flex items-center text-xs text-brand-muted">
+<svg class="w-3.5 h-3.5 text-brand-charcoal/60 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+<span class=""><strong class="font-medium text-brand-charcoal">Khởi hành:</strong> 06:30 sáng Thứ Sáu hàng tuần</span>
+</div>
+</div>
+<div class="hidden lg:block w-[1px] h-28 bg-brand-charcoal/10 self-center flex-shrink-0"></div>
+<div class="w-full lg:w-[28%] flex lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-brand-charcoal/10 flex-shrink-0"><div class="flex items-center space-x-1.5 text-xs lg:text-right mb-0.5"><div class="flex" style="color: #F59E0B;"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg></div><span class="font-bold text-brand-charcoal text-[11px]">5.0</span><span class="text-[10.5px] text-brand-muted">(340)</span></div><div class="text-right lg:my-1"><span class="text-[10px] uppercase tracking-wider text-brand-muted block font-medium">Giá tour trọn gói</span><span class="text-base sm:text-lg font-bold text-brand-charcoal tracking-tight">4.290.000₫ <span class="text-xs font-normal text-brand-muted">/ khách</span></span></div><button aria-label="Xem chi tiết tour" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-brand-charcoal text-white hover:bg-black text-xs font-medium group-hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm"><span class="">Chi tiết</span><svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
+</div>
+</article></div>
+<!-- Bespoke Plan Your Tour Call To Action Banner (Bottom) -->
+<div class="mt-2 bg-[#EEEAE1] border border-black/5 rounded-[22px] p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm flex-shrink-0 stagger-item stagger-footer border-dashed border-brand-charcoal/20">
+<div class="flex items-center space-x-3 text-left">
+<div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-brand-charcoal border border-dashed border-brand-charcoal/40">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div>
+<h5 class="text-xs font-bold text-brand-charcoal">Chưa tìm thấy lịch trình mơ ước?</h5>
+<p class="text-[11px] text-brand-muted">Thiết kế tour riêng theo sở thích cá nhân cùng chuyên gia lữ hành của Aura.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- ========================================== -->
+<!-- VIEW 3: In-Container Search Screen         -->
+<!-- ========================================== -->
+<div class="w-full h-full absolute inset-0 bg-brand-cream p-6 sm:p-10 lg:p-12 flex flex-col justify-between overflow-y-auto hide-scrollbar transition-all duration-500 ease-out z-20 opacity-0 scale-95 pointer-events-none" id="searchView">
+<!-- Header: Brand Logo, Back Button (NO HAMBURGER on Search screen) -->
+<header class="flex items-center justify-between w-full stagger-item stagger-header">
+<div class="flex items-center space-x-3">
+<!-- Logo acts as Back to Home -->
+<button aria-label="Back to Aura Home" class="group flex items-center space-x-2 focus:outline-none" onclick="showHomeView()" type="button">
+<svg class="w-5 h-5 sm:w-6 sm:h-6 text-brand-charcoal transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+</svg>
+</button>
+<!-- Back to home text button -->
+<button class="hidden sm:inline-flex items-center text-xs font-medium text-brand-muted hover:text-brand-charcoal transition-colors group pl-1 focus:outline-none" onclick="showHomeView()" type="button">
+<svg class="w-3.5 h-3.5 mr-1 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+          Back to home
+        </button>
+</div>
+<div>
+<!-- Close / Return to Home Button (clean minimalist top-right) -->
+<button aria-label="Close search and return to home" class="w-10 h-10 rounded-full bg-brand-charcoal/5 hover:bg-brand-charcoal/10 flex items-center justify-center text-brand-charcoal transition-all focus:outline-none group" onclick="showHomeView()" type="button">
+<svg class="w-4 h-4 transition-transform group-hover:rotate-90 duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</header>
+<!-- Center Search Input with Blinking Caret & Interactive Real-Time Typing -->
+<div class="text-center py-4 sm:py-6 max-w-xl mx-auto w-full stagger-item stagger-title">
+<div class="relative flex items-center justify-center">
+<span class="inline-block w-[2px] h-8 sm:h-12 bg-brand-muted/70 mr-1.5 cursor-caret flex-shrink-0" id="searchCaret" style="display: inline-block;"></span>
+<input autocomplete="off" class="bg-transparent border-0 text-center text-3xl sm:text-4xl md:text-5xl font-light text-brand-charcoal placeholder-brand-muted/70 tracking-tight focus:ring-0 focus:outline-none w-full selection:bg-brand-charcoal/10" id="inContainerSearchInput" oninput="handleSearchInput(this.value)" placeholder="Find your tour" type="text">
+<!-- Clear icon if user typed -->
+<button aria-label="Clear search input" class="absolute right-2 text-brand-muted hover:text-brand-charcoal transition-opacity opacity-0 pointer-events-none p-1.5 focus:outline-none" id="clearSearchBtn" onclick="clearSearchInput()" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- MAIN DYNAMIC CONTENT CONTAINER (Popular vs Search Results) -->
+<div class="mt-1 w-full stagger-item stagger-content">
+<!-- STATE A: Popular Destinations (Default) -->
+<div class="transition-opacity duration-300" id="popularSection">
+<div class="flex items-center justify-between mb-3.5">
+<span class="text-xs sm:text-sm font-bold text-brand-charcoal tracking-wide">Popular</span>
+<span class="text-[11px] text-brand-muted hidden sm:inline">Handcrafted journeys</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 pb-2">
+<!-- Card 1: Lofoten Islands -->
+<article class="group flex flex-col cursor-pointer" onclick="showToursView()">
+<div class="w-full aspect-[4/5] rounded-[24px] sm:rounded-[28px] overflow-hidden bg-stone-200 relative mb-3 shadow-md group-hover:shadow-xl transition-all duration-300">
+<img alt="Snowy mountain peaks in Lofoten Islands, Norway" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkfVRkOkWaCyn6Ft1tcWl5Emb8vNgDtzINg7jQbJLUJDSKKcK6bPAGNSEvXd8PC-THkvfx5-YLSid0uP2OqRSGgEMukmqme9IjHl2zIOnp-se5HGrzeMvkU0Hf7NEgoksj-jBzvJY8_Hz--HcWbsQUtvUdXFKUt4ZGC_EAqMNqsNzDiTMqc1-CB4OGsOa3uNreIi2kiz4ymvNNcpVf1T6JPbcdv4yLyZzPPoi7FbSe6ZsgeZAh1Q_Y2A">
+</div>
+<div>
+<h4 class="text-xs font-bold text-brand-charcoal group-hover:text-black transition-colors">Lofoten Islands, Norway</h4>
+<p class="text-[11px] text-brand-muted mt-0.5">$1800 / person</p>
+</div>
+</article>
+<!-- Card 2: Serengeti National Park -->
+<article class="group flex flex-col cursor-pointer" onclick="showToursView()">
+<div class="w-full aspect-[4/5] rounded-[24px] sm:rounded-[28px] overflow-hidden bg-stone-200 relative mb-3 shadow-md group-hover:shadow-xl transition-all duration-300">
+<img alt="Sunset safari in Serengeti with acacia tree" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgjW6flmGgVnledaQH4VvvDLoUh-kMIRO4wtQZNcrDAJ_hTGo1loyeiIMko32LyJUdpRYPsrNU5V8tgliUHvgB5fxL5AarY4iS5cFpicVcuj1jUvnGd2wdOGzBqIzBqmjy3PhroxQwRczp6dI7SAMVA2LUg-paFnXQa2UAlijFNSmc55jnmV23KWAwHCDiX8MH6FU7hNCj-b9LHJSvAYQT54FOkUZrQYTRrTSQfjupwGydSGhlAMhThQ">
+</div>
+<div>
+<h4 class="text-xs font-bold text-brand-charcoal group-hover:text-black transition-colors">Serengeti National Park, Tanzania</h4>
+<p class="text-[11px] text-brand-muted mt-0.5">$2400 / person</p>
+</div>
+</article>
+<!-- Card 3: Algarve Coast -->
+<article class="group flex flex-col cursor-pointer" onclick="showToursView()">
+<div class="w-full aspect-[4/5] rounded-[24px] sm:rounded-[28px] overflow-hidden bg-stone-200 relative mb-3 shadow-md group-hover:shadow-xl transition-all duration-300">
+<img alt="Scenic coastline along Algarve Coast, Portugal" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeLKYsj7uoCspBW_7i1efiXiCa-CkDzcTRMvi1Kp0gMSAXfcpmlt-JedUAhXaCclyKwR2EAzWQBQBdBzXqFHaobDSpHKlqfv6W2s7MOX_Pa4tvPh-VBY8DTA2-aHCXdrNlSJAxaMaZWe4fDMYaacImhrlx5_pMlmHgkvX_IKOpG0PA98e5NSbzxDQMXBos4XXYLYQX6SSdTt9Hq677YxWSBj783i6lqenF6W0y7zTH7fTqgJG-PPNm9A">
+</div>
+<div>
+<h4 class="text-xs font-bold text-brand-charcoal group-hover:text-black transition-colors">Algarve Coast, Portugal</h4>
+<p class="text-[11px] text-brand-muted mt-0.5">$1200 / person</p>
+</div>
+</article>
+<!-- Card 4: Isle of Skye -->
+<article class="group flex flex-col cursor-pointer" onclick="showToursView()">
+<div class="w-full aspect-[4/5] rounded-[24px] sm:rounded-[28px] overflow-hidden bg-stone-200 relative mb-3 shadow-md group-hover:shadow-xl transition-all duration-300">
+<img alt="Lush green cliffs and serene fjord in Isle of Skye" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEbcqWPC3GefNDn8jxYVX25bDl9mrXXGf50xoi4FS5VEhuVDnbTyuKNlh8aW-mK4Lo1czabAVtKBtX7qb2HuZIGDG97m25dzf1tX9d5IEB-gzcip1ZhbcRmyPcV5zE-IlRvQuB7FUIu3VMI6qr0aWNJTCG8pvNl6YQuzUAMgpjB3RMptbV5FrXTV_i0bb3G2zTQgcexLGhig3B-2etxdLdsMVQJEuvemLNxg5bPUfw6A1LDYy6gRK_xA">
+</div>
+<div>
+<h4 class="text-xs font-bold text-brand-charcoal group-hover:text-black transition-colors">Isle of Skye, Scotland</h4>
+<p class="text-[11px] text-brand-muted mt-0.5">$1500 / person</p>
+</div>
+</article>
+</div>
+</div>
+<!-- STATE B: Search Results + Bespoke Tour CTA (Shown when user types) -->
+<div class="hidden transition-opacity duration-300" id="searchResultsSection">
+<div class="flex items-center justify-between mb-3.5">
+<div class="flex items-center space-x-2">
+<span class="text-xs sm:text-sm font-bold text-brand-charcoal tracking-wide">Search Results</span>
+<span class="text-[10px] font-semibold bg-brand-charcoal text-white px-2 py-0.5 rounded-full" id="resultsCountBadge">4 journeys found</span>
+</div>
+<span class="text-[11px] text-brand-muted hidden sm:inline" id="searchKeywordLabel">Matching your request</span>
+</div>
+<!-- Dynamic 4-card grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 pb-3">
+<!-- Result 1 -->
+<article class="group flex flex-col cursor-pointer" onclick="showToursView()">
+<div class="w-full aspect-[4/5] rounded-[24px] sm:rounded-[28px] overflow-hidden bg-stone-200 relative mb-3 shadow-md group-hover:shadow-xl transition-all duration-300">
+<img alt="Dolomites mountain trails and misty alpine pines" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxS7MoATvg0pAoqJPQquwTaycAvVwpbBL1tIqaLV3A1iOOOhEVi2ZBkXsAPEghtF5E4828OKrJZMTcetZQ0aAsKfguWG3es_ds8heWZAyBf9IHG00Z_rpexckS445vqfHvusSNFu2eHPch3QmKDeVIAc_3frqLonz0jj2axeJPk-G5-8aQ2sk1qlZHt3818in67JsVieNdw2Rtxv75ca81i_vTNnL3nb67UJfPMqdsX5_oaK0kOR_sXA">
+<span class="absolute top-3 left-3 bg-black/40 backdrop-blur-md text-white text-[10px] px-2.5 py-1 rounded-full font-medium border border-white/20">7 Days</span>
+</div>
+<div>
+<h4 class="text-xs font-bold text-brand-charcoal group-hover:text-black transition-colors">Dolomite Alpine Trail, Italy</h4>
+<p class="text-[11px] text-brand-muted mt-0.5">$2100 / person</p>
+</div>
+</article>
+<!-- Result 2 -->
+<article class="group flex flex-col cursor-pointer" onclick="showToursView()">
+<div class="w-full aspect-[4/5] rounded-[24px] sm:rounded-[28px] overflow-hidden bg-stone-200 relative mb-3 shadow-md group-hover:shadow-xl transition-all duration-300">
+<img alt="Kyoto peaceful bamboo forest and traditional temple" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeN5KDgDnJBtFJG4EHKmfDku72jdBMa5dgQsov9uwN_pe8xwe6o5WLOLpOYn7ZIcYjU9AQOZWNaPLQwxq6xLHlOAL3Dbcoo5D8WuZwH9VNRWJE-q6KOYb0GcjDKfzEkY2PhniM9BkW86SclqymJKc4PNiUNrhmSelE9y1F7RIuVhMcQNQIsJKxaQnSc8SWFTQwkPpMxZOcDYSfwMbBzxDnNVaVySracZKdDoIyeoo_9qh_kfwZu0P7sg">
+<span class="absolute top-3 left-3 bg-black/40 backdrop-blur-md text-white text-[10px] px-2.5 py-1 rounded-full font-medium border border-white/20">10 Days</span>
+</div>
+<div>
+<h4 class="text-xs font-bold text-brand-charcoal group-hover:text-black transition-colors">Kyoto Zen Sanctuary, Japan</h4>
+<p class="text-[11px] text-brand-muted mt-0.5">$2850 / person</p>
+</div>
+</article>
+<!-- Result 3 -->
+<article class="group flex flex-col cursor-pointer" onclick="showToursView()">
+<div class="w-full aspect-[4/5] rounded-[24px] sm:rounded-[28px] overflow-hidden bg-stone-200 relative mb-3 shadow-md group-hover:shadow-xl transition-all duration-300">
+<img alt="Emerald green river with serene wooden canoe" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwCAti8n-zJzc9Agm4_2slWDJf0o-EGPfB3yQeBsDRkM_nk_Wpj2RymRm8x5f7jglgjefKjmvCcHgvHbhuwPAGKeRgiFFyQDk7E3Sn4q_qdYS839qt3nEJn-LK-sqGuN3Mz6uSJa_3rsw7HH3bJL30_qPNFDB6tjjHovlu_HE54WsuQ_-xdbDiU1sTSudlQ8ymeemfBC1aBJBc1fAdN3GAa8WxKs4afaRoGTErEhV3IgY9uo8AJeco6Q">
+<span class="absolute top-3 left-3 bg-black/40 backdrop-blur-md text-white text-[10px] px-2.5 py-1 rounded-full font-medium border border-white/20">5 Days</span>
+</div>
+<div>
+<h4 class="text-xs font-bold text-brand-charcoal group-hover:text-black transition-colors">Soca River Kayak Expedition, Slovenia</h4>
+<p class="text-[11px] text-brand-muted mt-0.5">$1650 / person</p>
+</div>
+</article>
+<!-- Result 4 -->
+<article class="group flex flex-col cursor-pointer" onclick="showToursView()">
+<div class="w-full aspect-[4/5] rounded-[24px] sm:rounded-[28px] overflow-hidden bg-stone-200 relative mb-3 shadow-md group-hover:shadow-xl transition-all duration-300">
+<img alt="Hot air balloons floating above Cappadocia fairy chimneys" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-N7iCsV69rKN3-lHWIOk_I8Op57A84bdobhmDpbRTZKF_yi8bfEIJ7P0CiU06-AbvRloAFmv2HvHfmtcFHAehFab_XR16reuW07Q4LsdUPktAu4WNvOhUDTbROv4KJwTv4kYPnu5MVzIdb1y2PjNICq2-lgTjAcVx37wNCSikEyBeEQTuyCHVn0teExuNdTal1hK-7NdfJQvZ38MQ2W6xSkZ2nia54hquYGqPKA4JyNWtdaRUhHli9Q">
+<span class="absolute top-3 left-3 bg-black/40 backdrop-blur-md text-white text-[10px] px-2.5 py-1 rounded-full font-medium border border-white/20">6 Days</span>
+</div>
+<div>
+<h4 class="text-xs font-bold text-brand-charcoal group-hover:text-black transition-colors">Cappadocia Valley Escape, Turkey</h4>
+<p class="text-[11px] text-brand-muted mt-0.5">$1950 / person</p>
+</div>
+</article>
+</div>
+<!-- Bespoke Plan Your Tour Call To Action Banner -->
+<div class="mt-2 bg-[#EEEAE1] border border-black/5 rounded-[22px] p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+<div class="flex items-center space-x-3 text-left">
+<div class="w-8 h-8 rounded-full bg-brand-charcoal text-white flex items-center justify-center flex-shrink-0">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div>
+<h5 class="text-xs font-bold text-brand-charcoal">Can't find your dream destination?</h5>
+<p class="text-[11px] text-brand-muted">Plan your bespoke private tour tailored by our travel specialists.</p>
+</div>
+</div>
+<button class="bg-brand-charcoal hover:bg-black text-white text-xs font-medium px-4 py-2 rounded-full transition-all flex-shrink-0 shadow hover:scale-105 active:scale-95" type="button">
+          Plan your tour
+        </button>
+</div>
+</div>
+</div>
+<!-- Bottom Nav row inside Search View -->
+<footer class="mt-4 pt-3.5 border-t border-brand-charcoal/10 flex flex-col space-y-1 text-xs text-brand-charcoal/75 font-medium stagger-item stagger-footer border-dashed border-brand-charcoal/20">
+<div class="flex items-center space-x-6">
+<button class="hover:text-black transition-colors focus:outline-none" onclick="showHomeView()">About</button>
+<button class="hover:text-black transition-colors focus:outline-none" onclick="showToursView()">Tours</button>
+<span class="text-brand-charcoal font-semibold flex items-center">
+<span class="mr-1.5 opacity-80 text-brand-charcoal font-bold">/</span> Destinations
+        </span>
+<a class="hover:text-black transition-colors" href="#booking">Booking</a>
+<a class="hover:text-black transition-colors" href="#faq">FAQ</a>
+<a class="hover:text-black transition-colors" href="#account">Account</a>
+</div>
+</footer>
+</div>
+<!-- ========================================== -->
+<!-- VIEW 4: TOUR DETAIL VIEW (Aligned 100% with DB Schema) -->
+<!-- ========================================== -->
+<div class="w-full h-full absolute inset-0 bg-brand-cream p-5 sm:p-8 lg:p-12 flex flex-col justify-between overflow-y-auto hide-scrollbar transition-all duration-500 ease-out z-30 opacity-0 scale-95 pointer-events-none" id="tourDetailView">
+  
+  <!-- Header: Brand, Breadcrumbs & Navigation -->
+  <header class="flex items-center justify-between w-full pb-4 border-b border-brand-charcoal/10 flex-shrink-0">
+    <div class="flex items-center space-x-3 sm:space-x-5">
+      <button aria-label="Aura Brand Logo" class="group flex items-center space-x-2 focus:outline-none" onclick="showHomeView()" type="button">
+        <svg class="w-5 h-5 text-brand-charcoal transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+        </svg>
+        <span class="font-serif text-lg font-medium tracking-tight text-brand-charcoal hidden sm:inline">Aura Voyage</span>
+      </button>
+      
+      <span class="w-[1px] h-4 bg-brand-charcoal/20"></span>
+      
+      <!-- Editorial Breadcrumb (province_name) -->
+      <nav aria-label="Breadcrumb" class="hidden md:flex items-center space-x-2 text-xs text-brand-muted font-medium">
+        <button class="hover:text-brand-charcoal transition-colors focus:outline-none" onclick="hideTourDetailView()" type="button">Tours</button>
+        <span>/</span>
+        <span class="text-brand-charcoal font-semibold" id="tourBreadcrumbProvince">Thành phố Hồ Chí Minh</span>
+        <span>/</span>
+        <span class="text-brand-charcoal/70" id="tourBreadcrumbSlug">ho-chi-minh-2n1d</span>
+      </nav>
+      
+      <button class="inline-flex md:hidden items-center text-xs font-semibold text-brand-charcoal/80 hover:text-black transition-colors focus:outline-none" onclick="hideTourDetailView()" type="button">
+        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        Tours
+      </button>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="flex items-center space-x-2 sm:space-x-3">
+      <button aria-label="Lưu vào yêu thích" class="w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-brand-charcoal flex items-center justify-center transition-all duration-200 focus:outline-none" type="button" title="Lưu tour">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <button aria-label="Chia sẻ tour" class="w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 text-brand-charcoal flex items-center justify-center transition-all duration-200 focus:outline-none" type="button" title="Chia sẻ">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <button aria-label="Đóng chi tiết tour" class="w-9 h-9 rounded-full bg-brand-charcoal text-white hover:bg-black flex items-center justify-center transition-all duration-200 shadow-sm focus:outline-none" onclick="hideTourDetailView()" type="button">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Scrollable Body -->
+  <div class="mt-6 flex-1 space-y-8 pb-12">
+    
+    <!-- Title Section & Meta Strip (From: name, duration_days, province_name, price_from, original_price) -->
+    <div class="space-y-3">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+        <span class="text-[10px] font-mono tracking-widest uppercase text-brand-charcoal font-bold bg-black/5 px-2.5 py-1 rounded-full">
+          2 Ngày 1 Đêm
+        </span>
+        <span class="text-brand-charcoal/30">•</span>
+        <span class="font-medium text-brand-charcoal">Thành phố Hồ Chí Minh</span>
+        <span class="text-brand-charcoal/30">•</span>
+        <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+          Ưu đãi -17%
+        </span>
+        <span class="text-brand-charcoal/30">•</span>
+        <div class="flex items-center text-[#F59E0B]">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
+          </svg>
+          <span class="font-bold text-brand-charcoal text-xs ml-1">5.0</span>
+          <span class="text-[11px] text-brand-muted ml-1">(96 đánh giá)</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-normal tracking-tight text-brand-charcoal max-w-3xl leading-tight">
+            Sài Gòn năng động 2N1Đ
+          </h1>
+          <p class="text-xs sm:text-sm text-brand-muted mt-1.5 max-w-2xl">
+            Khám phá các biểu tượng kiến trúc, lịch sử và ẩm thực trung tâm Thành phố Hồ Chí Minh.
+          </p>
+        </div>
+
+        <div class="text-left lg:text-right flex-shrink-0">
+          <div class="flex items-baseline lg:justify-end gap-2">
+            <span class="text-xs text-brand-muted line-through">2.390.000₫</span>
+            <span class="text-2xl sm:text-3xl font-bold text-brand-charcoal tracking-tight">1.990.000₫</span>
+            <span class="text-xs font-normal text-brand-muted">/ khách</span>
+          </div>
+          <span class="text-[10px] text-emerald-700 font-semibold block mt-0.5">Tiết kiệm 400.000₫ trong đợt mở bán này</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Curated Asymmetric Gallery (From: cover_url & images array) -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 rounded-[28px] overflow-hidden">
+      <!-- Main Featured Image (8 cols - cover_url) -->
+      <div class="md:col-span-8 h-72 sm:h-96 rounded-[22px] overflow-hidden relative group bg-stone-200">
+        <img alt="Dinh Độc Lập TP. Hồ Chí Minh" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/20190923_Independence_Palace-10.jpg/1280px-20190923_Independence_Palace-10.jpg">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80"></div>
+        <div class="absolute bottom-4 left-5 right-5 flex items-end justify-between text-white">
+          <p class="text-xs sm:text-sm font-medium tracking-wide drop-shadow-sm">Dinh Độc Lập — Di tích lịch sử & kiến trúc biểu tượng</p>
+          <button class="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-[11px] font-medium px-3.5 py-1.5 rounded-full border border-white/30 transition-all flex items-center space-x-1.5" type="button">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span>Tất cả ảnh (4)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2 Side Images (4 cols - images[1], images[2]) -->
+      <div class="md:col-span-4 grid grid-cols-2 md:grid-cols-1 gap-3 sm:gap-4 h-44 md:h-96">
+        <div class="h-full rounded-[22px] overflow-hidden relative group bg-stone-200">
+          <img alt="Skyline Thành phố Hồ Chí Minh" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Ho_Chi_Minh_City_VIETNAM.jpg">
+          <span class="absolute bottom-3 left-3.5 bg-black/40 backdrop-blur-md text-white text-[10px] font-medium px-2 py-0.5 rounded-md">Trung tâm Sài Gòn</span>
+        </div>
+        <div class="h-full rounded-[22px] overflow-hidden relative group bg-stone-200">
+          <img alt="Phố Bùi Viện và Bến Nghé" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" src="https://upload.wikimedia.org/wikipedia/commons/b/b9/-_trung_tam_saigon-B%E1%BA%BFn_Ngh%C3%A9%2C_Qu%E1%BA%ADn_1%2C_TPHCM%2C_Vi%E1%BB%87t_Nam_-_panoramio.jpg">
+          <span class="absolute bottom-3 left-3.5 bg-black/40 backdrop-blur-md text-white text-[10px] font-medium px-2 py-0.5 rounded-md">Nhịp sống Bến Nghé</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Specifications Strip (From duration_days, departures, operator) -->
+    <div class="py-5 border-y border-brand-charcoal/10 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      <div class="space-y-1">
+        <span class="text-[10px] text-brand-muted uppercase font-mono tracking-wider">Thời lượng</span>
+        <p class="text-sm font-bold text-brand-charcoal">2 Ngày 1 Đêm</p>
+        <p class="text-[11px] text-brand-muted">City tour tinh hoa</p>
+      </div>
+      <div class="space-y-1">
+        <span class="text-[10px] text-brand-muted uppercase font-mono tracking-wider">Vận chuyển</span>
+        <p class="text-sm font-bold text-brand-charcoal">Xe máy lạnh du lịch</p>
+        <p class="text-[11px] text-brand-muted">Đưa đón theo lịch trình</p>
+      </div>
+      <div class="space-y-1">
+        <span class="text-[10px] text-brand-muted uppercase font-mono tracking-wider">Lưu trú</span>
+        <p class="text-sm font-bold text-brand-charcoal">Khách sạn 3 Sao</p>
+        <p class="text-[11px] text-brand-muted">2 khách / phòng</p>
+      </div>
+      <div class="space-y-1">
+        <span class="text-[10px] text-brand-muted uppercase font-mono tracking-wider">Đơn vị tổ chức</span>
+        <p class="text-sm font-bold text-brand-charcoal">Aura Travel Partner</p>
+        <p class="text-[11px] text-brand-muted">Đã duyệt xác thực</p>
+      </div>
+    </div>
+
+    <!-- Main Content 2-Column Grid (8 cols content, 4 cols booking) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT COLUMN: Narrative, Highlights, Timeline, Inclusions & Policy (8 cols) -->
+      <div class="lg:col-span-7 xl:col-span-8 space-y-8">
+        
+        <!-- SECTION 1: Description (From: description) -->
+        <section class="space-y-3">
+          <h2 class="text-lg font-bold text-brand-charcoal tracking-tight">Tổng quan hành trình</h2>
+          <p class="text-xs sm:text-sm text-brand-muted leading-relaxed">
+            Chuyến city tour gọn nhẹ qua những điểm đến tiêu biểu nhất của Sài Gòn. Hành trình được thiết kế hài hòa giữa chiều sâu di sản kiến trúc Đông Dương, các chứng tích lịch sử lắng đọng và không gian ẩm thực bản địa sôi động tại trung tâm Thành phố Hồ Chí Minh.
+          </p>
+        </section>
+
+        <!-- SECTION 2: Highlights (From: highlights JSON array) -->
+        <section class="space-y-3.5">
+          <h2 class="text-lg font-bold text-brand-charcoal tracking-tight">Điểm nhấn hành trình</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="flex items-center space-x-3 p-3.5 rounded-2xl bg-white/60 border border-brand-charcoal/10">
+              <span class="w-7 h-7 rounded-full bg-brand-charcoal text-white flex items-center justify-center font-mono text-xs font-bold flex-shrink-0">01</span>
+              <div>
+                <h3 class="text-xs font-bold text-brand-charcoal">Dinh Độc Lập</h3>
+                <p class="text-[11px] text-brand-muted">Di tích lịch sử Dinh Thống Nhất</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3 p-3.5 rounded-2xl bg-white/60 border border-brand-charcoal/10">
+              <span class="w-7 h-7 rounded-full bg-brand-charcoal text-white flex items-center justify-center font-mono text-xs font-bold flex-shrink-0">02</span>
+              <div>
+                <h3 class="text-xs font-bold text-brand-charcoal">Bưu điện Trung tâm Sài Gòn</h3>
+                <p class="text-[11px] text-brand-muted">Kiến trúc Pháp cổ kính tại Công xã Paris</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3 p-3.5 rounded-2xl bg-white/60 border border-brand-charcoal/10">
+              <span class="w-7 h-7 rounded-full bg-brand-charcoal text-white flex items-center justify-center font-mono text-xs font-bold flex-shrink-0">03</span>
+              <div>
+                <h3 class="text-xs font-bold text-brand-charcoal">Bảo tàng Chứng tích Chiến tranh</h3>
+                <p class="text-[11px] text-brand-muted">Không gian lưu giữ ký ức lịch sử</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3 p-3.5 rounded-2xl bg-white/60 border border-brand-charcoal/10">
+              <span class="w-7 h-7 rounded-full bg-brand-charcoal text-white flex items-center justify-center font-mono text-xs font-bold flex-shrink-0">04</span>
+              <div>
+                <h3 class="text-xs font-bold text-brand-charcoal">Chợ Bến Thành</h3>
+                <p class="text-[11px] text-brand-muted">Biểu tượng giao thương & ẩm thực phong phú</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: Detailed Itinerary (Strictly following Schema without fabricated labels) -->
+        <section class="space-y-4">
+          <div class="flex items-center justify-between pb-1 border-b border-brand-charcoal/10">
+            <div>
+              <h2 class="text-lg font-bold text-brand-charcoal tracking-tight">Lịch trình chi tiết</h2>
+              <p class="text-xs text-brand-muted mt-0.5">Lịch trình và dòng thời gian các điểm đến</p>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Day 1 Accordion -->
+            <div class="border border-brand-charcoal/10 rounded-[24px] bg-white/80 overflow-hidden transition-all duration-200 shadow-sm">
+              <button class="w-full p-4 sm:p-5 text-left flex items-center justify-between font-semibold text-xs sm:text-sm text-brand-charcoal focus:outline-none hover:bg-black/[0.02] transition-colors" onclick="toggleAccordion('day1')" type="button">
+                <div class="flex items-center space-x-3.5">
+                  <span class="text-[11px] font-mono tracking-wider uppercase font-bold text-white bg-brand-charcoal px-2.5 py-1 rounded-md">Ngày 01</span>
+                  <span class="text-sm font-bold text-brand-charcoal">gneogn eerg</span>
+                </div>
+                <span class="text-sm font-bold text-brand-charcoal w-7 h-7 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0" id="icon-day1">−</span>
+              </button>
+              
+              <div class="px-5 pb-6 text-xs text-brand-muted border-t border-brand-charcoal/10 pt-4" id="day1">
+                <!-- day.description -->
+                <p class="text-xs text-brand-charcoal/80 mb-5 leading-relaxed bg-black/[0.03] p-3 rounded-xl border border-black/5">
+                  mperagj  gjwp awngui mhjgao ngăp noaiw npa  zguw ngao vâ aug apgan gnawio ngoa aauogay
+                </p>
+                
+                <!-- Vertical Timeline Container -->
+                <div class="space-y-4 relative before:absolute before:top-2 before:bottom-2 before:left-[17px] before:w-[2px] before:bg-brand-charcoal/15">
+                  
+                  <!-- Timeline Item 1 (type: "place") -->
+                  <div class="relative flex items-start space-x-4 pl-1">
+                    <div class="w-8 h-8 rounded-full bg-brand-charcoal text-white flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0 z-10 shadow-sm ring-4 ring-brand-cream">
+                      01
+                    </div>
+                    <div class="flex-1 bg-white p-3.5 sm:p-4 rounded-2xl border border-brand-charcoal/10 space-y-1.5">
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <strong class="text-xs sm:text-sm text-brand-charcoal font-bold">361 Av. Victor Hugo BP 1131</strong>
+                        <span class="text-[11px] font-mono text-brand-charcoal font-semibold bg-black/5 px-2 py-0.5 rounded">
+                          12:00 AM - 1:30 AM
+                        </span>
+                      </div>
+                      <div class="text-[11px] text-brand-muted">
+                        Valence, Pháp
+                      </div>
+                      <!-- place.note (render exact note text, no hardcoded label) -->
+                      <p class="text-[11px] text-brand-charcoal/80 bg-black/[0.03] p-2.5 rounded-xl border border-black/5 leading-relaxed">
+                        gewa ghe jretj ktykrf
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Timeline Item 2 (type: "place" with category if present) -->
+                  <div class="relative flex items-start space-x-4 pl-1">
+                    <div class="w-8 h-8 rounded-full bg-brand-charcoal text-white flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0 z-10 shadow-sm ring-4 ring-brand-cream">
+                      02
+                    </div>
+                    <div class="flex-1 bg-white p-3.5 sm:p-4 rounded-2xl border border-brand-charcoal/10 space-y-1.5">
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <strong class="text-xs sm:text-sm text-brand-charcoal font-bold">Résidence L'adret - 3 pièces mezzanine 7 personnes exposé Sud MAE-1131</strong>
+                        <span class="text-[10px] text-brand-muted border border-black/10 px-2 py-0.5 rounded">Cho thuê kỳ nghỉ</span>
+                      </div>
+                      <div class="text-[11px] text-brand-muted">
+                        Valloire, Pháp
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Timeline Item 3 (type: "note" - render item.text directly) -->
+                  <div class="relative flex items-start space-x-4 pl-1">
+                    <div class="w-8 h-8 rounded-full bg-stone-500 text-white flex items-center justify-center flex-shrink-0 z-10 shadow-sm ring-4 ring-brand-cream">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1 bg-stone-50 border border-stone-200/80 p-3.5 rounded-2xl text-[11.5px] text-brand-charcoal leading-relaxed">
+                      mperagj  gjwp awngui mhjgao ngăp noaiw npa  zguw ngao vâ aug apgan gnawio ngoa aauogay
+                    </div>
+                  </div>
+
+                  <!-- Timeline Item 4 (type: "place" with place.note) -->
+                  <div class="relative flex items-start space-x-4 pl-1">
+                    <div class="w-8 h-8 rounded-full bg-brand-charcoal text-white flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0 z-10 shadow-sm ring-4 ring-brand-cream">
+                      03
+                    </div>
+                    <div class="flex-1 bg-white p-3.5 sm:p-4 rounded-2xl border border-brand-charcoal/10 space-y-1.5">
+                      <strong class="text-xs sm:text-sm text-brand-charcoal font-bold block">Rte de Genève 32 B/1131</strong>
+                      <div class="text-[11px] text-brand-muted">
+                        Tolochenaz, Thụy Sĩ
+                      </div>
+                      <!-- place.note -->
+                      <p class="text-[11px] text-brand-charcoal/80 bg-black/[0.03] p-2.5 rounded-xl border border-black/5 leading-relaxed">
+                        nơ g3g enwrgoi vewpag fwg
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Timeline Item 5 (type: "checklist" - title: item.title, items: item.items) -->
+                  <div class="relative flex items-start space-x-4 pl-1">
+                    <div class="w-8 h-8 rounded-full bg-brand-charcoal text-white flex items-center justify-center flex-shrink-0 z-10 shadow-sm ring-4 ring-brand-cream">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1 bg-white border border-brand-charcoal/10 p-3.5 sm:p-4 rounded-2xl space-y-2">
+                      <div class="text-xs font-bold text-brand-charcoal">
+                        nowag ephn
+                      </div>
+                      <div class="space-y-1.5">
+                        <label class="flex items-center space-x-2.5 text-xs text-brand-charcoal cursor-pointer select-none">
+                          <input type="checkbox" class="w-4 h-4 rounded text-brand-charcoal focus:ring-0 border-brand-charcoal/30">
+                          <span>g3e ờn  fwoto</span>
+                        </label>
+                        <label class="flex items-center space-x-2.5 text-xs text-brand-charcoal cursor-pointer select-none">
+                          <input type="checkbox" class="w-4 h-4 rounded text-brand-charcoal focus:ring-0 border-brand-charcoal/30">
+                          <span>gewhbw yh54w</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Day 2 Accordion -->
+            <div class="border border-brand-charcoal/10 rounded-[24px] bg-white/80 overflow-hidden transition-all duration-200 shadow-sm">
+              <button class="w-full p-4 sm:p-5 text-left flex items-center justify-between font-semibold text-xs sm:text-sm text-brand-charcoal focus:outline-none hover:bg-black/[0.02] transition-colors" onclick="toggleAccordion('day2')" type="button">
+                <div class="flex items-center space-x-3.5">
+                  <span class="text-[11px] font-mono tracking-wider uppercase font-bold text-white bg-brand-charcoal px-2.5 py-1 rounded-md">Ngày 02</span>
+                  <span class="text-sm font-bold text-brand-charcoal">gwh h4w rjh trj</span>
+                </div>
+                <span class="text-sm font-bold text-brand-charcoal w-7 h-7 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0" id="icon-day2">+</span>
+              </button>
+              
+              <div class="px-5 pb-6 text-xs text-brand-muted border-t border-brand-charcoal/10 pt-4 hidden" id="day2">
+                <div class="space-y-4 relative before:absolute before:top-2 before:bottom-2 before:left-[17px] before:w-[2px] before:bg-brand-charcoal/15">
+                  
+                  <!-- Timeline Item 1 (type: "place") -->
+                  <div class="relative flex items-start space-x-4 pl-1">
+                    <div class="w-8 h-8 rounded-full bg-brand-charcoal text-white flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0 z-10 shadow-sm ring-4 ring-brand-cream">
+                      01
+                    </div>
+                    <div class="flex-1 bg-white p-3.5 sm:p-4 rounded-2xl border border-brand-charcoal/10 space-y-1.5">
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <strong class="text-xs sm:text-sm text-brand-charcoal font-bold">361 Av. Victor Hugo BP 1131</strong>
+                        <span class="text-[11px] font-mono text-brand-charcoal font-semibold bg-black/5 px-2 py-0.5 rounded">
+                          12:00 AM - 1:30 AM
+                        </span>
+                      </div>
+                      <div class="text-[11px] text-brand-muted">
+                        Valence, Pháp
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Timeline Item 2 (type: "place") -->
+                  <div class="relative flex items-start space-x-4 pl-1">
+                    <div class="w-8 h-8 rounded-full bg-brand-charcoal text-white flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0 z-10 shadow-sm ring-4 ring-brand-cream">
+                      02
+                    </div>
+                    <div class="flex-1 bg-white p-3.5 sm:p-4 rounded-2xl border border-brand-charcoal/10 space-y-1.5">
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <strong class="text-xs sm:text-sm text-brand-charcoal font-bold">Rte de Genève 32 B/1131</strong>
+                        <span class="text-[11px] font-mono text-brand-charcoal font-semibold bg-black/5 px-2 py-0.5 rounded">
+                          2:00 AM - 4:00 AM
+                        </span>
+                      </div>
+                      <div class="text-[11px] text-brand-muted">
+                        Tolochenaz, Thụy Sĩ
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Day 3 Accordion -->
+            <div class="border border-brand-charcoal/10 rounded-[24px] bg-white/80 overflow-hidden transition-all duration-200 shadow-sm">
+              <button class="w-full p-4 sm:p-5 text-left flex items-center justify-between font-semibold text-xs sm:text-sm text-brand-charcoal focus:outline-none hover:bg-black/[0.02] transition-colors" onclick="toggleAccordion('day3')" type="button">
+                <div class="flex items-center space-x-3.5">
+                  <span class="text-[11px] font-mono tracking-wider uppercase font-bold text-white bg-brand-charcoal px-2.5 py-1 rounded-md">Ngày 03</span>
+                  <span class="text-sm font-bold text-brand-charcoal">hr sjhtr jrsjdn hs</span>
+                </div>
+                <span class="text-sm font-bold text-brand-charcoal w-7 h-7 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0" id="icon-day3">+</span>
+              </button>
+              
+              <div class="px-5 pb-6 text-xs text-brand-muted border-t border-brand-charcoal/10 pt-4 hidden" id="day3">
+                <div class="space-y-4 relative before:absolute before:top-2 before:bottom-2 before:left-[17px] before:w-[2px] before:bg-brand-charcoal/15">
+                  
+                  <!-- Timeline Item 1 -->
+                  <div class="relative flex items-start space-x-4 pl-1">
+                    <div class="w-8 h-8 rounded-full bg-brand-charcoal text-white flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0 z-10 shadow-sm ring-4 ring-brand-cream">
+                      01
+                    </div>
+                    <div class="flex-1 bg-white p-3.5 sm:p-4 rounded-2xl border border-brand-charcoal/10 space-y-1.5">
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <strong class="text-xs sm:text-sm text-brand-charcoal font-bold">361 Av. Victor Hugo BP 1131</strong>
+                        <span class="text-[11px] font-mono text-brand-charcoal font-semibold bg-black/5 px-2 py-0.5 rounded">
+                          11:30 AM - 1:30 PM
+                        </span>
+                      </div>
+                      <div class="text-[11px] text-brand-muted">
+                        Valence, Pháp
+                      </div>
+                      <!-- place.note -->
+                      <p class="text-[11px] text-brand-charcoal/80 bg-black/[0.03] p-2.5 rounded-xl border border-black/5 leading-relaxed">
+                        gwb4y54w hrw hj54 jsrtj e
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Timeline Item 2 -->
+                  <div class="relative flex items-start space-x-4 pl-1">
+                    <div class="w-8 h-8 rounded-full bg-brand-charcoal text-white flex items-center justify-center text-[11px] font-mono font-bold flex-shrink-0 z-10 shadow-sm ring-4 ring-brand-cream">
+                      02
+                    </div>
+                    <div class="flex-1 bg-white p-3.5 sm:p-4 rounded-2xl border border-brand-charcoal/10 space-y-1.5">
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <strong class="text-xs sm:text-sm text-brand-charcoal font-bold">Rte de Genève 32 B/1131</strong>
+                        <span class="text-[11px] font-mono text-brand-charcoal font-semibold bg-black/5 px-2 py-0.5 rounded">
+                          12:00 AM - 2:00 AM
+                        </span>
+                      </div>
+                      <div class="text-[11px] text-brand-muted">
+                        Tolochenaz, Thụy Sĩ
+                      </div>
+                      <!-- place.note -->
+                      <p class="text-[11px] text-brand-charcoal/80 bg-black/[0.03] p-2.5 rounded-xl border border-black/5 leading-relaxed">
+                        gw hw4j ezgwa nsdh swas ggesrhg
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- SECTION 4: Inclusions & Exclusions (From: included & excluded JSON arrays) -->
+        <section class="space-y-4 pt-4 border-t border-brand-charcoal/10">
+          <h2 class="text-lg font-bold text-brand-charcoal tracking-tight">Dịch vụ bao gồm &amp; chưa bao gồm</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+            <!-- Included -->
+            <div class="space-y-2.5">
+              <span class="text-xs font-bold text-brand-charcoal flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                <span>Bao gồm trong giá tour</span>
+              </span>
+              <ul class="space-y-2 text-brand-muted pl-4">
+                <li class="relative before:content-['✓'] before:absolute before:-left-4 before:text-emerald-700 before:font-bold">Xe du lịch máy lạnh theo chương trình</li>
+                <li class="relative before:content-['✓'] before:absolute before:-left-4 before:text-emerald-700 before:font-bold">Khách sạn 3 sao, hai khách một phòng</li>
+                <li class="relative before:content-['✓'] before:absolute before:-left-4 before:text-emerald-700 before:font-bold">Các bữa ăn ghi trong lịch trình</li>
+                <li class="relative before:content-['✓'] before:absolute before:-left-4 before:text-emerald-700 before:font-bold">Vé tham quan một lượt các điểm đến</li>
+                <li class="relative before:content-['✓'] before:absolute before:-left-4 before:text-emerald-700 before:font-bold">Hướng dẫn viên tiếng Việt suốt tuyến</li>
+                <li class="relative before:content-['✓'] before:absolute before:-left-4 before:text-emerald-700 before:font-bold">Bảo hiểm du lịch theo quy định</li>
+              </ul>
+            </div>
+
+            <!-- Excluded -->
+            <div class="space-y-2.5">
+              <span class="text-xs font-bold text-brand-charcoal flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-stone-400"></span>
+                <span>Chưa bao gồm</span>
+              </span>
+              <ul class="space-y-2 text-brand-muted pl-4">
+                <li class="relative before:content-['—'] before:absolute before:-left-4 before:text-stone-400">Vé máy bay hoặc tàu đến điểm đón</li>
+                <li class="relative before:content-['—'] before:absolute before:-left-4 before:text-stone-400">Chi phí cá nhân và đồ uống ngoài chương trình</li>
+                <li class="relative before:content-['—'] before:absolute before:-left-4 before:text-stone-400">Phụ thu phòng đơn (nếu yêu cầu phòng riêng)</li>
+                <li class="relative before:content-['—'] before:absolute before:-left-4 before:text-stone-400">Tiền tip cho hướng dẫn viên và tài xế</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: Cancellation Policy (From: cancellation_policy JSON array) -->
+        <section class="space-y-3 pt-4 border-t border-brand-charcoal/10">
+          <h2 class="text-lg font-bold text-brand-charcoal tracking-tight">Chính sách hoàn hủy</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center text-xs">
+            <div class="p-3 rounded-xl bg-white/60 border border-brand-charcoal/10">
+              <span class="text-[10px] text-brand-muted block uppercase">Trước 15 ngày</span>
+              <strong class="text-emerald-700 text-sm block mt-0.5">Hoàn 90%</strong>
+              <span class="text-[10px] text-brand-muted">Phí hủy 10%</span>
+            </div>
+            <div class="p-3 rounded-xl bg-white/60 border border-brand-charcoal/10">
+              <span class="text-[10px] text-brand-muted block uppercase">Trước 8 ngày</span>
+              <strong class="text-emerald-700 text-sm block mt-0.5">Hoàn 70%</strong>
+              <span class="text-[10px] text-brand-muted">Phí hủy 30%</span>
+            </div>
+            <div class="p-3 rounded-xl bg-white/60 border border-brand-charcoal/10">
+              <span class="text-[10px] text-brand-muted block uppercase">Trước 4 ngày</span>
+              <strong class="text-amber-700 text-sm block mt-0.5">Hoàn 50%</strong>
+              <span class="text-[10px] text-brand-muted">Phí hủy 50%</span>
+            </div>
+            <div class="p-3 rounded-xl bg-white/60 border border-brand-charcoal/10">
+              <span class="text-[10px] text-brand-muted block uppercase">Trong vòng 24h</span>
+              <strong class="text-rose-700 text-sm block mt-0.5">Không hoàn</strong>
+              <span class="text-[10px] text-brand-muted">Phí hủy 100%</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Booking Widget (From: tour_departures table) -->
+      <aside class="lg:col-span-5 xl:col-span-4 sticky top-6">
+        <div class="bg-white/85 backdrop-blur-md rounded-[28px] p-6 border border-brand-charcoal/10 shadow-lg space-y-5">
+          
+          <!-- Price Header (sale_price vs list_price) -->
+          <div class="flex items-baseline justify-between border-b border-brand-charcoal/10 pb-4">
+            <div>
+              <span class="text-[10px] uppercase tracking-wider text-brand-muted font-medium block">Giá ưu đãi trực tiếp</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-xs text-brand-muted line-through">2.390.000₫</span>
+                <span class="text-2xl font-bold text-brand-charcoal">1.990.000₫</span>
+                <span class="text-xs font-normal text-brand-muted">/ khách</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full" id="departureSeatsBadge">
+              Còn 20 chỗ
+            </span>
+          </div>
+
+          <!-- Booking Form Controls -->
+          <div class="space-y-3.5">
+            <!-- Departure Date Selection (From: tour_departures records) -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-brand-charcoal uppercase tracking-wider block">
+                Chọn đợt khởi hành
+              </label>
+              <select class="w-full text-xs font-medium rounded-xl border border-brand-charcoal/15 bg-white p-3 text-brand-charcoal focus:ring-1 focus:ring-brand-charcoal focus:outline-none cursor-pointer">
+                <option value="36">09/10/2026 — 1.990.000₫ (Còn 20 chỗ)</option>
+                <option value="274">16/10/2026 — 1.990.000₫ (Còn 20 chỗ)</option>
+                <option value="1519">23/10/2026 — 1.990.000₫ (Còn 24 chỗ)</option>
+                <option value="1520">30/10/2026 — 1.990.000₫ (Còn 24 chỗ)</option>
+                <option value="1521">06/11/2026 — 1.990.000₫ (Còn 24 chỗ)</option>
+              </select>
+            </div>
+
+            <!-- Guest Counter (guests) -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-brand-charcoal uppercase tracking-wider block">
+                Số lượng khách (tối thiểu 1)
+              </label>
+              <div class="flex items-center justify-between border border-brand-charcoal/15 rounded-xl p-2 bg-white">
+                <button aria-label="Giảm số lượng khách" class="w-8 h-8 rounded-lg bg-black/5 hover:bg-black/10 flex items-center justify-center font-bold text-sm text-brand-charcoal transition-colors focus:outline-none" onclick="decreaseGuests()" type="button">−</button>
+                <span class="text-xs font-bold text-brand-charcoal" id="guestCountText">1 khách</span>
+                <button aria-label="Tăng số lượng khách" class="w-8 h-8 rounded-lg bg-black/5 hover:bg-black/10 flex items-center justify-center font-bold text-sm text-brand-charcoal transition-colors focus:outline-none" onclick="increaseGuests()" type="button">+</button>
+              </div>
+            </div>
+
+            <!-- Price Breakdown Summary -->
+            <div class="pt-3 border-t border-brand-charcoal/10 space-y-1 text-xs">
+              <div class="flex justify-between text-brand-muted">
+                <span>Đơn giá:</span>
+                <span>1.990.000₫ × <span id="guestMultiplierText">1</span></span>
+              </div>
+              <div class="flex justify-between text-brand-muted">
+                <span>Giá gốc niêm yết:</span>
+                <span class="line-through">2.390.000₫</span>
+              </div>
+              <div class="flex justify-between text-emerald-700">
+                <span>Khuyến mãi:</span>
+                <span>-400.000₫ / khách</span>
+              </div>
+              <div class="pt-2 flex items-baseline justify-between border-t border-brand-charcoal/5">
+                <span class="font-bold text-brand-charcoal text-xs">Tổng tạm tính:</span>
+                <span class="font-bold text-brand-charcoal text-xl" id="totalPriceText">1.990.000₫</span>
+              </div>
+            </div>
+
+            <!-- Conversion Action Button -->
+            <button class="w-full py-3.5 rounded-full bg-brand-charcoal text-white hover:bg-black text-xs font-semibold tracking-wider uppercase transition-all duration-300 shadow hover:scale-[1.01] active:scale-95 flex items-center justify-center space-x-2" onclick="alert('Cảm ơn quý khách! Yêu cầu giữ chỗ đã được ghi nhận. Thời gian giữ chỗ là 15 phút.')" type="button">
+              <span>Đặt tour ngay</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+
+            <!-- Trust Badges -->
+            <div class="text-[11px] text-center text-brand-muted space-y-1 pt-1">
+              <p class="flex items-center justify-center space-x-1">
+                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                <span>Hủy miễn phí trước 15 ngày theo chính sách</span>
+              </p>
+              <p class="text-[10px]">Giữ chỗ an toàn • Không thu phí ẩn</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+  </div>
+</div>
+<!-- ========================================== -->
+<!-- RIGHT-SIDE SLIDE DRAWER MENU (Width < 1/2) -->
+<!-- ========================================== -->
+<!-- Backdrop overlay inside container -->
+<div aria-hidden="true" class="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-40 transition-opacity duration-300 opacity-0 pointer-events-none" id="drawerBackdrop" onclick="closeMenuDrawer()"></div>
+<!-- Right Side Drawer Element -->
+<aside aria-label="Navigation Menu Drawer" class="absolute top-0 right-0 bottom-0 z-50 w-full sm:w-[420px] md:w-[460px] lg:w-[40%] max-w-[480px] bg-[#0E1116] text-white shadow-2xl transition-transform duration-400 ease-out flex flex-col justify-between p-6 sm:p-9 border-l border-white/10 translate-x-full" id="rightMenuDrawer">
+<!-- Drawer Top Bar: Brand Pin + Close Button -->
+<div class="flex items-center justify-between w-full">
+<div class="flex items-center space-x-2">
+<svg class="w-5 h-5 text-white/90" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+</svg>
+<span class="text-xs font-semibold tracking-wider uppercase text-white/50 pl-1">Aura Journal</span>
+</div>
+<button aria-label="Close navigation menu" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors focus:outline-none" onclick="closeMenuDrawer()" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+<!-- Drawer Body: Refined Editorial Menu Links & Curated Thumbnail Pairing -->
+<div class="my-auto py-4 flex flex-col space-y-3 sm:space-y-4">
+<button class="text-left text-2xl sm:text-3xl font-light text-white/80 hover:text-white transition-all hover:translate-x-1.5 flex items-center justify-between group focus:outline-none" onclick="closeMenuDrawer(); showToursView();" type="button">
+<span class="">Tours</span>
+<span class="text-xs text-white/30 tracking-widest uppercase font-mono group-hover:text-white/60">01</span>
+</button>
+<a class="text-2xl sm:text-3xl font-light text-white/80 hover:text-white transition-all hover:translate-x-1.5 flex items-center justify-between group" href="#trips" onclick="closeMenuDrawer()">
+<span class="">My trips</span>
+<span class="text-xs text-white/30 tracking-widest uppercase font-mono group-hover:text-white/60">02</span>
+</a>
+<a class="text-2xl sm:text-3xl font-light text-white/80 hover:text-white transition-all hover:translate-x-1.5 flex items-center justify-between group" href="#saved" onclick="closeMenuDrawer()">
+<span class="">Saved <span class="text-sm font-medium text-white/40 ml-1">(4)</span></span>
+<span class="text-xs text-white/30 tracking-widest uppercase font-mono group-hover:text-white/60">03</span>
+</a>
+<!-- Highlighted Active 'Popular' Pill Button -->
+<div class="py-1">
+
+</div>
+
+
+<a class="text-2xl sm:text-3xl font-light text-white/80 hover:text-white transition-all hover:translate-x-1.5 flex items-center justify-between group" href="#account" onclick="closeMenuDrawer()">
+<span class="">Account</span>
+<span class="text-xs text-white/30 tracking-widest uppercase font-mono group-hover:text-white/60">07</span>
+</a>
+</div>
+<!-- Drawer Curated Editorial Feature Footer -->
+<div class="pt-4 border-t border-white/10 flex items-center space-x-3.5">
+<div class="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 border border-white/15 bg-white/5">
+<img alt="Sunrise pagoda in misty landscape" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeN5KDgDnJBtFJG4EHKmfDku72jdBMa5dgQsov9uwN_pe8xwe6o5WLOLpOYn7ZIcYjU9AQOZWNaPLQwxq6xLHlOAL3Dbcoo5D8WuZwH9VNRWJE-q6KOYb0GcjDKfzEkY2PhniM9BkW86SclqymJKc4PNiUNrhmSelE9y1F7RIuVhMcQNQIsJKxaQnSc8SWFTQwkPpMxZOcDYSfwMbBzxDnNVaVySracZKdDoIyeoo_9qh_kfwZu0P7sg">
+</div>
+<div class="flex flex-col justify-center">
+<span class="text-[10px] uppercase tracking-wider text-white/40 font-medium">Bespoke Collection</span>
+<p class="text-xs font-medium text-white/90">Hành trình Di sản Việt Nam</p>
+<button class="text-[10.5px] text-white/60 hover:text-white text-left underline underline-offset-2 mt-0.5" onclick="closeMenuDrawer(); showToursView();">Xem danh sách tour</button>
+</div>
+</div>
+</aside>
+</main>
+<!-- ========================================== -->
+<!-- In-Container Smooth Transition Script      -->
+<!-- ========================================== -->
+<script>
+  const homeView = document.getElementById('homeView');
+  const searchView = document.getElementById('searchView');
+  const toursView = document.getElementById('toursView');
+  const inContainerSearchInput = document.getElementById('inContainerSearchInput');
+  const searchCaret = document.getElementById('searchCaret');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+  const popularSection = document.getElementById('popularSection');
+  const searchResultsSection = document.getElementById('searchResultsSection');
+  const searchKeywordLabel = document.getElementById('searchKeywordLabel');
+
+  const drawerBackdrop = document.getElementById('drawerBackdrop');
+  const rightMenuDrawer = document.getElementById('rightMenuDrawer');
+
+  // Transition from Split Screen Home -> Search View within same container
+  function showSearchView() {
+    // Hide Tours View if open
+    toursView.classList.remove('tours-active', 'opacity-100', 'scale-100', 'pointer-events-auto');
+    toursView.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+    // 1. Transition Home View Out
+    homeView.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+    homeView.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+    // 2. Transition Search View In
+    searchView.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+    searchView.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+
+    // 3. Trigger staggered entrance animation and auto focus input
+    setTimeout(() => {
+      searchView.classList.add('search-active');
+      inContainerSearchInput.focus();
+    }, 100);
+  }
+
+  // Transition to Tour Listing View ("Danh sách tour hiện có")
+  function showToursView() {
+    // Hide Search View if open
+    searchView.classList.remove('search-active', 'opacity-100', 'scale-100', 'pointer-events-auto');
+    searchView.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+    // 1. Transition Home View Out
+    homeView.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+    homeView.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+    // 2. Transition Tours View In
+    toursView.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+    toursView.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+
+    // Scroll back to top inside view
+    toursView.scrollTop = 0;
+
+    // 3. Trigger staggered entrance animation
+    setTimeout(() => {
+      toursView.classList.add('tours-active');
+    }, 100);
+  }
+
+  // Transition back to Split Screen Home
+  function showHomeView() {
+    searchView.classList.remove('search-active', 'opacity-100', 'scale-100', 'pointer-events-auto');
+    searchView.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+    toursView.classList.remove('tours-active', 'opacity-100', 'scale-100', 'pointer-events-auto');
+    toursView.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+    homeView.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+    homeView.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+  }
+
+  // Interactive Live Search Handler
+  function handleSearchInput(query) {
+    const trimmed = query.trim();
+
+    if (trimmed.length > 0) {
+      // Hide Caret when user typed text
+      if (searchCaret) searchCaret.style.display = 'none';
+      if (clearSearchBtn) {
+        clearSearchBtn.classList.remove('opacity-0', 'pointer-events-none');
+        clearSearchBtn.classList.add('opacity-100', 'pointer-events-auto');
+      }
+
+      // Hide Popular with fade
+      popularSection.classList.add('hidden');
+      searchResultsSection.classList.remove('hidden');
+
+      // Update keyword preview
+      if (searchKeywordLabel) {
+        searchKeywordLabel.textContent = `Results for "${trimmed}"`;
+      }
+    } else {
+      // Revert to Popular view
+      if (searchCaret) searchCaret.style.display = 'inline-block';
+      if (clearSearchBtn) {
+        clearSearchBtn.classList.add('opacity-0', 'pointer-events-none');
+        clearSearchBtn.classList.remove('opacity-100', 'pointer-events-auto');
+      }
+      searchResultsSection.classList.add('hidden');
+      popularSection.classList.remove('hidden');
+    }
+  }
+
+  function clearSearchInput() {
+    inContainerSearchInput.value = '';
+    handleSearchInput('');
+    inContainerSearchInput.focus();
+  }
+
+  // Right-Side Slide Drawer Menu Controls
+  function openMenuDrawer() {
+    drawerBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+    drawerBackdrop.classList.add('opacity-100', 'pointer-events-auto');
+
+    rightMenuDrawer.classList.remove('translate-x-full');
+    rightMenuDrawer.classList.add('translate-x-0');
+  }
+
+  function closeMenuDrawer() {
+    drawerBackdrop.classList.remove('opacity-100', 'pointer-events-auto');
+    drawerBackdrop.classList.add('opacity-0', 'pointer-events-none');
+
+    rightMenuDrawer.classList.remove('translate-x-0');
+    rightMenuDrawer.classList.add('translate-x-full');
+  }
+
+  function switchToPopularFromDrawer() {
+    closeMenuDrawer();
+    setTimeout(showSearchView, 220);
+  }
+
+  // Keyboard ESC dismissal (closes drawer or returns to home)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (rightMenuDrawer.classList.contains('translate-x-0')) {
+        closeMenuDrawer();
+      } else if (!searchView.classList.contains('pointer-events-none') || !toursView.classList.contains('pointer-events-none')) {
+        showHomeView();
+      }
+    }
+  });
+</script>
+<script>
+  const tourDetailView = document.getElementById('tourDetailView');
+  let guestCount = 1;
+  const basePrice = 1990000;
+
+  function showTourDetailView() {
+    if (!tourDetailView) return;
+    toursView.classList.remove('tours-active', 'opacity-100', 'scale-100', 'pointer-events-auto');
+    toursView.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+    tourDetailView.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+    tourDetailView.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+    tourDetailView.scrollTop = 0;
+  }
+
+  function hideTourDetailView() {
+    if (!tourDetailView) return;
+    tourDetailView.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+    tourDetailView.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+    toursView.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+    toursView.classList.add('opacity-100', 'scale-100', 'pointer-events-auto', 'tours-active');
+  }
+
+  function toggleAccordion(id) {
+    const el = document.getElementById(id);
+    const icon = document.getElementById('icon-' + id);
+    if (el) {
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        if (icon) icon.textContent = '−';
+      } else {
+        el.classList.add('hidden');
+        if (icon) icon.textContent = '+';
+      }
+    }
+  }
+
+  function increaseGuests() {
+    guestCount++;
+    updateGuestDisplay();
+  }
+
+  function decreaseGuests() {
+    if (guestCount > 1) {
+      guestCount--;
+      updateGuestDisplay();
+    }
+  }
+
+  function updateGuestDisplay() {
+    const countText = document.getElementById('guestCountText');
+    const priceText = document.getElementById('totalPriceText');
+    const multiplierText = document.getElementById('guestMultiplierText');
+    if (countText) countText.textContent = guestCount + ' khách';
+    if (multiplierText) multiplierText.textContent = guestCount;
+    if (priceText) priceText.textContent = (guestCount * basePrice).toLocaleString('vi-VN') + '₫';
+  }
+
+  // Auto show tour detail if URL has #tour-detail hash
+  if (window.location.hash === '#tour-detail') {
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(showTourDetailView, 100);
+    });
+    setTimeout(showTourDetailView, 100);
+  }
+</script>
+
+</body></html>

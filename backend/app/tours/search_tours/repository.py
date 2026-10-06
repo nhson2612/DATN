@@ -9,6 +9,7 @@ from app.core.database import Transaction, execute_query
 
 _COLS = """t.id, t.slug, t.name, t.summary, t.description, t.province_id,
            t.duration_days, t.cover_url, t.images, t.highlights,
+           t.transportation, t.departure_location, t.tags,
            t.itinerary, t.included, t.excluded, t.cancellation_policy,
            t.operator_id, t.created_at"""
 
@@ -29,6 +30,12 @@ def _cols_sql() -> str:
         cols = cols.replace("t.cancellation_policy", "'[]'::jsonb AS cancellation_policy")
     if not _has_col("tours", "operator_id"):
         cols = cols.replace("t.operator_id", "NULL::integer AS operator_id")
+    if not _has_col("tours", "transportation"):
+        cols = cols.replace("t.transportation", "'[]'::jsonb AS transportation")
+    if not _has_col("tours", "departure_location"):
+        cols = cols.replace("t.departure_location", "NULL::text AS departure_location")
+    if not _has_col("tours", "tags"):
+        cols = cols.replace("t.tags", "'[]'::jsonb AS tags")
     return cols
 
 
@@ -988,6 +995,9 @@ def create_tour(data: dict, upsert: bool = True):
     has_images = _has_col("tours", "images")
     has_operator = _has_col("tours", "operator_id")
     has_active = _has_col("tours", "active")
+    has_transportation = _has_col("tours", "transportation")
+    has_departure_location = _has_col("tours", "departure_location")
+    has_tags = _has_col("tours", "tags")
 
     cover_url = data.get("cover_url")
     images_list = _chuan_hoa_mang_anh(data.get("images"), cover_url)
@@ -1016,6 +1026,18 @@ def create_tour(data: dict, upsert: bool = True):
 
     cols.append("highlights")
     vals.append(json.dumps(data.get("highlights") or [], ensure_ascii=False))
+
+    if has_transportation:
+        cols.append("transportation")
+        vals.append(json.dumps(_chuan_hoa_mang_text(data.get("transportation")), ensure_ascii=False))
+
+    if has_departure_location:
+        cols.append("departure_location")
+        vals.append((data.get("departure_location") or "").strip() or None)
+
+    if has_tags:
+        cols.append("tags")
+        vals.append(json.dumps(_chuan_hoa_mang_text(data.get("tags")), ensure_ascii=False))
 
     cols.append("itinerary")
     vals.append(json.dumps(data.get("itinerary") or [], ensure_ascii=False))
@@ -1118,7 +1140,7 @@ def get_tour_by_id(tour_id: int) -> Optional[dict]:
     if not rows:
         return None
     r = rows[0]
-    for k in ("images", "highlights", "itinerary", "included", "excluded", "cancellation_policy"):
+    for k in ("images", "highlights", "transportation", "tags", "itinerary", "included", "excluded", "cancellation_policy"):
         if k in r and isinstance(r[k], str):
             try:
                 r[k] = json.loads(r[k])
@@ -1134,6 +1156,9 @@ def update_tour(tour_id: int, data: dict) -> bool:
     has_images = _has_col("tours", "images")
     has_active = _has_col("tours", "active")
     has_operator = _has_col("tours", "operator_id")
+    has_transportation = _has_col("tours", "transportation")
+    has_departure_location = _has_col("tours", "departure_location")
+    has_tags = _has_col("tours", "tags")
 
     set_clauses = []
     params = []
@@ -1169,6 +1194,18 @@ def update_tour(tour_id: int, data: dict) -> bool:
     if "highlights" in data and data["highlights"] is not None:
         set_clauses.append("highlights = %s")
         params.append(json.dumps(data["highlights"], ensure_ascii=False))
+
+    if has_transportation and "transportation" in data and data["transportation"] is not None:
+        set_clauses.append("transportation = %s")
+        params.append(json.dumps(_chuan_hoa_mang_text(data["transportation"]), ensure_ascii=False))
+
+    if has_departure_location and "departure_location" in data:
+        set_clauses.append("departure_location = %s")
+        params.append((data.get("departure_location") or "").strip() or None)
+
+    if has_tags and "tags" in data and data["tags"] is not None:
+        set_clauses.append("tags = %s")
+        params.append(json.dumps(_chuan_hoa_mang_text(data["tags"]), ensure_ascii=False))
 
     if "itinerary" in data and data["itinerary"] is not None:
         set_clauses.append("itinerary = %s")
@@ -1296,6 +1333,7 @@ def list_operator_tours(
     sql = f"""
         SELECT t.id, t.slug, t.name, t.summary, t.description, t.province_id,
                t.duration_days, t.price_from, t.cover_url, t.highlights,
+               t.transportation, t.departure_location, t.tags,
                {op_col} {st_col}
                t.created_at, p.name AS province_name
         FROM tours t

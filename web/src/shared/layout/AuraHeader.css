@@ -1,0 +1,174 @@
+/* ==========================================================================
+   BLOCK: .aura-tours__header (Shared Aura Header)
+   Header tiêu chuẩn đồng bộ toàn bộ ứng dụng Aura Voyage
+   ========================================================================== */
+
+.aura-tours__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(20, 22, 25, 0.08);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 20;
+}
+
+.aura-tours__header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.aura-tours__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #141619;
+  transition: opacity 0.15s ease;
+}
+
+.aura-tours__brand:hover {
+  opacity: 0.85;
+}
+
+.aura-tours__brand-icon {
+  width: 20px;
+  height: 20px;
+  color: #141619;
+}
+
+.aura-tours__brand-text {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #141619;
+  letter-spacing: -0.02em;
+}
+
+.aura-tours__divider {
+  width: 1px;
+  height: 16px;
+  background-color: rgba(20, 22, 25, 0.15);
+}
+
+.aura-tours__back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(20, 22, 25, 0.8);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.aura-tours__back-btn:hover {
+  color: #000000;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.aura-tours__breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.aura-tours__breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aura-tours__breadcrumb-link {
+  color: #64748B;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.aura-tours__breadcrumb-link:hover {
+  color: #0F172A;
+}
+
+.aura-tours__breadcrumb-curr {
+  color: #0F172A;
+  font-weight: 600;
+}
+
+.aura-tours__breadcrumb-sep {
+  color: #CBD5E1;
+  font-size: 11px;
+}
+
+.aura-tours__header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aura-tours__search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: none;
+  cursor: pointer;
+  color: #141619;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.aura-tours__search-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.aura-tours__menu-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.06);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #141619;
+  transition: all 0.2s ease;
+}
+
+.aura-tours__menu-btn:hover {
+  background-color: rgba(0, 0, 0, 0.12);
+  transform: scale(1.05);
+}
+
+.aura-tours__close-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.06);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #141619;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.aura-tours__close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.12);
+  transform: scale(1.05);
+}

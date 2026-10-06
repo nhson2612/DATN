@@ -4,7 +4,8 @@ from app.core.database import execute_query
 
 COT_TOUR = (
     "id, slug, name, summary, description, province_id, duration_days, cover_url, "
-    "highlights, itinerary, cancellation_policy, operator_id, status, active, reject_reason"
+    "highlights, transportation, departure_location, tags, itinerary, "
+    "cancellation_policy, operator_id, status, active, reject_reason"
 )
 
 

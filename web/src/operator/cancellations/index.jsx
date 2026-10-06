@@ -48,7 +48,7 @@ export default function CancellationsScreen() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="op-cancellations__div-1">
       {/* Toast thông báo */}
       {toast && (
         <Toast
@@ -59,23 +59,23 @@ export default function CancellationsScreen() {
       )}
 
       {/* Header khu vực */}
-      <div className="pb-5 border-b border-zinc-200">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+      <div className="op-cancellations__div-2">
+        <h1 className="op-cancellations__text-3">
           Huỷ đợt khởi hành
         </h1>
-        <p className="text-sm text-zinc-500 mt-1">
+        <p className="op-cancellations__text-4">
           Đóng chuyến đi và kích hoạt quy trình hoàn tiền 100% cho khách hàng khi không đủ điều kiện khởi hành
         </p>
       </div>
 
       {/* Banner nghiệp vụ BR-C5 & BR-C7 */}
-      <div className="bg-amber-50/75 border border-amber-200 rounded-lg p-4 text-xs text-amber-900 flex items-start gap-3">
-        <span className="material-symbols-outlined text-xl text-amber-600 shrink-0 mt-0.5">
+      <div className="op-cancellations__div-5 op-cancellations__div-1">
+        <span className="material-symbols-outlined op-cancellations__span-6 op-cancellations__span-2">
           gavel
         </span>
-        <div className="space-y-1">
-          <p className="font-semibold text-amber-950">Quy tắc nghiệp vụ huỷ đợt (BR-C5 &amp; BR-C7):</p>
-          <ul className="list-disc list-inside space-y-0.5 text-amber-800">
+        <div className="op-cancellations__div-7">
+          <p className="op-cancellations__text-8">Quy tắc nghiệp vụ huỷ đợt (BR-C5 &amp; BR-C7):</p>
+          <ul className="list-disc list-inside op-cancellations__ul-9">
             <li>
               <strong>BR-C5:</strong> Do lỗi từ phía nhà điều hành, khi hủy đợt toàn bộ đơn hàng liên quan sẽ được <strong>hoàn tiền 100%</strong> mà không áp bất kỳ khoản phí nào.
             </li>
@@ -95,18 +95,18 @@ export default function CancellationsScreen() {
         renderActions={(departure) => {
           const isCancelled = departure.status === "CANCELLED";
           return (
-            <div className="flex justify-end">
+            <div className="op-cancellations__div-10">
               <button
                 type="button"
                 disabled={isCancelled}
                 onClick={() => handleOpenCancelModal(departure)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border transition-colors cursor-pointer shadow-2xs ${
+                className={`op-cancellations__button-13 op-cancellations__button-3  ${
                   isCancelled
-                    ? "bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed"
-                    : "bg-white text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300"
+                    ? "op-cancellations__button-11--variant-1"
+                    : "op-cancellations__button-12--variant-2"
                 }`}
               >
-                <span className="material-symbols-outlined text-sm">
+                <span className="material-symbols-outlined op-cancellations__span-14">
                   {isCancelled ? "check_circle" : "event_busy"}
                 </span>
                 {isCancelled ? "Đã huỷ" : "Huỷ đợt này"}
@@ -118,23 +118,23 @@ export default function CancellationsScreen() {
 
       {/* Modal xác nhận huỷ đợt */}
       {cancelingDep && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-2xl max-w-md w-full p-6 relative">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
-                <span className="material-symbols-outlined text-2xl">warning</span>
+        <div className="fade-in op-cancellations__div-15">
+          <div className="op-cancellations__div-16 op-cancellations__div-4">
+            <div className="op-cancellations__div-17">
+              <div className="op-cancellations__div-18 op-cancellations__div-5">
+                <span className="material-symbols-outlined op-cancellations__span-19">warning</span>
               </div>
               <div>
-                <h3 className="text-base font-bold text-zinc-900">Xác nhận huỷ đợt khởi hành?</h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <h3 className="op-cancellations__text-20">Xác nhận huỷ đợt khởi hành?</h3>
+                <p className="op-cancellations__text-21">
                   Ngày khởi hành: <strong>{date(cancelingDep.depart_date)}</strong>
                 </p>
               </div>
             </div>
 
-            <div className="p-3 bg-rose-50/75 rounded-lg border border-rose-200 text-xs text-rose-900 space-y-1.5 mb-4 leading-relaxed">
-              <p className="font-semibold flex items-center gap-1 text-rose-700">
-                <span className="material-symbols-outlined text-sm">info</span>
+            <div className="op-cancellations__div-22 op-cancellations__div-6">
+              <p className="op-cancellations__text-23">
+                <span className="material-symbols-outlined op-cancellations__span-24">info</span>
                 Cảnh báo huỷ đợt:
               </p>
               <p>
@@ -142,10 +142,10 @@ export default function CancellationsScreen() {
               </p>
             </div>
 
-            <form onSubmit={handleConfirmCancel} className="space-y-3">
+            <form onSubmit={handleConfirmCancel} className="op-cancellations__form-25">
               <div>
-                <label className="block text-xs font-medium text-zinc-700 mb-1">
-                  Lý do huỷ đợt <span className="text-rose-500">*</span>
+                <label className="op-cancellations__label-26">
+                  Lý do huỷ đợt <span className="op-cancellations__span-27">*</span>
                 </label>
                 <textarea
                   required
@@ -153,25 +153,25 @@ export default function CancellationsScreen() {
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                   placeholder="Nhập lý do huỷ chuyến..."
-                  className="w-full bg-white border border-zinc-200 rounded-md p-2.5 text-xs text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 resize-none"
+                  className="op-cancellations__element-28 op-cancellations__element-7"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-200">
+              <div className="op-cancellations__div-29">
                 <button
                   type="button"
                   disabled={submitting}
                   onClick={() => setCancelingDep(null)}
-                  className="px-3.5 py-1.5 text-xs font-medium rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+                  className="op-cancellations__button-30 op-cancellations__button-8"
                 >
                   Đóng
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded-md bg-rose-600 text-white hover:bg-rose-700 transition-colors cursor-pointer shadow-xs disabled:opacity-60 flex items-center gap-1"
+                  className="op-cancellations__button-31"
                 >
-                  <span className="material-symbols-outlined text-sm">event_busy</span>
+                  <span className="material-symbols-outlined op-cancellations__span-32">event_busy</span>
                   {submitting ? "Đang huỷ..." : "Xác nhận huỷ đợt"}
                 </button>
               </div>

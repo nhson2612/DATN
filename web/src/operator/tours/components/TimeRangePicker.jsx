@@ -119,8 +119,8 @@ export default function TimeRangePicker({
             onClick={() => setIsOpen(!isOpen)}
             title="Chỉnh sửa khung giờ"
           >
-            <span className="material-symbols-outlined text-[14px]">schedule</span>
-            <span className="font-semibold text-[11px]">{displayRange}</span>
+            <span className="material-symbols-outlined op-time-range__span-1">schedule</span>
+            <span className="op-time-range__icon-2">{displayRange}</span>
           </button>
           <button
             type="button"
@@ -131,7 +131,7 @@ export default function TimeRangePicker({
             }}
             title="Xoá thời gian"
           >
-            <span className="material-symbols-outlined text-[13px]">close</span>
+            <span className="material-symbols-outlined op-time-range__span-3">close</span>
           </button>
         </div>
       ) : (
@@ -141,39 +141,39 @@ export default function TimeRangePicker({
           onClick={() => setIsOpen(!isOpen)}
           title="Thêm khung giờ tham quan"
         >
-          <span className="material-symbols-outlined text-[15px]">schedule</span>
+          <span className="material-symbols-outlined op-time-range__span-4">schedule</span>
           <span>Add time</span>
         </button>
       )}
 
       {/* Popover Wanderlog Modal (ảnh nuo.png) */}
       {isOpen && (
-        <div className="op-wizard__wander-popover animate-in fade-in zoom-in-95 duration-150">
+        <div className="op-wizard__wander-popover fade-in op-time-range__div-5 op-time-range__div-1">
           {/* Hàng 2 ô Start time — End time */}
           <div className="op-wizard__wander-inputs-row">
             <div
-              className={`op-wizard__wander-time-box ${
+              className={`op-wizard__wander-time-box    ${
                 activeField === "start" ? "op-wizard__wander-time-box--active" : ""
               }`}
               onClick={() => setActiveField("start")}
             >
               <span className="op-wizard__wander-box-label">Start time</span>
               <div className="op-wizard__wander-box-val">
-                {tempStart || <span className="text-zinc-400">--:--</span>}
+                {tempStart || <span className="op-time-range__span-6">--:--</span>}
               </div>
             </div>
 
             <span className="op-wizard__wander-dash">—</span>
 
             <div
-              className={`op-wizard__wander-time-box ${
+              className={`op-wizard__wander-time-box    ${
                 activeField === "end" ? "op-wizard__wander-time-box--active" : ""
               }`}
               onClick={() => setActiveField("end")}
             >
               <span className="op-wizard__wander-box-label">End time</span>
               <div className="op-wizard__wander-box-val">
-                {tempEnd || <span className="text-zinc-400">--:--</span>}
+                {tempEnd || <span className="op-time-range__span-7">--:--</span>}
               </div>
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function TimeRangePicker({
               return (
                 <div
                   key={slot}
-                  className={`op-wizard__wander-slot-item ${
+                  className={`op-wizard__wander-slot-item    ${
                     isSelected ? "op-wizard__wander-slot-item--selected" : ""
                   }`}
                   onClick={() => handleSelectSlot(slot)}

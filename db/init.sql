@@ -189,6 +189,9 @@ CREATE TABLE IF NOT EXISTS tours (
     cover_url           TEXT,
     images              JSONB NOT NULL DEFAULT '[]', -- danh sách URL ảnh tour cho gallery
     highlights          JSONB,                   -- ["Bà Nà Hills", "Cầu Vàng", ...]
+    transportation      JSONB NOT NULL DEFAULT '[]', -- ["Xe du lịch", "Máy bay", ...]
+    departure_location  TEXT,                    -- điểm đón/khởi hành chính
+    tags                JSONB NOT NULL DEFAULT '[]', -- nhãn phân loại do operator gắn
     -- [{day, title, description, place_ids: [int]}] — nối được sang bảng poi để
     -- vẽ lịch trình lên bản đồ.
     itinerary           JSONB,
@@ -198,6 +201,8 @@ CREATE TABLE IF NOT EXISTS tours (
     status              VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     active              BOOLEAN DEFAULT TRUE,    -- giữ để tương thích với các bộ lọc WHERE t.active
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CHECK (jsonb_typeof(transportation) = 'array'),
+    CHECK (jsonb_typeof(tags) = 'array'),
     CHECK (status IN ('DRAFT', 'PENDING_APPROVAL', 'ACTIVE', 'REJECTED', 'INACTIVE'))
 );
 CREATE INDEX IF NOT EXISTS tours_province_idx ON tours(province_id);
@@ -251,6 +256,7 @@ CREATE TABLE IF NOT EXISTS tour_bookings (
 );
 CREATE INDEX IF NOT EXISTS tour_bookings_status_idx ON tour_bookings(status);
 CREATE INDEX IF NOT EXISTS tour_bookings_code_idx   ON tour_bookings(code);
+CREATE INDEX IF NOT EXISTS tour_bookings_created_at_idx ON tour_bookings(created_at);
 
 CREATE TABLE IF NOT EXISTS booking_passengers (
     id BIGSERIAL PRIMARY KEY,
@@ -304,6 +310,10 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 CREATE INDEX IF NOT EXISTS payments_booking_id_idx ON payments(booking_id);
 CREATE INDEX IF NOT EXISTS payments_status_idx     ON payments(status);
+CREATE INDEX IF NOT EXISTS payments_status_created_at_idx
+    ON payments(status, created_at);
+CREATE INDEX IF NOT EXISTS payments_status_effective_at_idx
+    ON payments(status, (COALESCE(confirmed_at, created_at)));
 CREATE UNIQUE INDEX IF NOT EXISTS payments_booking_success_unique_idx
     ON payments(booking_id)
     WHERE status = 'SUCCESS';

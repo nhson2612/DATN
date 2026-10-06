@@ -140,6 +140,75 @@
   align-items: stretch;
   gap: 14px;
   position: relative;
+  transition: opacity 140ms ease;
+}
+
+.op-wizard .op-wizard__timeline-row--dragging {
+  opacity: 0.42;
+}
+
+.op-wizard .op-wizard__timeline-row--drop-before::before,
+.op-wizard .op-wizard__timeline-row--drop-after::after {
+  content: "";
+  position: absolute;
+  left: 42px;
+  right: 0;
+  z-index: 8;
+  height: 3px;
+  border-radius: 999px;
+  background: #0891b2;
+  pointer-events: none;
+}
+
+.op-wizard .op-wizard__timeline-row--drop-before::before {
+  top: -2px;
+}
+
+.op-wizard .op-wizard__timeline-row--drop-after::after {
+  bottom: 10px;
+}
+
+.op-screen .op-wizard__drag-handle,
+.op-wizard .op-wizard__drag-handle {
+  width: 22px;
+  height: 28px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: grab;
+  box-shadow: none;
+  touch-action: none;
+}
+
+.op-screen .op-wizard__drag-handle:hover,
+.op-wizard .op-wizard__drag-handle:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.op-screen .op-wizard__drag-handle:active,
+.op-wizard .op-wizard__drag-handle:active {
+  cursor: grabbing;
+}
+
+.op-wizard .op-wizard__drag-dots {
+  display: grid;
+  grid-template-columns: repeat(2, 3px);
+  grid-template-rows: repeat(3, 3px);
+  gap: 3px;
+  pointer-events: none;
+}
+
+.op-wizard .op-wizard__drag-dots > span {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 /* Cột Marker bên trái kèm đường nét đứt (ảnh 5.png) */
@@ -684,9 +753,17 @@
 }
 
 .op-wizard .op-wizard__checklist-title {
+  width: min(260px, 38vw);
+  min-width: 80px;
+  border: 0;
+  background: transparent;
+  padding: 0;
   font-size: 15px;
   font-weight: 800;
   color: #0f172a;
+  line-height: 1.25;
+  outline: none;
+  box-shadow: none;
 }
 
 .op-wizard .op-wizard__checklist-count-badge {

@@ -139,6 +139,13 @@ export default function Dropdown({
             >
               {displayText}
             </span>
+            <span
+              className={`custom-dropdown-arrow ${
+                isOpen ? "custom-dropdown-arrow--up" : ""
+              }`}
+            >
+              ▾
+            </span>
           </div>
         </button>
 

@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="title desc">
+<title id="title">Blue sky and rolling green hills</title>
+<desc id="desc">A flat vector landscape with a deep blue upper edge matching #0e699c, a sky fading to pale blue, distant mountains and a winding path through green hills.</desc>
+<defs>
+  <!-- Exact match with the previous sea-base gradient's final stop. -->
+  <linearGradient id="hill-sky" x1="0" y1="0" x2="0" y2="1000" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#0e699c"/><stop offset=".035" stop-color="#0e699c"/>
+    <stop offset=".22" stop-color="#2685b4"/><stop offset=".43" stop-color="#55acd0"/>
+    <stop offset=".65" stop-color="#a6d8e7"/><stop offset="1" stop-color="#d3e9df"/>
+  </linearGradient>
+  <linearGradient id="hill-cloud" x2="0" y2="1"><stop stop-color="#e3f5fb"/><stop offset="1" stop-color="#b7e2f0"/></linearGradient>
+  <linearGradient id="hill-back" x2="0" y2="1"><stop stop-color="#69b6cf"/><stop offset="1" stop-color="#419eb9"/></linearGradient>
+  <linearGradient id="hill-middle" x2="0" y2="1"><stop stop-color="#94be62"/><stop offset="1" stop-color="#66a45f"/></linearGradient>
+  <linearGradient id="hill-front" x2=".2" y2="1"><stop stop-color="#80b360"/><stop offset="1" stop-color="#3a8862"/></linearGradient>
+  <linearGradient id="hill-right" x2=".25" y2="1"><stop stop-color="#9bc465"/><stop offset="1" stop-color="#438e62"/></linearGradient>
+  <linearGradient id="hill-road" x2="0" y2="1"><stop stop-color="#c6cf87"/><stop offset="1" stop-color="#eed394"/></linearGradient>
+  <clipPath id="hill-frame"><path d="M0 0H1600V1000H0Z"/></clipPath>
+  <g id="hill-tree"><path d="M0 0C-12 -20 -10 -65 -2 -91Q3 -105 8 -89C19 -48 20 -17 12 0Z" fill="#2d826e"/></g>
+  <g id="hill-shrubs" fill="#328777"><path d="M0 20Q3 -7 24 0Q34 -22 58 -10Q76 -38 98 -16Q119 -29 131 -6Q153 -13 164 9Q185 -5 197 20Z"/></g>
+</defs>
+<g clip-path="url(#hill-frame)">
+  <path fill="url(#hill-sky)" d="M0 0H1600V1000H0Z"/>
+  <!-- The upper edge is deliberately free of artwork and texture. -->
+  <circle cx="1270" cy="173" r="57" fill="#ffe5ad"/>
+  <g fill="url(#hill-cloud)">
+    <path d="M103 292C126 276 173 282 204 311C218 260 257 240 294 263C321 208 379 210 419 253C456 229 498 247 518 277C562 263 598 282 610 311C595 338 152 348 109 318Q95 309 103 292Z"/>
+    <path d="M974 367C1001 343 1045 331 1075 349C1085 314 1122 291 1160 308C1192 270 1247 281 1266 319C1306 303 1353 325 1370 356C1354 381 1020 393 979 378Q966 374 974 367Z"/>
+  </g>
+  <g fill="none" stroke="#b6e2ee" stroke-linecap="round" opacity=".30">
+    <path d="M100 335Q352 364 548 345Q594 342 650 359" stroke-width="14"/>
+    <path d="M968 394Q1154 413 1368 384" stroke-width="10"/>
+    <path d="M-25 434C235 396 488 487 730 453" stroke-width="7"/>
+    <path d="M786 444C1005 396 1252 464 1495 407" stroke-width="6"/>
+    <path d="M100 525C397 488 658 558 920 523" stroke-width="4"/>
+  </g>
+  <g fill="none" stroke="#326f8b" stroke-width="4" stroke-linecap="round">
+    <path d="M900 269Q918 252 936 269Q954 252 972 269"/>
+    <path d="M820 334Q832 322 844 334Q856 322 868 334"/>
+  </g>
+  <!-- Distant ridges: cool, low-contrast silhouettes. -->
+  <path d="M0 771L94 753 202 709 237 721 274 708 311 718 356 690 436 733 522 708 562 717 600 702 639 727 689 701 734 668 763 682 789 689 820 706 851 722 901 701 930 723 971 734 1017 715 1053 730 1108 706 1150 730 1211 754 1258 738 1290 751 1335 741 1415 756 1500 748 1600 770V880H0Z" fill="#79bfd8"/>
+  <path d="M407 793L530 747 606 760 669 712 720 665 762 691 784 684 829 718 852 742 902 724 981 783V861H407Z" fill="#61b2d1"/>
+  <path d="M720 665L720 692 749 706 738 690 769 710 758 691Z M784 684L778 697 814 721 803 703 816 709Z M901 701L889 714 904 710 917 717Z M600 702L586 713 604 709 617 717Z" fill="#c1e3eb" opacity=".8"/>
+  <path d="M720 695L682 739 707 760 661 784 810 818 875 787 815 752 772 713Z" fill="#71bdd5" opacity=".45"/>
+  <!-- Broad overlapping foothills. -->
+  <path d="M-50 750C119 844 285 706 475 738C565 753 601 806 684 784C753 765 814 809 887 792C967 784 1009 748 1077 762C1195 789 1249 839 1384 789C1493 748 1551 719 1650 732V940H-50Z" fill="url(#hill-back)"/>
+  <path d="M0 848C164 863 260 775 388 805C522 837 566 851 697 814L772 787C861 824 981 823 1089 852C1240 894 1431 810 1600 856V1000H0Z" fill="#3f9aac"/>
+  <g opacity=".72">
+    <use href="#hill-shrubs" transform="translate(524 853) scale(.65)"/>
+    <use href="#hill-shrubs" transform="translate(914 843) scale(.65)"/>
+    <use href="#hill-shrubs" transform="translate(1058 862) scale(.8)"/>
+  </g>
+  <use href="#hill-shrubs" transform="translate(-30 819) scale(1.1)"/>
+  <use href="#hill-shrubs" transform="translate(164 838) scale(.62)"/>
+  <use href="#hill-tree" transform="translate(109 827) scale(.78)"/>
+  <use href="#hill-tree" transform="translate(143 831) scale(.60)"/>
+  <!-- Middle meadow and distant trail. -->
+  <path d="M0 856C183 883 285 893 433 866C573 839 697 817 840 831C1016 834 1072 880 1247 871L1600 861V1000H0Z" fill="url(#hill-middle)"/>
+  <path d="M735 831Q797 842 757 847Q717 852 710 861C772 854 819 855 853 867C815 860 741 862 704 865Q702 852 747 847Q777 841 735 831Z" fill="#c2ce85"/>
+  <path d="M430 883C598 857 738 852 853 879C890 896 809 898 783 911L526 928Z" fill="#5b9f64" opacity=".6"/>
+  <use href="#hill-shrubs" transform="translate(560 911) scale(.8)"/>
+  <path d="M-20 827C166 810 331 849 490 879C693 918 816 897 1000 863C1201 825 1393 823 1630 866L1615 1000H-20Z" fill="url(#hill-middle)"/>
+  <!-- Right slope and left foreground give the path depth. -->
+  <path d="M659 943C845 888 996 918 1166 876C1308 846 1478 834 1620 868V1010H660Z" fill="url(#hill-right)"/>
+  <use href="#hill-shrubs" transform="translate(1390 883) scale(.85)"/>
+  <use href="#hill-tree" transform="translate(1494 866) scale(.62)"/>
+  <use href="#hill-tree" transform="translate(1530 859) scale(.91)"/>
+  <path d="M1580 861C1309 874 1187 944 960 976L918 1000H1600V861Z" fill="url(#hill-front)"/>
+  <path d="M-30 863C178 837 278 910 421 918C557 923 685 968 924 1000H-30Z" fill="url(#hill-front)"/>
+  <!-- A tapered road, narrow at the horizon, broad at the bottom. -->
+  <path d="M859 883C827 893 732 901 743 922C754 943 902 949 944 978Q968 991 976 1000H882Q910 981 864 967C816 951 746 945 736 928C723 906 819 894 859 883Z" fill="url(#hill-road)"/>
+  <g fill="#2c7865">
+    <path d="M-30 952Q-10 892 20 916C33 869 81 877 93 916C116 900 133 913 135 934C158 923 183 934 181 956C210 951 224 967 226 980L253 1000H-30Z"/>
+    <path d="M166 1000Q177 953 208 959Q229 914 255 945Q269 954 270 973C302 949 333 971 336 994Q352 981 368 1000Z"/>
+  </g>
+  <use href="#hill-shrubs" transform="translate(1160 942) scale(.7)" opacity=".65"/>
+</g>
+</svg>

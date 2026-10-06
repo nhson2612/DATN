@@ -150,6 +150,9 @@ class TourUpsert(BaseModel):
     cover_url: Optional[str] = None
     images: Optional[List[str]] = None
     highlights: Optional[List[str]] = None
+    transportation: Optional[List[str]] = None
+    departure_location: Optional[str] = None
+    tags: Optional[List[str]] = None
     itinerary: Optional[List[dict]] = None
     included: Optional[List[str]] = None
     excluded: Optional[List[str]] = None

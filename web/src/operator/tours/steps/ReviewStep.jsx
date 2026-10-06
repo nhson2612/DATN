@@ -20,6 +20,8 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
   const included = (form?.included || []).filter(Boolean);
   const excluded = (form?.excluded || []).filter(Boolean);
   const highlights = (form?.highlights || []).filter(Boolean);
+  const transportation = (form?.transportation || []).filter(Boolean);
+  const tourTags = (form?.tags || []).filter(Boolean);
   const images = (form?.images || []).filter(Boolean);
 
   const daDuDieuKien = conThieu.length === 0;
@@ -78,7 +80,34 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
                   <strong>{tongDiem} điểm</strong>
                 </div>
               </div>
+
+              <div className="op-review-step__meta-item">
+                <span className="material-symbols-outlined">trip_origin</span>
+                <div>
+                  <small>Khởi hành từ</small>
+                  <strong>{form?.departure_location || "(Chưa nhập)"}</strong>
+                </div>
+              </div>
+
+              <div className="op-review-step__meta-item">
+                <span className="material-symbols-outlined">directions_bus</span>
+                <div>
+                  <small>Phương tiện</small>
+                  <strong>{transportation.join(", ") || "(Chưa chọn)"}</strong>
+                </div>
+              </div>
             </div>
+
+            {tourTags.length > 0 && (
+              <div className="op-review-step__highlights-box">
+                <span className="op-review-step__sublabel">Tag phân loại:</span>
+                <div className="op-review-step__tags">
+                  {tourTags.map((tag) => (
+                    <span key={tag} className="op-review-step__tag">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {form?.description?.trim() && (
               <div className="op-review-step__desc-box">
@@ -154,14 +183,14 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
                               const place = item.place || {};
                               return (
                                 <div key={item.id || itIdx} className="op-review-step__place-item">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
+                                  <div className="op-review-step__div-1">
+                                    <div className="op-review-step__div-2">
                                       <strong>
                                         {pCounter}. {place?.name || "Điểm tham quan"}
                                       </strong>
                                       {place?.time_range && (
-                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-full">
-                                          <span className="material-symbols-outlined text-[13px]">schedule</span>
+                                        <span className="op-review-step__span-3">
+                                          <span className="material-symbols-outlined op-review-step__span-4">schedule</span>
                                           {place.time_range}
                                         </span>
                                       )}
@@ -177,7 +206,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
                                     <img
                                       src={place.anh}
                                       alt={place.name}
-                                      className="w-16 h-16 rounded-md object-cover border border-zinc-200 shrink-0"
+                                      className="op-review-step__img-5 op-review-step__img-1"
                                       loading="lazy"
                                     />
                                   )}
@@ -189,9 +218,9 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
                               return (
                                 <div
                                   key={item.id || itIdx}
-                                  className="flex items-start gap-2 p-2.5 bg-amber-50/80 border border-amber-200/80 rounded-md text-xs text-amber-900"
+                                  className="op-review-step__div-6 op-review-step__div-2"
                                 >
-                                  <span className="material-symbols-outlined text-[16px] text-amber-700 shrink-0 mt-0.5">
+                                  <span className="material-symbols-outlined op-review-step__span-7 op-review-step__span-3">
                                     edit_note
                                   </span>
                                   <span>{item.text}</span>
@@ -205,18 +234,18 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
                               return (
                                 <div
                                   key={item.id || itIdx}
-                                  className="p-2.5 bg-zinc-50 border border-zinc-200 rounded-md flex flex-col gap-1.5"
+                                  className="op-review-step__div-8 op-review-step__div-4"
                                 >
-                                  <div className="flex items-center gap-1.5 font-bold text-xs text-zinc-900">
-                                    <span className="material-symbols-outlined text-[15px] text-emerald-600">
+                                  <div className="op-review-step__div-9">
+                                    <span className="material-symbols-outlined op-review-step__span-10">
                                       fact_check
                                     </span>
                                     <span>{item.title || "Check list"}</span>
                                   </div>
-                                  <ul className="flex flex-col gap-1 m-0 p-0 list-none">
+                                  <ul className="list-none op-review-step__ul-11">
                                     {subItems.map((sub, sIdx) => (
-                                      <li key={sub.id || sIdx} className="flex items-center gap-1.5 text-xs text-zinc-700">
-                                        <span className="material-symbols-outlined text-[14px] text-emerald-600">
+                                      <li key={sub.id || sIdx} className="op-review-step__li-12">
+                                        <span className="material-symbols-outlined op-review-step__span-13">
                                           check_circle
                                         </span>
                                         <span>{typeof sub === "string" ? sub : sub.text}</span>
@@ -238,14 +267,14 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
                           return (
                             <div key={place?.id || pIdx} className="op-review-step__place-item">
                               <span className="material-symbols-outlined">location_on</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
+                              <div className="op-review-step__div-14">
+                                <div className="op-review-step__div-15">
                                   <strong>
                                     {pIdx + 1}. {place?.name || "Điểm tham quan"}
                                   </strong>
                                   {place?.time_range && (
-                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-full">
-                                      <span className="material-symbols-outlined text-[13px]">schedule</span>
+                                    <span className="op-review-step__span-16">
+                                      <span className="material-symbols-outlined op-review-step__span-17">schedule</span>
                                       {place.time_range}
                                     </span>
                                   )}
@@ -261,7 +290,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
                                 <img
                                   src={place.anh}
                                   alt={place.name}
-                                  className="w-16 h-16 rounded-md object-cover border border-zinc-200 shrink-0"
+                                  className="op-review-step__img-18 op-review-step__img-5"
                                   loading="lazy"
                                 />
                               )}
@@ -449,7 +478,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
           <div className="op-wizard__card-head">
             <span className="op-wizard__check-title">Điều kiện gửi duyệt</span>
             <span
-              className={`op-review-step__status-pill ${
+              className={`op-review-step__status-pill    ${
                 daDuDieuKien
                   ? "op-review-step__status-pill--success"
                   : "op-review-step__status-pill--warn"
@@ -461,7 +490,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
 
           <ul className="op-wizard__check-list">
             <li
-              className={`op-wizard__check-item ${
+              className={`op-wizard__check-item    ${
                 form?.name?.trim().length >= 15 ? "op-wizard__check-item--done" : ""
               }`}
             >
@@ -471,7 +500,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
               <span>Tên tour (từ 15 ký tự)</span>
             </li>
             <li
-              className={`op-wizard__check-item ${
+              className={`op-wizard__check-item    ${
                 form?.summary?.trim() ? "op-wizard__check-item--done" : ""
               }`}
             >
@@ -481,7 +510,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
               <span>Mô tả ngắn</span>
             </li>
             <li
-              className={`op-wizard__check-item ${
+              className={`op-wizard__check-item    ${
                 form?.description?.trim() ? "op-wizard__check-item--done" : ""
               }`}
             >
@@ -491,7 +520,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
               <span>Mô tả chi tiết</span>
             </li>
             <li
-              className={`op-wizard__check-item ${
+              className={`op-wizard__check-item    ${
                 form?.province_id ? "op-wizard__check-item--done" : ""
               }`}
             >
@@ -501,7 +530,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
               <span>Điểm đến chính</span>
             </li>
             <li
-              className={`op-wizard__check-item ${
+              className={`op-wizard__check-item    ${
                 itinerary.length > 0 && itinerary.every((d) => (d?.places || []).length > 0)
                   ? "op-wizard__check-item--done"
                   : ""
@@ -515,7 +544,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
               <span>Lịch trình & các điểm đến</span>
             </li>
             <li
-              className={`op-wizard__check-item ${
+              className={`op-wizard__check-item    ${
                 form?.cover_url?.trim() ? "op-wizard__check-item--done" : ""
               }`}
             >
@@ -525,7 +554,7 @@ export default function ReviewStep({ form = {}, provinces = [], conThieu = [], o
               <span>Ảnh bìa tour</span>
             </li>
             <li
-              className={`op-wizard__check-item ${
+              className={`op-wizard__check-item    ${
                 cancellationPolicy.length > 0 ? "op-wizard__check-item--done" : ""
               }`}
             >

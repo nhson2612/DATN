@@ -267,7 +267,7 @@ export default function PointSearch({
                 <button
                   type="button"
                   key={diem.id || index}
-                  className={`op-wizard__search-item ${
+                  className={`op-wizard__search-item    ${
                     index === mucDangChon ? "op-wizard__search-item--active" : ""
                   }`}
                   onPointerEnter={() => setMucDangChon(index)}

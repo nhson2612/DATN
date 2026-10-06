@@ -226,7 +226,7 @@ export default function DeparturesScreen() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="op-departures__div-1">
       {/* Toast thông báo */}
       {toast && (
         <Toast
@@ -237,21 +237,21 @@ export default function DeparturesScreen() {
       )}
 
       {/* Header khu vực */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-zinc-200">
+      <div className="op-departures__div-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+          <h1 className="op-departures__text-3">
             Đợt khởi hành &amp; giá
           </h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="op-departures__text-4">
             Quản lý ngày chạy tour, số lượng chỗ ngồi và chính sách giá bán khuyến mãi
           </p>
         </div>
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-zinc-900 text-white hover:bg-zinc-800 transition-colors shadow-xs shrink-0 cursor-pointer"
+          className="op-departures__button-5 op-departures__button-1"
         >
-          <span className="material-symbols-outlined text-lg">calendar_add_on</span>
+          <span className="material-symbols-outlined op-departures__span-6">calendar_add_on</span>
           Mở đợt khởi hành
         </button>
       </div>
@@ -260,38 +260,38 @@ export default function DeparturesScreen() {
       <DeparturePicker tours={tours} tourId={tourId} onChange={setTourId} />
 
       {/* Thẻ chỉ số nhanh */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg border border-zinc-200 p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+      <div className="op-departures__div-7">
+        <div className="op-departures__div-8 op-departures__div-2">
+          <div className="op-departures__div-9">
             <span>TỔNG SỐ ĐỢT</span>
-            <span className="material-symbols-outlined text-lg text-zinc-400">event_available</span>
+            <span className="material-symbols-outlined op-departures__span-10">event_available</span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-zinc-900">{stats.total}</div>
-          <div className="text-xs text-zinc-500 mt-1">
-            Đang mở bán: <strong className="text-emerald-600">{stats.openCount}</strong> đợt
+          <div className="op-departures__div-11">{stats.total}</div>
+          <div className="op-departures__div-12">
+            Đang mở bán: <strong className="op-departures__text-13">{stats.openCount}</strong> đợt
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-zinc-200 p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+        <div className="op-departures__div-14 op-departures__div-3">
+          <div className="op-departures__div-15">
             <span>CHỖ ĐÃ BÁN</span>
-            <span className="material-symbols-outlined text-lg text-zinc-400">airline_seat_recline_normal</span>
+            <span className="material-symbols-outlined op-departures__span-16">airline_seat_recline_normal</span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-zinc-900">
-            {stats.sold} <span className="text-sm font-normal text-zinc-400">/ {stats.capacity} chỗ</span>
+          <div className="op-departures__div-17">
+            {stats.sold} <span className="op-departures__span-18">/ {stats.capacity} chỗ</span>
           </div>
-          <div className="text-xs text-zinc-500 mt-1">
-            Tỉ lệ lấp đầy toàn tour: <strong className="text-zinc-800">{stats.occupancyRate}%</strong>
+          <div className="op-departures__div-19">
+            Tỉ lệ lấp đầy toàn tour: <strong className="op-departures__text-20">{stats.occupancyRate}%</strong>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-zinc-200 p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+        <div className="op-departures__div-21 op-departures__div-4">
+          <div className="op-departures__div-22">
             <span>CHÍNH SÁCH BÁN</span>
-            <span className="material-symbols-outlined text-lg text-zinc-400">local_offer</span>
+            <span className="material-symbols-outlined op-departures__span-23">local_offer</span>
           </div>
-          <div className="mt-2 text-sm font-semibold text-zinc-900">Giảm giá trực tiếp theo đợt</div>
-          <div className="text-xs text-zinc-500 mt-1">
+          <div className="op-departures__div-24">Giảm giá trực tiếp theo đợt</div>
+          <div className="op-departures__div-25">
             Không dùng coupon, hiển thị giá gạch ngang tự động
           </div>
         </div>
@@ -309,29 +309,29 @@ export default function DeparturesScreen() {
       {/* MODAL 1: Mở đợt khởi hành mới */}
       {/* ────────────────────────────────────────────────────────── */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-zinc-200">
+        <div className="fade-in op-departures__div-26">
+          <div className="op-departures__div-27 op-departures__div-5">
+            <div className="op-departures__div-28">
               <div>
-                <h3 className="text-lg font-bold text-zinc-900">Mở đợt khởi hành mới</h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <h3 className="op-departures__text-29">Mở đợt khởi hành mới</h3>
+                <p className="op-departures__text-30">
                   Thiết lập ngày đi, giá bán và số lượng chỗ ngồi cho chuyến đi
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsCreateOpen(false)}
-                className="text-zinc-400 hover:text-zinc-700 p-1 rounded-md hover:bg-zinc-100 transition-colors"
+                className="op-departures__button-31"
               >
-                <span className="material-symbols-outlined text-xl">close</span>
+                <span className="material-symbols-outlined op-departures__span-32">close</span>
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
+            <form onSubmit={handleCreateSubmit} className="op-departures__form-33">
               {/* Ngày khởi hành */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1">
-                  Ngày khởi hành <span className="text-rose-500">*</span>
+                <label className="op-departures__label-34">
+                  Ngày khởi hành <span className="op-departures__span-35">*</span>
                 </label>
                 <input
                   type="date"
@@ -339,17 +339,17 @@ export default function DeparturesScreen() {
                   min={minDateStr}
                   value={createForm.depart_date}
                   onChange={(e) => setCreateForm({ ...createForm, depart_date: e.target.value })}
-                  className="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                  className="op-departures__element-36 op-departures__element-6"
                 />
-                <p className="text-[11px] text-zinc-500 mt-1">
+                <p className="op-departures__text-37">
                   Theo quy định BR-D1: Ngày khởi hành phải cách thời điểm hiện tại ít nhất 2 ngày.
                 </p>
               </div>
 
               {/* Giá niêm yết */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1">
-                  Giá niêm yết gốc (VND) <span className="text-rose-500">*</span>
+                <label className="op-departures__label-38">
+                  Giá niêm yết gốc (VND) <span className="op-departures__span-39">*</span>
                 </label>
                 <input
                   type="number"
@@ -359,20 +359,20 @@ export default function DeparturesScreen() {
                   placeholder="Ví dụ: 3500000"
                   value={createForm.list_price}
                   onChange={(e) => setCreateForm({ ...createForm, list_price: e.target.value })}
-                  className="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 font-mono"
+                  className="op-departures__element-40 op-departures__element-7"
                 />
                 {createForm.list_price ? (
-                  <p className="text-xs font-medium text-emerald-700 mt-1">
+                  <p className="op-departures__text-41">
                     Định dạng hiển thị: {money(Number(createForm.list_price))}
                   </p>
                 ) : null}
               </div>
 
               {/* Số chỗ & Khách tối thiểu */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="op-departures__div-42">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-700 mb-1">
-                    Tổng số chỗ <span className="text-rose-500">*</span>
+                  <label className="op-departures__label-43">
+                    Tổng số chỗ <span className="op-departures__span-44">*</span>
                   </label>
                   <input
                     type="number"
@@ -381,11 +381,11 @@ export default function DeparturesScreen() {
                     max="500"
                     value={createForm.seats_total}
                     onChange={(e) => setCreateForm({ ...createForm, seats_total: e.target.value })}
-                    className="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 font-mono"
+                    className="op-departures__element-45 op-departures__element-8"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-700 mb-1">
+                  <label className="op-departures__label-46">
                     Số khách tối thiểu (min_pax)
                   </label>
                   <input
@@ -395,30 +395,30 @@ export default function DeparturesScreen() {
                     max="100"
                     value={createForm.min_pax}
                     onChange={(e) => setCreateForm({ ...createForm, min_pax: e.target.value })}
-                    className="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 font-mono"
+                    className="op-departures__element-47 op-departures__element-9"
                   />
                 </div>
               </div>
 
               {/* Tùy chọn đặt giá sale ngay */}
-              <div className="pt-2 border-t border-zinc-200">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
+              <div className="op-departures__div-48">
+                <label className="op-departures__label-49">
                   <input
                     type="checkbox"
                     checked={createForm.has_sale}
                     onChange={(e) => setCreateForm({ ...createForm, has_sale: e.target.checked })}
-                    className="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 w-4 h-4 cursor-pointer"
+                    className="op-departures__element-50 op-departures__element-10"
                   />
-                  <span className="text-xs font-medium text-zinc-800">
+                  <span className="op-departures__span-51">
                     Áp dụng giá khuyến mãi ngay cho đợt này
                   </span>
                 </label>
 
                 {createForm.has_sale && (
-                  <div className="mt-3 p-3 bg-zinc-50 rounded-lg border border-zinc-200 space-y-3 animate-in fade-in duration-150">
+                  <div className="fade-in op-departures__div-52 op-departures__div-11">
                     <div>
-                      <label className="block text-xs font-medium text-zinc-700 mb-1">
-                        Giá bán khuyến mãi (VND) <span className="text-rose-500">*</span>
+                      <label className="op-departures__label-53">
+                        Giá bán khuyến mãi (VND) <span className="op-departures__span-54">*</span>
                       </label>
                       <input
                         type="number"
@@ -427,37 +427,37 @@ export default function DeparturesScreen() {
                         placeholder="Giá bán thấp hơn giá gốc"
                         value={createForm.sale_price}
                         onChange={(e) => setCreateForm({ ...createForm, sale_price: e.target.value })}
-                        className="w-full bg-white border border-zinc-200 rounded-md px-3 py-1.5 text-sm text-zinc-900 font-mono"
+                        className="op-departures__element-55 op-departures__element-12"
                       />
                       {createForm.sale_price && createForm.list_price && Number(createForm.sale_price) < Number(createForm.list_price) && (
-                        <div className="text-xs font-semibold text-rose-600 mt-1 flex items-center gap-1.5">
+                        <div className="op-departures__div-56">
                           <span>Giảm {Math.round(((Number(createForm.list_price) - Number(createForm.sale_price)) / Number(createForm.list_price)) * 100)}%</span>
                           <span>(Tiết kiệm {money(Number(createForm.list_price) - Number(createForm.sale_price))})</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="op-departures__div-57">
                       <div>
-                        <label className="block text-[11px] font-medium text-zinc-600 mb-0.5">
+                        <label className="op-departures__label-58">
                           Bắt đầu (tùy chọn)
                         </label>
                         <input
                           type="datetime-local"
                           value={createForm.sale_starts_at}
                           onChange={(e) => setCreateForm({ ...createForm, sale_starts_at: e.target.value })}
-                          className="w-full bg-white border border-zinc-200 rounded px-2 py-1 text-xs text-zinc-800"
+                          className="op-departures__element-59 op-departures__element-13"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-medium text-zinc-600 mb-0.5">
+                        <label className="op-departures__label-60">
                           Kết thúc (tùy chọn)
                         </label>
                         <input
                           type="datetime-local"
                           value={createForm.sale_ends_at}
                           onChange={(e) => setCreateForm({ ...createForm, sale_ends_at: e.target.value })}
-                          className="w-full bg-white border border-zinc-200 rounded px-2 py-1 text-xs text-zinc-800"
+                          className="op-departures__element-61 op-departures__element-14"
                         />
                       </div>
                     </div>
@@ -466,19 +466,19 @@ export default function DeparturesScreen() {
               </div>
 
               {/* Action buttons */}
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-200">
+              <div className="op-departures__div-62">
                 <button
                   type="button"
                   disabled={submitting}
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 text-sm font-medium rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+                  className="op-departures__button-63 op-departures__button-15"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-sm font-medium rounded-md bg-zinc-900 text-white hover:bg-zinc-800 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-60"
+                  className="op-departures__button-64"
                 >
                   {submitting ? "Đang xử lý..." : "Lưu đợt khởi hành"}
                 </button>
@@ -492,39 +492,39 @@ export default function DeparturesScreen() {
       {/* MODAL 2: Đặt hoặc Sửa giá khuyến mãi */}
       {/* ────────────────────────────────────────────────────────── */}
       {editingSaleDep && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-2xl max-w-md w-full p-6 relative">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-200">
+        <div className="fade-in op-departures__div-65">
+          <div className="op-departures__div-66 op-departures__div-16">
+            <div className="op-departures__div-67">
               <div>
-                <h3 className="text-lg font-bold text-zinc-900">Thiết lập giá khuyến mãi</h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <h3 className="op-departures__text-68">Thiết lập giá khuyến mãi</h3>
+                <p className="op-departures__text-69">
                   Đợt ngày {date(editingSaleDep.depart_date)}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingSaleDep(null)}
-                className="text-zinc-400 hover:text-zinc-700 p-1 rounded-md hover:bg-zinc-100 transition-colors"
+                className="op-departures__button-70"
               >
-                <span className="material-symbols-outlined text-xl">close</span>
+                <span className="material-symbols-outlined op-departures__span-71">close</span>
               </button>
             </div>
 
-            <div className="mb-4 p-3 bg-zinc-50 rounded-lg border border-zinc-200 text-xs space-y-1">
-              <div className="flex justify-between text-zinc-600">
+            <div className="op-departures__div-72 op-departures__div-17">
+              <div className="op-departures__div-73">
                 <span>Giá niêm yết gốc:</span>
-                <span className="font-bold text-zinc-900 font-mono text-sm">{money(editingSaleDep.list_price)}</span>
+                <span className="op-departures__span-74">{money(editingSaleDep.list_price)}</span>
               </div>
-              <div className="flex justify-between text-zinc-600">
+              <div className="op-departures__div-75">
                 <span>Số chỗ còn lại:</span>
-                <span className="font-semibold text-zinc-800">{editingSaleDep.seats_left}/{editingSaleDep.seats_total} chỗ</span>
+                <span className="op-departures__span-76">{editingSaleDep.seats_left}/{editingSaleDep.seats_total} chỗ</span>
               </div>
             </div>
 
-            <form onSubmit={handleSaveSale} className="space-y-4">
+            <form onSubmit={handleSaveSale} className="op-departures__form-77">
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1">
-                  Giá bán khuyến mãi (VND) <span className="text-rose-500">*</span>
+                <label className="op-departures__label-78">
+                  Giá bán khuyến mãi (VND) <span className="op-departures__span-79">*</span>
                 </label>
                 <input
                   type="number"
@@ -534,11 +534,11 @@ export default function DeparturesScreen() {
                   placeholder="Nhập giá thấp hơn giá gốc"
                   value={saleForm.sale_price}
                   onChange={(e) => setSaleForm({ ...saleForm, sale_price: e.target.value })}
-                  className="w-full bg-white border border-zinc-200 rounded-md px-3 py-2 text-sm text-zinc-900 font-mono focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                  className="op-departures__element-80 op-departures__element-18"
                 />
 
                 {saleForm.sale_price && Number(saleForm.sale_price) < editingSaleDep.list_price && (
-                  <div className="mt-2 p-2 rounded bg-rose-50 border border-rose-200 text-xs font-medium text-rose-800 flex items-center justify-between">
+                  <div className="op-departures__div-81 op-departures__div-19">
                     <span>
                       Giảm: <strong>{Math.round(((editingSaleDep.list_price - Number(saleForm.sale_price)) / editingSaleDep.list_price) * 100)}%</strong>
                     </span>
@@ -547,56 +547,56 @@ export default function DeparturesScreen() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="op-departures__div-82">
                 <div>
-                  <label className="block text-[11px] font-medium text-zinc-600 mb-1">
+                  <label className="op-departures__label-83">
                     Bắt đầu (tùy chọn)
                   </label>
                   <input
                     type="datetime-local"
                     value={saleForm.sale_starts_at}
                     onChange={(e) => setSaleForm({ ...saleForm, sale_starts_at: e.target.value })}
-                    className="w-full bg-white border border-zinc-200 rounded px-2.5 py-1.5 text-xs text-zinc-800 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                    className="op-departures__element-84 op-departures__element-20"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-zinc-600 mb-1">
+                  <label className="op-departures__label-85">
                     Kết thúc (tùy chọn)
                   </label>
                   <input
                     type="datetime-local"
                     value={saleForm.sale_ends_at}
                     onChange={(e) => setSaleForm({ ...saleForm, sale_ends_at: e.target.value })}
-                    className="w-full bg-white border border-zinc-200 rounded px-2.5 py-1.5 text-xs text-zinc-800 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                    className="op-departures__element-86 op-departures__element-21"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-zinc-200">
+              <div className="op-departures__div-87">
                 {editingSaleDep.sale_price ? (
                   <button
                     type="button"
                     disabled={submitting}
                     onClick={handleRemoveSale}
-                    className="px-3 py-1.5 text-xs font-medium rounded-md border border-zinc-200 text-zinc-600 hover:text-rose-600 hover:border-rose-200 transition-colors cursor-pointer"
+                    className="op-departures__button-88 op-departures__button-22"
                   >
                     Gỡ giá sale
                   </button>
                 ) : <span />}
 
-                <div className="flex items-center gap-2">
+                <div className="op-departures__div-89">
                   <button
                     type="button"
                     disabled={submitting}
                     onClick={() => setEditingSaleDep(null)}
-                    className="px-3 py-1.5 text-xs font-medium rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+                    className="op-departures__button-90 op-departures__button-23"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-4 py-1.5 text-xs font-semibold rounded-md bg-zinc-900 text-white hover:bg-zinc-800 transition-colors cursor-pointer shadow-xs disabled:opacity-60"
+                    className="op-departures__button-91"
                   >
                     {submitting ? "Đang lưu..." : "Lưu giá sale"}
                   </button>
@@ -611,23 +611,23 @@ export default function DeparturesScreen() {
       {/* MODAL 3: Xác nhận huỷ đợt khởi hành (BR-C5) */}
       {/* ────────────────────────────────────────────────────────── */}
       {cancelingDep && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-2xl max-w-md w-full p-6 relative">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
-                <span className="material-symbols-outlined text-2xl">warning</span>
+        <div className="fade-in op-departures__div-92">
+          <div className="op-departures__div-93 op-departures__div-24">
+            <div className="op-departures__div-94">
+              <div className="op-departures__div-95 op-departures__div-25">
+                <span className="material-symbols-outlined op-departures__span-96">warning</span>
               </div>
               <div>
-                <h3 className="text-base font-bold text-zinc-900">Xác nhận huỷ đợt khởi hành?</h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <h3 className="op-departures__text-97">Xác nhận huỷ đợt khởi hành?</h3>
+                <p className="op-departures__text-98">
                   Ngày khởi hành: <strong>{date(cancelingDep.depart_date)}</strong>
                 </p>
               </div>
             </div>
 
-            <div className="p-3 bg-rose-50/75 rounded-lg border border-rose-200 text-xs text-rose-900 space-y-1.5 mb-4 leading-relaxed">
-              <p className="font-semibold flex items-center gap-1 text-rose-700">
-                <span className="material-symbols-outlined text-sm">info</span>
+            <div className="op-departures__div-99 op-departures__div-26">
+              <p className="op-departures__text-100">
+                <span className="material-symbols-outlined op-departures__span-101">info</span>
                 Quy định bồi hoàn theo chuẩn BR-C5:
               </p>
               <p>
@@ -635,10 +635,10 @@ export default function DeparturesScreen() {
               </p>
             </div>
 
-            <form onSubmit={handleConfirmCancel} className="space-y-3">
+            <form onSubmit={handleConfirmCancel} className="op-departures__form-102">
               <div>
-                <label className="block text-xs font-medium text-zinc-700 mb-1">
-                  Lý do huỷ đợt <span className="text-rose-500">*</span>
+                <label className="op-departures__label-103">
+                  Lý do huỷ đợt <span className="op-departures__span-104">*</span>
                 </label>
                 <textarea
                   required
@@ -646,25 +646,25 @@ export default function DeparturesScreen() {
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                   placeholder="Nhập lý do huỷ chuyến..."
-                  className="w-full bg-white border border-zinc-200 rounded-md p-2.5 text-xs text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 resize-none"
+                  className="op-departures__element-105 op-departures__element-27"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-200">
+              <div className="op-departures__div-106">
                 <button
                   type="button"
                   disabled={submitting}
                   onClick={() => setCancelingDep(null)}
-                  className="px-3.5 py-1.5 text-xs font-medium rounded-md border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+                  className="op-departures__button-107 op-departures__button-28"
                 >
                   Đóng
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded-md bg-rose-600 text-white hover:bg-rose-700 transition-colors cursor-pointer shadow-xs disabled:opacity-60 flex items-center gap-1"
+                  className="op-departures__button-108"
                 >
-                  <span className="material-symbols-outlined text-sm">event_busy</span>
+                  <span className="material-symbols-outlined op-departures__span-109">event_busy</span>
                   {submitting ? "Đang huỷ..." : "Xác nhận huỷ đợt"}
                 </button>
               </div>

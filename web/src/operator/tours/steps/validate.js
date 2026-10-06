@@ -18,6 +18,9 @@ export function kiemTraBuoc(buoc, form) {
 
     if (!form.province_id) loi.province_id = "Chưa chọn điểm đến chính.";
     if (!Number(form.duration_days)) loi.duration_days = "Chưa nhập số ngày của tour.";
+    if (!form.departure_location.trim()) loi.departure_location = "Chưa nhập địa điểm khởi hành.";
+    if (!form.transportation.length) loi.transportation = "Chưa chọn phương tiện di chuyển.";
+    if (!form.tags.length) loi.tags = "Chưa gắn tag cho tour.";
   }
 
   if (buoc === "itinerary") {
@@ -60,6 +63,9 @@ export function conThieuDeGuiDuyet(form) {
   if (!form.description.trim()) thieu.push("mô tả đầy đủ");
   if (!form.province_id) thieu.push("điểm đến chính (tỉnh, thành)");
   if (!Number(form.duration_days)) thieu.push("số ngày");
+  if (!form.departure_location.trim()) thieu.push("địa điểm khởi hành");
+  if (!form.transportation.length) thieu.push("phương tiện di chuyển");
+  if (!form.tags.length) thieu.push("tag tour");
 
   const soNgay = Number(form.duration_days) || 0;
   if (form.itinerary.length === 0) thieu.push("lịch trình theo ngày");

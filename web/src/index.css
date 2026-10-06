@@ -6,11 +6,7 @@
 @layer base {
   html, body {
     color-scheme: light;
-    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif !important;
-  }
-  
-  h1, h2, h3, h4, h5, h6, input, button, select, textarea {
-    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   }
 
   body {

@@ -10,9 +10,9 @@ export default function SectionHeader({ title, action, actionLabel }) {
         <button
           type="button"
           onClick={action}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 active:scale-[0.98] text-white text-sm font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
+          className="op-section-header__button-1"
         >
-          <span className="material-symbols-outlined text-lg">add</span>
+          <span className="material-symbols-outlined op-section-header__span-2">add</span>
           <span>{actionLabel}</span>
         </button>
       )}

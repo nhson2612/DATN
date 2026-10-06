@@ -5,12 +5,20 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Playfair Display"', "Georgia", "serif"],
-        // Chỉ dùng cho đúng một dòng nhấn ở hero. Không dùng ở chỗ nào khác.
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        serif: ['"Cormorant Garamond"', 'serif'],
         script: ['"Dancing Script"', "cursive"],
       },
 
       colors: {
+        brand: {
+          canvas: '#B8ACA2',
+          cream: '#F6F4EE',
+          charcoal: '#141619',
+          darkDrawer: '#0D1117',
+          muted: '#7C7974',
+          softBorder: '#E5E1D8',
+        },
         // MỘT accent duy nhất cho web khách. Trước đây có 13 cặp gradient khác nhau
         // (sky, blue, violet, rose, amber, emerald...) — mỗi khối một màu, thương
         // hiệu tan biến. Chọn xanh rừng: gợi thiên nhiên Việt Nam và tránh hẳn
@@ -64,20 +72,6 @@ export default {
         "space-2xl": "3rem",
         "space-3xl": "4rem",
         "container-max": "1280px",
-      },
-
-      fontFamily: {
-        sans: ['"Playfair Display"', "Georgia", "serif"],
-        serif: ['"Playfair Display"', "Georgia", "serif"],
-        script: ['"Dancing Script"', "cursive"],
-        "headline-sm": ['"Playfair Display"', "Georgia", "serif"],
-        "headline-md": ['"Playfair Display"', "Georgia", "serif"],
-        "title-md": ['"Playfair Display"', "Georgia", "serif"],
-        "body-md": ['"Playfair Display"', "Georgia", "serif"],
-        "body-sm": ['"Playfair Display"', "Georgia", "serif"],
-        "label-md": ['"Playfair Display"', "Georgia", "serif"],
-        "label-lg": ['"Playfair Display"', "Georgia", "serif"],
-        "label-caps": ['"Playfair Display"', "Georgia", "serif"],
       },
 
       fontSize: {
