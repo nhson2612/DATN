@@ -82,16 +82,18 @@ export default function Navbar({
                 Cá nhân
               </span>
               <Link
-                to="/tour/don-cua-toi"
+                to="/tai-khoan?tab=tours"
                 className={`wl-sidebar__item ${
-                  isActive("/tour/don-cua-toi") ? "wl-sidebar__item--active" : ""
+                  location.pathname === "/tai-khoan" && location.search.includes("tab=tours")
+                    ? "wl-sidebar__item--active"
+                    : ""
                 }`}
                 onClick={closeMobile}
               >
                 <span className="material-symbols-outlined wl-sidebar__icon">
                   receipt_long
                 </span>
-                <span className="wl-sidebar__item-label">Đơn tour của tôi</span>
+                <span className="wl-sidebar__item-label">Tour của tôi</span>
               </Link>
             </>
           )}

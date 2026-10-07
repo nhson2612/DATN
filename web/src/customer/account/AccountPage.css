@@ -781,7 +781,9 @@
   border-radius: var(--acc-radius-card);
   overflow: hidden;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 220px 1fr;
+  min-height: 175px;
+  max-height: 195px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -791,14 +793,16 @@
 }
 
 .voyage-account-booking-cover {
+  position: relative;
   width: 100%;
   height: 100%;
-  min-height: 170px;
   background: #11222c;
   overflow: hidden;
 }
 
 .voyage-account-booking-cover img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1599,17 +1603,18 @@
 .voyage-account-btn-stripe {
   padding: 10px 18px;
   border-radius: var(--acc-radius-control);
-  background: #635bff;
+  background: #09090b;
   color: #ffffff;
   font-size: 13.5px;
   font-weight: 500;
-  border: 0;
+  border: 1px solid #09090b;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .voyage-account-btn-stripe:hover:not(:disabled) {
-  background: #4f46e5;
+  background: #27272a;
+  border-color: #27272a;
 }
 
 .voyage-account-modal-warning {
@@ -1685,6 +1690,8 @@
 
   .voyage-account-booking-card {
     grid-template-columns: 1fr;
+    min-height: 0;
+    max-height: none;
   }
 
   .voyage-account-booking-cover {

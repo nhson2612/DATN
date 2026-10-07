@@ -165,22 +165,51 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
     }
   }, [user, fetchBookings, fetchItineraries]);
 
+  // Kiểm tra callback thanh toán Stripe từ URL
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (checkout === "success") {
+      showToast("Thanh toán đơn tour thành công! Dữ liệu đã được cập nhật.");
+      fetchBookings();
+    } else if (checkout === "cancelled") {
+      showToast("Giao dịch thanh toán đã bị hủy.");
+    }
+  }, [searchParams, fetchBookings]);
+
   // Lọc tour theo trạng thái
   const filteredBookings = useMemo(() => {
     if (bookingFilter === "all") return bookings;
     if (bookingFilter === "pending") {
-      return bookings.filter(
-        (b) => (b.payment_status === "pending" || b.status === "pending") && b.status !== "cancelled"
-      );
+      return bookings.filter((b) => {
+        const isExpired = b.is_hold_expired || b.status === "EXPIRED" || b.status === "expired";
+        const isCancelled = b.status?.startsWith("CANCEL") || b.status === "cancelled";
+        const isPaid =
+          b.payment_status === "paid" ||
+          b.payment_status === "SUCCESS" ||
+          b.status === "confirmed" ||
+          b.status === "PAID" ||
+          b.status === "paid";
+        return !isExpired && !isCancelled && !isPaid;
+      });
     }
     if (bookingFilter === "paid") {
       return bookings.filter(
-        (b) => b.payment_status === "paid" || b.status === "confirmed" || b.status === "paid"
+        (b) =>
+          b.payment_status === "paid" ||
+          b.payment_status === "SUCCESS" ||
+          b.status === "confirmed" ||
+          b.status === "PAID" ||
+          b.status === "paid"
       );
     }
     if (bookingFilter === "cancelled") {
       return bookings.filter(
-        (b) => b.status === "cancelled" || b.status === "expired"
+        (b) =>
+          b.status === "cancelled" ||
+          b.status === "expired" ||
+          b.status === "EXPIRED" ||
+          b.is_hold_expired ||
+          b.status?.startsWith("CANCEL")
       );
     }
     return bookings;
@@ -658,19 +687,36 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
                 <div className="voyage-account-cards-list">
                   {filteredBookings.map((b) => {
                     const isPending =
-                      (b.payment_status === "pending" || b.status === "pending") && b.status !== "cancelled";
+                      (b.payment_status === "pending" || b.status === "pending" || b.status === "PENDING_PAYMENT") &&
+                      !b.is_hold_expired &&
+                      b.status !== "EXPIRED" &&
+                      !b.status?.startsWith("CANCEL");
                     const isPaid =
-                      b.payment_status === "paid" || b.status === "confirmed" || b.status === "paid";
+                      b.payment_status === "paid" ||
+                      b.payment_status === "SUCCESS" ||
+                      b.status === "confirmed" ||
+                      b.status === "PAID" ||
+                      b.status === "paid";
                     const isCancelled =
-                      b.status === "cancelled" || b.status === "expired";
+                      b.status === "cancelled" ||
+                      b.status === "expired" ||
+                      b.status === "EXPIRED" ||
+                      b.is_hold_expired ||
+                      b.status?.startsWith("CANCEL");
 
-                    const bookingCode = b.booking_code || `#BK-${b.id}`;
+                    const bookingCode = b.code || b.booking_code || `#BK-${b.id}`;
+                    const tourTitle = b.tour_name || b.tour_title || `Tour #${b.tour_id}`;
+                    const tourCover = b.tour_cover_url || b.tour_cover_image;
+                    const tourDepart = b.depart_date
+                      ? new Date(b.depart_date).toLocaleDateString("vi-VN")
+                      : (b.departure_date || "Đang cập nhật");
+                    const tourGuests = b.guests || b.num_passengers || 1;
 
                     return (
                       <article key={b.id} className="voyage-account-booking-card">
                         <div className="voyage-account-booking-cover">
-                          {b.tour_cover_image ? (
-                            <img src={b.tour_cover_image} alt={b.tour_title || "Tour"} />
+                          {tourCover ? (
+                            <img src={tourCover} alt={tourTitle} />
                           ) : (
                             <div className="voyage-account-booking-no-img">
                               <span className="material-symbols-outlined">image</span>
@@ -694,7 +740,6 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
                                 onClick={() => setSelectedBooking(b)}
                                 title="Bấm để thanh toán hoàn tất giữ chỗ"
                               >
-                                <span className="material-symbols-outlined">payments</span>
                                 <span>Thanh toán ngay →</span>
                               </button>
                             ) : (
@@ -712,18 +757,18 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
 
                           <h3 className="voyage-account-booking-title">
                             <Link to={b.tour_slug ? `/tour/${b.tour_slug}` : "/tour"}>
-                              {b.tour_title || `Tour #${b.tour_id}`}
+                              {tourTitle}
                             </Link>
                           </h3>
 
                           <div className="voyage-account-booking-meta">
                             <span className="voyage-account-meta-item">
                               <span className="material-symbols-outlined text-[16px]">calendar_today</span>
-                              Khởi hành: <strong>{b.departure_date || "Đang cập nhật"}</strong>
+                              Khởi hành: <strong>{tourDepart}</strong>
                             </span>
                             <span className="voyage-account-meta-item">
                               <span className="material-symbols-outlined text-[16px]">group</span>
-                              Hành khách: <strong>{b.num_passengers || 1} người</strong>
+                              Hành khách: <strong>{tourGuests} người</strong>
                             </span>
                             <span className="voyage-account-meta-item">
                               <span className="material-symbols-outlined text-[16px]">payments</span>
@@ -1097,17 +1142,21 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
 
             <div className="voyage-account-modal-body">
               <div className="voyage-account-modal-tour-title">
-                {selectedBooking.tour_title || `Tour #${selectedBooking.tour_id}`}
+                {selectedBooking.tour_name || selectedBooking.tour_title || `Tour #${selectedBooking.tour_id}`}
               </div>
 
               <div className="voyage-account-modal-details-grid">
                 <div>
                   <span className="voyage-account-modal-label">Ngày khởi hành:</span>
-                  <strong>{selectedBooking.departure_date}</strong>
+                  <strong>
+                    {selectedBooking.depart_date
+                      ? new Date(selectedBooking.depart_date).toLocaleDateString("vi-VN")
+                      : (selectedBooking.departure_date || "Theo thỏa thuận")}
+                  </strong>
                 </div>
                 <div>
                   <span className="voyage-account-modal-label">Số khách:</span>
-                  <strong>{selectedBooking.num_passengers || 1} người</strong>
+                  <strong>{selectedBooking.guests || selectedBooking.num_passengers || 1} người</strong>
                 </div>
                 <div>
                   <span className="voyage-account-modal-label">Tổng thanh toán:</span>
@@ -1132,7 +1181,6 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
                 selectedBooking.status !== "cancelled" && (
                   <div className="voyage-account-payment-guide">
                     <h4 className="voyage-account-payment-guide-title">
-                      <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
                       Hướng dẫn chuyển khoản ngân hàng (VietQR)
                     </h4>
                     <div className="voyage-account-qr-box">

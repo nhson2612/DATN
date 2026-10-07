@@ -591,11 +591,31 @@ def book(data: dict, user_id=None):
     """
     guests = int(data.get("guests") or 1)
     departure_id = data.get("departure_id")
-    passengers = data.get("passengers") or []
-    if len(passengers) != guests or any(not (p.get("full_name") or "").strip() for p in passengers):
-        raise PaymentInvalidError("Cần nhập họ tên cho từng hành khách và số lượng phải khớp số chỗ đặt.")
+    raw_passengers = data.get("passengers") or []
 
-    # Retry nếu xảy ra xung đột mã đơn cực hiếm khi không truyền code cố định
+    # Tự động đồng bộ hành khách: Khách số 1 luôn là người đặt / liên hệ
+    booker_name = (data.get("full_name") or "").strip()
+    if not booker_name:
+        raise PaymentInvalidError("Vui lòng cung cấp họ và tên người đặt tour.")
+
+    passengers = []
+    # Khách 1
+    p1 = raw_passengers[0] if raw_passengers else {}
+    passengers.append({
+        "full_name": (p1.get("full_name") or "").strip() or booker_name,
+        "phone": (p1.get("phone") or "").strip() or (data.get("phone") or "").strip() or None,
+        "email": (p1.get("email") or "").strip() or (data.get("email") or "").strip() or None,
+    })
+
+    # Khách 2 .. N (người đi cùng)
+    for i in range(1, guests):
+        pi = raw_passengers[i] if i < len(raw_passengers) else {}
+        pi_name = (pi.get("full_name") or "").strip() or f"Khách {i + 1} (đi cùng {booker_name})"
+        passengers.append({
+            "full_name": pi_name,
+            "phone": (pi.get("phone") or "").strip() or None,
+            "email": (pi.get("email") or "").strip() or None,
+        })
     max_retries = 3
     for attempt in range(max_retries):
         try:
@@ -1247,10 +1267,10 @@ def tao_checkout_stripe(
 
     base = (redirect_base or settings.web_base_url).rstrip("/")
     success_url = (
-        f"{base}/tour/don-cua-toi?checkout=success&booking_id={booking_id}"
+        f"{base}/tai-khoan?tab=tours&checkout=success&booking_id={booking_id}"
         f"&session_id={{CHECKOUT_SESSION_ID}}"
     )
-    cancel_url = f"{base}/tour/don-cua-toi?checkout=cancelled&booking_id={booking_id}"
+    cancel_url = f"{base}/tai-khoan?tab=tours&checkout=cancelled&booking_id={booking_id}"
 
     try:
         session = stripe.checkout.Session.create(

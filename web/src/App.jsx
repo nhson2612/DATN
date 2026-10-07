@@ -31,6 +31,13 @@ function KhongTimThay() {
   );
 }
 
+function RedirectDonCuaToi() {
+  const location = useLocation();
+  const sp = new URLSearchParams(location.search);
+  sp.set("tab", "tours");
+  return <Navigate to={`/tai-khoan?${sp.toString()}`} replace />;
+}
+
 /* Đăng nhập xong, mỗi vai trò về đúng khu của mình. Khách về trang chủ, quản trị
  * về bảng quản trị. Khu nhà điều hành chưa có màn hình nào nên tạm về trang chủ —
  * dựng xong thì đổi đúng một dòng ở bảng dưới, không phải đi sửa chỗ khác. */
@@ -51,6 +58,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
   const isHome = location.pathname === "/";
   const isTours = location.pathname === "/tour";
   const isTourDetail = location.pathname.startsWith("/tour/") && location.pathname !== "/tour/don-cua-toi";
+  const isMyBookings = location.pathname === "/tour/don-cua-toi";
   const isTrips = location.pathname === "/chuyen-di";
   const isLogin = location.pathname === "/login" || location.pathname === "/dang-nhap" || location.pathname === "/dang-ky";
   const isAccount = location.pathname === "/tai-khoan" || location.pathname === "/account";
@@ -87,7 +95,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
     return <div className="font-sans min-h-screen"><OperatorPage user={user} onLogout={dangXuat} onNeedAuth={handleNeedAuth} /><AuthModal open={moAuth} onClose={() => setMoAuth(false)} onSuccess={sauKhiDangNhap} /></div>;
   }
 
-  const isFullPage = isHome || isTours || isTourDetail || isTrips || isPlanner || isLogin || isAccount;
+  const isFullPage = isHome || isTours || isTourDetail || isMyBookings || isTrips || isPlanner || isLogin || isAccount;
 
   return (
     <div className="font-sans min-h-screen">
@@ -113,7 +121,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
               element={<PlaceDetail user={user} onNeedAuth={handleNeedAuth} />} />
             <Route path="/tour" element={<Tours user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
             <Route path="/tour/don-cua-toi"
-              element={<TourMyBookings user={user} onNeedAuth={handleNeedAuth} />} />
+              element={<RedirectDonCuaToi />} />
             <Route path="/tour/:slug"
               element={<TourDetail user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
             <Route path="/chuyen-di"
@@ -137,7 +145,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
           </Routes>
         </div>
 
-        {!isHome && !isPlanner && !isTours && !isTourDetail && !isTrips && !isLogin && !isAccount && (
+        {!isHome && !isPlanner && !isTours && !isTourDetail && !isMyBookings && !isTrips && !isLogin && !isAccount && (
           <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-16">
             <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-zinc-500">
               <p className="font-semibold text-zinc-700 mb-1">Đi Đâu · Khoá luận tốt nghiệp</p>
