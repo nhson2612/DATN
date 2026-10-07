@@ -596,11 +596,14 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
                                   <button
                                     type="button"
                                     className="voyage-account-cta-pay"
-                                    onClick={() => setSelectedBooking(b)}
-                                    title="Bấm để thanh toán giữ chỗ ngay"
+                                    onClick={() => handlePayStripe(b.id)}
+                                    disabled={payingBookingId === b.id}
+                                    title="Bấm để thanh toán giữ chỗ ngay qua Stripe"
                                   >
                                     <span className="material-symbols-outlined">payments</span>
-                                    <span>Thanh toán ngay →</span>
+                                    <span>
+                                      {payingBookingId === b.id ? "Đang chuyển..." : "Thanh toán ngay →"}
+                                    </span>
                                   </button>
                                 ) : (
                                   <span
@@ -790,10 +793,10 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
                                 <button
                                   type="button"
                                   className="voyage-account-btn-action"
-                                  onClick={() => setSelectedBooking(b)}
+                                  onClick={() => handlePayStripe(b.id)}
                                   disabled={payingBookingId === b.id}
                                 >
-                                  Thanh toán ngay →
+                                  {payingBookingId === b.id ? "Đang chuyển..." : "Thanh toán ngay →"}
                                 </button>
                                 <button
                                   type="button"
@@ -1167,18 +1170,35 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
                 <div>
                   <span className="voyage-account-modal-label">Trạng thái:</span>
                   <strong>
-                    {selectedBooking.payment_status === "paid" || selectedBooking.status === "confirmed"
+                    {selectedBooking.payment_status === "paid" ||
+                    selectedBooking.payment_status === "SUCCESS" ||
+                    selectedBooking.status === "confirmed" ||
+                    selectedBooking.status === "PAID"
                       ? "Đã thanh toán"
-                      : selectedBooking.status === "cancelled"
-                      ? "Đã hủy"
+                      : selectedBooking.status === "cancelled" ||
+                        selectedBooking.status?.startsWith("CANCEL") ||
+                        selectedBooking.status === "EXPIRED" ||
+                        selectedBooking.is_hold_expired
+                      ? "Đã hủy / Hết hạn"
                       : "Chờ thanh toán"}
                   </strong>
                 </div>
               </div>
 
               {/* Hướng dẫn thanh toán nếu chưa trả tiền */}
-              {(selectedBooking.payment_status === "pending" || selectedBooking.status === "pending") &&
-                selectedBooking.status !== "cancelled" && (
+              {(() => {
+                const isPaidStatus =
+                  selectedBooking.payment_status === "paid" ||
+                  selectedBooking.payment_status === "SUCCESS" ||
+                  selectedBooking.status === "confirmed" ||
+                  selectedBooking.status === "PAID";
+                const isCancelledStatus =
+                  selectedBooking.status === "cancelled" ||
+                  selectedBooking.status?.startsWith("CANCEL") ||
+                  selectedBooking.status === "EXPIRED" ||
+                  selectedBooking.is_hold_expired;
+                return !isPaidStatus && !isCancelledStatus;
+              })() && (
                   <div className="voyage-account-payment-guide">
                     <h4 className="voyage-account-payment-guide-title">
                       Hướng dẫn chuyển khoản ngân hàng (VietQR)
