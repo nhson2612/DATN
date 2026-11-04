@@ -229,7 +229,7 @@ export default function HomeSections({ activeTab }) {
               {/* CTA Link Button */}
               <div className="pt-2">
                 <button
-                  onClick={() => nav("/chuyen-di")}
+                  onClick={() => nav("/trips")}
                   className="inline-flex items-center gap-2.5 text-[#003527] font-extrabold text-sm md:text-base hover:text-emerald-700 hover:translate-x-1 transition-all cursor-pointer"
                 >
                   Bắt đầu thiết kế <i className="fa-solid fa-arrow-right text-sm" />
@@ -312,7 +312,7 @@ export default function HomeSections({ activeTab }) {
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-center">
                     <button
                       type="button"
-                      onClick={() => nav("/chuyen-di")}
+                      onClick={() => nav("/trips")}
                       className="text-xs font-bold text-[#003527] hover:text-emerald-700 flex items-center gap-1.5 cursor-pointer py-1"
                     >
                       <i className="fa-solid fa-plus text-[10px]" /> Thêm ngày

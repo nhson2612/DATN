@@ -67,7 +67,8 @@ def list_operators(limit: int = 100, offset: int = 0) -> list[dict]:
     return execute_query(
         """
         SELECT o.id, o.user_id, o.company_name, o.tax_code, o.commission_rate, o.status, o.created_at,
-               u.email, u.full_name, u.role
+               u.email, u.full_name, u.role,
+               (SELECT COUNT(*) FROM tours t WHERE t.operator_id = o.id) AS tour_count
         FROM operators o
         JOIN users u ON u.id = o.user_id
         ORDER BY o.created_at DESC
@@ -75,3 +76,26 @@ def list_operators(limit: int = 100, offset: int = 0) -> list[dict]:
         """,
         (limit, offset),
     ) or []
+
+
+def update_operator(
+    operator_id: int,
+    company_name: Optional[str] = None,
+    tax_code: Optional[str] = None,
+    commission_rate: Optional[float] = None,
+    status: Optional[str] = None,
+    tx: Optional[Transaction] = None,
+) -> Optional[dict]:
+    _exec(
+        """
+        UPDATE operators
+        SET company_name = COALESCE(%s, company_name),
+            tax_code = COALESCE(%s, tax_code),
+            commission_rate = COALESCE(%s, commission_rate),
+            status = COALESCE(%s, status)
+        WHERE id = %s
+        """,
+        (company_name, tax_code, commission_rate, status, operator_id),
+        tx=tx,
+    )
+    return find_by_id(operator_id, tx=tx)

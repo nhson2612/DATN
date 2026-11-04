@@ -35,7 +35,7 @@ def create_itinerary(
 ):
     new_id = itinerary_repo.create(
         current_user["id"], data.name, data.description, data.duration_days,
-        data.stops, data.start_date, data.destination, data.sections,
+        data.stops, data.start_date, data.destination, data.sections, data.reservations,
     )
     return {"success": True, "id": new_id}
 
@@ -47,7 +47,7 @@ def update_itinerary(
     _require_owned(id, current_user["id"])
     itinerary_repo.update(
         id, data.name, data.description, data.duration_days, data.stops,
-        data.start_date, data.destination, data.sections,
+        data.start_date, data.destination, data.sections, data.reservations,
     )
     return {"success": True, "id": id}
 

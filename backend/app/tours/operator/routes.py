@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query
 
 from app.core.security import get_current_admin
-from app.shared.schemas.requests import OperatorCreate
+from app.shared.schemas.requests import OperatorCreate, OperatorUpdate
 from app.tours.operator import service as operator_service
 
 router = APIRouter(prefix="/api/admin/operators", tags=["admin-operators"])
@@ -38,4 +38,19 @@ def list_operators(
     return {
         "success": True,
         "operators": operators,
+    }
+
+
+@router.put("/{operator_id}")
+def update_operator(
+    operator_id: int,
+    data: OperatorUpdate,
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Admin cập nhật thông tin hoặc khóa/mở khóa tài khoản nhà điều hành tour."""
+    op = operator_service.update_operator(operator_id, data)
+    return {
+        "success": True,
+        "operator": op,
+        "message": "Đã cập nhật thông tin nhà điều hành.",
     }

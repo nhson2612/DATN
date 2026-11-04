@@ -7,10 +7,8 @@ import OperatorPage from "./operator/OperatorPage";
 import Destination from "./customer/trips/destinations/Destination";
 import Favorites from "./customer/trips/favorites/Favorites";
 import HomePage from "./customer/trips/home";
-import Navbar from "./customer/trips/home/components/Navbar/Navbar";
 import PlaceDetail from "./customer/trips/place-detail";
 import TourDetail from "./customer/tours/TourDetail";
-import TourMyBookings from "./customer/my-bookings/TourMyBookings";
 import Tours from "./customer/tours";
 import TripPlanner from "./customer/trips/planner/TripPlanner";
 import Trips from "./customer/trips/trips/Trips";
@@ -35,15 +33,20 @@ function RedirectDonCuaToi() {
   const location = useLocation();
   const sp = new URLSearchParams(location.search);
   sp.set("tab", "tours");
-  return <Navigate to={`/tai-khoan?${sp.toString()}`} replace />;
+  return <Navigate to={`/account?${sp.toString()}`} replace />;
+}
+
+function RedirectChuyenDiChiTiet() {
+  const location = useLocation();
+  const id = location.pathname.replace(/^\/chuyen-di\//, "");
+  return <Navigate to={`/trips/${id}${location.search}`} replace />;
 }
 
 /* Đăng nhập xong, mỗi vai trò về đúng khu của mình. Khách về trang chủ, quản trị
- * về bảng quản trị. Khu nhà điều hành chưa có màn hình nào nên tạm về trang chủ —
- * dựng xong thì đổi đúng một dòng ở bảng dưới, không phải đi sửa chỗ khác. */
+ * về bảng quản trị, nhà điều hành về khu operator. */
 const TRANG_MAC_DINH = {
-  admin: "/quan-tri",
-  operator: "/nha-dieu-hanh",
+  admin: "/admin",
+  operator: "/operator",
   user: "/",
 };
 
@@ -54,16 +57,18 @@ function trangMacDinh(role) {
 function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const isPlanner = location.pathname.startsWith("/chuyen-di/") && location.pathname !== "/chuyen-di";
+  const isPlanner = (location.pathname.startsWith("/trips/") || location.pathname.startsWith("/chuyen-di/")) &&
+    location.pathname !== "/trips" && location.pathname !== "/chuyen-di";
   const isHome = location.pathname === "/";
-  const isTours = location.pathname === "/tour";
-  const isTourDetail = location.pathname.startsWith("/tour/") && location.pathname !== "/tour/don-cua-toi";
-  const isMyBookings = location.pathname === "/tour/don-cua-toi";
-  const isTrips = location.pathname === "/chuyen-di";
+  const isTours = location.pathname === "/tour" || location.pathname === "/tours";
+  const isTourDetail = (location.pathname.startsWith("/tour/") || location.pathname.startsWith("/tours/")) &&
+    location.pathname !== "/tour/don-cua-toi" && location.pathname !== "/tours/my-bookings";
+  const isMyBookings = location.pathname === "/tour/don-cua-toi" || location.pathname === "/tours/my-bookings";
+  const isTrips = location.pathname === "/trips" || location.pathname === "/chuyen-di";
   const isLogin = location.pathname === "/login" || location.pathname === "/dang-nhap" || location.pathname === "/dang-ky";
-  const isAccount = location.pathname === "/tai-khoan" || location.pathname === "/account";
-  const isAdmin = location.pathname.startsWith("/quan-tri");
-  const isOperator = location.pathname.startsWith("/nha-dieu-hanh");
+  const isAccount = location.pathname === "/account" || location.pathname === "/tai-khoan";
+  const isAdmin = location.pathname.startsWith("/admin") || location.pathname.startsWith("/quan-tri");
+  const isOperator = location.pathname.startsWith("/operator") || location.pathname.startsWith("/nha-dieu-hanh");
 
   // Chuyển tới trang đăng nhập chuẩn và lưu lại trang đang đứng để sau khi đăng nhập quay về
   const handleNeedAuth = useCallback(() => {
@@ -80,8 +85,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
     }
   };
 
-  // Bảng quản trị có giao diện riêng: không mượn header/sidebar của web khách,
-  // và web khách cũng không có lối nào vào đây (chỉ gõ thẳng /quan-tri).
+  // Bảng quản trị có giao diện riêng: không mượn header/sidebar của web khách.
   if (isAdmin) {
     return (
       <div className="font-sans min-h-screen bg-zinc-50">
@@ -99,48 +103,55 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
 
   return (
     <div className="font-sans min-h-screen">
-      {!isLogin && (
-        <Navbar
-          user={user}
-          onNeedAuth={handleNeedAuth}
-          onLogout={dangXuat}
-          variant={isFullPage ? "home" : "sidebar"}
-        />
-      )}
-
-      <div
-        className={`min-h-screen flex flex-col ${
-          isFullPage ? "" : "pt-16 lg:pl-[16.5rem] lg:pt-0"
-        }`}
-      >
+      <div className="min-h-screen flex flex-col">
         <div className="flex-1">
           <Routes>
             <Route path="/" element={<HomePage user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
+            {/* Điểm đến */}
+            <Route path="/destinations/:slug" element={<Destination />} />
             <Route path="/diem-den/:slug" element={<Destination />} />
-            <Route path="/dia-diem/:type/:id"
-              element={<PlaceDetail user={user} onNeedAuth={handleNeedAuth} />} />
+
+            {/* Địa điểm */}
+            <Route path="/places/:type/:id" element={<PlaceDetail user={user} onNeedAuth={handleNeedAuth} />} />
+            <Route path="/dia-diem/:type/:id" element={<PlaceDetail user={user} onNeedAuth={handleNeedAuth} />} />
+
+            {/* Tours */}
+            <Route path="/tours" element={<Tours user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
             <Route path="/tour" element={<Tours user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
-            <Route path="/tour/don-cua-toi"
-              element={<RedirectDonCuaToi />} />
-            <Route path="/tour/:slug"
-              element={<TourDetail user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
-            <Route path="/chuyen-di"
-              element={<Trips user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
-            <Route path="/chuyen-di/:id"
-              element={<TripPlanner user={user} onNeedAuth={handleNeedAuth} />} />
-            <Route path="/tro-ly" element={<Navigate to="/chuyen-di" replace />} />
-            <Route path="/yeu-thich"
-              element={<Favorites user={user} onNeedAuth={handleNeedAuth} />} />
+            <Route path="/tours/my-bookings" element={<RedirectDonCuaToi />} />
+            <Route path="/tour/don-cua-toi" element={<RedirectDonCuaToi />} />
+            <Route path="/tours/:slug" element={<TourDetail user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
+            <Route path="/tour/:slug" element={<TourDetail user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
 
+            {/* Chuyến đi / Trips */}
+            <Route path="/trips/:id" element={<TripPlanner user={user} onNeedAuth={handleNeedAuth} />} />
+            <Route path="/chuyen-di/:id" element={<RedirectChuyenDiChiTiet />} />
+            <Route path="/trips" element={<Trips user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
+            <Route path="/chuyen-di" element={<Navigate to="/trips" replace />} />
+            <Route path="/tro-ly" element={<Navigate to="/trips" replace />} />
+
+            {/* Yêu thích */}
+            <Route path="/favorites" element={<Favorites user={user} onNeedAuth={handleNeedAuth} />} />
+            <Route path="/yeu-thich" element={<Favorites user={user} onNeedAuth={handleNeedAuth} />} />
+
+            {/* Tài khoản */}
+            <Route path="/account" element={<AccountPage user={user} onLogout={dangXuat} onNeedAuth={handleNeedAuth} />} />
             <Route path="/tai-khoan" element={<AccountPage user={user} onLogout={dangXuat} onNeedAuth={handleNeedAuth} />} />
-            <Route path="/account" element={<Navigate to="/tai-khoan" replace />} />
 
+            {/* Đăng nhập & Đăng ký */}
             <Route path="/login" element={<LoginPage user={user} onSuccess={sauKhiDangNhap} />} />
             <Route path="/dang-nhap" element={<Navigate to="/login" replace />} />
+            <Route path="/register" element={<LoginPage user={user} onSuccess={sauKhiDangNhap} initialMode="register" />} />
             <Route path="/dang-ky" element={<LoginPage user={user} onSuccess={sauKhiDangNhap} initialMode="register" />} />
 
-            <Route path="/map.html" element={<Navigate to="/chuyen-di" replace />} />
-            <Route path="/admin.html" element={<Navigate to="/quan-tri" replace />} />
+            {/* Quản trị & Điều hành */}
+            <Route path="/admin" element={<AdminPage user={user} onLogout={dangXuat} onNeedAuth={handleNeedAuth} />} />
+            <Route path="/quan-tri" element={<Navigate to="/admin" replace />} />
+            <Route path="/admin.html" element={<Navigate to="/admin" replace />} />
+            <Route path="/operator/*" element={<OperatorPage user={user} onLogout={dangXuat} onNeedAuth={handleNeedAuth} />} />
+            <Route path="/nha-dieu-hanh/*" element={<Navigate to="/operator" replace />} />
+
+            <Route path="/map.html" element={<Navigate to="/trips" replace />} />
             <Route path="*" element={<KhongTimThay />} />
           </Routes>
         </div>
@@ -148,7 +159,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
         {!isHome && !isPlanner && !isTours && !isTourDetail && !isMyBookings && !isTrips && !isLogin && !isAccount && (
           <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-16">
             <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-zinc-500">
-              <p className="font-semibold text-zinc-700 mb-1">Đi Đâu · Khoá luận tốt nghiệp</p>
+              <p className="font-semibold text-zinc-700 mb-1">Aura Voyage · Khoá luận tốt nghiệp</p>
               <p>Dữ liệu địa điểm: Overture Maps · Mạng đường: OpenStreetMap · Ảnh: Wikimedia Commons</p>
             </div>
           </footer>

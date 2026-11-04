@@ -4,6 +4,7 @@ psycopg[binary]>=3.1.0
 psycopg-pool>=3.1.0
 requests>=2.31.0
 stripe>=8.0.0
+payos>=1.1.0
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
 pyjwt>=2.13.0

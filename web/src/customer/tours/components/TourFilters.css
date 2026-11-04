@@ -46,7 +46,7 @@
 /* Range slider simulation */
 .tour-filters__range-track {
   height: 4px;
-  background-color: #ffedd5; /* orange-100 */
+  background-color: var(--accent-sky-soft);
   border-radius: 9999px;
   position: relative;
   width: 100%;
@@ -55,7 +55,7 @@
 .tour-filters__range-fill {
   position: absolute;
   height: 100%;
-  background-color: #ea580c; /* brand-600 */
+  background-color: var(--accent-sky);
   border-radius: 9999px;
 }
 
@@ -66,8 +66,8 @@
   width: 1rem;
   height: 1rem;
   border-radius: 9999px;
-  background-color: #ea580c;
-  box-shadow: 0 0 0 2px #ffffff, 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--accent-sky);
+  box-shadow: 0 0 0 2px #ffffff, 0 2px 8px rgba(2, 132, 199, 0.25);
   cursor: pointer;
   transition: transform 0.15s ease;
 }

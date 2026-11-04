@@ -1,0 +1,122 @@
+.app-navbar {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 28px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.app-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.app-brand__icon {
+  width: 24px;
+  height: 24px;
+  color: #0f172a;
+}
+
+.app-brand__name {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.app-navbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+.app-navbar__link {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.app-navbar__link:hover,
+.app-navbar__link--active {
+  color: #0f172a;
+}
+
+.app-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-navbar__cta-btn {
+  background-color: #111827;
+  color: #ffffff;
+  padding: 10px 24px;
+  border-radius: 9999px;
+  border: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.app-navbar__cta-btn:hover {
+  background-color: #1f2937;
+  
+}
+
+.app-navbar__admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #ccff00;
+  color: #0f172a;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(204, 255, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.app-navbar__admin-btn:hover {
+  background-color: #bbf000;
+  box-shadow: 0 4px 12px rgba(204, 255, 0, 0.45);
+}
+
+.app-navbar__user-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.app-navbar__user-pill:hover {
+  background-color: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .app-navbar {
+    padding: 16px 20px;
+  }
+  .app-navbar__nav {
+    display: none;
+  }
+}

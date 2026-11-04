@@ -121,21 +121,33 @@ export default function ToursScreen() {
   }
 
   return (
-    <div className="op-tours__div-1">
-      {/* 1. Tiêu đề trang chuẩn Shadcn Page Header */}
-      <div className="op-tours__div-2">
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* 1. Tiêu đề trang */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", paddingBottom: "20px", borderBottom: "1px solid #e2e8f0" }}>
         <div>
-          <h1 className="op-tours__text-3">Tour của tôi</h1>
-          <p className="op-tours__text-4">
+          <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a", margin: "0 0 6px" }}>Tour của tôi</h1>
+          <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
             Quản lý danh sách tour du lịch, theo dõi tiến độ duyệt và cấu hình thông tin mở bán.
           </p>
         </div>
         <button
           type="button"
-          className="op-tours__button-5"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            background: "#0f172a",
+            color: "#ffffff",
+            padding: "9px 16px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            fontSize: "13px",
+            border: "none",
+            cursor: "pointer",
+          }}
           onClick={() => setSearchParams({ action: "create" })}
         >
-          <span className="material-symbols-outlined op-tours__span-6">add</span>
+          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
           <span>Tạo tour mới</span>
         </button>
       </div>
@@ -143,50 +155,54 @@ export default function ToursScreen() {
       {/* Toast thông báo nổi chuẩn Shadcn */}
       <Toast message={message} onClose={() => setMessage("")} />
 
-      {/* 2. Thẻ số liệu đo lường chuẩn Shadcn Metric Cards */}
-      <div className="op-tours__div-7">
-        <div className="op-tours__div-8 op-tours__div-1">
-          <div>
-            <p className="op-tours__text-9">Tổng số tour</p>
-            <p className="op-tours__text-10">{thongKe.tong}</p>
-            <p className="op-tours__text-11">Tất cả tour trong hệ thống</p>
-          </div>
-          <div className="op-tours__div-12 op-tours__div-2">
-            <span className="material-symbols-outlined op-tours__span-13">map</span>
-          </div>
+      {/* 2. Thẻ số liệu đo lường - Thiết kế tối giản, sạch sẽ, không icon nền màu */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px 20px" }}>
+          <p style={{ fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+            Tổng số tour
+          </p>
+          <p style={{ fontSize: "26px", fontWeight: "800", color: "#0f172a", margin: "6px 0 2px" }}>
+            {thongKe.tong}
+          </p>
+          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
+            Tất cả tour trong hệ thống
+          </p>
         </div>
 
-        <div className="op-tours__div-14 op-tours__div-3">
-          <div>
-            <p className="op-tours__text-15">Đã duyệt / Đang bán</p>
-            <p className="op-tours__text-16">{thongKe.daDuyet}</p>
-            <p className="op-tours__text-17">Sẵn sàng mở đợt khởi hành</p>
-          </div>
-          <div className="op-tours__div-18 op-tours__div-4">
-            <span className="material-symbols-outlined op-tours__span-19">verified</span>
-          </div>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px 20px" }}>
+          <p style={{ fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+            Đã duyệt / Đang bán
+          </p>
+          <p style={{ fontSize: "26px", fontWeight: "800", color: "#0f172a", margin: "6px 0 2px" }}>
+            {thongKe.daDuyet}
+          </p>
+          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
+            Sẵn sàng mở đợt khởi hành
+          </p>
         </div>
 
-        <div className="op-tours__div-20 op-tours__div-5">
-          <div>
-            <p className="op-tours__text-21">Chờ duyệt</p>
-            <p className="op-tours__text-22">{thongKe.choDuyet}</p>
-            <p className="op-tours__text-23">Đang chờ ban quản trị xét duyệt</p>
-          </div>
-          <div className="op-tours__div-24 op-tours__div-6">
-            <span className="material-symbols-outlined op-tours__span-25">pending_actions</span>
-          </div>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px 20px" }}>
+          <p style={{ fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+            Chờ duyệt
+          </p>
+          <p style={{ fontSize: "26px", fontWeight: "800", color: "#0f172a", margin: "6px 0 2px" }}>
+            {thongKe.choDuyet}
+          </p>
+          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
+            Đang chờ ban quản trị xét duyệt
+          </p>
         </div>
 
-        <div className="op-tours__div-26 op-tours__div-7">
-          <div>
-            <p className="op-tours__text-27">Bản nháp / Cần sửa</p>
-            <p className="op-tours__text-28">{thongKe.canSua}</p>
-            <p className="op-tours__text-29">Chưa gửi hoặc bị từ chối</p>
-          </div>
-          <div className="op-tours__div-30 op-tours__div-8">
-            <span className="material-symbols-outlined op-tours__span-31">edit_document</span>
-          </div>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px 20px" }}>
+          <p style={{ fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+            Bản nháp / Cần sửa
+          </p>
+          <p style={{ fontSize: "26px", fontWeight: "800", color: "#0f172a", margin: "6px 0 2px" }}>
+            {thongKe.canSua}
+          </p>
+          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
+            Chưa gửi hoặc bị từ chối
+          </p>
         </div>
       </div>
 
@@ -329,19 +345,17 @@ export default function ToursScreen() {
                       </div>
                     </td>
 
-                    {/* Cột 2: Điểm đến */}
+                    {/* Cột 2: Điểm đến (không dùng badge) */}
                     <td className="align-middle op-tours__td-65">
-                      <span className="op-tours__span-66">
-                        <span className="material-symbols-outlined op-tours__span-67">location_on</span>
-                        <span>{tenTinh(tour.province_id)}</span>
+                      <span style={{ fontSize: "13px", color: "#334155", fontWeight: "500" }}>
+                        {tenTinh(tour.province_id)}
                       </span>
                     </td>
 
-                    {/* Cột 3: Thời lượng */}
+                    {/* Cột 3: Thời lượng (không dùng badge) */}
                     <td className="align-middle op-tours__td-68">
-                      <span className="op-tours__span-69">
-                        <span className="material-symbols-outlined op-tours__span-70">schedule</span>
-                        <span>{tour.duration_days} ngày</span>
+                      <span style={{ fontSize: "13px", color: "#334155", fontWeight: "500" }}>
+                        {tour.duration_days} ngày
                       </span>
                     </td>
 
@@ -350,78 +364,111 @@ export default function ToursScreen() {
                       {ngayTao}
                     </td>
 
-                    {/* Cột 5: Trạng thái chuẩn Shadcn Badge */}
+                    {/* Cột 5: Trạng thái (chữ kèm dot nhỏ, không dùng badge hộp màu mè) */}
                     <td className="align-middle op-tours__td-72">
                       {tour.status === "APPROVED" && (
-                        <span className="op-tours__span-73 op-tours__span-17">
-                          <span className="op-tours__span-74"></span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#16a34a", fontWeight: "600" }}>
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }}></span>
                           <span>Đã duyệt</span>
                         </span>
                       )}
                       {tour.status === "ACTIVE" && (
-                        <span className="op-tours__span-75 op-tours__span-18">
-                          <span className="op-tours__span-76"></span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#16a34a", fontWeight: "600" }}>
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }}></span>
                           <span>Đang bán</span>
                         </span>
                       )}
                       {tour.status === "PENDING_APPROVAL" && (
-                        <span className="op-tours__span-77 op-tours__span-19">
-                          <span className="op-tours__span-78"></span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#d97706", fontWeight: "600" }}>
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#d97706" }}></span>
                           <span>Chờ duyệt</span>
                         </span>
                       )}
                       {tour.status === "DRAFT" && (
-                        <span className="op-tours__span-79 op-tours__span-20">
-                          <span className="op-tours__span-80"></span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#64748b", fontWeight: "600" }}>
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#94a3b8" }}></span>
                           <span>Bản nháp</span>
                         </span>
                       )}
                       {tour.status === "REJECTED" && (
-                        <span className="op-tours__span-81 op-tours__span-21">
-                          <span className="op-tours__span-82"></span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#dc2626", fontWeight: "600" }}>
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#dc2626" }}></span>
                           <span>Bị từ chối</span>
                         </span>
                       )}
                       {!["APPROVED", "ACTIVE", "PENDING_APPROVAL", "DRAFT", "REJECTED"].includes(tour.status) && (
-                        <span className="op-tours__span-83 op-tours__span-22">
-                          <span>{tour.status}</span>
+                        <span style={{ fontSize: "13px", color: "#64748b" }}>
+                          {tour.status}
                         </span>
                       )}
                     </td>
 
-                    {/* Cột 6: Nhóm nút hành động */}
+                    {/* Cột 6: Nhóm nút hành động dạng icon */}
                     <td className="align-middle op-tours__td-84">
-                      <div className="op-tours__div-85">
+                      <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", alignItems: "center" }}>
                         <button
                           type="button"
-                          className="op-tours__button-86 op-tours__button-23"
                           onClick={() => moSua(tour)}
-                          title="Chỉnh sửa thông tin và lịch trình tour"
+                          title="Chỉnh sửa thông tin tour"
+                          aria-label="Sửa tour"
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "6px",
+                            border: "1px solid #e2e8f0",
+                            background: "#ffffff",
+                            color: "#475569",
+                            cursor: "pointer",
+                          }}
                         >
-                          <span className="material-symbols-outlined op-tours__span-87">edit</span>
-                          <span>Sửa</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>edit</span>
                         </button>
 
                         {(tour.status === "DRAFT" || tour.status === "REJECTED") && (
                           <button
                             type="button"
-                            className="op-tours__button-88"
                             onClick={() => guiDuyet(tour)}
                             title="Gửi ban quản trị phê duyệt"
+                            aria-label="Gửi duyệt"
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: "6px",
+                              border: "none",
+                              background: "#0f172a",
+                              color: "#ffffff",
+                              cursor: "pointer",
+                            }}
                           >
-                            <span className="material-symbols-outlined op-tours__span-89">send</span>
-                            <span>Gửi duyệt</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>send</span>
                           </button>
                         )}
 
                         {(tour.status === "APPROVED" || tour.status === "ACTIVE") && (
                           <Link
-                            to={`/nha-dieu-hanh/departures?tour_id=${tour.id}`}
-                            className="op-tours__link-90 op-tours__link-24"
-                            title="Mở và cấu hình đợt khởi hành cho tour này"
+                            to={`/operator/departures?tour_id=${tour.id}`}
+                            title="Mở đợt khởi hành cho tour"
+                            aria-label="Mở đợt"
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: "6px",
+                              border: "1px solid #e2e8f0",
+                              background: "#ffffff",
+                              color: "#0f172a",
+                              textDecoration: "none",
+                            }}
                           >
-                            <span className="material-symbols-outlined op-tours__span-91">calendar_month</span>
-                            <span>Mở đợt</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>calendar_month</span>
                           </Link>
                         )}
                       </div>

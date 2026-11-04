@@ -28,9 +28,9 @@
 }
 
 .planner-place-picker__trigger:hover {
-  border-color: #f97316;
-  color: #ea580c;
-  background-color: #fff7ed;
+  border-color: #0f172a;
+  color: #0f172a;
+  background-color: #f8fafc;
 }
 
 .planner-place-picker__form {
@@ -62,17 +62,17 @@
   font-size: 0.75rem;
   font-weight: 500;
   border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
-  background-color: #f8fafc;
-  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  color: #0f172a;
   transition: all 0.15s ease-in-out;
 }
 
 .planner-place-picker__input:focus {
   outline: none;
-  border-color: #f97316;
+  border-color: #0f172a;
   background-color: #ffffff;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
 }
 
 .planner-place-picker__submit-btn {
@@ -80,7 +80,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: #ffffff;
-  background-color: #ea580c;
+  background-color: #0f172a;
   border: none;
   border-radius: 0.75rem;
   cursor: pointer;
@@ -89,7 +89,7 @@
 }
 
 .planner-place-picker__submit-btn:hover:not(:disabled) {
-  background-color: #c2410c;
+  background-color: #1e293b;
 }
 
 .planner-place-picker__submit-btn:disabled {
@@ -148,7 +148,7 @@
 
 .planner-place-picker__item:hover {
   background-color: #ffffff;
-  border-color: #fed7aa;
+  border-color: #cbd5e1;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -182,7 +182,7 @@
   font-weight: 700;
   border-radius: 0.5rem;
   border: none;
-  background-color: #ea580c;
+  background-color: #0f172a;
   color: #ffffff;
   cursor: pointer;
   white-space: nowrap;
@@ -190,8 +190,7 @@
 }
 
 .planner-place-picker__item-btn:hover {
-  background-color: #c2410c;
-  transform: translateY(-1px);
+  background-color: #1e293b;
 }
 
 .planner-place-picker__item-btn:active {

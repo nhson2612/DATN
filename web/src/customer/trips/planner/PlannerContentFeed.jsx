@@ -3,6 +3,7 @@ import { getProvinceImage } from "../trips/provinceImages";
 import { dinhDangKhoangNgay, dongPhu } from "./plannerUtils";
 import PlannerDay from "./PlannerDay";
 import PlannerPlacePicker from "./PlannerPlacePicker";
+import PlannerReservations from "./PlannerReservations";
 import "./PlannerContentFeed.css";
 
 function formatMoney(amount) {
@@ -14,6 +15,7 @@ export default function PlannerContentFeed({
   trip,
   stops = [],
   sections = [],
+  reservations = [],
   theoMuc = {},
   cacNgay = [],
   theoNgay = {},
@@ -40,6 +42,7 @@ export default function PlannerContentFeed({
   onThemNote,
   onThemChecklist,
   onAutoAssign,
+  onCapNhatReservations,
   onXem,
   onPick: _onPick,
   onResults: _onResults,
@@ -98,10 +101,12 @@ export default function PlannerContentFeed({
     return chuaXep;
   }, [sections, theoMuc, chuaXep]);
 
-  // Tính tổng chi phí hiện tại từ stops
+  // Tính tổng chi phí hiện tại từ stops + reservations
   const tongChiPhi = useMemo(() => {
-    return stops.reduce((sum, s) => sum + (Number(s.cost) || 0), 0);
-  }, [stops]);
+    const stopsCost = stops.reduce((sum, s) => sum + (Number(s.cost) || 0), 0);
+    const resCost = (reservations || []).reduce((sum, r) => sum + (Number(r.cost) || 0), 0);
+    return stopsCost + resCost;
+  }, [stops, reservations]);
 
   const handleThemExpense = (e) => {
     e?.preventDefault();
@@ -265,99 +270,15 @@ export default function PlannerContentFeed({
       </section>
 
       {/* ====================================================================
-          3. RESERVATIONS & ATTACHMENTS + BUDGETING ROW (ảnh w1.png)
+          3. ĐẶT CHỖ & VÉ CHUYẾN ĐI (PHƯƠNG ÁN 1) + BUDGETING
           ==================================================================== */}
-      <section id="overview-reservations" className="planner-feed__cards-row">
-        {/* Card 1: Reservations and attachments */}
-        <div className="planner-feed__res-card">
-          <h3 className="planner-feed__res-card-title">Reservations and attachments</h3>
-          <div className="planner-feed__res-icons-grid">
-            <button
-              type="button"
-              className="planner-feed__res-icon-item"
-              onClick={() => alert("Quản lý vé máy bay")}
-            >
-              <div className="planner-feed__res-circle">
-                <span className="material-symbols-outlined text-[20px]">flight</span>
-              </div>
-              <span className="planner-feed__res-label">Flight</span>
-            </button>
-
-            <button
-              type="button"
-              className="planner-feed__res-icon-item"
-              onClick={() => scrollToSection("day-1")}
-            >
-              <div className="planner-feed__res-circle">
-                <span className="material-symbols-outlined text-[20px]">hotel</span>
-              </div>
-              <span className="planner-feed__res-label">Lodging</span>
-            </button>
-
-            <button
-              type="button"
-              className="planner-feed__res-icon-item"
-              onClick={() => alert("Quản lý thuê xe")}
-            >
-              <div className="planner-feed__res-circle">
-                <span className="material-symbols-outlined text-[20px]">directions_car</span>
-              </div>
-              <span className="planner-feed__res-label">Rental car</span>
-            </button>
-
-            <button
-              type="button"
-              className="planner-feed__res-icon-item"
-              onClick={() => alert("Quản lý vé tàu hoả")}
-            >
-              <div className="planner-feed__res-circle">
-                <span className="material-symbols-outlined text-[20px]">train</span>
-              </div>
-              <span className="planner-feed__res-label">Train</span>
-            </button>
-
-            <button
-              type="button"
-              className="planner-feed__res-icon-item"
-              onClick={() => alert("Thêm tệp đính kèm mới")}
-            >
-              <div className="planner-feed__res-circle relative">
-                <span className="material-symbols-outlined text-[20px]">attach_file</span>
-                <span className="planner-feed__res-star-badge">★</span>
-              </div>
-              <span className="planner-feed__res-label">Attachment</span>
-            </button>
-
-            <button
-              type="button"
-              className="planner-feed__res-icon-item"
-              onClick={() => alert("Các loại đặt chỗ khác")}
-            >
-              <div className="planner-feed__res-circle">
-                <span className="material-symbols-outlined text-[20px]">more_horiz</span>
-              </div>
-              <span className="planner-feed__res-label">Other</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Card 2: Budgeting Quick Card */}
-        <div className="planner-feed__budget-quick-card">
-          <h3 className="planner-feed__res-card-title">Budgeting</h3>
-          <div className="planner-feed__budget-quick-body">
-            <span className="planner-feed__budget-quick-val">
-              {formatMoney(tongChiPhi)}
-            </span>
-            <button
-              type="button"
-              onClick={() => scrollToSection("budget-section")}
-              className="planner-feed__budget-quick-link"
-            >
-              View details
-            </button>
-          </div>
-        </div>
-      </section>
+      <PlannerReservations
+        reservations={reservations}
+        onCapNhatReservations={onCapNhatReservations}
+        tongChiPhi={tongChiPhi}
+        formatMoney={formatMoney}
+        scrollToSection={scrollToSection}
+      />
 
       {/* ====================================================================
           4. PLACES TO VISIT (ảnh w1.png, w2.png)
@@ -914,12 +835,44 @@ export default function PlannerContentFeed({
 
           {openExpenses && (
             <div className="planner-feed__expenses-body">
-              {stops.filter((s) => s.cost > 0 || s.type === "expense").length === 0 ? (
+              {stops.filter((s) => s.cost > 0 || s.type === "expense").length === 0 &&
+              (reservations || []).filter((r) => Number(r.cost) > 0).length === 0 ? (
                 <p className="planner-feed__expenses-empty">
                   You haven’t added any expenses yet.
                 </p>
               ) : (
                 <div className="planner-feed__expenses-list">
+                  {/* Các khoản vé & dịch vụ đặt chỗ */}
+                  {(reservations || [])
+                    .filter((r) => Number(r.cost) > 0)
+                    .map((r) => (
+                      <div key={`res-exp-${r.id}`} className="planner-feed__expense-item">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-800 text-sm flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                              {r.type === "flight"
+                                ? "Chuyến bay"
+                                : r.type === "lodging"
+                                ? "Khách sạn"
+                                : r.type === "car"
+                                ? "Thuê xe"
+                                : r.type === "train"
+                                ? "Tàu hoả"
+                                : "Đặt chỗ"}
+                            </span>
+                            <span>{r.title}</span>
+                          </p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {r.code ? `#${r.code}` : ""} {r.route || r.dates || ""}
+                          </p>
+                        </div>
+                        <span className="font-bold text-slate-900 text-sm">
+                          {formatMoney(r.cost)}
+                        </span>
+                      </div>
+                    ))}
+
+                  {/* Các khoản chi phí từ stops / địa điểm */}
                   {stops
                     .filter((s) => s.cost > 0 || s.type === "expense")
                     .map((s) => (

@@ -1,7 +1,7 @@
 .op-media-step {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 20px;
 }
 
 .op-media-step__file {
@@ -13,18 +13,21 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .op-media-step__head h2 {
   margin: 0;
-  color: #28221f;
-  font-size: 17px;
+  color: #0f172a;
+  font-size: 16.5px;
+  font-weight: 700;
 }
 
 .op-media-step__head span {
   display: block;
-  margin-top: 3px;
-  color: #827871;
+  margin-top: 4px;
+  color: #64748b;
   font-size: 13px;
 }
 
@@ -32,7 +35,12 @@
 .op-media-step__gallery {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
 }
 
 /* ==================== YANDEX-STYLE COVER DROPZONE (LIGHT MODE - NO BORDER) ==================== */
@@ -40,9 +48,8 @@
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 0;
   border: none;
 }
 
@@ -135,7 +142,7 @@
   background: #27272a !important;
   border-color: #27272a !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  
 }
 
 /* Nút Dán từ clipboard: Không có background (trong suốt), viền bo tròn */
@@ -152,7 +159,7 @@
   background: #f3f4f6 !important;
   border-color: #9ca3af !important;
   color: #111827 !important;
-  transform: translateY(-1px);
+  
 }
 
 /* Thanh URL phía dưới (bo góc chuẩn 6px của form) */
@@ -287,7 +294,7 @@
 .op-screen .op-media-step__cover-actions button:not(.op-media-step__cover-btn--danger):hover,
 .op-media-step__cover-actions button:not(.op-media-step__cover-btn--danger):hover {
   background: #f3f4f6 !important;
-  transform: translateY(-1px);
+  
 }
 
 /* Nút Xoá: Nền đỏ, chữ trắng */
@@ -301,7 +308,7 @@
 .op-screen .op-media-step__cover-actions button.op-media-step__cover-btn--danger:hover,
 .op-media-step__cover-actions button.op-media-step__cover-btn--danger:hover {
   background: #b91c1c !important;
-  transform: translateY(-1px);
+  
 }
 
 .op-media-step__cover-actions button .material-symbols-outlined {

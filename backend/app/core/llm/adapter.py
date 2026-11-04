@@ -1,5 +1,6 @@
 """Adapter gọi LLM. Mọi endpoint, model, timeout lấy từ core.config."""
 
+import json
 import re
 import time
 
@@ -166,3 +167,72 @@ def query_llm(prompt, system_prompt=None, *, json_mode=False, temperature=0, tim
             exc_info=True,
         )
         return ""
+
+
+def stream_llm(prompt, system_prompt=None, *, temperature=0.2, timeout=None):
+    """Generator streaming các token từ LLM (Ollama hoặc DeepSeek)."""
+    if timeout is None:
+        timeout = settings.llm_timeout
+    provider = settings.llm_provider.lower()
+
+    if provider == "ollama":
+        payload = {
+            "model": settings.ollama_model,
+            "prompt": prompt,
+            "stream": True,
+            "options": {"temperature": temperature},
+        }
+        if system_prompt:
+            payload["system"] = system_prompt
+
+        with requests.post(settings.ollama_url, json=payload, stream=True, timeout=timeout) as resp:
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if line:
+                    try:
+                        data = json.loads(line)
+                        chunk = data.get("response", "")
+                        if chunk:
+                            yield chunk
+                        if data.get("done", False):
+                            break
+                    except Exception:
+                        pass
+    elif provider == "deepseek":
+        api_key = settings.deepseek_api_key
+        if not api_key:
+            raise RuntimeError("missing DEEPSEEK_API_KEY")
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        payload = {
+            "model": settings.deepseek_model,
+            "messages": messages,
+            "stream": True,
+            "temperature": temperature,
+        }
+        with requests.post(
+            settings.deepseek_url,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json=payload,
+            stream=True,
+            timeout=timeout,
+        ) as resp:
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if line:
+                    decoded = line.decode("utf-8").strip()
+                    if decoded.startswith("data: "):
+                        data_str = decoded[6:].strip()
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            data = json.loads(data_str)
+                            delta = data.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                            if delta:
+                                yield delta
+                        except Exception:
+                            pass
+    else:
+        raise ValueError(f"unsupported LLM_PROVIDER: {provider}")

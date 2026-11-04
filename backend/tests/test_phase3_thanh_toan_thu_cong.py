@@ -114,7 +114,7 @@ class TestTaoPaymentService(unittest.TestCase):
 
         with self.assertRaises(PaymentInvalidError) as ctx:
             tour_service.tao_thanh_toan(booking_id=100)
-        self.assertIn("EXPIRED", str(ctx.exception))
+        self.assertIn("hết hạn giữ chỗ", str(ctx.exception))
 
     @patch("app.tours.search_tours.repository.get_booking")
     def test_tao_payment_chan_khi_qua_han_hold_expires_at(self, mock_get_b):
@@ -207,7 +207,7 @@ class TestXacNhanPaymentService(unittest.TestCase):
         self.assertFalse(kq["success"])
         self.assertEqual(kq["status"], "FAILED")
         self.assertEqual(kq["booking_status"], "EXPIRED")
-        self.assertIn("FAILED", kq["message"])
+        self.assertIn("hết hạn giữ chỗ", kq["message"])
 
         # Kiểm tra update payment FAILED
         mock_upd_p.assert_called_once()
@@ -263,7 +263,7 @@ class TestXacNhanPaymentService(unittest.TestCase):
 
         with self.assertRaises(PaymentInvalidError) as ctx:
             tour_service.xac_nhan_thanh_toan(payment_id=50, actor_id=1)
-        self.assertIn("BR-P1", str(ctx.exception))
+        self.assertIn("giao dịch thanh toán thành công", str(ctx.exception))
 
 
 class TestApiThanhToan(unittest.TestCase):
@@ -312,7 +312,7 @@ class TestApiThanhToan(unittest.TestCase):
         self.assertTrue(r.json()["success"])
 
     @patch("app.core.security.execute_query")
-    @patch("app.tours.search_tours.service.xac_nhan_thanh_toan")
+    @patch("app.tours.payment.service.xac_nhan_thanh_toan")
     def test_admin_confirm_payment_qua_api(self, mock_xac_nhan, mock_sql):
         """Admin gọi POST /api/tours/admin/payments/{id}/confirm -> 200 OK."""
         from app.core.security import create_access_token

@@ -96,28 +96,44 @@
   width: 100%;
 }
 
-/* Ô nhập tiêu đề phụ (Add subheading) chữ màu đen */
+/* Ô nhập tiêu đề phụ (Add subheading) có khung tương tác rõ ràng */
 .op-wizard .op-wizard__day-sub {
-  border: none;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 8px;
   outline: none;
-  background: transparent;
-  padding: 0;
+  background: #f8fafc;
+  padding: 7px 11px;
+  margin-left: -11px;
   font-family: inherit;
   font-size: 14px;
-  color: #000000;
-  width: 100%;
+  font-weight: 600;
+  color: #0f172a;
+  width: calc(100% + 11px);
+  transition: all 0.15s ease;
+}
+
+.op-wizard .op-wizard__day-sub:hover {
+  border-color: #e2e8f0;
+  background: #f1f5f9;
 }
 
 .op-wizard .op-wizard__day-sub::placeholder {
   color: #94a3b8;
+  font-weight: 400;
 }
 
 .op-wizard .op-wizard__day-sub:focus {
-  color: #000000;
+  background: #ffffff;
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+  color: #0f172a;
 }
 
 .op-wizard .op-wizard__day-sub--invalid {
-  color: #000000;
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #0f172a;
 }
 
 /* ==================== NỘI DUNG NGÀY ==================== */
@@ -364,24 +380,32 @@
 
 /* Ô nhập ghi chú địa điểm chuẩn Wanderlog */
 .op-wizard .op-wizard__place-card-note-input {
+  box-sizing: border-box;
   width: 100%;
-  border: none;
-  background: transparent;
-  color: #475569;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.65);
+  color: #334155;
   font-size: 13px;
-  padding: 2px 0;
+  padding: 6px 10px;
   outline: none;
-  font-style: italic;
+  transition: all 0.15s ease;
+}
+
+.op-wizard .op-wizard__place-card-note-input:hover {
+  background: #ffffff;
+  border-color: #e2e8f0;
 }
 
 .op-wizard .op-wizard__place-card-note-input::placeholder {
   color: #94a3b8;
-  font-style: normal;
 }
 
 .op-wizard .op-wizard__place-card-note-input:focus {
+  background: #ffffff;
+  border-color: #cbd5e1;
   color: #0f172a;
-  font-style: normal;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 /* Thanh nút hành động bên dưới thẻ địa điểm: Mark as visited, Add time,... */

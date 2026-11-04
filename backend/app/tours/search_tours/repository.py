@@ -142,6 +142,7 @@ def list_tour_provinces(all_provinces: bool = False):
 
 def list_tours(
     province_id=None,
+    province_ids=None,
     depart_from=None,
     depart_to=None,
     price_min=None,
@@ -151,6 +152,7 @@ def list_tours(
     min_days=None,
     guests=None,
     sort=None,
+    q=None,
     limit=24,
     offset=0,
 ):
@@ -164,7 +166,10 @@ def list_tours(
 
     dieu_kien = ["t.active"]
     params = {}
-    if province_id:
+    if province_ids:
+        dieu_kien.append("t.province_id = ANY(%(province_ids)s)")
+        params["province_ids"] = list(province_ids)
+    elif province_id:
         dieu_kien.append("t.province_id = %(province_id)s")
         params["province_id"] = province_id
     if max_days:
@@ -173,6 +178,9 @@ def list_tours(
     if min_days:
         dieu_kien.append("t.duration_days >= %(min_days)s")
         params["min_days"] = min_days
+    if q and q.strip():
+        dieu_kien.append("(t.name ILIKE %(q_search)s OR t.summary ILIKE %(q_search)s OR p.name ILIKE %(q_search)s)")
+        params["q_search"] = f"%{q.strip()}%"
 
     sql_eff = sql_gia_ban_hieu_luc("d")
     has_list_price = _has_col("tour_departures", "list_price")
@@ -245,6 +253,8 @@ def list_tours(
         order_by_sql = f"{gia_hien_tai} ASC NULLS LAST, t.id ASC"
     elif sort == "price_desc":
         order_by_sql = f"{gia_hien_tai} DESC NULLS LAST, t.id ASC"
+    elif sort == "sale_first":
+        order_by_sql = f"({sub_orig} - {gia_hien_tai}) DESC NULLS LAST, {gia_hien_tai} ASC NULLS LAST, t.id ASC"
     elif sort == "date_asc":
         order_by_sql = f"ngay_gan_nhat ASC NULLS LAST, {gia_hien_tai} ASC NULLS LAST, t.id ASC"
     else:

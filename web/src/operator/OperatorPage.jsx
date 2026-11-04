@@ -6,16 +6,18 @@ import DeparturesScreen from "./departures";
 import RevenueScreen from "./revenue";
 import ToursScreen from "./tours";
 import SupportScreen from "./support";
+import OperatorOverviewScreen from "./OperatorOverviewScreen";
 import "./Operator.css";
 import "./OperatorShell.css";
 import "./OperatorBem.css";
 
-/** Năm màn của khu nhà điều hành, nhóm theo việc. Đường dẫn con, biểu tượng và tên
+/** Các màn của khu nhà điều hành, nhóm theo việc. Đường dẫn con, biểu tượng và tên
  *  trên menu lấy từ đây; thêm màn mới thì thêm một dòng. */
 const NHOM_MENU = [
   {
     tieuDe: "Vận hành tour",
     muc: [
+      { path: "overview", icon: "space_dashboard", label: "Tổng quan", Screen: OperatorOverviewScreen },
       { path: "tours", icon: "map", label: "Tour của tôi", Screen: ToursScreen },
       { path: "departures", icon: "calendar_month", label: "Đợt khởi hành", Screen: DeparturesScreen },
     ],
@@ -99,15 +101,22 @@ export default function OperatorPage({ user, onLogout, onNeedAuth }) {
     <div className="op-shell">
       <aside className="op-shell__aside">
         <div>
-          <div className="op-shell__brand">
-            <div className="op-shell__brand-mark">Đ</div>
-            <div>
-              <span className="op-shell__brand-name">Đi Đâu</span>
-              <span className="op-shell__brand-role">Nhà điều hành</span>
+          <div className="op-shell__brand" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <svg
+              style={{ width: "22px", height: "22px", color: "#0f172a", flexShrink: 0 }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-label="Aura Voyage"
+            >
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
+            </svg>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span className="op-shell__brand-name" style={{ fontSize: "16px", fontWeight: "800", color: "#0f172a", lineHeight: "1.2" }}>Aura Voyage</span>
+              <span className="op-shell__brand-role" style={{ fontSize: "11px", color: "#64748b" }}>Nhà điều hành</span>
             </div>
           </div>
 
-          <Link to="/nha-dieu-hanh/tours?action=create" className="op-shell__quick-create">
+          <Link to="/operator/tours?action=create" className="op-shell__quick-create">
             <span className="material-symbols-outlined op-shell__span-1">add</span>
             <span>Tạo tour mới</span>
           </Link>
@@ -122,7 +131,7 @@ export default function OperatorPage({ user, onLogout, onNeedAuth }) {
                 {muc.map(({ path, icon, label }) => (
                   <NavLink
                     key={path}
-                    to={`/nha-dieu-hanh/${path}`}
+                    to={`/operator/${path}`}
                     className={({ isActive }) =>
                       `op-shell__link ${isActive ? "op-shell__link--active" : ""}`
                     }
@@ -168,13 +177,13 @@ export default function OperatorPage({ user, onLogout, onNeedAuth }) {
             </div>
             <div className="op-shell__header-divider"></div>
             <div className="op-shell__crumb">
-              <Link to="/nha-dieu-hanh/tours" className="op-shell__crumb-link">
+              <Link to="/operator/tours" className="op-shell__crumb-link">
                 Nhà điều hành
               </Link>
               <span className="material-symbols-outlined op-shell__icon--xs">chevron_right</span>
               {subCrumb ? (
                 <>
-                  <Link to={`/nha-dieu-hanh/${dangMo.path}`} className="op-shell__crumb-link">
+                  <Link to={`/operator/${dangMo.path}`} className="op-shell__crumb-link">
                     {dangMo.label}
                   </Link>
                   <span className="material-symbols-outlined op-shell__icon--xs">chevron_right</span>

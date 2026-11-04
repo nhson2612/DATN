@@ -272,8 +272,10 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
       try {
         await Promise.all(
           daysToRoute.map(async (day) => {
-            const ds = theoNgay[day] || [];
-            const choNgu = cacChoNgu.find((h) => Number(h.day) === day);
+            const rawDs = theoNgay[day] || [];
+            // Chỉ lấy các điểm dừng có toạ độ hợp lệ (loại bỏ note, checklist không có toạ độ)
+            const ds = rawDs.filter(laToaDo);
+            const choNgu = cacChoNgu.find((h) => Number(h.day) === day && laToaDo(h));
             // Nếu có lodging thì tuyến khép kín: lodging -> điểm 1 -> ... -> điểm N -> lodging
             const chuoi = choNgu ? [choNgu, ...ds, choNgu] : ds;
             if (chuoi.length < 2) return;
@@ -284,6 +286,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
               if (controller.signal.aborted) return;
               const start = chuoi[i];
               const end = chuoi[i + 1];
+              if (!laToaDo(start) || !laToaDo(end)) continue;
               const legKey = `${start.lon},${start.lat}->${end.lon},${end.lat}`;
 
               try {
@@ -325,8 +328,18 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
                   `[TripMap] Bỏ qua tuyến ngày ${day} (lỗi chặng ${i + 1}):`,
                   err.message
                 );
-                // Xử lý lỗi (snap quá xa / không tìm được đường): bỏ qua ngày đó, chỉ giữ marker
-                return;
+                // Xử lý lỗi (snap quá xa / không tìm được đường): bỏ qua chặng đó, fallback vẽ đường thẳng
+                dayFeatures.push({
+                  type: "Feature",
+                  properties: { name: "Đường thẳng" },
+                  geometry: {
+                    type: "LineString",
+                    coordinates: [
+                      [+start.lon, +start.lat],
+                      [+end.lon, +end.lat],
+                    ],
+                  },
+                });
               }
             }
 

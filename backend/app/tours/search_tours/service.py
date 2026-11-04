@@ -10,9 +10,10 @@ import csv
 import io
 import json
 import re
+import time
 import uuid
 from datetime import date, datetime, timedelta
-from typing import Optional
+from typing import Optional, Union
 from zoneinfo import ZoneInfo
 
 from app.core.config import settings
@@ -313,6 +314,7 @@ def _chuan_hoa_images_api(tour: dict, photos_by_pid: Optional[dict] = None) -> N
 
 def list_tours(
     province_id=None,
+    province_ids=None,
     depart_from=None,
     depart_to=None,
     price_min=None,
@@ -322,13 +324,25 @@ def list_tours(
     min_days=None,
     guests=None,
     sort=None,
+    q=None,
     page=1,
     page_size=24,
 ):
     if price_max is None and max_price is not None:
         price_max = max_price
+
+    p_ids = None
+    if province_ids:
+        if isinstance(province_ids, str):
+            p_ids = [int(x.strip()) for x in province_ids.split(",") if x.strip().isdigit()]
+        elif isinstance(province_ids, (list, tuple, set)):
+            p_ids = [int(x) for x in province_ids if str(x).isdigit()]
+    elif province_id:
+        p_ids = [province_id]
+
     items, tong = tour_repo.list_tours(
         province_id=province_id,
+        province_ids=p_ids,
         depart_from=depart_from,
         depart_to=depart_to,
         price_min=price_min,
@@ -338,6 +352,7 @@ def list_tours(
         min_days=min_days,
         guests=guests,
         sort=sort,
+        q=q,
         limit=page_size,
         offset=(max(page, 1) - 1) * page_size,
     )
@@ -512,7 +527,7 @@ def chuyen_trang_thai(
             if sang not in valid_next:
                 raise InvalidStatusTransitionError(
                     f"Đơn hàng #{booking_id} đã ở trạng thái kết thúc ({current_status}), "
-                    f"không thể chuyển sang '{sang}' (BR-L1)."
+                    f"không thể chuyển sang '{sang}'."
                 )
 
         # Kiểm tra ma trận chuyển đổi hợp lệ chung theo §6
@@ -881,8 +896,16 @@ def tao_thanh_toan(
 
         current_status = booking.get("status")
         if current_status != "PENDING_PAYMENT":
+            status_desc = {
+                "EXPIRED": "đã hết hạn giữ chỗ",
+                "CANCELLED_BY_CUSTOMER": "đã bị khách hàng huỷ",
+                "CANCELLED_BY_OPERATOR": "đã bị nhà điều hành huỷ",
+                "PAID": "đã thanh toán thành công",
+                "CONFIRMED": "đã được xác nhận",
+                "COMPLETED": "đã hoàn thành",
+            }.get(current_status, "không còn ở trạng thái chờ thanh toán")
             raise PaymentInvalidError(
-                f"Đơn hàng #{booking_id} đang ở trạng thái '{current_status}', không thể tạo thanh toán."
+                f"Đơn đặt tour #{booking_id} {status_desc}, không thể tạo thêm giao dịch thanh toán."
             )
 
         # 2. Kiểm tra hạn giữ chỗ hold_expires_at
@@ -899,8 +922,7 @@ def tao_thanh_toan(
                     hold_at = hold_at.replace(tzinfo=TZ_VN)
                 if now_vn > hold_at:
                     raise PaymentInvalidError(
-                        f"Đơn #{booking_id} đã hết hạn giữ chỗ ({hold_at.strftime('%Y-%m-%d %H:%M:%S')}), "
-                        f"không thể thanh toán (E3: không tự khôi phục chỗ)."
+                        f"Đơn đặt tour #{booking_id} đã hết hạn giữ chỗ ({hold_at.strftime('%H:%M %d/%m/%Y')}), không thể thanh toán tiếp."
                     )
 
         # 3. Xác định số tiền & trạng thái thanh toán ban đầu
@@ -1000,7 +1022,7 @@ def xac_nhan_thanh_toan(
             }
 
         if payment.get("status") == "FAILED":
-            raise PaymentInvalidError(f"Giao dịch #{payment_id} đã thất bại (FAILED), không thể xác nhận.")
+            raise PaymentInvalidError(f"Giao dịch #{payment_id} đã bị đánh dấu thất bại trước đó, không thể xác nhận lại.")
 
         booking_id = payment["booking_id"]
         # Khóa booking tương ứng
@@ -1026,6 +1048,25 @@ def xac_nhan_thanh_toan(
                 "Payment #%s bị đánh dấu FAILED vì booking #%s đã %s",
                 payment_id, booking_id, current_booking_status,
             )
+            if current_booking_status == "EXPIRED":
+                msg = (
+                    f"Không thể xác nhận: Đơn đặt tour #{booking_id} đã hết hạn giữ chỗ. "
+                    f"Vui lòng liên hệ khách hàng để tạo đơn mới hoặc tiến hành hoàn tiền."
+                )
+            elif current_booking_status in {"CANCELLED_BY_CUSTOMER", "CANCELLED_BY_OPERATOR"}:
+                msg = (
+                    f"Không thể xác nhận: Đơn đặt tour #{booking_id} đã bị huỷ trước đó. "
+                    f"Vui lòng liên hệ khách hàng để hỗ trợ hoàn tiền."
+                )
+            elif current_booking_status == "REFUNDED":
+                msg = f"Không thể xác nhận: Đơn đặt tour #{booking_id} đã được hoàn tiền trước đó."
+            elif current_booking_status in {"COMPLETED", "NO_SHOW"}:
+                msg = f"Không thể xác nhận: Chuyến đi của đơn đặt tour #{booking_id} đã kết thúc."
+            else:
+                msg = (
+                    f"Không thể xác nhận: Đơn đặt tour #{booking_id} không ở trạng thái chờ thanh toán. "
+                    f"Vui lòng kiểm tra lại đơn hàng."
+                )
             return {
                 "success": False,
                 "payment_id": payment_id,
@@ -1034,10 +1075,7 @@ def xac_nhan_thanh_toan(
                 "booking_status": current_booking_status,
                 "amount": payment.get("amount"),
                 "txn_ref": payment.get("txn_ref"),
-                "message": (
-                    f"Thanh toán thất bại (FAILED): Đơn đặt tour #{booking_id} đã ở trạng thái "
-                    f"'{current_booking_status}'. Admin cần xử lý thủ công (hoàn tiền hoặc tạo đơn mới)."
-                ),
+                "message": msg,
             }
 
         # 3. Kiểm tra nếu booking quá hạn hold_expires_at
@@ -1082,8 +1120,8 @@ def xac_nhan_thanh_toan(
                         "amount": payment.get("amount"),
                         "txn_ref": payment.get("txn_ref"),
                         "message": (
-                            f"Thanh toán thất bại (FAILED): Đơn đặt tour #{booking_id} đã quá hạn giữ chỗ "
-                            f"và được chuyển sang EXPIRED (chỗ đã trả về)."
+                            f"Không thể xác nhận: Đơn đặt tour #{booking_id} đã quá thời hạn giữ chỗ 30 phút "
+                            f"và chỗ đã được hoàn trả lại hệ thống. Vui lòng tạo đơn mới hoặc hoàn tiền cho khách."
                         ),
                     }
 
@@ -1116,9 +1154,8 @@ def xac_nhan_thanh_toan(
                 "amount": pay_amount,
                 "txn_ref": payment.get("txn_ref"),
                 "message": (
-                    f"Số tiền thanh toán ({pay_amount:,.0f} đ) không khớp với tổng tiền đơn hàng "
-                    f"({booking_total:,.0f} đ). Bản ghi thanh toán chuyển sang MISMATCH, "
-                    f"đơn hàng giữ nguyên {current_booking_status}."
+                    f"Số tiền thanh toán ({pay_amount:,.0f} đ) không khớp với giá trị đơn hàng "
+                    f"({booking_total:,.0f} đ). Bản ghi thanh toán đã được chuyển sang trạng thái chờ đối soát."
                 ),
             }
 
@@ -1126,7 +1163,7 @@ def xac_nhan_thanh_toan(
         succ_cnt = tour_repo.count_successful_payments(booking_id, tx=active_tx)
         if succ_cnt > 0:
             raise PaymentInvalidError(
-                f"Đơn hàng #{booking_id} đã có giao dịch thanh toán thành công khác (BR-P1: mỗi đơn chỉ 1 SUCCESS)."
+                f"Đơn đặt tour #{booking_id} đã có một giao dịch thanh toán thành công được ghi nhận trước đó."
             )
 
         # 6. Thanh toán thành công: Cập nhật payment SUCCESS và chuyển booking sang PAID
@@ -1164,7 +1201,7 @@ def xac_nhan_thanh_toan(
             "txn_ref": payment.get("txn_ref"),
             "confirmed_by": actor_id,
             "confirmed_at": now_vn.isoformat(),
-            "message": f"Xác nhận thanh toán thành công. Đơn hàng #{booking_id} đã chuyển sang PAID.",
+            "message": f"Xác nhận thanh toán thành công cho đơn đặt tour #{booking_id}.",
         }
 
     if tx is not None:
@@ -1204,8 +1241,16 @@ def tao_checkout_stripe(
 
         current_status = booking.get("status")
         if current_status != "PENDING_PAYMENT":
+            status_desc = {
+                "EXPIRED": "đã hết hạn giữ chỗ",
+                "CANCELLED_BY_CUSTOMER": "đã bị khách hàng huỷ",
+                "CANCELLED_BY_OPERATOR": "đã bị nhà điều hành huỷ",
+                "PAID": "đã thanh toán thành công",
+                "CONFIRMED": "đã được xác nhận",
+                "COMPLETED": "đã hoàn thành",
+            }.get(current_status, "không còn ở trạng thái chờ thanh toán")
             raise PaymentInvalidError(
-                f"Đơn hàng #{booking_id} đang ở trạng thái '{current_status}', không thể tạo thanh toán."
+                f"Đơn đặt tour #{booking_id} {status_desc}, không thể tạo thêm phiên thanh toán."
             )
 
         now_vn = datetime.now(TZ_VN)
@@ -1221,8 +1266,7 @@ def tao_checkout_stripe(
                     hold_at = hold_at.replace(tzinfo=TZ_VN)
                 if now_vn > hold_at:
                     raise PaymentInvalidError(
-                        f"Đơn #{booking_id} đã hết hạn giữ chỗ ({hold_at.strftime('%Y-%m-%d %H:%M:%S')}), "
-                        f"không thể thanh toán (E3: không tự khôi phục chỗ)."
+                        f"Đơn đặt tour #{booking_id} đã hết hạn giữ chỗ ({hold_at.strftime('%H:%M %d/%m/%Y')}), không thể thanh toán tiếp."
                     )
 
         total_price = booking.get("total_price") or 0
@@ -1351,6 +1395,190 @@ def tao_checkout_stripe(
         "stripe_session_id": session_id,
         "checkout_url": checkout_url,
         "message": "Đang chuyển sang cổng thanh toán Stripe...",
+    }
+
+
+def tao_checkout_payos(
+    booking_id: int,
+    actor_id: Optional[int] = None,
+    redirect_base: Optional[str] = None,
+) -> dict:
+    """Khởi tạo phiên thanh toán VietQR qua payOS cho đơn đặt tour.
+
+    Quy trình:
+    1. Kiểm tra booking trong transaction với lock FOR UPDATE; nếu không có -> BookingNotFoundError.
+    2. Booking phải ở PENDING_PAYMENT và chưa hết hạn hold_expires_at -> nếu không -> PaymentInvalidError.
+    3. Tạo bản ghi payment: method='PAYOS', provider='payos', status='PENDING', amount=total_price.
+    4. Ra ngoài transaction DB:
+       - Kiểm tra SDK payos và cấu hình PAYOS_CLIENT_ID, PAYOS_API_KEY, PAYOS_CHECKSUM_KEY.
+       - Sinh orderCode duy nhất (dạng số nguyên an toàn): int(f"{booking_id}{int(time.time()) % 100000:05d}").
+       - Gọi client.payment_requests.create(CreatePaymentLinkRequest(...))
+       - Lưu provider_order_id, provider_transaction_id, gateway_payload bằng tour_repo.set_payment_provider_refs.
+    5. Trả dict chứa checkout_url, qr_code, account_name, account_number, bin, order_code.
+    """
+    with transaction() as tx:
+        booking = tour_repo.get_booking(booking_id, tx=tx, for_update=True)
+        if not booking:
+            raise BookingNotFoundError(f"Không tìm thấy đơn đặt tour #{booking_id}")
+
+        current_status = booking.get("status")
+        if current_status != "PENDING_PAYMENT":
+            status_desc = {
+                "EXPIRED": "đã hết hạn giữ chỗ",
+                "CANCELLED_BY_CUSTOMER": "đã bị khách hàng huỷ",
+                "CANCELLED_BY_OPERATOR": "đã bị nhà điều hành huỷ",
+                "PAID": "đã thanh toán thành công",
+                "CONFIRMED": "đã được xác nhận",
+                "COMPLETED": "đã hoàn thành",
+            }.get(current_status, "không còn ở trạng thái chờ thanh toán")
+            raise PaymentInvalidError(
+                f"Đơn đặt tour #{booking_id} {status_desc}, không thể tạo phiên thanh toán."
+            )
+
+        now_vn = datetime.now(TZ_VN)
+        hold_at = booking.get("hold_expires_at")
+        if hold_at:
+            if isinstance(hold_at, str):
+                try:
+                    hold_at = datetime.fromisoformat(hold_at)
+                except Exception:
+                    hold_at = None
+            if hold_at:
+                if hold_at.tzinfo is None:
+                    hold_at = hold_at.replace(tzinfo=TZ_VN)
+                if now_vn > hold_at:
+                    raise PaymentInvalidError(
+                        f"Đơn đặt tour #{booking_id} đã hết hạn giữ chỗ ({hold_at.strftime('%H:%M %d/%m/%Y')}), không thể thanh toán tiếp."
+                    )
+
+        total_price = booking.get("total_price") or 0
+        if total_price <= 0:
+            raise PaymentInvalidError("Tổng tiền đơn hàng không hợp lệ để thanh toán.")
+
+        txn_ref = tour_repo.generate_payment_txn_ref(tx=tx)
+        payment_data = {
+            "booking_id": booking_id,
+            "method": "PAYOS",
+            "amount": total_price,
+            "status": "PENDING",
+            "txn_ref": txn_ref,
+            "note": "Tạo phiên thanh toán VietQR payOS",
+            "provider": "payos",
+            "confirmed_by": None,
+            "confirmed_at": None,
+        }
+        payment_id = tour_repo.create_payment(payment_data, tx=tx)
+        booking_code = booking.get("code") or f"TX-{booking_id}"
+
+    # Gọi SDK payOS bên ngoài transaction
+    try:
+        from payos import PayOS
+        from payos.types import CreatePaymentLinkRequest
+    except ImportError:
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="FAILED",
+            note="Thư viện payos chưa được cài đặt trong môi trường",
+        )
+        raise PaymentGatewayUnavailableError("Thư viện payos chưa được cài đặt trên hệ thống.")
+
+    client_id = settings.payos_client_id
+    api_key = settings.payos_api_key
+    checksum_key = settings.payos_checksum_key
+    if not (client_id and api_key and checksum_key):
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="FAILED",
+            note="Chưa cấu hình đầy đủ PAYOS_CLIENT_ID, PAYOS_API_KEY, PAYOS_CHECKSUM_KEY",
+        )
+        raise PaymentGatewayUnavailableError("Chưa cấu hình thông tin kết nối payOS.")
+
+    payos_client = PayOS(client_id=client_id, api_key=api_key, checksum_key=checksum_key)
+
+    base = (redirect_base or settings.web_base_url).rstrip("/")
+    return_url = f"{base}/tai-khoan?tab=tours&checkout=success&booking_id={booking_id}"
+    cancel_url = f"{base}/tai-khoan?tab=tours&checkout=cancelled&booking_id={booking_id}"
+
+    # orderCode duy nhất trong giới hạn số nguyên (JavaScript MAX_SAFE_INTEGER = 9007199254740991)
+    order_code = int(f"{booking_id}{int(time.time()) % 100000:05d}")
+
+    # Mô tả đơn hàng (payOS giới hạn tối đa 25 ký tự)
+    desc = f"Tour {booking_code}"[:25]
+    expired_timestamp = int(hold_at.timestamp()) if hold_at else None
+
+    try:
+        payment_link = payos_client.payment_requests.create(
+            payment_data=CreatePaymentLinkRequest(
+                orderCode=order_code,
+                amount=int(total_price),
+                description=desc,
+                cancelUrl=cancel_url,
+                returnUrl=return_url,
+                expiredAt=expired_timestamp,
+            )
+        )
+    except Exception as e:
+        logger.error("Lỗi khi tạo payment link payOS cho đơn #%s: %s", booking_id, e)
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="FAILED",
+            note=f"Lỗi payOS: {e}",
+        )
+        raise PaymentGatewayUnavailableError(f"Không thể khởi tạo phiên thanh toán payOS: {e}")
+
+    payment_link_id = getattr(payment_link, "payment_link_id", None) or getattr(payment_link, "paymentLinkId", None)
+    checkout_url = getattr(payment_link, "checkout_url", None) or getattr(payment_link, "checkoutUrl", "")
+    qr_code = getattr(payment_link, "qr_code", None) or getattr(payment_link, "qrCode", "")
+    account_name = getattr(payment_link, "account_name", None) or getattr(payment_link, "accountName", "")
+    account_number = getattr(payment_link, "account_number", None) or getattr(payment_link, "accountNumber", "")
+    bin_code = getattr(payment_link, "bin", None) or ""
+
+    link_payload = payment_link.to_dict() if hasattr(payment_link, "to_dict") else (
+        payment_link.model_dump() if hasattr(payment_link, "model_dump") else {
+            "order_code": order_code,
+            "payment_link_id": payment_link_id,
+            "checkout_url": checkout_url,
+        }
+    )
+
+    try:
+        tour_repo.set_payment_provider_refs(
+            payment_id=payment_id,
+            provider="payos",
+            provider_order_id=str(order_code),
+            provider_transaction_id=str(payment_link_id) if payment_link_id else None,
+            gateway_payload=link_payload,
+        )
+    except Exception as save_err:
+        logger.error("Lỗi lưu provider refs payOS cho payment #%s: %s", payment_id, save_err)
+        try:
+            payos_client.payment_requests.cancel(id=order_code, cancellation_reason="Lỗi hệ thống lưu DB")
+        except Exception:
+            pass
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="FAILED",
+            note=f"Lỗi lưu refs payOS: {save_err}",
+        )
+        raise
+
+    logger.info(
+        "Tạo phiên VietQR payOS thành công cho đơn #%s: payment=#%s, order_code=%s, link_id=%s",
+        booking_id, payment_id, order_code, payment_link_id,
+    )
+
+    return {
+        "success": True,
+        "payment_id": payment_id,
+        "txn_ref": txn_ref,
+        "order_code": order_code,
+        "amount": total_price,
+        "checkout_url": checkout_url,
+        "qr_code": qr_code,
+        "account_name": account_name,
+        "account_number": account_number,
+        "bin": bin_code,
+        "message": "Khởi tạo thanh toán VietQR payOS thành công.",
     }
 
 
@@ -1705,6 +1933,205 @@ def xu_ly_stripe_webhook(payload: bytes, sig_header: str) -> dict:
         }
 
 
+def xu_ly_payos_webhook(payload: Union[str, bytes, dict]) -> dict:
+    """Xử lý webhook tự động từ cổng thanh toán payOS VietQR.
+
+    1. Xác thực chữ ký webhook payOS bằng PAYOS_CHECKSUM_KEY.
+    2. Nếu không hợp lệ -> ném PaymentInvalidError.
+    3. Tìm payment theo provider='payos' và provider_order_id=str(data.order_code).
+    4. Trong transaction:
+       - Nếu payment đã SUCCESS -> idempotent return.
+       - Khóa booking FOR UPDATE.
+       - Kiểm tra số tiền: data.amount == payment.amount == booking.total_price.
+       - Kiểm tra đơn hết hạn/huỷ: nếu quá hạn -> update needs_refund=True.
+       - Hợp lệ: payment -> SUCCESS, booking -> PAID qua chuyen_trang_thai().
+    """
+    try:
+        from payos import PayOS
+    except ImportError:
+        raise PaymentGatewayUnavailableError("Thư viện payos chưa được cài đặt trên hệ thống.")
+
+    checksum_key = settings.payos_checksum_key
+    if not checksum_key:
+        raise PaymentGatewayUnavailableError("Chưa cấu hình PAYOS_CHECKSUM_KEY")
+
+    payos_client = PayOS(
+        client_id=settings.payos_client_id or "",
+        api_key=settings.payos_api_key or "",
+        checksum_key=checksum_key,
+    )
+
+    try:
+        verified_data = payos_client.webhooks.verify(payload)
+    except Exception as e:
+        logger.warning("Xác thực chữ ký webhook payOS thất bại: %s", e)
+        raise PaymentInvalidError(f"Chữ ký webhook payOS không hợp lệ: {e}")
+
+    order_code = verified_data.order_code
+    amount = verified_data.amount
+    code = verified_data.code
+    reference = verified_data.reference
+    payment_link_id = verified_data.payment_link_id
+
+    # Nếu mã trả về không phải "00" (thanh toán thành công)
+    if code != "00":
+        logger.info("payOS webhook nhận mã không phải 00 (code=%s, desc=%s)", code, verified_data.desc)
+        return {"received": True, "handled": False, "code": code, "desc": verified_data.desc}
+
+    payment = tour_repo.get_payment_by_provider_order("payos", str(order_code))
+    if not payment:
+        logger.warning("Không tìm thấy payment tương ứng với payOS orderCode: %s", order_code)
+        return {
+            "received": True,
+            "handled": False,
+            "reason": "khong_tim_thay_payment",
+            "order_code": order_code,
+        }
+
+    payment_id = payment["id"]
+    target_bid = payment["booking_id"]
+    now_vn = datetime.now(TZ_VN)
+
+    payload_dict = payload if isinstance(payload, dict) else (
+        verified_data.model_dump() if hasattr(verified_data, "model_dump") else {}
+    )
+
+    with transaction() as tx:
+        payment = tour_repo.get_payment_by_provider_order(
+            "payos", str(order_code), tx=tx, for_update=True
+        )
+        if not payment:
+            return {"received": True, "handled": False, "reason": "khong_tim_thay_payment"}
+
+        # Idempotent: payment đã SUCCESS
+        if payment.get("status") == "SUCCESS":
+            logger.info("Payment #%s (payOS order %s) đã ở trạng thái SUCCESS (idempotent).", payment_id, order_code)
+            return {
+                "received": True,
+                "handled": True,
+                "outcome": "already_success",
+                "booking_id": target_bid,
+                "booking_status": payment.get("booking_status") or "PAID",
+            }
+
+        booking = tour_repo.get_booking(target_bid, tx=tx, for_update=True)
+        if not booking:
+            logger.warning("Không tìm thấy booking #%s từ payment payOS #%s", target_bid, payment_id)
+            return {"received": True, "handled": False, "reason": "khong_tim_thay_booking"}
+
+        current_booking_status = booking.get("status")
+
+        # Kiểm tra quá hạn hold_expires_at
+        is_overdue = False
+        hold_at = booking.get("hold_expires_at")
+        if hold_at:
+            if isinstance(hold_at, str):
+                try:
+                    hold_at = datetime.fromisoformat(hold_at)
+                except Exception:
+                    hold_at = None
+            if hold_at:
+                if hold_at.tzinfo is None:
+                    hold_at = hold_at.replace(tzinfo=TZ_VN)
+                if now_vn > hold_at:
+                    is_overdue = True
+
+        succ_cnt = tour_repo.count_successful_payments(target_bid, tx=tx)
+        if succ_cnt > 0:
+            tour_repo.update_payment_status(
+                payment_id=payment_id,
+                status="FAILED",
+                confirmed_at=now_vn,
+                note=f"Đã có payment SUCCESS khác cho đơn #{target_bid} (BR-P1); tiền payOS order {order_code} cần admin hoàn tiền.",
+                needs_refund=True,
+                gateway_payload=payload_dict,
+                tx=tx,
+            )
+            return {
+                "received": True,
+                "handled": True,
+                "outcome": "duplicate_paid",
+                "booking_id": target_bid,
+            }
+
+        # Nếu đơn không còn PENDING_PAYMENT hoặc quá hạn
+        if current_booking_status != "PENDING_PAYMENT" or is_overdue:
+            if current_booking_status == "PENDING_PAYMENT" and is_overdue:
+                chuyen_trang_thai(
+                    booking_id=target_bid,
+                    tu="PENDING_PAYMENT",
+                    sang="EXPIRED",
+                    ly_do="Đơn quá hạn giữ chỗ khi nhận webhook payOS",
+                    actor_id=None,
+                    tx=tx,
+                )
+
+            tour_repo.update_payment_status(
+                payment_id=payment_id,
+                status="SUCCESS",
+                confirmed_at=now_vn,
+                note=f"Thanh toán payOS về sau khi đơn hết hạn ({current_booking_status}) — cần admin hoàn tiền; ref={reference}",
+                needs_refund=True,
+                gateway_payload=payload_dict,
+                tx=tx,
+            )
+            return {
+                "received": True,
+                "handled": True,
+                "outcome": "needs_refund",
+                "booking_id": target_bid,
+            }
+
+        # Kiểm tra số tiền
+        payment_amount = payment.get("amount")
+        booking_total = booking.get("total_price")
+        if (
+            amount is None
+            or int(amount) != int(payment_amount or 0)
+            or int(payment_amount or 0) != int(booking_total or 0)
+        ):
+            mismatch_note = f"Sai lệch số tiền payOS: webhook={amount}, payment={payment_amount}, booking={booking_total}"
+            tour_repo.update_payment_status(
+                payment_id=payment_id,
+                status="MISMATCH",
+                confirmed_at=now_vn,
+                note=mismatch_note,
+                gateway_payload=payload_dict,
+                tx=tx,
+            )
+            return {"received": True, "handled": True, "outcome": "mismatch", "booking_id": target_bid}
+
+        # Hợp lệ: cập nhật SUCCESS và chuyển trạng thái PAID
+        tour_repo.update_payment_status(
+            payment_id=payment_id,
+            status="SUCCESS",
+            confirmed_at=now_vn,
+            note=f"Thanh toán VietQR payOS thành công; ref={reference}; link_id={payment_link_id}",
+            gateway_payload=payload_dict,
+            needs_refund=False,
+            expected_status=payment.get("status"),
+            tx=tx,
+        )
+
+        chuyen_trang_thai(
+            booking_id=target_bid,
+            tu="PENDING_PAYMENT",
+            sang="PAID",
+            ly_do=f"Thanh toán thành công qua VietQR payOS (orderCode={order_code})",
+            actor_id=None,
+            tx=tx,
+        )
+
+        logger.info("Webhook payOS hoàn tất cho đơn #%s: payment=#%s -> SUCCESS, booking -> PAID", target_bid, payment_id)
+
+        return {
+            "received": True,
+            "handled": True,
+            "booking_id": target_bid,
+            "booking_status": "PAID",
+        }
+
+
 # Phase 5.2: Nghiệp vụ Tour dành cho Tour Operator (BR-O1 / BR-T1..T5)
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -1749,7 +2176,7 @@ def tao_tour_operator(data: dict, current_user: dict) -> dict:
 
     duration_days = int(data.get("duration_days") or 1)
     if duration_days < 1:
-        raise TourBusinessRuleError("Số ngày của tour (duration_days) phải lớn hơn hoặc bằng 1 theo quy tắc BR-T1.")
+        raise TourBusinessRuleError("Số ngày của tour phải từ 1 ngày trở lên.")
 
     name = (data.get("name") or "").strip()
     if not name:
@@ -1766,7 +2193,7 @@ def tao_tour_operator(data: dict, current_user: dict) -> dict:
     else:
         existing = tour_repo.get_tour_by_slug(slug)
         if existing:
-            raise TourBusinessRuleError(f"Slug '{slug}' đã tồn tại trong hệ thống (BR-T2).")
+            raise TourBusinessRuleError(f"Đường dẫn '{slug}' đã tồn tại trong hệ thống.")
 
     is_admin = current_user.get("is_admin", False)
     if is_admin:
@@ -1796,7 +2223,7 @@ def tao_tour_operator(data: dict, current_user: dict) -> dict:
 
     tour_id = tour_repo.create_tour(tour_dict, upsert=False)
     if not tour_id:
-        raise TourBusinessRuleError(f"Slug '{slug}' vừa bị tour khác chiếm (BR-T2).")
+        raise TourBusinessRuleError(f"Đường dẫn '{slug}' vừa bị tour khác chiếm.")
     created = tour_repo.get_tour_by_id(tour_id)
     return created
 
@@ -1810,7 +2237,7 @@ def lay_chi_tiet_tour_operator(tour_id: int, current_user: dict) -> dict:
     is_admin = current_user.get("is_admin", False)
     if not is_admin:
         if tour.get("operator_id") != current_user.get("operator_id"):
-            raise TourPermissionDeniedError("Bạn không có quyền truy cập tour của nhà điều hành khác (BR-O1).")
+            raise TourPermissionDeniedError("Bạn không có quyền truy cập tour của nhà điều hành khác.")
 
     # Gắn tên điểm vào từng ngày: màn sửa tour đọc `places` của ngày, thiếu bước này
     # thì mở tour có điểm sẵn là mất hết điểm, lưu lại là xoá luôn trong CSDL.
@@ -1862,54 +2289,49 @@ def cap_nhat_tour_operator(tour_id: int, data: dict, current_user: dict) -> dict
     is_admin = current_user.get("is_admin", False)
     if not is_admin:
         if tour_cu.get("operator_id") != current_user.get("operator_id"):
-            raise TourPermissionDeniedError("Bạn không có quyền chỉnh sửa tour của nhà điều hành khác (BR-O1).")
+            raise TourPermissionDeniedError("Bạn không có quyền chỉnh sửa tour của nhà điều hành khác.")
 
     duration_days = int(data.get("duration_days") or tour_cu.get("duration_days") or 1)
     if duration_days < 1:
-        raise TourBusinessRuleError("Số ngày của tour (duration_days) phải lớn hơn hoặc bằng 1 theo quy tắc BR-T1.")
+        raise TourBusinessRuleError("Số ngày của tour phải từ 1 ngày trở lên.")
 
-    # BR-T3: Tour đã có booking CONFIRMED thì KHÔNG ĐƯỢC sửa lịch trình, số ngày, chính sách hủy
+    # Tour đã có booking CONFIRMED thì không được sửa lịch trình, số ngày, chính sách hủy
     if tour_repo.tour_has_confirmed_bookings(tour_id):
         if "duration_days" in data and int(data["duration_days"]) != int(tour_cu.get("duration_days", 1)):
             raise TourBusinessRuleError(
-                "Tour đã có đơn đặt tour được xác nhận (CONFIRMED). "
-                "Theo quy tắc BR-T3, không được thay đổi số ngày (duration_days)."
+                "Tour đã có đơn đặt tour được xác nhận, không được thay đổi số ngày của tour."
             )
         if "itinerary" in data and _normalize_json_obj(data["itinerary"]) != _normalize_json_obj(tour_cu.get("itinerary")):
             raise TourBusinessRuleError(
-                "Tour đã có đơn đặt tour được xác nhận (CONFIRMED). "
-                "Theo quy tắc BR-T3, không được thay đổi lịch trình (itinerary)."
+                "Tour đã có đơn đặt tour được xác nhận, không được thay đổi lịch trình."
             )
         if "cancellation_policy" in data and _normalize_json_obj(data["cancellation_policy"]) != _normalize_json_obj(tour_cu.get("cancellation_policy")):
             raise TourBusinessRuleError(
-                "Tour đã có đơn đặt tour được xác nhận (CONFIRMED). "
-                "Theo quy tắc BR-T3, không được thay đổi chính sách hủy (cancellation_policy)."
+                "Tour đã có đơn đặt tour được xác nhận, không được thay đổi chính sách hủy."
             )
 
-    # BR-T4: Sửa hạn chế khi tour đang ACTIVE (chỉ mô tả, ảnh, highlights, included, excluded, status)
+    # Sửa hạn chế khi tour đang ACTIVE
     if tour_cu.get("status") == "ACTIVE":
         # Kiểm tra nếu cố đổi các trường cốt lõi
         if "duration_days" in data and int(data["duration_days"]) != int(tour_cu.get("duration_days", 1)):
             raise TourBusinessRuleError(
-                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, chỉ được cập nhật mô tả, hình ảnh, điểm nhấn và dịch vụ bao gồm/không bao gồm. "
-                "Để đổi số ngày, vui lòng chuyển tour về DRAFT trước."
+                "Tour đang mở bán nên chỉ được cập nhật mô tả, hình ảnh và dịch vụ. Vui lòng tạm dừng mở bán nếu muốn đổi số ngày."
             )
         if "itinerary" in data and _normalize_json_obj(data["itinerary"]) != _normalize_json_obj(tour_cu.get("itinerary")):
             raise TourBusinessRuleError(
-                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, chỉ được cập nhật mô tả, hình ảnh, điểm nhấn và dịch vụ bao gồm/không bao gồm. "
-                "Để đổi lịch trình, vui lòng chuyển tour về DRAFT trước."
+                "Tour đang mở bán nên chỉ được cập nhật mô tả, hình ảnh và dịch vụ. Vui lòng tạm dừng mở bán nếu muốn đổi lịch trình."
             )
         if "province_id" in data and data["province_id"] != tour_cu.get("province_id"):
             raise TourBusinessRuleError(
-                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, không được đổi điểm đến tỉnh/thành khi tour đang mở bán."
+                "Không được đổi điểm đến tỉnh/thành khi tour đang mở bán."
             )
         if "cancellation_policy" in data and _normalize_json_obj(data["cancellation_policy"]) != _normalize_json_obj(tour_cu.get("cancellation_policy")):
             raise TourBusinessRuleError(
-                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, không được đổi chính sách hủy khi tour đang mở bán."
+                "Không được đổi chính sách hủy khi tour đang mở bán."
             )
         if "name" in data and data["name"].strip() != tour_cu.get("name", "").strip():
             raise TourBusinessRuleError(
-                "Tour đang ở trạng thái ACTIVE. Theo quy tắc BR-T4, không được đổi tên tour khi đang mở bán. Vui lòng chuyển về DRAFT nếu muốn đổi."
+                "Không được đổi tên tour khi đang mở bán. Vui lòng tạm dừng mở bán nếu muốn đổi tên."
             )
 
     # Kiểm tra slug nếu đổi
@@ -1949,7 +2371,7 @@ def xoa_tour_operator(tour_id: int, current_user: dict) -> dict:
     is_admin = current_user.get("is_admin", False)
     if not is_admin:
         if tour.get("operator_id") != current_user.get("operator_id"):
-            raise TourPermissionDeniedError("Bạn không có quyền xoá tour của nhà điều hành khác (BR-O1).")
+            raise TourPermissionDeniedError("Bạn không có quyền xoá tour của nhà điều hành khác.")
 
     has_booking = tour_repo.tour_has_bookings(tour_id)
     if has_booking:
@@ -1958,7 +2380,7 @@ def xoa_tour_operator(tour_id: int, current_user: dict) -> dict:
             "success": True,
             "tour_id": tour_id,
             "soft_deleted": True,
-            "message": "Tour đã có đơn đặt phòng nên được chuyển sang trạng thái ngừng hoạt động (INACTIVE) theo quy tắc BR-T5.",
+            "message": "Tour đã có đơn đặt nên được chuyển sang trạng thái ngừng hoạt động.",
         }
     else:
         tour_repo.delete_tour_hard(tour_id)
@@ -1975,28 +2397,24 @@ def xoa_tour_operator(tour_id: int, current_user: dict) -> dict:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _kiem_tra_quyen_tour(tour: dict, current_user: dict):
-    """Kiểm tra quyền thao tác trên tour theo quy tắc BR-O1."""
+    """Kiểm tra quyền thao tác trên tour."""
     is_admin = current_user.get("is_admin", False)
     if is_admin:
         return
     tour_op_id = tour.get("operator_id")
     user_op_id = current_user.get("operator_id")
     if tour_op_id is None or user_op_id is None or tour_op_id != user_op_id:
-        raise TourPermissionDeniedError("Bạn không có quyền thao tác trên tour của nhà điều hành khác (BR-O1).")
+        raise TourPermissionDeniedError("Bạn không có quyền thao tác trên tour của nhà điều hành khác.")
 
 
 def _kiem_tra_sale_hop_le(list_price, sale_price):
-    """Kiểm tra sale_price với list_price trước khi lưu đợt khởi hành.
-
-    Bảng tour_departures có CHECK tương tự; validate ở service để trả 400
-    (TourBusinessRuleError) thay vì để DB văng lỗi constraint -> HTTP 500.
-    """
+    """Kiểm tra sale_price với list_price trước khi lưu đợt khởi hành."""
     if sale_price is None:
         return
     try:
         sp = int(sale_price)
     except (ValueError, TypeError):
-        raise TourBusinessRuleError("Giá khuyến mãi (sale_price) phải là số nguyên.")
+        raise TourBusinessRuleError("Giá khuyến mãi phải là số nguyên.")
     if sp <= 0 or (list_price is not None and sp >= int(list_price)):
         raise TourBusinessRuleError(
             f"Giá khuyến mãi ({sp}) phải lớn hơn 0 và nhỏ hơn giá gốc ({list_price})."
@@ -2053,57 +2471,56 @@ def tao_departure_operator(tour_id: int, data: dict, current_user: dict) -> dict
 
     # 1. Kiểm tra các trường bắt buộc
     if "depart_date" not in data or data["depart_date"] is None:
-        raise TourBusinessRuleError("Thiếu trường bắt buộc depart_date.")
+        raise TourBusinessRuleError("Vui lòng chọn ngày khởi hành.")
     if "list_price" not in data or data["list_price"] is None:
-        raise TourBusinessRuleError("Thiếu trường bắt buộc list_price.")
+        raise TourBusinessRuleError("Vui lòng nhập giá niêm yết.")
     if "seats_total" not in data or data["seats_total"] is None:
-        raise TourBusinessRuleError("Thiếu trường bắt buộc seats_total.")
+        raise TourBusinessRuleError("Vui lòng nhập tổng số chỗ.")
 
-    # 2. Xử lý và kiểm tra ngày khởi hành (BR-D1)
+    # 2. Xử lý và kiểm tra ngày khởi hành
     dep_date = data["depart_date"]
     if isinstance(dep_date, str):
         try:
             dep_date = date.fromisoformat(dep_date)
         except ValueError:
-            raise TourBusinessRuleError(f"Định dạng ngày depart_date không hợp lệ: '{dep_date}'. Yêu cầu YYYY-MM-DD.")
+            raise TourBusinessRuleError(f"Định dạng ngày khởi hành không hợp lệ: '{dep_date}'. Yêu cầu định dạng YYYY-MM-DD.")
 
     today_vn = datetime.now(TZ_VN).date()
     min_lead_date = today_vn + timedelta(days=2)
     if dep_date < min_lead_date:
         raise TourBusinessRuleError(
-            f"Ngày khởi hành ({dep_date}) phải từ {min_lead_date} trở đi "
-            f"(tối thiểu 2 ngày trước khởi hành theo BR-D1)."
+            f"Ngày khởi hành ({dep_date}) phải cách thời điểm hiện tại ít nhất 2 ngày (từ ngày {min_lead_date} trở đi)."
         )
 
     # 3. Kiểm tra giá niêm yết và số chỗ
     try:
         list_price = int(data["list_price"])
     except (ValueError, TypeError):
-        raise TourBusinessRuleError("Giá gốc (list_price) phải là số nguyên.")
+        raise TourBusinessRuleError("Giá niêm yết phải là số nguyên.")
     if list_price <= 0:
-        raise TourBusinessRuleError("Giá gốc (list_price) phải lớn hơn 0.")
+        raise TourBusinessRuleError("Giá niêm yết phải lớn hơn 0.")
     _kiem_tra_sale_hop_le(list_price, data.get("sale_price"))
 
     try:
         seats_total = int(data["seats_total"])
     except (ValueError, TypeError):
-        raise TourBusinessRuleError("Tổng số chỗ (seats_total) phải là số nguyên.")
+        raise TourBusinessRuleError("Tổng số chỗ phải là số nguyên.")
     if seats_total < 1:
-        raise TourBusinessRuleError("Tổng số chỗ (seats_total) phải lớn hơn hoặc bằng 1.")
+        raise TourBusinessRuleError("Tổng số chỗ phải lớn hơn hoặc bằng 1.")
 
     min_pax = int(data.get("min_pax") or 1)
     if min_pax < 1:
-        raise TourBusinessRuleError("Số khách tối thiểu (min_pax) phải lớn hơn hoặc bằng 1.")
+        raise TourBusinessRuleError("Số khách tối thiểu để khởi hành phải lớn hơn hoặc bằng 1.")
 
     status = data.get("status") or "OPEN"
     valid_statuses = {'OPEN', 'FULL', 'CLOSED', 'DEPARTED', 'COMPLETED', 'CANCELLED'}
     if status not in valid_statuses:
         raise TourBusinessRuleError(f"Trạng thái đợt khởi hành '{status}' không hợp lệ.")
 
-    # 4. Kiểm tra trùng ngày (BR-D2)
+    # 4. Kiểm tra trùng ngày
     existing = tour_repo.get_departure_by_tour_and_date(tour_id, dep_date)
     if existing:
-        raise TourBusinessRuleError(f"Đợt khởi hành ngày {dep_date} của tour này đã tồn tại (BR-D2).")
+        raise TourBusinessRuleError(f"Đợt khởi hành ngày {dep_date} của tour này đã tồn tại.")
 
     # 5. Lưu đợt khởi hành mới
     payload = dict(data)
@@ -2232,12 +2649,11 @@ def cap_nhat_departure_operator(
             min_lead_date = today_vn + timedelta(days=2)
             if new_date < min_lead_date:
                 raise TourBusinessRuleError(
-                    f"Ngày khởi hành ({new_date}) phải từ {min_lead_date} trở đi "
-                    f"(tối thiểu 2 ngày trước khởi hành theo BR-D1)."
+                    f"Ngày khởi hành ({new_date}) phải cách thời điểm hiện tại ít nhất 2 ngày (từ ngày {min_lead_date} trở đi)."
                 )
             dup = tour_repo.get_departure_by_tour_and_date(dep["tour_id"], new_date)
             if dup and dup["id"] != departure_id:
-                raise TourBusinessRuleError(f"Đợt khởi hành ngày {new_date} của tour này đã tồn tại (BR-D2).")
+                raise TourBusinessRuleError(f"Đợt khởi hành ngày {new_date} của tour này đã tồn tại.")
             update_payload["depart_date"] = new_date
 
     # 2. Cập nhật giá niêm yết
@@ -2245,18 +2661,17 @@ def cap_nhat_departure_operator(
         try:
             lp = int(data["list_price"])
         except (ValueError, TypeError):
-            raise TourBusinessRuleError("Giá gốc (list_price) phải là số nguyên.")
+            raise TourBusinessRuleError("Giá niêm yết phải là số nguyên.")
         if lp <= 0:
-            raise TourBusinessRuleError("Giá gốc (list_price) phải lớn hơn 0.")
+            raise TourBusinessRuleError("Giá niêm yết phải lớn hơn 0.")
 
-        # BR-SL5 / E13: Đợt đã có booking (đang giữ/đã bán, chưa release) -> không cho tăng list_price
         cur_lp = dep.get("list_price") if dep.get("list_price") is not None else dep.get("price")
         if cur_lp is not None and lp > cur_lp:
             sold_seats = tour_repo.get_departure_sold_seats(departure_id)
             if sold_seats > 0:
                 raise TourBusinessRuleError(
                     f"Đợt khởi hành đã có {sold_seats} chỗ đang giữ hoặc đã bán, "
-                    f"không được phép tăng giá gốc (list_price) từ {cur_lp} lên {lp} (BR-SL5/E13)."
+                    f"không được phép tăng giá niêm yết từ {cur_lp:,.0f} đ lên {lp:,.0f} đ."
                 )
         update_payload["list_price"] = lp
 
@@ -2273,15 +2688,14 @@ def cap_nhat_departure_operator(
     if "sale_starts_at" in data or "sale_ends_at" in data:
         _kiem_tra_cua_so_sale(next_starts, next_ends)
 
-
     # 3. Cập nhật min_pax
     if "min_pax" in data and data["min_pax"] is not None:
         try:
             mp = int(data["min_pax"])
         except (ValueError, TypeError):
-            raise TourBusinessRuleError("Số khách tối thiểu (min_pax) phải là số nguyên.")
+            raise TourBusinessRuleError("Số khách tối thiểu phải là số nguyên.")
         if mp < 1:
-            raise TourBusinessRuleError("Số khách tối thiểu (min_pax) phải lớn hơn hoặc bằng 1.")
+            raise TourBusinessRuleError("Số khách tối thiểu để khởi hành phải lớn hơn hoặc bằng 1.")
         update_payload["min_pax"] = mp
 
     # 4. Cập nhật trạng thái đợt
@@ -2292,7 +2706,7 @@ def cap_nhat_departure_operator(
             raise TourBusinessRuleError(f"Trạng thái đợt khởi hành '{st}' không hợp lệ.")
         update_payload["status"] = st
 
-    # 5. Cập nhật số chỗ (BR-D4/E6 và BR-D3)
+    # 5. Cập nhật số chỗ
     sold_seats = tour_repo.get_departure_sold_seats(departure_id)
     cur_seats_total = dep["seats_total"]
     cur_seats_left = dep["seats_left"]
@@ -2301,14 +2715,13 @@ def cap_nhat_departure_operator(
         try:
             new_seats_total = int(data["seats_total"])
         except (ValueError, TypeError):
-            raise TourBusinessRuleError("Tổng số chỗ (seats_total) phải là số nguyên.")
+            raise TourBusinessRuleError("Tổng số chỗ phải là số nguyên.")
         if new_seats_total < 1:
-            raise TourBusinessRuleError("Tổng số chỗ (seats_total) phải lớn hơn hoặc bằng 1.")
+            raise TourBusinessRuleError("Tổng số chỗ phải lớn hơn hoặc bằng 1.")
 
-        # BR-D4 / E6: Không được giảm xuống dưới số chỗ đã bán
         if new_seats_total < sold_seats:
             raise TourBusinessRuleError(
-                f"Không thể giảm tổng số chỗ xuống {new_seats_total} vì đợt đã bán {sold_seats} chỗ (BR-D4/E6)."
+                f"Không thể giảm tổng số chỗ xuống {new_seats_total} vì đợt đã có {sold_seats} chỗ đã bán."
             )
 
         update_payload["seats_total"] = new_seats_total
@@ -2320,25 +2733,26 @@ def cap_nhat_departure_operator(
             try:
                 new_seats_left = int(data["seats_left"])
             except (ValueError, TypeError):
-                raise TourBusinessRuleError("Số chỗ còn lại (seats_left) phải là số nguyên.")
+                raise TourBusinessRuleError("Số chỗ còn lại phải là số nguyên.")
             max_seats_left = new_seats_total - sold_seats
             if new_seats_left < 0 or new_seats_left > max_seats_left:
                 raise TourBusinessRuleError(
                     f"Số chỗ còn lại ({new_seats_left}) phải từ 0 đến {max_seats_left} "
-                    f"vì đợt đang có {sold_seats} chỗ đã bán/giữ (BR-D3/BR-D4)."
+                    f"vì đợt đang có {sold_seats} chỗ đã bán/giữ."
                 )
             update_payload["seats_left"] = new_seats_left
     elif "seats_left" in data and data["seats_left"] is not None:
         try:
             new_seats_left = int(data["seats_left"])
         except (ValueError, TypeError):
-            raise TourBusinessRuleError("Số chỗ còn lại (seats_left) phải là số nguyên.")
+            raise TourBusinessRuleError("Số chỗ còn lại phải là số nguyên.")
         max_seats_left = cur_seats_total - sold_seats
         if new_seats_left < 0 or new_seats_left > max_seats_left:
             raise TourBusinessRuleError(
                 f"Số chỗ còn lại ({new_seats_left}) phải từ 0 đến {max_seats_left} "
-                f"vì đợt đang có {sold_seats} chỗ đã bán/giữ (BR-D3/BR-D4)."
+                f"vì đợt đang có {sold_seats} chỗ đã bán/giữ."
             )
+        update_payload["seats_left"] = new_seats_left
         update_payload["seats_left"] = new_seats_left
 
     # Giữ các trường sale nếu có truyền vào (chuẩn bị cho 5.4)

@@ -2,20 +2,196 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apply Playfair Display font globally for the entire application */
+/* Global Theme Tokens & Design System */
+:root {
+  /* 1. Nền toàn website dùng chung đồng bộ */
+  --bg-app: #f4f6fa;
+
+  /* 2. Màu chữ & Màu điểm nhấn dùng chung */
+  --text-main: #0f172a;        /* Đen slate-900 sắc nét */
+  --text-body: #334155;        /* Nội dung slate-700 */
+  --text-muted: #64748b;       /* Nhãn phụ slate-500 */
+  --text-light: #94a3b8;       /* Chữ mờ slate-400 */
+  --text-white: #ffffff;
+  --accent-sky: #0284c7;       /* Xanh da trời điểm nhấn */
+  --accent-sky-light: #38bdf8; /* Xanh da trời sáng */
+  --accent-sky-soft: #e0f2fe;  /* Nền xanh nhạt */
+
+  /* 3. Khung kính Liquid Panel lớn (Sidebar, Wrapper chính) */
+  --liquid-panel-bg: rgba(255, 255, 255, 0.78);
+  --liquid-panel-blur: blur(32px) saturate(190%);
+  --liquid-panel-border: 1.5px solid rgba(255, 255, 255, 0.95);
+  --liquid-panel-shadow: 0 20px 50px -10px rgba(2, 132, 199, 0.12),
+                         0 4px 16px rgba(0, 0, 0, 0.03),
+                         inset 0 2px 2px #ffffff,
+                         inset 0 -1.5px 2px rgba(2, 132, 199, 0.06);
+
+  /* 4. Khối thẻ Liquid Card 3D độc lập (Tour Card, Hero Card, Booking Card) */
+  --liquid-card-bg: rgba(255, 255, 255, 0.84);
+  --liquid-card-blur: blur(28px) saturate(180%);
+  --liquid-card-border: 1.5px solid #ffffff;
+  --liquid-card-shadow: 0 16px 36px -8px rgba(2, 132, 199, 0.15),
+                        0 2px 8px rgba(0, 0, 0, 0.02),
+                        inset 0 2px 2.5px #ffffff,
+                        inset 0 -1.5px 2px rgba(2, 132, 199, 0.05);
+  --liquid-card-shadow-hover: 0 20px 45px -8px rgba(2, 132, 199, 0.22),
+                              inset 0 2.5px 3px #ffffff;
+
+  /* 5. Viên nhộng Liquid Pill (Dropdowns, Inputs, Nav Links, Filter Pills, Badges) */
+  --liquid-pill-bg: rgba(255, 255, 255, 0.9);
+  --liquid-pill-blur: blur(20px);
+  --liquid-pill-border: 1.5px solid #ffffff;
+  --liquid-pill-shadow: 0 6px 18px -4px rgba(2, 132, 199, 0.12),
+                        inset 0 1.5px 2px #ffffff;
+  --liquid-pill-hover-bg: #ffffff;
+  --liquid-pill-hover-border: #38bdf8;
+  --liquid-pill-hover-shadow: 0 8px 22px -4px rgba(2, 132, 199, 0.2),
+                              inset 0 1.5px 2px #ffffff;
+
+  /* 6. Liquid Input */
+  --liquid-input-bg: rgba(255, 255, 255, 0.9);
+  --liquid-input-border: 1.5px solid rgba(255, 255, 255, 0.95);
+  --liquid-input-shadow: 0 4px 12px rgba(2, 132, 199, 0.06), inset 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  /* 7. Liquid Buttons */
+  --btn-primary-bg: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  --btn-primary-border: 1px solid rgba(255, 255, 255, 0.7);
+  --btn-primary-shadow: 0 10px 24px -4px rgba(2, 132, 199, 0.45),
+                        inset 0 2px 2px rgba(255, 255, 255, 0.8),
+                        inset 0 -2px 3px rgba(0, 0, 0, 0.12);
+
+  --btn-secondary-bg: rgba(255, 255, 255, 0.92);
+  --btn-secondary-border: 1.5px solid #ffffff;
+  --btn-secondary-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.15),
+                          inset 0 1.5px 2px #ffffff;
+
+  --radius-pill: 9999px;
+  --radius-card: 24px;
+  --radius-panel: 32px;
+}
+
 @layer base {
-  html, body {
+  html, body, #root {
     color-scheme: light;
+    min-height: 100vh;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   }
 
-  body {
-    @apply bg-[#f4f6f8] text-slate-900 min-h-screen antialiased selection:bg-emerald-500/20 selection:text-emerald-900;
+  body, #root {
+    background: var(--bg-app);
+    background-attachment: fixed;
+    color: var(--text-main);
+    antialiased: true;
+    selection-background-color: rgba(56, 189, 248, 0.35);
   }
 }
 
 @layer components {
-  /* Dynamic utilities */
+  /* ==========================================================================
+     UNIFIED AURA PAGE SHELL (Dùng chung cho cả 3 trang: Home, Tours, TourDetail)
+     Cả 3 trang chia sẻ 100% cấu trúc layout bao bọc chung, edge-to-edge, không padding thừa
+     ========================================================================== */
+  .aura-page,
+  .aura-home,
+  .aura-tours,
+  .aura-detail {
+    background: transparent !important;
+    color: var(--text-main) !important;
+    min-height: 100vh !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+    overflow-x: hidden !important;
+  }
+
+  .aura-page__container,
+  .aura-home__container,
+  .aura-tours__container,
+  .aura-detail__container {
+    width: 100% !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    max-height: 100vh !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+    border: none !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* ==========================================================================
+     UNIFIED CUSTOMER 2-COLUMN SYSTEM (TRÁI NAV, PHẢI CONTENT LỚN HƠN)
+     Áp dụng thống nhất cho tất cả các trang trong /src/customer
+     ========================================================================== */
+  .customer-layout {
+    display: flex !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    background: var(--bg-app) !important;
+    background-attachment: fixed !important;
+    color: var(--text-main) !important;
+    box-sizing: border-box !important;
+    padding: 16px !important;
+    gap: 20px !important;
+  }
+
+  /* Cột Trái: Nav Sidebar (~260px, nhỏ hơn bên phải) */
+  .customer-sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 24px 18px !important;
+    background: var(--liquid-card-bg) !important;
+    backdrop-filter: var(--liquid-card-blur) !important;
+    -webkit-backdrop-filter: var(--liquid-card-blur) !important;
+    border: var(--liquid-card-border) !important;
+    border-radius: var(--radius-panel) !important;
+    box-shadow: var(--liquid-card-shadow) !important;
+    color: var(--text-main) !important;
+    overflow-y: auto !important;
+    scrollbar-width: none !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+  }
+
+  .customer-sidebar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Cột Phải: Nội Dung Chính (Lớn hơn bên trái, flex: 1, cuộn độc lập) */
+  .customer-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    scrollbar-width: none !important;
+  }
+
+  .customer-content::-webkit-scrollbar {
+    display: none !important;
+  }
+
   .line-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -23,40 +199,137 @@
     overflow: hidden;
   }
 
-  /* Material 3 Card (Double-bezel / 24px Squircle) */
+  /* Shared Liquid Glass Components */
+  .liquid-panel {
+    background: var(--liquid-panel-bg);
+    backdrop-filter: var(--liquid-panel-blur);
+    -webkit-backdrop-filter: var(--liquid-panel-blur);
+    border: var(--liquid-panel-border);
+    box-shadow: var(--liquid-panel-shadow);
+    border-radius: var(--radius-panel);
+    color: var(--text-main);
+  }
+
+  .liquid-card,
   .ui-card {
-    @apply bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200;
+    background: var(--liquid-card-bg);
+    backdrop-filter: var(--liquid-card-blur);
+    -webkit-backdrop-filter: var(--liquid-card-blur);
+    border: var(--liquid-card-border);
+    box-shadow: var(--liquid-card-shadow);
+    border-radius: var(--radius-card);
+    color: var(--text-main);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    transform: none !important;
   }
 
-  /* Material 3 Input Field */
-  .ui-field {
-    @apply rounded-2xl bg-white border border-slate-300/80 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all;
+  .liquid-card:hover,
+  .ui-card:hover {
+    box-shadow: var(--liquid-card-shadow-hover);
+    transform: none !important;
   }
 
-  /* Material 3 Buttons */
+  .liquid-pill {
+    background: var(--liquid-pill-bg);
+    backdrop-filter: var(--liquid-pill-blur);
+    -webkit-backdrop-filter: var(--liquid-pill-blur);
+    border: var(--liquid-pill-border);
+    box-shadow: var(--liquid-pill-shadow);
+    border-radius: var(--radius-pill);
+    color: var(--text-main);
+    transition: all 0.2s ease;
+  }
+
+  .liquid-pill:hover {
+    background: var(--liquid-pill-hover-bg);
+    border-color: var(--liquid-pill-hover-border);
+    box-shadow: var(--liquid-pill-hover-shadow);
+  }
+
+  .ui-field,
+  .liquid-input {
+    background: var(--liquid-input-bg);
+    backdrop-filter: blur(20px);
+    border: var(--liquid-input-border);
+    box-shadow: var(--liquid-input-shadow);
+    border-radius: 16px;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: var(--text-main);
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .ui-field:focus,
+  .liquid-input:focus {
+    background: #ffffff;
+    border-color: var(--accent-sky-light);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+  }
+
   .btn {
-    @apply rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center gap-2;
-  }
-  
-  .btn-primary {
-    @apply btn bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-md hover:shadow-emerald-600/20;
+    border-radius: var(--radius-pill);
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    border: none;
+    transform: none !important;
   }
 
-  .btn-ghost {
-    @apply btn border border-slate-300/80 text-slate-700 bg-white hover:bg-slate-100 hover:border-slate-400;
+  .btn-primary {
+    background: var(--btn-primary-bg);
+    border: var(--btn-primary-border);
+    box-shadow: var(--btn-primary-shadow);
+    color: var(--text-white);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(180deg, #60a5fa 0%, #0369a1 100%);
+    box-shadow: 0 12px 28px -4px rgba(2, 132, 199, 0.55), inset 0 2px 2px #fff;
   }
 
   .btn-secondary {
-    @apply btn bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
+    background: var(--btn-secondary-bg);
+    border: var(--btn-secondary-border);
+    box-shadow: var(--btn-secondary-shadow);
+    color: var(--accent-sky);
   }
 
-  /* Material 3 Eyebrow & Badges */
+  .btn-secondary:hover {
+    background: #ffffff;
+    border-color: var(--accent-sky-light);
+    box-shadow: 0 10px 24px -4px rgba(2, 132, 199, 0.25);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-body);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
   .ui-badge {
-    @apply rounded-full px-3 py-1 text-xs font-semibold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200/50 inline-flex items-center gap-1.5;
+    border-radius: var(--radius-pill);
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--liquid-pill-bg);
+    border: var(--liquid-pill-border);
+    color: var(--accent-sky);
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  /* Skeleton Loading */
   .skeleton {
-    @apply animate-pulse bg-slate-200/70 rounded-2xl;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    background: rgba(224, 242, 254, 0.6);
+    border-radius: 16px;
   }
 }

@@ -70,7 +70,7 @@ export default function PlannerRail({
       <div className="planner-rail__top">
         <button
           type="button"
-          onClick={() => (nav ? nav("/chuyen-di") : (window.location.href = "/chuyen-di"))}
+          onClick={() => (nav ? nav("/trips") : (window.location.href = "/trips"))}
           className="planner-rail__back-btn"
           title="Quay lại danh sách chuyến đi"
         >
@@ -78,7 +78,7 @@ export default function PlannerRail({
         </button>
         <span
           className="planner-rail__brand"
-          onClick={() => (nav ? nav("/chuyen-di") : (window.location.href = "/chuyen-di"))}
+          onClick={() => (nav ? nav("/trips") : (window.location.href = "/trips"))}
           role="button"
           tabIndex={0}
         >

@@ -37,9 +37,9 @@ export default function DepartureTable({
   }
 
   return (
-    <div className="op-departure-table__div-6 op-departure-table__div-2">
-      <div className="op-departure-table__div-7">
-        <table className="op-departure-table__table-8">
+    <div className="op-departure-table__div-6" style={{ width: "100%", overflow: "hidden", border: "1px solid #e2e8f0", borderRadius: "10px", background: "#ffffff" }}>
+      <div className="op-departure-table__div-7" style={{ width: "100%", overflowX: "auto" }}>
+        <table className="op-departure-table__table-8" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr className="op-departure-table__tr-9">
               <th className="op-departure-table__th-10">Ngày khởi hành</th>
@@ -73,18 +73,18 @@ export default function DepartureTable({
 
                   {/* Giá bán & Giá gốc */}
                   <td className="op-departure-table__td-20">
-                    <div className="op-departure-table__div-21">
-                      <span className="op-departure-table__span-22">
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                      <span style={{ fontWeight: "700", color: "#0f172a", fontSize: "14px" }}>
                         {money(departure.effective_price || departure.sale_price || departure.list_price)}
                       </span>
                       {isSale && discountPct > 0 && (
-                        <span className="op-departure-table__span-23 op-departure-table__span-3">
-                          -{discountPct}%
+                        <span style={{ fontSize: "12px", color: "#dc2626", fontWeight: "600" }}>
+                          (-{discountPct}%)
                         </span>
                       )}
                     </div>
                     {isSale && departure.list_price && (
-                      <div className="line-through op-departure-table__div-24">
+                      <div style={{ fontSize: "12px", color: "#94a3b8", textDecoration: "line-through", marginTop: "2px" }}>
                         Gốc: {money(departure.list_price)}
                       </div>
                     )}
@@ -92,11 +92,11 @@ export default function DepartureTable({
 
                   {/* Chỗ ngồi */}
                   <td className="op-departure-table__td-25">
-                    <div className="op-departure-table__div-26">
-                      <span className="op-departure-table__span-27">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
                         {soldSeats}/{totalSeats} chỗ
                       </span>
-                      <span className={departure.seats_left === 0 ? "op-departure-table__span-28--variant-1" : "op-departure-table__span-29--variant-2"}>
+                      <span style={{ fontSize: "12px", color: departure.seats_left === 0 ? "#dc2626" : "#64748b", fontWeight: "500" }}>
                         {departure.seats_left === 0 ? "Hết chỗ" : `Còn ${departure.seats_left} chỗ`}
                       </span>
                     </div>
@@ -110,10 +110,9 @@ export default function DepartureTable({
                     </div>
                   </td>
 
-                  {/* Quy mô đoàn */}
+                  {/* Quy mô đoàn (không dùng badge) */}
                   <td className="op-departure-table__td-35">
-                    <span className="op-departure-table__span-36 op-departure-table__span-5">
-                      <span className="material-symbols-outlined op-departure-table__span-37">group</span>
+                    <span style={{ fontSize: "13px", color: "#334155" }}>
                       Tối thiểu {departure.min_pax || 1} khách
                     </span>
                   </td>
@@ -128,38 +127,71 @@ export default function DepartureTable({
                     {renderActions ? (
                       renderActions(departure)
                     ) : (
-                      <div className="op-departure-table__div-40">
+                      <div className="op-departure-table__div-40" style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                         {onEditSale && (
                           <button
                             type="button"
                             onClick={() => onEditSale(departure)}
-                            className="op-departure-table__button-41 op-departure-table__button-6"
-                            title="Đặt hoặc sửa giá khuyến mãi"
+                            title={isSale ? "Sửa giá khuyến mãi" : "Đặt giá khuyến mãi"}
+                            aria-label={isSale ? "Sửa giá khuyến mãi" : "Đặt giá khuyến mãi"}
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: "6px",
+                              border: "1px solid #e2e8f0",
+                              background: isSale ? "#f0fdf4" : "#ffffff",
+                              color: isSale ? "#16a34a" : "#475569",
+                              cursor: "pointer",
+                            }}
                           >
-                            <span className="material-symbols-outlined op-departure-table__span-42">percent</span>
-                            {isSale ? "Sửa sale" : "Đặt sale"}
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>percent</span>
                           </button>
                         )}
                         {onExportGuests && (
                           <button
                             type="button"
                             onClick={() => onExportGuests(departure.id)}
-                            className="op-departure-table__button-43 op-departure-table__button-7"
                             title="Xuất file CSV danh sách khách"
+                            aria-label="Xuất CSV"
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: "6px",
+                              border: "1px solid #e2e8f0",
+                              background: "#ffffff",
+                              color: "#475569",
+                              cursor: "pointer",
+                            }}
                           >
-                            <span className="material-symbols-outlined op-departure-table__span-44">download</span>
-                            Xuất CSV
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>
                           </button>
                         )}
                         {onCancelDeparture && departure.status !== "CANCELLED" && (
                           <button
                             type="button"
                             onClick={() => onCancelDeparture(departure)}
-                            className="op-departure-table__button-45 op-departure-table__button-8"
                             title="Huỷ đợt khởi hành này"
+                            aria-label="Huỷ đợt"
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: "6px",
+                              border: "1px solid #fee2e2",
+                              background: "#fff1f2",
+                              color: "#dc2626",
+                              cursor: "pointer",
+                            }}
                           >
-                            <span className="material-symbols-outlined op-departure-table__span-46">event_busy</span>
-                            Huỷ đợt
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>event_busy</span>
                           </button>
                         )}
                       </div>

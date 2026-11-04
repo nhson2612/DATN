@@ -1,0 +1,568 @@
+/* ==========================================================================
+   NEO-BENTO DASHBOARD SYSTEM (Aura Voyage Smart Tourism)
+   Thiết kế Bento hiện đại, pastel sáng, typography nổi bật, tương tác mượt mà
+   ========================================================================== */
+
+:root {
+  --bento-font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --bento-font-mono: 'JetBrains Mono', monospace;
+
+  --bento-bg-canvas: #f8fafc;
+  --bento-bg-card: #ffffff;
+  --bento-color-lime: #0f172a;
+  --bento-color-lime-soft: #f1f5f9;
+  --bento-color-sky-soft: #f1f5f9;
+  --bento-color-sky-deep: #0f172a;
+  --bento-color-purple-soft: #f1f5f9;
+  --bento-color-purple-deep: #475569;
+  --bento-color-rose-soft: #fee2e2;
+  --bento-color-rose-deep: #dc2626;
+  --bento-color-amber-soft: #fef3c7;
+
+  --bento-text-dark: #0f172a;
+  --bento-text-body: #334155;
+  --bento-text-muted: #64748b;
+  --bento-text-light: #94a3b8;
+
+  --bento-radius-sm: 8px;
+  --bento-radius-md: 12px;
+  --bento-radius-lg: 16px;
+  --bento-radius-xl: 16px;
+
+  --bento-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05);
+  --bento-shadow-hover: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+}
+
+.bento-wrapper {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: var(--bento-font-main);
+  color: var(--bento-text-body);
+}
+
+/* BENTO ROW & CARDS */
+.bento-row {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.bento-card {
+  background: var(--bento-bg-card);
+  border-radius: var(--bento-radius-xl);
+  padding: 24px;
+  box-shadow: var(--bento-shadow);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: box-shadow 0.25s ease;
+  box-sizing: border-box;
+}
+
+.bento-card:hover {
+  box-shadow: var(--bento-shadow-hover);
+}
+
+/* CARD PASTEL SKY BLUE -> THẺ TRẮNG CHUẨN TỐI GIẢN */
+.card-sky-pastel {
+  background: #ffffff;
+  color: var(--bento-text-dark);
+  border: 1px solid #e2e8f0;
+}
+
+/* DANH SÁCH DÒNG PHẲNG KHÔNG BỌC CARD CON */
+.order-flat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 8px;
+}
+
+.order-flat-row {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.order-flat-row:last-child {
+  border-bottom: none;
+}
+
+/* AVATAR STACK */
+.avatar-stack {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-circle-sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  margin-left: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 10px;
+  color: #ffffff;
+}
+
+.avatar-circle-sm:first-child {
+  margin-left: 0;
+}
+
+.avatar-more {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -8px;
+  border: 2px solid #ffffff;
+}
+
+/* MINI SEGMENTED TAB */
+.chart-micro-tabs {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  gap: 3px;
+  align-self: flex-start;
+  margin: 10px 0 12px;
+}
+
+.micro-tab-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bento-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.micro-tab-btn.active {
+  background: #ffffff;
+  color: var(--bento-text-dark);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* KHUNG HIỂN THỊ CỐ ĐỊNH 170PX */
+.chart-fixed-viewport {
+  width: 100%;
+  height: 170px;
+  position: relative;
+}
+
+.chart-view-pane {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* BIỂU ĐỒ CỘT THỰC THỤ */
+.bar-chart-stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 130px;
+  gap: 12px;
+  padding: 10px 6px 6px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.bar-column-item {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.bar-val-bubble {
+  font-size: 11px;
+  font-weight: 800;
+  font-family: var(--bento-font-mono);
+  color: var(--bento-text-dark);
+  line-height: 1;
+}
+
+.bar-pillar {
+  width: 100%;
+  max-width: 36px;
+  border-radius: 8px 8px 3px 3px;
+  transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s ease;
+  cursor: pointer;
+}
+
+.bar-pillar:hover {
+  transform: scaleY(1.04);
+  filter: brightness(0.95);
+}
+
+.bar-bottom-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 6px 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bento-text-muted);
+}
+
+.bar-label-item {
+  flex: 1;
+  text-align: center;
+}
+
+.pillar-sun { height: 55%; background: #bef264; }
+.pillar-mon { height: 76%; background: #6ee7b7; }
+.pillar-tue { height: 43%; background: #7dd3fc; }
+.pillar-wed { height: 64%; background: #c4b5fd; }
+.pillar-thu { height: 46%; background: #7dd3fc; }
+.pillar-fri { height: 84%; background: #bef264; }
+.pillar-sat { height: 100%; background: #fde047; box-shadow: 0 2px 8px rgba(253, 224, 71, 0.4); }
+
+/* ACTION CIRCLE BUTTON */
+.btn-circle-arrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  font-weight: 800;
+  font-size: 15px;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.btn-circle-arrow::after {
+  content: "↗";
+  transition: all 0.15s ease;
+}
+
+.btn-circle-arrow:hover {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+.btn-circle-arrow:hover::after {
+  content: "→";
+}
+
+/* BENTO HEADER LINK VỚI MŨI TÊN CẠNH HEADER: HOVER TỪ ↗ THÀNH → */
+.bento-header-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--bento-text-dark);
+  cursor: pointer;
+  transition: color 0.15s ease;
+  user-select: none;
+  text-decoration: none;
+}
+
+.bento-header-link:hover {
+  color: #0284c7;
+}
+
+.bento-header-link .arrow-symbol {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--bento-text-muted);
+  transition: color 0.15s ease;
+}
+
+.bento-header-link .arrow-symbol::after {
+  content: "↗";
+  display: inline-block;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.bento-header-link:hover .arrow-symbol {
+  color: #0284c7;
+}
+
+.bento-header-link:hover .arrow-symbol::after {
+  content: "→";
+  transform: translateX(3px);
+}
+
+
+/* CTA LINK ARROW HOVER CHUYỂN ↗ THÀNH → */
+.cta-link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bento-text-muted);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.cta-link-arrow:hover {
+  color: #0284c7;
+}
+
+.cta-link-arrow .arrow-symbol::after {
+  content: "↗";
+  display: inline-block;
+  font-weight: 800;
+  transition: all 0.15s ease;
+}
+
+.cta-link-arrow:hover .arrow-symbol::after {
+  content: "→";
+  transform: translateX(2px);
+}
+
+/* SIDEBAR BENTO MENU */
+.bento-nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: var(--bento-radius-md);
+  color: var(--bento-text-body);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.nav-menu-item:hover {
+  background: #f8fafc;
+  color: var(--bento-text-dark);
+}
+
+.nav-menu-item.active {
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.nav-menu-item span.material-symbols-outlined {
+  font-size: 20px;
+}
+
+/* BENTO TABLE */
+.bento-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.bento-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--bento-text-muted);
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.bento-table td {
+  padding: 14px;
+  font-size: 13px;
+  color: var(--bento-text-dark);
+  border-bottom: 1px solid #f8fafc;
+  vertical-align: middle;
+}
+
+.bento-table tr:hover td {
+  background: #f8fafc;
+}
+
+.tour-thumb-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tour-thumb-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+/* STATUS TAGS / TEXT - BỎ BADGE LÒE LOẸT */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  background: transparent !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pill-lime { background: transparent !important; color: #16a34a; }
+.pill-sky { background: transparent !important; color: #2563eb; }
+.pill-amber { background: transparent !important; color: #d97706; }
+.pill-purple { background: transparent !important; color: #64748b; }
+.pill-rose { background: transparent !important; color: #dc2626; }
+
+/* BUTTONS */
+.btn-lime {
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--bento-radius-sm);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-lime:hover {
+  filter: brightness(0.95);
+  
+}
+
+.btn-ghost {
+  background: #f1f5f9;
+  color: var(--bento-text-body);
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--bento-radius-sm);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-ghost:hover {
+  background: #e2e8f0;
+}
+
+/* TOGGLE TABS (ROLE / FILTER) */
+.role-toggle-group {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: var(--bento-radius-md);
+  gap: 4px;
+}
+
+.role-tab {
+  border: none;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bento-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.role-tab.active {
+  background: var(--bento-bg-card);
+  color: var(--bento-text-dark);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* CLEAN MINIMALIST EMPTY STATE (CHUẨN DRIB рациональ) */
+.bento-clean-empty-state {
+  width: 100%;
+  height: 100%;
+  min-height: 155px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px 16px;
+  background: transparent;
+  border: none;
+}
+
+.bento-clean-empty-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 8px;
+  margin-bottom: 3px;
+  letter-spacing: -0.01em;
+}
+
+.bento-clean-empty-desc {
+  font-size: 12px;
+  color: #64748b;
+  max-width: 340px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+
+.bento-empty-table-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.bento-empty-table-state .material-symbols-outlined {
+  font-size: 34px;
+  color: #10b981;
+  margin-bottom: 6px;
+}
+
+.bento-empty-table-state h4 {
+  margin: 0 0 3px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.bento-empty-table-state p {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+}
+

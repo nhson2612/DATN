@@ -1,87 +1,92 @@
-/* Khung khu nhà điều hành: menu dọc, thanh trên, vùng nội dung theo chuẩn Shadcn UI đen-trắng */
+/* Khung khu nhà điều hành: menu dọc, thanh trên, vùng nội dung theo chuẩn Neo-Bento */
 
 .op-shell {
   min-height: 100vh;
-  background: #fafafa;
-  color: #09090b;
+  background: var(--bento-bg-canvas, #edf1f7);
+  color: var(--bento-text-dark, #0f172a);
+  font-family: var(--bento-font-sans, "Plus Jakarta Sans", system-ui, -apple-system, sans-serif);
   font-size: 14px;
   line-height: 20px;
 }
 
-/* Menu dọc chuẩn Shadcn (ảnh shadcn.png) */
+/* Menu dọc chuẩn Neo-Bento */
 .op-shell__aside {
   position: fixed;
   left: 0;
   top: 0;
   height: 100%;
-  width: 256px;
+  width: 260px;
   background: #ffffff;
-  border-right: 1px solid #e4e4e7;
+  border-right: 1px solid rgba(226, 232, 240, 0.8);
   z-index: 50;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 16px 12px;
+  padding: 20px 14px;
   overflow-y: auto;
 }
 
 .op-shell__brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 8px 14px;
+  gap: 12px;
+  padding: 4px 6px 18px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .op-shell__brand-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: #09090b;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #0f172a;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   flex-shrink: 0;
+  box-shadow: none;
 }
 
 .op-shell__brand-name {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #09090b;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
   line-height: 1.2;
 }
 
 .op-shell__brand-role {
   display: block;
   font-size: 11px;
-  font-weight: 500;
-  color: #71717a;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 2px;
 }
 
-/* Nút Quick Create chuẩn ảnh shadcn.png */
+/* Nút Quick Create chuẩn Neo-Bento */
 .op-shell__quick-create {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 8px 12px;
-  background: #09090b;
+  padding: 10px 14px;
+  background: #0f172a;
   color: #ffffff;
   border-radius: 8px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
-  margin-bottom: 14px;
-  transition: background 0.15s ease, transform 0.1s ease;
+  margin: 16px 0 10px;
+  transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .op-shell__quick-create:hover {
-  background: #27272a;
+  background: #1e293b;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .op-shell__quick-create:active {
@@ -94,42 +99,43 @@
 }
 
 .op-shell__group-title {
-  padding: 6px 8px;
+  padding: 6px 10px;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #a1a1aa;
+  color: #94a3b8;
 }
 
 .op-shell__nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .op-shell__link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #52525b;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #475569;
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
 .op-shell__link:hover {
-  background: #f4f4f5;
-  color: #09090b;
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .op-shell__link--active {
-  background: #09090b !important;
+  background: #0f172a !important;
   color: #ffffff !important;
-  font-weight: 500;
+  font-weight: 700;
+  box-shadow: none;
 }
 
 .op-shell__link--active .op-shell__icon {
@@ -137,8 +143,8 @@
 }
 
 .op-shell__foot {
-  border-top: 1px solid #e4e4e7;
-  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
   margin-top: auto;
 }
 

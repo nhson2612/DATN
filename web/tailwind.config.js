@@ -12,20 +12,17 @@ export default {
 
       colors: {
         brand: {
-          canvas: '#B8ACA2',
-          cream: '#F6F4EE',
-          charcoal: '#141619',
-          darkDrawer: '#0D1117',
-          muted: '#7C7974',
-          softBorder: '#E5E1D8',
+          canvas: '#f0f9ff',
+          cream: '#ffffff',
+          charcoal: '#0f172a',
+          darkDrawer: '#0f172a',
+          muted: '#64748b',
+          softBorder: 'rgba(255, 255, 255, 0.9)',
+          sky: '#0284c7',
         },
-        // MỘT accent duy nhất cho web khách. Trước đây có 13 cặp gradient khác nhau
-        // (sky, blue, violet, rose, amber, emerald...) — mỗi khối một màu, thương
-        // hiệu tan biến. Chọn xanh rừng: gợi thiên nhiên Việt Nam và tránh hẳn
-        // dải xanh-tím vốn là dấu hiệu giao diện do máy sinh.
         accent: {
-          50: "#ecfdf5", 100: "#d1fae5", 200: "#a7f3d0",
-          500: "#10b981", 600: "#059669", 700: "#047857", 900: "#064e3b",
+          50: "#f0f9ff", 100: "#e0f2fe", 200: "#bae6fd",
+          500: "#0ea5e9", 600: "#0284c7", 700: "#0369a1", 900: "#0c4a6e",
         },
 
         // Bộ token của bản thiết kế khu nhà điều hành (Material 3, tông cam đất).

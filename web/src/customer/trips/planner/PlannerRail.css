@@ -101,7 +101,7 @@
 }
 
 .planner-rail__ai-btn:hover {
-  transform: translateY(-1px);
+  
   background: rgba(20, 26, 31, 0.05);
   border-color: #141a1f;
   color: #141a1f;

@@ -48,7 +48,7 @@ export default function CancellationsScreen() {
   };
 
   return (
-    <div className="op-cancellations__div-1">
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Toast thông báo */}
       {toast && (
         <Toast
@@ -59,31 +59,13 @@ export default function CancellationsScreen() {
       )}
 
       {/* Header khu vực */}
-      <div className="op-cancellations__div-2">
-        <h1 className="op-cancellations__text-3">
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px", paddingBottom: "20px", borderBottom: "1px solid #e2e8f0" }}>
+        <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
           Huỷ đợt khởi hành
         </h1>
-        <p className="op-cancellations__text-4">
+        <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
           Đóng chuyến đi và kích hoạt quy trình hoàn tiền 100% cho khách hàng khi không đủ điều kiện khởi hành
         </p>
-      </div>
-
-      {/* Banner nghiệp vụ BR-C5 & BR-C7 */}
-      <div className="op-cancellations__div-5 op-cancellations__div-1">
-        <span className="material-symbols-outlined op-cancellations__span-6 op-cancellations__span-2">
-          gavel
-        </span>
-        <div className="op-cancellations__div-7">
-          <p className="op-cancellations__text-8">Quy tắc nghiệp vụ huỷ đợt (BR-C5 &amp; BR-C7):</p>
-          <ul className="list-disc list-inside op-cancellations__ul-9">
-            <li>
-              <strong>BR-C5:</strong> Do lỗi từ phía nhà điều hành, khi hủy đợt toàn bộ đơn hàng liên quan sẽ được <strong>hoàn tiền 100%</strong> mà không áp bất kỳ khoản phí nào.
-            </li>
-            <li>
-              <strong>BR-C7:</strong> Nếu hủy vì không đủ số khách tối thiểu (<code>min_pax</code>), nhà điều hành cần thông báo trước ngày khởi hành để khách chủ động lịch trình.
-            </li>
-          </ul>
-        </div>
       </div>
 
       {/* Bộ chọn Tour */}
@@ -95,21 +77,30 @@ export default function CancellationsScreen() {
         renderActions={(departure) => {
           const isCancelled = departure.status === "CANCELLED";
           return (
-            <div className="op-cancellations__div-10">
+            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
               <button
                 type="button"
                 disabled={isCancelled}
                 onClick={() => handleOpenCancelModal(departure)}
-                className={`op-cancellations__button-13 op-cancellations__button-3  ${
-                  isCancelled
-                    ? "op-cancellations__button-11--variant-1"
-                    : "op-cancellations__button-12--variant-2"
-                }`}
+                title={isCancelled ? "Đợt này đã bị huỷ" : "Huỷ đợt khởi hành này"}
+                aria-label={isCancelled ? "Đã huỷ" : "Huỷ đợt"}
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "6px",
+                  border: isCancelled ? "1px solid #e2e8f0" : "1px solid #fee2e2",
+                  background: isCancelled ? "#f8fafc" : "#fff1f2",
+                  color: isCancelled ? "#94a3b8" : "#dc2626",
+                  cursor: isCancelled ? "not-allowed" : "pointer",
+                  transition: "all 0.15s ease",
+                }}
               >
-                <span className="material-symbols-outlined op-cancellations__span-14">
+                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
                   {isCancelled ? "check_circle" : "event_busy"}
                 </span>
-                {isCancelled ? "Đã huỷ" : "Huỷ đợt này"}
               </button>
             </div>
           );

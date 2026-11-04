@@ -573,7 +573,7 @@
 }
 .place-field-guide__nearby-card:hover {
   border-color: var(--forest);
-  transform: translateY(-2px);
+  
 }
 .place-field-guide__nearby-name {
   margin: 0 0 0.35rem;

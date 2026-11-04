@@ -226,7 +226,7 @@ export default function DeparturesScreen() {
   };
 
   return (
-    <div className="op-departures__div-1">
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Toast thông báo */}
       {toast && (
         <Toast
@@ -237,22 +237,34 @@ export default function DeparturesScreen() {
       )}
 
       {/* Header khu vực */}
-      <div className="op-departures__div-2">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", paddingBottom: "20px", borderBottom: "1px solid #e2e8f0" }}>
         <div>
-          <h1 className="op-departures__text-3">
+          <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a", margin: "0 0 6px" }}>
             Đợt khởi hành &amp; giá
           </h1>
-          <p className="op-departures__text-4">
+          <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
             Quản lý ngày chạy tour, số lượng chỗ ngồi và chính sách giá bán khuyến mãi
           </p>
         </div>
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="op-departures__button-5 op-departures__button-1"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            background: "#0f172a",
+            color: "#ffffff",
+            padding: "9px 16px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            fontSize: "13px",
+            border: "none",
+            cursor: "pointer",
+          }}
         >
-          <span className="material-symbols-outlined op-departures__span-6">calendar_add_on</span>
-          Mở đợt khởi hành
+          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>calendar_add_on</span>
+          <span>Mở đợt khởi hành</span>
         </button>
       </div>
 
@@ -260,40 +272,41 @@ export default function DeparturesScreen() {
       <DeparturePicker tours={tours} tourId={tourId} onChange={setTourId} />
 
       {/* Thẻ chỉ số nhanh */}
-      <div className="op-departures__div-7">
-        <div className="op-departures__div-8 op-departures__div-2">
-          <div className="op-departures__div-9">
-            <span>TỔNG SỐ ĐỢT</span>
-            <span className="material-symbols-outlined op-departures__span-10">event_available</span>
-          </div>
-          <div className="op-departures__div-11">{stats.total}</div>
-          <div className="op-departures__div-12">
-            Đang mở bán: <strong className="op-departures__text-13">{stats.openCount}</strong> đợt
-          </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px 20px" }}>
+          <p style={{ fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+            Tổng số đợt
+          </p>
+          <p style={{ fontSize: "26px", fontWeight: "800", color: "#0f172a", margin: "6px 0 2px" }}>
+            {stats.total}
+          </p>
+          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
+            Đang mở bán: <strong style={{ color: "#0f172a" }}>{stats.openCount}</strong> đợt
+          </p>
         </div>
 
-        <div className="op-departures__div-14 op-departures__div-3">
-          <div className="op-departures__div-15">
-            <span>CHỖ ĐÃ BÁN</span>
-            <span className="material-symbols-outlined op-departures__span-16">airline_seat_recline_normal</span>
-          </div>
-          <div className="op-departures__div-17">
-            {stats.sold} <span className="op-departures__span-18">/ {stats.capacity} chỗ</span>
-          </div>
-          <div className="op-departures__div-19">
-            Tỉ lệ lấp đầy toàn tour: <strong className="op-departures__text-20">{stats.occupancyRate}%</strong>
-          </div>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px 20px" }}>
+          <p style={{ fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+            Chỗ đã bán
+          </p>
+          <p style={{ fontSize: "26px", fontWeight: "800", color: "#0f172a", margin: "6px 0 2px" }}>
+            {stats.sold} <span style={{ fontSize: "14px", fontWeight: "500", color: "#94a3b8" }}>/ {stats.capacity} chỗ</span>
+          </p>
+          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
+            Tỉ lệ lấp đầy: <strong style={{ color: "#0f172a" }}>{stats.occupancyRate}%</strong>
+          </p>
         </div>
 
-        <div className="op-departures__div-21 op-departures__div-4">
-          <div className="op-departures__div-22">
-            <span>CHÍNH SÁCH BÁN</span>
-            <span className="material-symbols-outlined op-departures__span-23">local_offer</span>
-          </div>
-          <div className="op-departures__div-24">Giảm giá trực tiếp theo đợt</div>
-          <div className="op-departures__div-25">
-            Không dùng coupon, hiển thị giá gạch ngang tự động
-          </div>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px 20px" }}>
+          <p style={{ fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", margin: 0 }}>
+            Chính sách bán
+          </p>
+          <p style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", margin: "8px 0 4px" }}>
+            Giảm giá trực tiếp theo đợt
+          </p>
+          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
+            Hiển thị giá gạch ngang tự động
+          </p>
         </div>
       </div>
 
@@ -342,7 +355,7 @@ export default function DeparturesScreen() {
                   className="op-departures__element-36 op-departures__element-6"
                 />
                 <p className="op-departures__text-37">
-                  Theo quy định BR-D1: Ngày khởi hành phải cách thời điểm hiện tại ít nhất 2 ngày.
+                  Ngày khởi hành phải cách thời điểm hiện tại ít nhất 2 ngày.
                 </p>
               </div>
 
@@ -386,7 +399,7 @@ export default function DeparturesScreen() {
                 </div>
                 <div>
                   <label className="op-departures__label-46">
-                    Số khách tối thiểu (min_pax)
+                    Số khách tối thiểu để khởi hành
                   </label>
                   <input
                     type="number"
@@ -628,7 +641,7 @@ export default function DeparturesScreen() {
             <div className="op-departures__div-99 op-departures__div-26">
               <p className="op-departures__text-100">
                 <span className="material-symbols-outlined op-departures__span-101">info</span>
-                Quy định bồi hoàn theo chuẩn BR-C5:
+                Chính sách hoàn tiền khi huỷ đợt:
               </p>
               <p>
                 Khi nhà điều hành hủy đợt, hệ thống sẽ tự động hủy toàn bộ các đơn đặt tour còn hiệu lực và kích hoạt quy trình <strong>hoàn trả 100% tiền</strong> cho khách hàng.

@@ -62,7 +62,7 @@ export default function HeroSearch({ activeTab, setActiveTab }) {
 
   function handleThietKe(e) {
     e.preventDefault();
-    nav("/chuyen-di");
+    nav("/trips");
   }
 
   return (

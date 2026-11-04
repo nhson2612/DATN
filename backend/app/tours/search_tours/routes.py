@@ -1,10 +1,12 @@
 """Endpoint tour trọn gói."""
 
 from datetime import date
+import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
+from app.core.logging import get_logger
 from app.core.security import get_current_admin, get_current_user
 from app.tours.search_tours import repository as tour_repo
 from app.shared.schemas.requests import (
@@ -19,11 +21,14 @@ from app.tours.place_hold import service as place_hold_service
 from app.tours.search_tours import service as tour_service
 
 router = APIRouter(prefix="/api/tours", tags=["tours"])
+logger = get_logger(__name__)
 
 
 @router.get("")
 def list_tours(
+    q: Optional[str] = Query(None, description="Tìm theo tên tour, tóm tắt hoặc địa danh"),
     province_id: Optional[int] = Query(None),
+    province_ids: Optional[str] = Query(None, description="Danh sách ID tỉnh thành phân tách bằng dấu phẩy"),
     depart_from: Optional[date] = Query(None),
     depart_to: Optional[date] = Query(None),
     price_min: Optional[int] = Query(None, ge=0),
@@ -32,13 +37,15 @@ def list_tours(
     max_days: Optional[int] = Query(None, ge=1, le=30),
     min_days: Optional[int] = Query(None, ge=1, le=30),
     guests: Optional[int] = Query(None, ge=1, le=100),
-    sort: Optional[str] = Query(None, pattern=r"^(price_asc|price_desc|date_asc)$"),
+    sort: Optional[str] = Query(None, pattern=r"^(price_asc|price_desc|date_asc|sale_first)$"),
     page: int = Query(1, ge=1),
     page_size: int = Query(24, ge=1, le=100),
 ):
     eff_max_price = price_max if price_max is not None else max_price
     return {"success": True, **tour_service.list_tours(
+        q=q,
         province_id=province_id,
+        province_ids=province_ids,
         depart_from=depart_from,
         depart_to=depart_to,
         price_min=price_min,
@@ -231,6 +238,36 @@ def create_stripe_checkout_session(
     return {"success": True, **kq}
 
 
+@router.post("/bookings/{booking_id}/checkout-payos")
+def create_payos_checkout(
+    booking_id: int,
+    data: Optional[CreateStripeCheckoutRequest] = None,
+    current_user: dict = Depends(get_current_user),
+):
+    """Khởi tạo phiên thanh toán VietQR qua cổng payOS cho đơn đặt tour."""
+    booking = tour_repo.get_booking(booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy đơn đặt tour #{booking_id}.")
+
+    if booking.get("user_id") and booking["user_id"] != current_user["id"] and current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Bạn không có quyền thanh toán cho đơn hàng này.")
+
+    try:
+        kq = payment_service.tao_checkout_payos(
+            booking_id=booking_id,
+            actor_id=current_user["id"],
+            redirect_base=data.redirect_base if data else None,
+        )
+    except tour_service.BookingNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except tour_service.PaymentInvalidError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except tour_service.PaymentGatewayUnavailableError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+    return {"success": True, **kq}
+
+
 @router.get("/bookings/{booking_id}/status")
 def get_booking_payment_status(
     booking_id: int,
@@ -277,5 +314,23 @@ async def stripe_webhook(request: Request):
         raise HTTPException(status_code=503, detail=str(e))
     except tour_service.PaymentInvalidError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    return {"success": True, **kq}
+
+
+@router.post("/payos/webhook")
+async def payos_webhook(request: Request):
+    """Webhook công khai từ payOS; chữ ký được xác thực bằng PAYOS_CHECKSUM_KEY."""
+    try:
+        payload_bytes = await request.body()
+        payload_json = json.loads(payload_bytes.decode("utf-8")) if payload_bytes else {}
+        kq = payment_service.xu_ly_payos_webhook(payload=payload_json)
+    except tour_service.PaymentGatewayUnavailableError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except tour_service.PaymentInvalidError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error("Lỗi khi xử lý webhook payOS: %s", e)
+        raise HTTPException(status_code=500, detail=f"Lỗi webhook payOS: {e}")
 
     return {"success": True, **kq}

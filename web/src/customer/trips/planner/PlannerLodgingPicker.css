@@ -254,7 +254,7 @@
 
 .planner-lodging-picker__select-btn:hover {
   background-color: #4338ca;
-  transform: translateY(-1px);
+  
 }
 
 .planner-lodging-picker__select-btn:active {

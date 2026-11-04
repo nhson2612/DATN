@@ -182,7 +182,7 @@
 
 .voyage-login-icon-btn:hover {
   opacity: 1;
-  transform: translateY(-1px);
+  
 }
 
 .voyage-login-icon-btn svg {
@@ -558,7 +558,7 @@
 }
 
 .voyage-login-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
+  
   box-shadow: 0 12px 24px rgba(15, 42, 56, 0.2);
   background: #0b2430;
 }
@@ -613,7 +613,7 @@
 }
 
 .voyage-login-social:hover {
-  transform: translateY(-2px);
+  
   border-color: #c5d0d6;
   box-shadow: 0 8px 20px rgba(25, 46, 58, 0.06);
 }

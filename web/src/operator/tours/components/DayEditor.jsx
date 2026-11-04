@@ -412,8 +412,14 @@ export default function DayEditor({ day, index, tinh, loi = "", onChange }) {
       .searchPlaces({ destination: tinh, place_type: "poi", page_size: 6 })
       .then((data) => {
         if (!huy && data.items) {
-          cacheGoiYTheoTinh.set(tinh, data.items);
-          setGoiY(data.items);
+          const hopLe = data.items.filter((it) => {
+            const lat = Number(it.lat);
+            const lon = Number(it.lon);
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return true;
+            return lat >= 8.0 && lat <= 24.0 && lon >= 102.0 && lon <= 110.5;
+          });
+          cacheGoiYTheoTinh.set(tinh, hopLe);
+          setGoiY(hopLe);
         }
       })
       .catch(() => {});

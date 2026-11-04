@@ -45,11 +45,36 @@ def list_provinces(limit: int = 100):
 
 
 def find_province(slug_hoac_ten: str):
-    """Tra tỉnh theo slug hoặc tên gõ tắt.
+    """Tra tỉnh theo slug, tên gõ tắt, hoặc ID số.
 
-    Người dùng gõ "da-nang" hoặc "Đà Nẵng", còn CSDL lưu "Thành phố Đà Nẵng" —
-    phải bỏ được tiền tố hành chính, giống find_anchor trong search_service.
+    Người dùng gõ "da-nang" hoặc "Đà Nẵng", hoặc truyền ID số như 2840,
+    còn CSDL lưu "Thành phố Đà Nẵng".
     """
+    if not slug_hoac_ten:
+        return None
+    val_str = str(slug_hoac_ten).strip()
+    if val_str.isdigit():
+        rows = execute_query(
+            """
+            SELECT p.id, p.name,
+                   ST_X(ST_Centroid(p2.geom)) AS lon,
+                   ST_Y(ST_Centroid(p2.geom)) AS lat
+            FROM provinces_clean p
+            JOIN LATERAL (
+                SELECT geom
+                FROM provinces_clean
+                WHERE name = p.name
+                ORDER BY ST_Area(geom) ASC
+                LIMIT 1
+            ) p2 ON TRUE
+            WHERE p.id = %s
+            LIMIT 1
+            """,
+            (int(val_str),),
+        )
+        if rows:
+            return rows[0]
+
     rows = execute_query(
         """
         SELECT id, name,
@@ -60,10 +85,10 @@ def find_province(slug_hoac_ten: str):
                   '^(thanh pho|tinh|phuong|xa|quan|huyen) ', '') = %s
            OR replace(regexp_replace(norm_txt(name),
                   '^(thanh pho|tinh) ', ''), ' ', '-') = %s
-        ORDER BY length(name)
+        ORDER BY length(name), ST_Area(geom) ASC
         LIMIT 1
         """,
-        (slug_hoac_ten, slug_hoac_ten, slug_hoac_ten),
+        (val_str, val_str, val_str),
     )
     return rows[0] if rows else None
 

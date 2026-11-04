@@ -46,6 +46,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
   const [trip, setTrip] = useState(null);
   const [stops, setStops] = useState([]);
   const [sections, setSections] = useState([]);
+  const [reservations, setReservations] = useState([]);
 
   const [activeSection, setActiveSection] = useState("overview");
   const [isRailCollapsed, setIsRailCollapsed] = useState(false);
@@ -102,9 +103,10 @@ export default function TripPlanner({ user, onNeedAuth }) {
       .itineraries()
       .then((d) => {
         const t = d.itineraries.find((x) => String(x.id) === String(id));
-        if (!t) return nav("/chuyen-di");
+        if (!t) return nav("/trips");
         setTrip(t);
         setStops(t.stops_details || []);
+        setReservations(Array.isArray(t.reservations) ? t.reservations : []);
         setSections(
           t.sections?.length
             ? t.sections
@@ -131,9 +133,10 @@ export default function TripPlanner({ user, onNeedAuth }) {
   }, [diemDen]);
 
   const luu = useCallback(
-    async (moiStops, moiSections) => {
+    async (moiStops, moiSections, moiReservations) => {
       if (!trip) return;
       setDangLuu(true);
+      const resList = moiReservations !== undefined ? moiReservations : reservations;
       try {
         await api.updateItinerary(id, {
           name: trip.name,
@@ -142,6 +145,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
           destination: trip.destination || null,
           start_date: trip.start_date || null,
           sections: moiSections,
+          reservations: resList,
           stops: moiStops.map((s) => ({
             day: s.day ?? null,
             type: s.type,
@@ -165,7 +169,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
         setDangLuu(false);
       }
     },
-    [id, trip]
+    [id, trip, reservations]
   );
 
   const capNhat = useCallback(
@@ -174,9 +178,17 @@ export default function TripPlanner({ user, onNeedAuth }) {
       setStops(moiStops);
       if (moiSections) setSections(moiSections);
       setToiUu(null);
-      luu(moiStops, ss);
+      luu(moiStops, ss, reservations);
     },
-    [sections, luu]
+    [sections, reservations, luu]
+  );
+
+  const capNhatReservations = useCallback(
+    (moiReservations) => {
+      setReservations(moiReservations);
+      luu(stops, sections, moiReservations);
+    },
+    [stops, sections, luu]
   );
 
   async function boSungChiTiet(p) {
@@ -545,6 +557,8 @@ export default function TripPlanner({ user, onNeedAuth }) {
             trip={trip}
             stops={stops}
             sections={sections}
+            reservations={reservations}
+            onCapNhatReservations={capNhatReservations}
             theoMuc={theoMuc}
             cacNgay={cacNgay}
             theoNgay={theoNgay}

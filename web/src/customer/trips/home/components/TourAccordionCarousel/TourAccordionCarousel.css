@@ -212,7 +212,7 @@
 .wl-accordion__btn:hover {
   background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
   box-shadow: 0 6px 15px -2px rgba(249, 115, 22, 0.5);
-  transform: translateY(-1px);
+  
 }
 
 .wl-accordion__image-box {

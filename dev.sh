@@ -43,5 +43,5 @@ npx -y concurrently \
   --names "BACKEND,FRONTEND" \
   --prefix-colors "cyan.bold,green.bold" \
   --kill-others-on-fail \
-  "cd backend && ./venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port 8000" \
+  "cd backend && ./venv/bin/uvicorn app.main:app --reload --reload-dir app --host 0.0.0.0 --port 8000" \
   "cd web && npm run dev"

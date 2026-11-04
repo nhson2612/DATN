@@ -722,11 +722,58 @@
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 0.875rem;
-  padding: 0.875rem;
+  padding: 0.875rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  gap: 0.625rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  animation: pickerSlideDown 0.15s ease-out;
+}
+
+@keyframes pickerSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.planner-day__picker-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.planner-day__picker-box-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.planner-day__picker-box-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  transition: all 0.15s ease;
+}
+
+.planner-day__picker-box-close:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
 .planner-day__picker-label {
@@ -755,23 +802,8 @@
 }
 
 .planner-day__chip:hover {
-  background-color: #ccfbf1;
-  border-color: #99f6e4;
-  color: #0f766e;
-}
-
-.planner-day__picker-close {
-  background: none;
-  border: none;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #64748b;
-  cursor: pointer;
-  padding: 0.25rem;
-  margin-top: 0.25rem;
-}
-
-.planner-day__picker-close:hover {
+  background-color: #f8fafc;
+  border-color: #0f172a;
   color: #0f172a;
 }
 

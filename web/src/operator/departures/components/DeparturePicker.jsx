@@ -76,15 +76,13 @@ export default function DeparturePicker({ tours = [], tourId, onChange }) {
 
   return (
     <div className="op-departure-picker__div-1 op-departure-picker__div-1">
-      <div className="op-departure-picker__div-2">
-        <div className="op-departure-picker__div-3 op-departure-picker__div-2">
-          <span className="material-symbols-outlined op-departure-picker__span-4">travel_explore</span>
-        </div>
-        <div className="op-departure-picker__div-5">
-          <span className="op-departure-picker__icon-6">
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+        <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "#64748b" }}>travel_explore</span>
+        <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", color: "#94a3b8" }}>
             Tour đang quản lý đợt
           </span>
-          <span className="op-departure-picker__span-7">
+          <span style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {selectedTour ? selectedTour.name : "Chưa chọn tour nào"}
           </span>
         </div>

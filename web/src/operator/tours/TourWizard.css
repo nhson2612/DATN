@@ -126,12 +126,12 @@
   min-width: 0;
 }
 .op-wizard .op-wizard__card-title .material-symbols-outlined {
-  color: #9d4300;
+  color: #0f172a;
   font-size: 22px;
 }
 .op-wizard .op-wizard__badge {
-  background: #dae2fd;
-  color: #131b2e;
+  background: #f1f5f9;
+  color: #0f172a;
   border-radius: 6px;
   padding: 2px 10px;
   font-size: 11px;
@@ -146,14 +146,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-top: 28px;
-  padding-top: 18px;
-  border-top: 1px solid #e8e3df;
+  margin-top: 12px;
+  padding: 18px 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
 }
 .op-wizard .op-wizard__footer-side {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
 }
 .op-wizard .op-wizard__footer-side:last-child { justify-content: flex-end; }
@@ -165,49 +168,64 @@
   border: 0;
   font: inherit;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 .op-wizard .op-wizard__btn--back {
-  padding: 10px 20px;
-  font-size: 14px;
+  padding: 9px 16px;
+  font-size: 13.5px;
   font-weight: 600;
-  background: transparent;
-  color: #28221f;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+}
+.op-wizard .op-wizard__btn--back:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 .op-wizard .op-wizard__btn--back:disabled {
   background: transparent;
-  color: #746b65;
+  border-color: transparent;
+  color: #94a3b8;
   opacity: 0.6;
   cursor: not-allowed;
 }
 .op-wizard .op-wizard__btn--plain {
-  padding: 8px 16px;
-  font-size: 12px;
+  padding: 8px 14px;
+  font-size: 13px;
   font-weight: 600;
-  background: none;
-  color: #565e74;
+  background: transparent;
+  color: #475569;
+}
+.op-wizard .op-wizard__btn--plain:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 .op-wizard .op-wizard__btn--exit {
-  padding: 8px;
-  font-size: 12px;
+  padding: 9px 14px;
+  font-size: 13px;
   font-weight: 600;
-  background: none;
-  color: #565e74;
+  background: transparent;
+  color: #64748b;
+}
+.op-wizard .op-wizard__btn--exit:hover {
+  background: #fef2f2;
+  color: #dc2626;
 }
 .op-wizard .op-wizard__btn--primary {
-  padding: 10px 24px;
-  font-size: 14px;
+  padding: 10px 22px;
+  font-size: 13.5px;
   font-weight: 600;
-  background: #09090b;
+  background: #0f172a;
   color: #ffffff;
-  border-radius: 8px;
-  border: 1px solid #09090b;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: background 0.15s ease;
+  border-radius: 10px;
+  border: 1px solid #0f172a;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  transition: background 0.15s ease, transform 0.12s ease;
 }
-.op-wizard .op-wizard__btn--primary:hover {
-  background: #27272a;
-  border-color: #27272a;
+.op-wizard .op-wizard__btn--primary:hover:not(:disabled) {
+  background: #1e293b;
+  border-color: #1e293b;
 }
 .op-wizard .op-wizard__btn--primary:disabled {
   opacity: 0.5;
@@ -353,37 +371,48 @@
 /* ---------- Thanh bước: vạch màu + số thứ tự + tên bước ---------- */
 .op-wizard .op-wizard__steps {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
 }
 
 .op-wizard .op-wizard__step {
   border: 0;
-  padding: 0;
+  padding: 4px 6px;
+  border-radius: 8px;
   background: none;
   text-align: left;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 9px;
+  transition: background 0.15s ease;
+}
+
+.op-wizard .op-wizard__step:hover {
+  background: #f8fafc;
 }
 
 .op-wizard .op-wizard__step-bar {
   display: block;
-  height: 6px;
+  height: 5px;
   width: 100%;
   border-radius: 9999px;
-  background: #e4e4e7;
+  background: #e2e8f0;
   transition: background 0.2s ease;
 }
 
 .op-wizard .op-wizard__step--done .op-wizard__step-bar {
-  background: #09090b;
+  background: #10b981;
 }
 
 .op-wizard .op-wizard__step--active .op-wizard__step-bar {
-  background: #09090b;
-  box-shadow: 0 0 0 1px #09090b;
+  background: #0f172a;
+  box-shadow: 0 0 0 1px #0f172a;
 }
 
 .op-wizard .op-wizard__step-line {
@@ -395,49 +424,352 @@
 
 .op-wizard .op-wizard__step-number {
   flex: none;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  background: #f4f4f5;
-  color: #71717a;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .op-wizard .op-wizard__step--done .op-wizard__step-number {
-  background: #e4e4e7;
-  color: #09090b;
+  background: #d1fae5;
+  color: #059669;
 }
 
 .op-wizard .op-wizard__step--active .op-wizard__step-number {
-  background: #09090b;
+  background: #0f172a;
   color: #ffffff;
 }
 
 .op-wizard .op-wizard__step-name {
-  font-size: 12px;
+  font-size: 12.5px;
   letter-spacing: -0.01em;
-  color: #565e74;
+  color: #64748b;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .op-wizard .op-wizard__step--done .op-wizard__step-name {
-  color: #0b1c30;
+  color: #0f172a;
   font-weight: 600;
 }
 
 .op-wizard .op-wizard__step--active .op-wizard__step-name {
-  color: #9d4300;
+  color: #0f172a;
   font-weight: 700;
 }
 
 .op-wizard .op-wizard__step--todo {
-  opacity: 0.5;
+  opacity: 0.65;
+}
+
+/* ==================== BƯỚC 4: CHÍNH SÁCH & DỊCH VỤ ==================== */
+.op-wizard .op-policy-step {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.op-wizard .op-policy-step__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .op-wizard .op-policy-step__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.op-wizard .op-policy-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.op-wizard .op-policy-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.op-wizard .op-policy-card__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.op-wizard .op-policy-card__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.op-wizard .op-policy-card__icon--included {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.op-wizard .op-policy-card__icon--excluded {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.op-wizard .op-policy-card__icon--cancel {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.op-wizard .op-policy-card__icon .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.op-wizard .op-policy-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.op-wizard .op-policy-card__sub {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.op-wizard .op-policy-card__badge {
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 9999px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.op-wizard .op-policy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.op-wizard .op-policy-list__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.op-wizard .op-policy-list__input-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.op-wizard .op-policy-list__bullet {
+  position: absolute;
+  left: 12px;
+  font-size: 17px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.op-wizard .op-policy-list__bullet--included {
+  color: #10b981;
+}
+
+.op-wizard .op-policy-list__bullet--excluded {
+  color: #f43f5e;
+}
+
+.op-wizard .op-policy-list__input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px 0 38px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  font: inherit;
+  font-size: 13.5px;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.op-wizard .op-policy-list__input:focus {
+  background: #ffffff;
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.op-wizard .op-policy-list__remove {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.op-wizard .op-policy-list__remove:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.op-wizard .op-policy-list__remove .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.op-wizard .op-policy-list__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #334155;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  width: fit-content;
+  transition: all 0.15s ease;
+}
+
+.op-wizard .op-policy-list__add:hover {
+  background: #f1f5f9;
+  border-color: #0f172a;
+  color: #0f172a;
+}
+
+.op-wizard .op-policy-list__add .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Bảng mốc hoàn tiền khi huỷ tour */
+.op-wizard .op-cancel-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.op-wizard .op-cancel-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.op-wizard .op-cancel-row:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+@media (max-width: 680px) {
+  .op-wizard .op-cancel-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.op-wizard .op-cancel-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.op-wizard .op-cancel-cell__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.op-wizard .op-cancel-cell__label .material-symbols-outlined {
+  font-size: 17px;
+  color: #64748b;
+}
+
+.op-wizard .op-cancel-input-group {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 38px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.op-wizard .op-cancel-input-group:focus-within {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.op-wizard .op-cancel-input {
+  width: 68px;
+  height: 100%;
+  border: 0;
+  padding: 0 10px;
+  text-align: right;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  background: transparent;
+  outline: none;
+}
+
+.op-wizard .op-cancel-unit {
+  padding: 0 10px 0 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f8fafc;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  border-left: 1px solid #e2e8f0;
+  white-space: nowrap;
 }
 
 /* ---------- Ô tìm điểm ---------- */

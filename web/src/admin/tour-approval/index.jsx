@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { api } from "../../shared/api";
 import Toast from "../../shared/common/Toast";
+import "../../shared/bento/BentoDashboard.css";
 import AdminTourDetailModal from "./AdminTourDetailModal";
 import "./TourApproval.css";
 
@@ -96,75 +97,122 @@ export default function TourApproval() {
       ) : (
         <div className="admin-data-card admin-approval__results">
           <div className="admin-data-card__scroll">
-            <table className="admin-data-table tour-approval__table-11">
+            <table className="bento-table">
               <thead>
-                <tr className="tour-approval__tr-12">
-                  <th className="tour-approval__th-13">Tour</th>
-                  <th className="tour-approval__th-14">Nhà điều hành</th>
-                  <th className="tour-approval__th-15">Thời lượng</th>
-                  <th className="tour-approval__th-16">Gửi ngày</th>
-                  <th className="tour-approval__th-17">Thao tác</th>
+                <tr>
+                  <th>Tour & Điểm Đến</th>
+                  <th>Nhà Điều Hành</th>
+                  <th>Trạng Thái</th>
+                  <th>Thời Lượng</th>
+                  <th>Gửi Ngày</th>
+                  <th>Thao Tác</th>
                 </tr>
               </thead>
-              <tbody className="tour-approval__table-body">
+              <tbody>
                 {tours.map((tour) => (
-                  <tr key={tour.id} className="tour-approval__tr-18">
-                    <td className="tour-approval__td-19">
-                      <button
-                        type="button"
-                        onClick={() => setXemTourId(tour.id)}
-                        className="tour-approval__button-20"
-                        title="Bấm để xem toàn bộ thông tin chi tiết tour"
-                      >
-                        <span className="tour-duyet__ten tour-approval__span-21">
-                          {tour.name}
-                        </span>
-                      </button>
-                      {tour.summary && (
-                        <span className="tour-duyet__tom-tat tour-approval__span-22">
-                          {tour.summary}
-                        </span>
-                      )}
+                  <tr key={tour.id}>
+                    <td>
+                      <div className="tour-thumb-cell">
+                        <img
+                          src={tour.cover_url || "/images/vietnam_explore_new.png"}
+                          onError={(e) => { e.currentTarget.src = "/images/vietnam_explore_new.png"; }}
+                          className="tour-thumb-img"
+                          alt={tour.name}
+                        />
+                        <div>
+                          <div
+                            style={{ fontWeight: "700", color: "var(--bento-text-dark)", cursor: "pointer" }}
+                            onClick={() => setXemTourId(tour.id)}
+                          >
+                            {tour.name}
+                          </div>
+                          {tour.summary && (
+                            <div style={{ fontSize: "11px", color: "var(--bento-text-muted)", marginTop: "2px" }}>
+                              {tour.summary}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </td>
-                    <td className="tour-approval__td-23">
+                    <td style={{ fontWeight: "600" }}>
                       {tour.company_name || "—"}
                     </td>
-                    <td className="tour-approval__td-24">
+                    <td>
+                      <span className="pill pill-lime">
+                        CHỜ DUYỆT
+                      </span>
+                    </td>
+                    <td style={{ fontFamily: "var(--bento-font-mono)", fontWeight: "800", color: "var(--bento-text-dark)" }}>
                       {tour.duration_days} ngày
                     </td>
-                    <td className="tour-approval__td-25">
+                    <td style={{ fontSize: "12px", color: "#64748b" }}>
                       {ngay(tour.created_at)}
                     </td>
-                    <td className="tour-approval__td-26">
-                      <div className="tour-duyet__thao-tac">
+                    <td>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                         <button
                           type="button"
-                          className="tour-approval__button-27 tour-approval__button-4"
                           onClick={() => setXemTourId(tour.id)}
                           title="Xem toàn bộ thông tin chi tiết tour"
+                          aria-label="Chi tiết tour"
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "6px",
+                            border: "1px solid #e2e8f0",
+                            background: "#ffffff",
+                            color: "#475569",
+                            cursor: "pointer",
+                          }}
                         >
-                          <span className="material-symbols-outlined tour-approval__span-28">visibility</span>
-                          <span>Chi tiết</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>visibility</span>
                         </button>
                         <button
                           type="button"
-                          className="tour-approval__button-29"
                           onClick={() => duyet(tour)}
+                          title="Phê duyệt tour"
+                          aria-label="Duyệt tour"
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "6px",
+                            border: "none",
+                            background: "#0f172a",
+                            color: "#ffffff",
+                            cursor: "pointer",
+                          }}
                         >
-                          <span className="material-symbols-outlined tour-approval__span-30">check</span>
-                          <span>Duyệt</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check</span>
                         </button>
                         <button
                           type="button"
-                          className="tour-approval__button-31 tour-approval__button-5"
                           onClick={() => {
                             setDangTuChoi((prev) => (prev === tour.id ? null : tour.id));
                             setLyDo("");
                             setLoiLyDo("");
                           }}
+                          title="Từ chối tour"
+                          aria-label="Từ chối tour"
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "6px",
+                            border: "1px solid #fee2e2",
+                            background: "#fff1f2",
+                            color: "#dc2626",
+                            cursor: "pointer",
+                          }}
                         >
-                          <span className="material-symbols-outlined tour-approval__span-32">close</span>
-                          <span>Từ chối</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>close</span>
                         </button>
                       </div>
 

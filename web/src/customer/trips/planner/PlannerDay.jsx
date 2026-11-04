@@ -711,6 +711,23 @@ export default function PlannerDay({
           {/* 3. Thanh tác vụ thêm nhanh cuối mỗi ngày chuẩn Wanderlog (ảnh nuo.png) */}
           {moChon ? (
             <div className="planner-day__picker-box">
+              <div className="planner-day__picker-box-header">
+                <span className="planner-day__picker-box-title">
+                  <span className="material-symbols-outlined text-[16px] text-slate-500">
+                    location_on
+                  </span>
+                  <span>Thêm địa điểm vào Ngày {ngay}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMoChon(false)}
+                  className="planner-day__picker-box-close"
+                  title="Đóng tìm kiếm"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+
               {chuaXep.length > 0 && (
                 <>
                   <p className="planner-day__picker-label">
@@ -736,22 +753,13 @@ export default function PlannerDay({
 
               <PlannerPlacePicker
                 diemDen={diemDen}
-                nhan="Hoặc tìm địa điểm mới thêm vào ngày"
-                placeholder="Nhập tên địa điểm, quán ăn..."
+                placeholder={`Nhập tên địa điểm, quán ăn cho Ngày ${ngay}...`}
                 moSan
                 onChon={(p) => {
                   onXep(p, ngay);
                   setMoChon(false);
                 }}
               />
-
-              <button
-                type="button"
-                onClick={() => setMoChon(false)}
-                className="planner-day__picker-close"
-              >
-                Đóng
-              </button>
             </div>
           ) : (
             <div className="planner-day__quick-bar">

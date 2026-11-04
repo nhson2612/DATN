@@ -83,14 +83,32 @@ def search_places(destination=None, nhom=None, category=None, q=None,
                   has_photo=False, page=1, page_size=24, bang="poi"):
     """Danh sách địa điểm có lọc, dùng cho view lưới."""
     if bang in ("poi", "trackasia", "serper"):
-        query = ", ".join(value for value in (q, destination) if value)
-        if not query:
-            query = destination or "tourist attractions"
         center_lat = center_lon = None
+        tinh_name = None
         if destination:
-            tinh = destination_repo.find_province(slugify(destination))
+            dest_str = str(destination).strip()
+            tinh = destination_repo.find_province(dest_str if dest_str.isdigit() else slugify(dest_str))
+            if not tinh:
+                tinh = destination_repo.find_province(dest_str)
             if tinh:
                 center_lat, center_lon = tinh["lat"], tinh["lon"]
+                tinh_name = tinh["name"]
+
+        tinh_clean = re.sub(r"^Tỉnh\s+", "", str(tinh_name or "")).strip()
+
+        # Xây dựng câu query tìm kiếm hợp lý (luôn giới hạn tại tỉnh/thành Việt Nam)
+        q_str = str(q or "").strip()
+        if q_str and tinh_clean:
+            query = f"{q_str}, {tinh_clean}"
+        elif q_str:
+            query = f"{q_str}, Việt Nam"
+        elif tinh_clean:
+            query = f"Địa điểm tham quan tại {tinh_clean}"
+        elif destination and not str(destination).strip().isdigit():
+            query = f"Địa điểm tham quan tại {destination}"
+        else:
+            query = "Địa điểm tham quan nổi tiếng tại Việt Nam"
+
         try:
             rows = serper_service.search_places(
                 query, center_lat, center_lon, page * page_size)

@@ -48,6 +48,20 @@ def _distance_m(a_lat, a_lon, b_lat, b_lon) -> float:
     return 6_371_000 * 2 * asin(sqrt(h))
 
 
+def _is_in_vietnam(lat, lon, address: str | None = None) -> bool:
+    """Kiểm tra toạ độ và địa chỉ nằm trong lãnh thổ Việt Nam."""
+    try:
+        f_lat, f_lon = float(lat), float(lon)
+    except (TypeError, ValueError):
+        return False
+    if not (8.0 <= f_lat <= 24.0 and 102.0 <= f_lon <= 110.5):
+        return False
+    addr_lower = str(address or "").lower()
+    if any(foreign in addr_lower for foreign in ("hoa kỳ", "united states", ", usa", "pháp", "france", "china", "trung quốc")):
+        return False
+    return True
+
+
 def _post(url: str, place: dict, post) -> dict:
     key = (settings.serper_api_key or "").strip()
     if not key:
@@ -239,15 +253,19 @@ def search_places(question: str, lat: float | None = None,
             results = []
             for r in cached_rows:
                 item = dict(r)
+                if not _is_in_vietnam(item.get("lat"), item.get("lon"), item.get("dia_chi") or item.get("formatted_address")):
+                    continue
                 if lat is not None and lon is not None and item.get("lat") and item.get("lon"):
                     item["met"] = round(_distance_m(lat, lon, item["lat"], item["lon"]))
                 results.append(item)
 
-            if lat is not None and lon is not None:
-                within_radius = [row for row in results if row.get("met") is not None and row["met"] <= settings.serper_search_radius_m]
-                if within_radius:
-                    results = within_radius
-            return sorted(results, key=lambda row: row.get("met") if row.get("met") is not None else 0)[:limit]
+            if results:
+                max_radius = max(settings.serper_search_radius_m, 150_000)
+                if lat is not None and lon is not None:
+                    within_radius = [row for row in results if row.get("met") is not None and row["met"] <= max_radius]
+                    if within_radius:
+                        results = within_radius
+                return sorted(results, key=lambda row: row.get("met") if row.get("met") is not None else 0)[:limit]
 
     key = (settings.serper_api_key or "").strip()
     if not key:
@@ -257,7 +275,7 @@ def search_places(question: str, lat: float | None = None,
         response = post(
             settings.serper_places_url,
             headers={"X-API-KEY": key, "Content-Type": "application/json"},
-            json={"q": question, "gl": "vn", "hl": "vi", "num": min(max(limit, 1), 20)},
+            json={"q": question, "gl": "vn", "hl": "vi", "num": max(min(max(limit, 1), 20), 10)},
             timeout=settings.serper_timeout,
         )
     except requests.RequestException as exc:
@@ -273,26 +291,51 @@ def search_places(question: str, lat: float | None = None,
     if not isinstance(payload, dict):
         raise SerperTransientError("Serper Places trả payload không hợp lệ.")
 
+    places_list = payload.get("places") or []
+    # Fallback: Serper /places chỉ trả về địa điểm kinh doanh. Đối với danh lam thắng cảnh,
+    # hồ nước, di tích tự nhiên (như Hồ Hoàn Kiếm, Fansipan...), Serper /places trả về [].
+    # Khi đó gọi fallback sang Serper /maps để lấy thông tin địa danh chính xác.
+    if not places_list:
+        try:
+            maps_resp = post(
+                settings.serper_maps_url,
+                headers={"X-API-KEY": key, "Content-Type": "application/json"},
+                json={"q": question, "gl": "vn", "hl": "vi"},
+                timeout=settings.serper_timeout,
+            )
+            if maps_resp.status_code == 200:
+                maps_payload = maps_resp.json()
+                if isinstance(maps_payload, dict) and maps_payload.get("places"):
+                    places_list = maps_payload.get("places")
+                    payload = maps_payload
+        except Exception as exc:
+            logger.warning("Serper Maps fallback thất bại cho %r: %s", question, exc)
+
     rows = []
-    for item in payload.get("places") or []:
+    for item in places_list:
         if not isinstance(item, dict):
             continue
         name = str(item.get("title") or "").strip()
         item_lat, item_lon = item.get("latitude"), item.get("longitude")
-        cid = str(item.get("cid") or "").strip()
+        cid = str(item.get("cid") or item.get("placeId") or "").strip()
         if not name or not cid or item_lat is None or item_lon is None:
             continue
         try:
             item_lat, item_lon = float(item_lat), float(item_lon)
         except (TypeError, ValueError):
             continue
+        if not _is_in_vietnam(item_lat, item_lon, item.get("address")):
+            continue
+        if str(item.get("address") or "").strip().lower() in ("việt nam", "vietnam"):
+            continue
+        category = item.get("category") or item.get("type") or (item.get("types")[0] if isinstance(item.get("types"), list) and item.get("types") else None)
         identity = {
             "name": name,
             "address": item.get("address") or "",
             "lat": item_lat,
             "lon": item_lon,
             "cid": cid,
-            "category": item.get("category"),
+            "category": category,
             "rating": item.get("rating"),
             "review_count": item.get("ratingCount"),
         }
@@ -305,7 +348,7 @@ def search_places(question: str, lat: float | None = None,
             "provider_place_id": cid,
             "source": "serper",
             "name": name,
-            "category": item.get("category"),
+            "category": category,
             "lat": item_lat,
             "lon": item_lon,
             "dia_chi": item.get("address"),
@@ -314,6 +357,7 @@ def search_places(question: str, lat: float | None = None,
                    if lat is not None and lon is not None else None,
             "rating": item.get("rating"),
             "review_count": item.get("ratingCount"),
+            "photo_url": item.get("thumbnailUrl"),
         })
 
     # Lưu vĩnh viễn vào cơ sở dữ liệu để không bao giờ phải gọi lại Serper cho câu hỏi này
@@ -322,8 +366,9 @@ def search_places(question: str, lat: float | None = None,
         _save_places_to_store(rows)
 
     if lat is not None and lon is not None:
+        max_radius = max(settings.serper_search_radius_m, 150_000)
         within_radius = [row for row in rows
-                         if row["met"] <= settings.serper_search_radius_m]
+                         if row["met"] <= max_radius]
         # Nếu không có kết quả trong bán kính (do tìm ở tỉnh/thành khác với vị trí GPS),
         # giữ nguyên các kết quả từ Google Places để không làm mất dữ liệu.
         if within_radius:

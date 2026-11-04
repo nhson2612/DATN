@@ -1,1985 +1,1110 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* ==========================================================================
+   SKYWINGS / AURA VOYAGE - PIXEL PERFECT EDITORIAL LANDING PAGE
+   Phục dựng chính xác 100% bố cục, typography và tỷ lệ từ ảnh tham chiếu
+   Tuyệt đối KHÔNG sidebar, KHÔNG icon-in-colored-box, KHÔNG tech-stack
+   ========================================================================== */
 
-:root {
-  --ink: #141a1f;
-  --muted: #66717a;
-  --line: #dfe3e6;
-  --paper: #f7f6f2;
-  --white: #ffffff;
-  --shadow: 0 22px 70px rgba(18, 27, 34, 0.16);
-  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --sans: 'Playfair Display', Georgia, 'Times New Roman', serif;
+.sky-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #0f172a;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* ==========================================================================
-   BLOCK: .aura-home
-   Split-Screen Editorial Home tuân thủ nghiêm ngặt chuẩn BEM từ .design/index.html
+   TOP NAVIGATION BAR
    ========================================================================== */
-
-.aura-home {
-  background-color: #B8ACA2;
-  color: #141619;
-  min-height: 100vh;
-  padding: 12px;
+.sky-header {
+  width: 100%;
+  max-width: 1240px;
+  padding: 24px 28px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   box-sizing: border-box;
+}
+
+.sky-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #0f172a;
+}
+
+.sky-brand__icon {
+  width: 28px;
+  height: 28px;
+  color: #0f172a;
+}
+
+.sky-brand__name {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.sky-nav {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+.sky-nav__link {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.sky-nav__link:hover,
+.sky-nav__link--active {
+  color: #0f172a;
+}
+
+.sky-btn-book {
+  background-color: #111827;
+  color: #ffffff;
+  padding: 11px 26px;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.sky-btn-book:hover {
+  background-color: #1f2937;
+  
+}
+
+/* ==========================================================================
+   MAIN CONTENT WRAPPER
+   ========================================================================== */
+.sky-main {
+  width: 100%;
+  max-width: 1240px;
+  padding: 0 28px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   1. HERO CARD
+   ========================================================================== */
+.sky-hero {
+  width: 100%;
+  border-radius: 36px;
+  background: linear-gradient(135deg, #d3e7f6 0%, #dfedf8 45%, #cae3f4 100%);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.04);
+}
+
+.sky-hero__container {
+  display: grid;
+  grid-template-columns: 44px 1.15fr 1fr;
+  align-items: center;
+  gap: 32px;
+  padding: 56px 48px;
+  position: relative;
+  min-height: 500px;
+}
+
+/* Vertical Stepper */
+.sky-stepper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 3;
+}
+
+.sky-stepper__item {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-}
-
-.aura-home__container {
-  width: 100%;
-  height: calc(100vh - 24px);
-  min-height: calc(100vh - 24px);
-  background-color: #F6F4EE;
-  border-radius: 40px;
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: row;
-  position: relative;
-  box-sizing: border-box;
-}
-
-/* Left Column: Typography & Navigation */
-.aura-home__col-left {
-  width: 50%;
-  padding: 56px 64px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background-color: #F6F4EE;
-  box-sizing: border-box;
-  z-index: 10;
-  position: relative;
-}
-
-/* Top bar */
-.aura-home__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.aura-home__brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
-  color: #141619;
-  transition: transform 0.2s ease;
-}
-
-.aura-home__brand:hover {
-  transform: scale(1.05);
-}
-
-.aura-home__brand-icon {
-  width: 22px;
-  height: 22px;
-  color: #141619;
-}
-
-.aura-home__search-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 9999px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #7C7974;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.aura-home__search-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #141619;
-}
-
-.aura-home__search-btn-icon {
-  width: 18px;
-  height: 18px;
-  color: #141619;
-}
-
-/* Editorial Body */
-.aura-home__editorial {
-  max-width: 540px;
-  margin: auto 0;
-}
-
-.aura-home__title {
-  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-  font-size: 64px;
-  font-weight: 300;
-  line-height: 1.08;
-  letter-spacing: -0.035em;
-  color: #141619;
-  margin: 0 0 24px;
-}
-
-.aura-home__title em {
-  font-style: italic;
-  font-weight: 400;
-}
-
-.aura-home__desc {
-  font-size: 13.5px;
-  line-height: 1.65;
-  color: #7C7974;
-  margin: 0;
-  max-width: 440px;
-}
-
-/* Bottom Nav */
-.aura-home__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.aura-home__nav-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(20, 22, 25, 0.75);
-  padding: 4px 0;
-  transition: color 0.15s ease, transform 0.15s ease;
-}
-
-.aura-home__nav-link:hover {
-  color: #000000;
-  transform: translateX(4px);
-}
-
-.aura-home__nav-link--active {
-  color: #141619;
+  border: 1.5px solid rgba(15, 23, 42, 0.2);
+  color: rgba(15, 23, 42, 0.45);
+  font-size: 12px;
   font-weight: 700;
 }
 
-/* Right Column: Visual Scenic */
-.aura-home__col-right {
-  width: 50%;
-  position: relative;
-  overflow: hidden;
-  height: 100%;
+.sky-stepper__item--active {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-.aura-home__visual-wrap {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  inset: 0;
+.sky-stepper__line {
+  width: 1px;
+  height: 36px;
+  background: rgba(15, 23, 42, 0.2);
 }
 
-.aura-home__visual-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+/* Hero Content */
+.sky-hero__content {
+  z-index: 3;
 }
 
-/* Hamburger Menu Button */
-.aura-home__menu-btn {
-  position: absolute;
-  top: 36px;
-  right: 36px;
+.sky-hero__eyebrow {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #475569;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.sky-hero__title {
+  font-size: clamp(38px, 4.4vw, 58px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  margin: 0 0 32px;
+}
+
+.sky-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sky-btn-primary {
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 13px 28px;
+  border-radius: 9999px;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.sky-btn-primary:hover {
+  background-color: #1d4ed8;
+  
+}
+
+.sky-btn-play {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  background-color: #ffffff;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 20;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
+  color: #2563eb;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-.aura-home__menu-btn:hover {
-  background: rgba(0, 0, 0, 0.5);
-  transform: scale(1.05);
+.sky-btn-play:hover {
+  transform: scale(1.06);
+  background-color: #f8fafc;
 }
 
-/* Floating Inset Card */
-.aura-home__floating-card {
+.sky-btn-play__icon {
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+}
+
+/* Hero Plane Visual */
+.sky-hero__visual {
   position: absolute;
-  bottom: 32px;
-  right: 32px;
-  max-width: 420px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-radius: 28px;
-  padding: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  z-index: 20;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 62%;
+  pointer-events: none;
+  z-index: 1;
   display: flex;
-  gap: 16px;
   align-items: center;
-  box-sizing: border-box;
+  justify-content: flex-end;
 }
 
-.aura-home__card-thumb {
-  width: 110px;
-  height: 110px;
-  border-radius: 18px;
-  overflow: hidden;
-  flex-shrink: 0;
-  background-color: #e5e5e5;
-}
-
-.aura-home__card-img {
+.sky-hero__plane-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 70% 30%;
+  mix-blend-mode: multiply;
+  opacity: 0.95;
+  mask-image: linear-gradient(to right, transparent 0%, black 35%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 35%);
 }
 
-.aura-home__card-body {
+/* Inset Notch Cutout in Bottom-Right of Hero */
+.sky-know-more {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #ffffff;
+  border-top-left-radius: 40px;
+  padding: 24px 36px 20px 32px;
+  z-index: 4;
+  box-shadow: none;
+  min-width: 270px;
+}
+
+/* Inverted curves (Concave fillets) */
+.sky-know-more::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border-bottom-right-radius: 40px;
+  box-shadow: 20px 20px 0 20px #ffffff;
+  pointer-events: none;
+}
+
+.sky-know-more::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: -40px;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border-bottom-right-radius: 40px;
+  box-shadow: 20px 20px 0 20px #ffffff;
+  pointer-events: none;
+}
+
+.sky-know-more__header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: space-between;
-  flex: 1;
+  margin-bottom: 12px;
 }
 
-.aura-home__card-title {
-  font-size: 14px;
+.sky-know-more__title {
+  font-size: 13.5px;
   font-weight: 700;
-  color: #141619;
-  margin: 0;
-  letter-spacing: -0.01em;
+  color: #0f172a;
 }
 
-.aura-home__card-text {
-  font-size: 11px;
-  line-height: 1.45;
-  color: #7C7974;
-  margin: 4px 0 10px;
+.sky-know-more__arrow {
+  font-size: 15px;
+  color: #0f172a;
 }
 
-.aura-home__card-actions {
+.sky-know-more__body {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 14px;
 }
 
-.aura-home__card-btn {
-  display: inline-flex;
-  align-items: center;
-  background-color: #141619;
-  color: #ffffff;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.aura-home__card-btn:hover {
-  background-color: #000000;
-  transform: translateY(-1px);
-}
-
-.aura-home__card-dots {
+.sky-know-more__avatars {
   display: flex;
   align-items: center;
-  gap: 5px;
 }
 
-.aura-home__card-dot {
-  width: 6px;
-  height: 6px;
+.sky-know-more__avatar {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background-color: rgba(20, 22, 25, 0.2);
+  border: 2px solid #ffffff;
+  object-fit: cover;
+  margin-left: -10px;
 }
 
-.aura-home__card-dot--active {
-  background-color: #141619;
+.sky-know-more__avatar:first-child {
+  margin-left: 0;
+}
+
+.sky-know-more__badge-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.sky-know-more__badge-desc {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: #64748b;
+  margin: 2px 0 0;
 }
 
 /* ==========================================================================
-   BLOCK: .aura-search
-   Toàn bộ màn hình Search View in-container chuẩn BEM từ .design/index.html
-   Kèm hiệu ứng chuyển cảnh so le (Staggered Animation) và Scale Transition
+   2. SOCIAL FOLLOW & BRAND LOGOS STRIP
    ========================================================================== */
-
-.aura-home__split-view {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  position: absolute;
-  inset: 0;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 10;
-}
-
-.aura-home__split-view--active {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-.aura-home__split-view--hidden {
-  opacity: 0;
-  transform: scale(0.95);
-  pointer-events: none;
-}
-
-.aura-search {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  inset: 0;
-  background-color: #F6F4EE;
-  padding: 28px 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow-y: auto;
-  box-sizing: border-box;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 20;
-}
-
-.aura-search--active {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-.aura-search--hidden {
-  opacity: 0;
-  transform: scale(0.95);
-  pointer-events: none;
-}
-
-/* Stagger Item Transitions matching mockup */
-.aura-search__stagger {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, opacity;
-}
-
-.aura-search--stagger-active .aura-search__stagger--header,
-.aura-search--active.aura-search--stagger-active .aura-search__stagger--header {
-  opacity: 1;
-  transform: translateY(0);
-  transition-delay: 0.05s;
-}
-
-.aura-search--stagger-active .aura-search__stagger--title,
-.aura-search--active.aura-search--stagger-active .aura-search__stagger--title {
-  opacity: 1;
-  transform: translateY(0);
-  transition-delay: 0.12s;
-}
-
-.aura-search--stagger-active .aura-search__stagger--content,
-.aura-search--active.aura-search--stagger-active .aura-search__stagger--content {
-  opacity: 1;
-  transform: translateY(0);
-  transition-delay: 0.20s;
-}
-
-.aura-search--stagger-active .aura-search__stagger--footer,
-.aura-search--active.aura-search--stagger-active .aura-search__stagger--footer {
-  opacity: 1;
-  transform: translateY(0);
-  transition-delay: 0.32s;
-}
-
-.aura-search__header {
+.sky-partners {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(20, 22, 25, 0.1);
-  flex-shrink: 0;
+  gap: 32px;
+  padding: 10px 0;
+  flex-wrap: wrap;
 }
 
-.aura-search__header-left {
+.sky-follow-pill {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.sky-follow-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.sky-social-icons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sky-social-link {
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.sky-social-link:hover {
+  opacity: 1;
+  
+}
+
+.sky-social-link svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sky-brand-logos {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.sky-brand-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #94a3b8;
+  font-size: 17px;
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.sky-brand-item:hover {
+  color: #64748b;
+}
+
+.sky-brand-logo-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.sky-brand-name-text {
+  letter-spacing: -0.02em;
+}
+
+.sky-brand-booking {
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.sky-brand-trivago {
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.sky-trivago-red { color: #e11d48; }
+.sky-trivago-blue { color: #0284c7; }
+.sky-trivago-orange { color: #f59e0b; }
+
+/* ==========================================================================
+   3. POPULAR DESTINATION
+   ========================================================================== */
+.sky-popular {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sky-popular__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.sky-popular__title {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.sky-popular__subtitle {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.sky-popular__controls {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.aura-search__logo-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  color: #141619;
-  display: flex;
-  align-items: center;
-}
-
-.aura-search__back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #7C7974;
-  padding: 4px 6px;
-  border-radius: 6px;
-  transition: color 0.15s ease;
-}
-
-.aura-search__back-btn:hover {
-  color: #141619;
-}
-
-.aura-search__close-btn {
-  width: 36px;
-  height: 36px;
+.sky-carousel-btn {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: rgba(20, 22, 25, 0.05);
-  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 22px;
+  line-height: 1;
   cursor: pointer;
-  color: #141619;
-  transition: all 0.2s ease;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.aura-search__close-btn:hover {
-  background: rgba(20, 22, 25, 0.1);
-  transform: rotate(90deg);
-}
-
-/* Big Search Input */
-.aura-search__input-wrap {
-  text-align: center;
-  padding: 24px 0 20px;
-  max-width: 600px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.aura-search__input-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.aura-search__caret {
-  display: inline-block;
-  width: 2px;
-  height: 36px;
-  background-color: rgba(124, 121, 116, 0.7);
-  margin-right: 6px;
-  flex-shrink: 0;
-  animation: auraBlink 1.1s infinite;
-}
-
-@keyframes auraBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.aura-search__input {
-  background: transparent;
-  border: none;
-  outline: none;
-  text-align: center;
-  font-size: 38px;
-  font-weight: 300;
-  color: #141619;
-  width: 100%;
-  letter-spacing: -0.02em;
-}
-
-.aura-search__input::placeholder {
-  color: rgba(124, 121, 116, 0.6);
-}
-
-.aura-search__clear-btn {
-  position: absolute;
-  right: 6px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #7C7974;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s ease;
-}
-
-.aura-search__clear-btn:hover {
-  color: #141619;
-}
-
-/* Content Area */
-.aura-search__content {
-  width: 100%;
-  flex: 1;
-}
-
-.aura-search__subhead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.aura-search__subhead-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #141619;
-  letter-spacing: 0.02em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.aura-search__subhead-desc {
-  font-size: 11px;
-  color: #7C7974;
-}
-
-.aura-search__badge {
-  font-size: 10px;
-  font-weight: 600;
-  background-color: #141619;
+.sky-carousel-btn:hover {
+  background-color: #0f172a;
+  border-color: #0f172a;
   color: #ffffff;
-  padding: 2px 8px;
-  border-radius: 9999px;
+  transform: scale(1.06);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
 }
 
-/* 4-Card Grid */
-.aura-search__grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  padding-bottom: 12px;
+.sky-carousel-btn:active {
+  transform: scale(0.95);
 }
 
-.aura-search__card {
-  display: flex;
-  flex-direction: column;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-}
-
-.aura-search__card-thumb {
+/* Khung chứa slider trượt mượt mà */
+.sky-popular__slider-wrapper {
   width: 100%;
-  aspect-ratio: 4 / 5;
-  border-radius: 26px;
   overflow: hidden;
-  background-color: #e5e5e5;
-  position: relative;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  padding: 4px 0 16px;
 }
 
-.aura-search__card:hover .aura-search__card-thumb {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14);
-}
-
-.aura-search__card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.5s ease-out;
-}
-
-.aura-search__card:hover .aura-search__card-img {
-  transform: scale(1.05);
-}
-
-.aura-search__card-duration {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.aura-search__card-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #141619;
-  margin: 0;
-  transition: color 0.15s ease;
-}
-
-.aura-search__card:hover .aura-search__card-title {
-  color: #000000;
-}
-
-.aura-search__card-price {
-  font-size: 11px;
-  color: #7C7974;
-  margin: 2px 0 0;
-}
-
-/* Bespoke CTA Banner */
-.aura-search__cta {
-  margin-top: 10px;
-  background-color: #EEEAE1;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 22px;
-  padding: 14px 20px;
+.sky-popular__track {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-}
-
-.aura-search__cta-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.aura-search__cta-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #141619;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.aura-search__cta-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #141619;
-  margin: 0 0 2px;
-}
-
-.aura-search__cta-desc {
-  font-size: 11px;
-  color: #7C7974;
-  margin: 0;
-}
-
-.aura-search__cta-btn {
-  background-color: #141619;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 8px 18px;
-  border-radius: 9999px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.aura-search__cta-btn:hover {
-  background-color: #000000;
-  transform: scale(1.03);
-}
-
-/* Empty search state & Quick tags */
-.aura-search__empty-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 36px 20px;
-  text-align: center;
-  background-color: rgba(0, 0, 0, 0.02);
-  border: 1px dashed rgba(0, 0, 0, 0.1);
-  border-radius: 20px;
-  margin: 12px 0;
-}
-
-.aura-search__empty-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #141619;
-  margin: 0 0 6px;
-}
-
-.aura-search__empty-desc {
-  font-size: 12px;
-  color: #71717A;
-  margin: 0 0 16px;
-}
-
-.aura-search__quick-tags {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  max-width: 500px;
-}
-
-.aura-search__tag-chip {
-  background-color: #ECEAE4;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 9999px;
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #27272A;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.aura-search__tag-chip:hover {
-  background-color: #141619;
-  color: #FFFFFF;
-  border-color: #141619;
-  transform: translateY(-1px);
-}
-
-/* Footer row */
-.aura-search__footer {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px dashed rgba(20, 22, 25, 0.2);
-  flex-shrink: 0;
-}
-
-.aura-search__footer-nav {
-  display: flex;
-  align-items: center;
   gap: 24px;
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(20, 22, 25, 0.75);
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: transform;
 }
 
-.aura-search__footer-link {
-  color: inherit;
-  text-decoration: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  font-size: inherit;
-  font-weight: inherit;
-  transition: color 0.15s ease;
-}
-
-.aura-search__footer-link:hover {
-  color: #000000;
-}
-
-.aura-search__footer-link--active {
-  color: #141619;
-  font-weight: 700;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .aura-search {
-    padding: 20px;
-  }
-
-  .aura-search__input {
-    font-size: 28px;
-  }
-
-  .aura-search__grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .aura-search__cta {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .aura-home__container {
-    flex-direction: column;
-    height: auto;
-    min-height: calc(100vh - 24px);
-  }
-
-  .aura-home__col-left {
-    width: 100%;
-    padding: 36px 28px;
-  }
-
-  .aura-home__title {
-    font-size: 42px;
-  }
-
-  .aura-home__col-right {
-    width: 100%;
-    min-height: 480px;
-  }
-
-  .aura-home__floating-card {
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
-    max-width: none;
-  }
-}
-
-
-/* Base Home Container */
-.voyage-home {
-  background: #10171c;
-  color: #ffffff;
-  min-height: 100vh;
-  position: relative;
-  padding: 18px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  font-family: var(--sans);
+.sky-popular__slide {
+  flex: 0 0 calc((100% - 48px) / 3);
+  min-width: 0;
   box-sizing: border-box;
 }
 
-/* Atmospheric Overlay */
-.voyage-home::after {
-  content: "";
-  position: absolute;
-  inset: 18px;
-  border-radius: 16px;
-  background: linear-gradient(
-    180deg,
-    rgba(8, 15, 20, 0.22) 0%,
-    rgba(8, 15, 20, 0.32) 45%,
-    rgba(8, 15, 20, 0.68) 100%
-  );
-  pointer-events: none;
-  z-index: 1;
+@media (max-width: 960px) {
+  .sky-popular__slide {
+    flex: 0 0 calc((100% - 24px) / 2);
+  }
 }
 
-/* Background Image Frame with Ken Burns Animation */
-.voyage-bg {
-  position: absolute;
-  inset: 18px;
-  border-radius: 16px;
+@media (max-width: 600px) {
+  .sky-popular__slide {
+    flex: 0 0 100%;
+  }
+}
+
+.sky-dest-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  gap: 12px;
+}
+
+.sky-dest-card__img-box {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 20px;
   overflow: hidden;
-  z-index: 0;
+  background-color: #e2e8f0;
 }
 
-.voyage-bg-img {
+.sky-dest-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.sky-dest-card:hover .sky-dest-card__img {
+  transform: scale(1.04);
+}
+
+.sky-dest-card__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.sky-dest-card__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px;
+}
+
+.sky-dest-card__loc {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.sky-pin-icon {
+  width: 13px;
+  height: 13px;
+  color: #94a3b8;
+}
+
+.sky-dest-card__rating {
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ==========================================================================
+   4. JOURNEY TO THE SKIES MADE SIMPLE!
+   ========================================================================== */
+.sky-journey {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  padding: 20px 0;
+}
+
+.sky-journey__header {
+  text-align: center;
+  max-width: 620px;
+}
+
+.sky-journey__title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #0f172a;
+  margin: 0 0 10px;
+}
+
+.sky-journey__subtitle {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #64748b;
+  margin: 0;
+}
+
+.sky-journey__grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.sky-journey-card {
+  position: relative;
+  border-radius: 28px;
+  padding: 34px 28px 30px;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  box-sizing: border-box;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sky-journey-card:hover,
+.sky-journey-card--active {
+  
+  box-shadow: 0 20px 45px rgba(37, 99, 235, 0.28);
+}
+
+/* 1. Ảnh nền phủ kín toàn bộ card khi inactive */
+.sky-journey-card__bg-photo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0;
-  transition: opacity 1.2s ease-in-out;
-  transform: scale(1.03);
+  z-index: 0;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.voyage-bg-img--active {
-  opacity: 1;
-  animation: heroZoom 16s ease-in-out infinite alternate;
+.sky-journey-card:hover .sky-journey-card__bg-photo,
+.sky-journey-card--active .sky-journey-card__bg-photo {
+  transform: scale(1.06);
 }
 
-@keyframes heroZoom {
-  from {
-    transform: scale(1.03);
-  }
-  to {
-    transform: scale(1.09);
-  }
-}
-
-/* Inner Layout Shell */
-.voyage-shell {
-  width: min(1280px, calc(100% - 48px));
-  margin: 0 auto;
-}
-
-.voyage-inner {
-  position: relative;
-  z-index: 2;
-  min-height: calc(100vh - 36px);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-/* Top Navigation Bar */
-.voyage-nav {
-  height: 76px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 28px;
-  position: relative;
-  z-index: 20;
-  color: #ffffff;
-}
-
-.voyage-brand {
-  font-family: var(--serif);
-  font-size: 30px;
-  font-weight: 500;
-  letter-spacing: -0.035em;
-  color: #ffffff;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  transition: opacity 0.2s ease;
-}
-
-.voyage-brand:hover {
-  opacity: 0.9;
-}
-
-.voyage-navlinks {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  font-size: 15px;
-  font-weight: 500;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              gap 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.3s ease;
-}
-
-.voyage-navlinks--shifted {
-  transform: translateX(-48px);
-  gap: 22px;
-}
-
-.voyage-navlink {
-  color: rgba(255, 255, 255, 0.82);
-  text-decoration: none;
-  transition: color 0.2s ease, transform 0.2s ease;
-  position: relative;
-  padding: 4px 0;
-  background: transparent;
-  border: none;
-  font: inherit;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-}
-
-.voyage-navlink:hover {
-  color: #ffffff;
-  transform: translateY(-1px);
-}
-
-.voyage-navlink::after {
-  content: "";
+/* 2. Lớp scrim mờ nhẹ khi inactive để chữ và badge nổi bật trên ảnh nền */
+.sky-journey-card__scrim {
   position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 0;
-  height: 1.5px;
-  background: #ffffff;
-  transition: width 0.25s ease;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(15, 23, 42, 0.72) 0%,
+    rgba(15, 23, 42, 0.22) 42%,
+    rgba(15, 23, 42, 0.04) 70%,
+    transparent 100%
+  );
+  z-index: 1;
+  transition: opacity 0.45s ease;
 }
 
-.voyage-navlink:hover::after {
+.sky-journey-card:hover .sky-journey-card__scrim,
+.sky-journey-card--active .sky-journey-card__scrim {
+  opacity: 0;
+}
+
+/* 3. Lớp sóng nước màu xanh mở rộng từ góc trái bên dưới chéo lên trên */
+.sky-journey-card__wave-overlay {
+  position: absolute;
+  inset: 0;
   width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  clip-path: circle(0% at 0% 100%);
+  -webkit-clip-path: circle(0% at 0% 100%);
+  transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              -webkit-clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.voyage-actions {
+.sky-journey-card:hover .sky-journey-card__wave-overlay,
+.sky-journey-card--active .sky-journey-card__wave-overlay {
+  clip-path: circle(180% at 0% 100%);
+  -webkit-clip-path: circle(180% at 0% 100%);
+}
+
+/* 4. Badge Icon ở góc trên bên trái - ẨN HOÀN TOÀN KHI CHƯA HOVER */
+.sky-journey-card__badge-wrapper {
+  position: relative;
+  z-index: 3;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.85);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sky-journey-card:hover .sky-journey-card__badge-wrapper,
+.sky-journey-card--active .sky-journey-card__badge-wrapper {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.sky-journey-card__badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 14px;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Expandable Search Bar in Navbar (Bigger and Longer) */
-.voyage-nav-search {
-  position: relative;
-  height: 48px;
-  width: 48px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(0, 0, 0, 0.15);
+  justify-content: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background-color: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  box-sizing: border-box;
-  transition: width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-              background 0.3s ease,
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
-}
-
-.voyage-nav-search:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.65);
-}
-
-.voyage-nav-search--open {
-  width: clamp(340px, 32vw, 480px);
-  background: rgba(3, 7, 18, 0.68) !important;
-  border-color: rgba(255, 255, 255, 0.38) !important;
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
-}
-
-.voyage-nav-search-trigger {
-  width: 46px;
-  min-width: 46px;
-  height: 46px;
-  border: none;
-  background: transparent;
   color: #ffffff;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
+  transition: all 0.35s ease;
+}
+
+.sky-journey-badge-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* 5. Nội dung card: tiêu đề và khối mở rộng */
+.sky-journey-card__content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sky-journey-card__title {
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0;
+  white-space: pre-line;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: transform 0.35s ease;
+}
+
+.sky-journey-card__expandable {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sky-journey-card:hover .sky-journey-card__expandable,
+.sky-journey-card--active .sky-journey-card__expandable {
+  max-height: 220px;
+  opacity: 1;
+}
+
+.sky-journey-card__desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0;
+}
+
+.sky-journey-card__link {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.voyage-nav-search-trigger:hover {
+.sky-journey-card__link:hover {
   opacity: 0.85;
+  transform: translateX(2px);
 }
 
-.voyage-nav-search-form {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  padding-right: 14px;
+@keyframes popCircle {
+  from { opacity: 0; transform: scale(0.65); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-.voyage-nav-search-input {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #ffffff;
-  font-family: var(--sans);
-  font-size: 15px;
-  padding: 0 8px;
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.voyage-nav-search-input::placeholder {
-  color: rgba(255, 255, 255, 0.55);
+/* ==========================================================================
+   5. UNLEASH WANDERLUST BANNER
+   ========================================================================== */
+.sky-wanderlust {
+  width: 100%;
+  margin: 20px 0 0;
+  box-sizing: border-box;
 }
 
-.voyage-nav-search-close {
-  background: none;
-  border: none;
-  outline: none;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 15px;
-  cursor: pointer;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  transition: color 0.15s ease, transform 0.15s ease;
-  flex-shrink: 0;
-}
-
-.voyage-nav-search-close:hover {
-  color: #ffffff;
-  transform: scale(1.18);
-}
-
-/* Icon Buttons (Menu, etc.) */
-.voyage-iconbtn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
-  color: #ffffff;
+.sky-wanderlust__grid {
   display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  font-size: 18px;
+  grid-template-columns: 360px 1fr;
+  grid-template-rows: 460px 64px;
+  gap: 16px 36px;
+  align-items: stretch;
 }
 
-.voyage-iconbtn:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.65);
-  color: #ffffff;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-}
-
-.voyage-auth-btn {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.92);
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 999px;
-  transition: all 0.2s ease;
-}
-
-.voyage-auth-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-/* User profile button when logged in */
-.voyage-user-chip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 14px 5px 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #ffffff;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.voyage-user-chip:hover {
-  background: rgba(255, 255, 255, 0.26);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-1px);
-}
-
-.voyage-user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #ffffff;
-  color: var(--ink);
-  font-weight: 700;
-  font-size: 13px;
-  display: grid;
-  place-items: center;
-}
-
-.voyage-user-name {
-  font-size: 13.5px;
-  font-weight: 600;
-  max-width: 130px;
-  white-space: nowrap;
+/* 1. Ô Ảnh (Top-Left - Cao hơn chữ chuẩn yêu cầu) */
+.sky-wanderlust__photo-box {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  width: 100%;
+  height: 460px;
+  border-radius: 28px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
 }
 
-/* Hero Typography */
-.voyage-hero-copy {
-  padding-top: min(10vh, 100px);
-  max-width: 720px;
-}
-
-.voyage-hero-title {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: clamp(54px, 7.2vw, 106px);
-  line-height: 0.94;
-  letter-spacing: -0.05em;
-  margin: 0 0 20px;
-  color: #ffffff;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
-}
-
-.voyage-hero-desc {
-  font-size: clamp(16px, 1.6vw, 20px);
-  color: rgba(255, 255, 255, 0.88);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  margin: 0;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
-}
-
-/* Trending Destination Chips */
-.voyage-trending-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.voyage-trending-label {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
-  font-style: italic;
-  font-weight: 400;
-}
-
-.voyage-trending-chip {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(8px);
-  color: #ffffff;
-  padding: 5px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  text-decoration: none;
-}
-
-.voyage-trending-chip:hover {
-  background: #ffffff;
-  color: var(--ink);
-  border-color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-}
-
-/* Choice Cards Grid */
-.voyage-choices {
-  margin-top: auto;
-  padding: 32px 0 24px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.voyage-choice-card {
-  min-height: 330px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: #0d151c;
-  color: #ffffff;
-  position: relative;
-  overflow: hidden;
-  padding: 34px 34px 28px;
-  border-radius: 20px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  isolation: isolate;
-  cursor: pointer;
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-.voyage-choice-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(8, 14, 20, 0.42) 0%,
-    rgba(8, 14, 20, 0.25) 40%,
-    rgba(8, 14, 20, 0.8) 100%
-  );
-  z-index: -1;
-  transition: background 0.35s ease;
-  pointer-events: none;
-}
-
-.voyage-choice-img {
-  position: absolute;
-  inset: 0;
+.sky-wanderlust__photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: -2;
-  transition: filter 0.35s ease;
-  filter: brightness(0.65) contrast(1.08) saturate(1.05);
+  transition: transform 0.5s ease;
 }
 
-.voyage-choice-card:hover {
-  border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.4);
+.sky-wanderlust__photo-box:hover .sky-wanderlust__photo {
+  transform: scale(1.04);
 }
 
-.voyage-choice-card:hover::before {
-  background: linear-gradient(
-    180deg,
-    rgba(8, 14, 20, 0.3) 0%,
-    rgba(8, 14, 20, 0.15) 40%,
-    rgba(8, 14, 20, 0.68) 100%
-  );
-}
-
-.voyage-choice-card:hover .voyage-choice-img {
-  filter: brightness(0.78) contrast(1.1) saturate(1.1);
-}
-
-.voyage-choice-title {
-  font-family: var(--serif);
-  font-size: clamp(28px, 2.4vw, 36px);
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  margin: 0 0 8px;
-  color: #ffffff;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-}
-
-.voyage-choice-desc {
-  margin: 0;
-  width: 78%;
-  font-size: 15px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 400;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
-}
-
-.voyage-choice-action {
-  position: absolute;
-  bottom: 28px;
-  right: 32px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  color: #ffffff;
-  padding: 0;
-  border-radius: 0;
-  font-size: 15px;
-  font-weight: 500;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
-  transition: opacity 0.25s ease;
-}
-
-.voyage-choice-action span:first-child {
-  position: relative;
-}
-
-.voyage-choice-action span:first-child::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 100%;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.6);
-  transition: background 0.25s ease, height 0.25s ease;
-}
-
-.voyage-choice-card:hover .voyage-choice-action span:first-child::after {
-  background: #ffffff;
-  height: 1.5px;
-}
-
-.voyage-choice-arrow {
-  display: inline-block;
-  font-size: 16px;
-  transition: transform 0.25s ease;
-}
-
-.voyage-choice-card:hover .voyage-choice-arrow {
-  transform: translateX(5px);
-}
-
-/* Bottom Footer Details (Travel differently & Slide indicators) */
-.voyage-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 0 16px;
-  position: relative;
-  z-index: 10;
-}
-
-.voyage-footer-quote {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.78);
-  letter-spacing: 0.01em;
-}
-
-.voyage-slides-nav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: 56px;
-}
-
-.voyage-slide-dash {
-  width: 28px;
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.35);
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.voyage-slide-dash:hover {
-  background: rgba(255, 255, 255, 0.65);
-}
-
-.voyage-slide-dash--active {
-  background: #ffffff;
-  width: 44px;
-}
-
-/* ==========================================================================
-   INTERACTIVE MODALS: Search Modal & Slide-out Menu Drawer
-   ========================================================================== */
-
-/* Search Modal */
-.voyage-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 16, 22, 0.68);
-  backdrop-filter: blur(12px);
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  animation: modalFadeIn 0.25s ease-out;
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.voyage-search-dialog {
-  background: #ffffff;
-  color: var(--ink);
-  width: min(640px, 100%);
-  border-radius: 18px;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
-  overflow: hidden;
-  position: relative;
-}
-
-.voyage-search-header {
-  padding: 24px 28px 18px;
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.voyage-search-title {
-  font-family: var(--serif);
-  font-size: 24px;
-  font-weight: 500;
-  margin: 0;
-}
-
-.voyage-search-close {
-  background: transparent !important;
-  border: 0 !important;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  font-size: 20px;
-  color: rgba(255, 255, 255, 0.7);
-  transition: color 0.2s ease, transform 0.2s ease;
-  box-shadow: none !important;
-}
-
-.voyage-search-close:hover {
-  background: transparent !important;
-  color: #ffffff;
-  transform: scale(1.1);
-}
-
-.voyage-search-body {
-  padding: 24px 28px;
-}
-
-.voyage-search-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: #f7f6f2;
-  border: 1px solid #dbe0e3;
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-bottom: 20px;
-  transition: border-color 0.2s;
-}
-
-.voyage-search-input-wrap:focus-within {
-  border-color: var(--ink);
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(20, 26, 31, 0.08);
-}
-
-.voyage-search-input {
-  border: 0;
-  outline: 0;
-  background: transparent;
-  font-size: 16px;
-  color: var(--ink);
-  width: 100%;
-  font-family: var(--sans);
-}
-
-.voyage-search-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.voyage-search-pill {
-  background: #f1f3f4;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 13px;
-  color: #4a535a;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.voyage-search-pill:hover {
-  background: #e4e7e9;
-  color: var(--ink);
-  border-color: #cbd1d5;
-}
-
-.voyage-search-submit {
-  width: 100%;
-  background: var(--ink);
-  color: #ffffff;
-  border: 0;
-  border-radius: 999px;
-  padding: 14px 24px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.2s ease;
-}
-
-.voyage-search-submit:hover {
-  background: #000000;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(20, 26, 31, 0.2);
-}
-
-/* Slide-out Menu Drawer (Medusa.js liquid glass style, right-docked, frame-matched) */
-.voyage-drawer-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 100;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 18px;
-  animation: drawerOverlay 0.22s ease-out;
-  box-sizing: border-box;
-}
-
-@keyframes drawerOverlay {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.voyage-drawer {
-  position: relative;
-  width: clamp(340px, 28vw, 420px);
-  height: calc(100vh - 36px);
-  background: rgba(3, 7, 18, 0.52);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  box-shadow: -15px 0 60px rgba(0, 0, 0, 0.6);
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 28px 32px;
-  box-sizing: border-box;
-  animation: drawerSlideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 101;
-}
-
-@keyframes drawerSlideRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0.5;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.voyage-drawer-head {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
-}
-
-.voyage-drawer-close {
-  background: none;
-  border: none;
-  outline: none;
-  padding: 4px;
-  margin: -4px;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s ease, transform 0.15s ease;
-}
-
-.voyage-drawer-close:hover {
-  color: #ffffff;
-  transform: scale(1.1);
-}
-
-.voyage-drawer-nav {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.voyage-drawer-link {
-  display: inline-block;
-  font-size: clamp(26px, 2.6vw, 34px);
-  line-height: 1.25;
-  font-weight: 350;
-  color: #ffffff;
-  text-decoration: none;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-  letter-spacing: -0.01em;
-  transition: color 0.15s ease;
-}
-
-.voyage-drawer-link:hover {
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.voyage-drawer-link--sub {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 6px;
-  font-weight: 400;
-}
-
-.voyage-drawer-link--sub:hover {
-  color: #f87171;
-}
-
-.voyage-drawer-footer {
+/* 2. Cụm chữ Editorial (Top-Right - Nằm chính giữa trục dọc, thấp hơn ảnh) */
+.sky-wanderlust__editorial {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+  align-self: center;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-top: 16px;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.voyage-drawer-region {
+.sky-editorial-row {
+  display: flex;
+  align-items: center;
+}
+
+.sky-editorial-row--1 {
+  align-items: center;
+  gap: 20px;
+}
+
+.sky-editorial-row--2 {
+  display: block;
+  width: 100%;
+}
+
+.sky-editorial-row--3 {
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.sky-word {
+  font-size: clamp(42px, 4.5vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: #0f172a;
+}
+
+.sky-word--wanderlust {
+  width: 100%;
+  letter-spacing: -0.015em;
+}
+
+.sky-editorial-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #64748b;
+  max-width: 280px;
+  margin: 0;
+}
+
+.sky-editorial-text--top {
+  text-align: left;
+}
+
+.sky-editorial-text--bottom {
+  text-align: left;
+}
+
+/* 3. Ô Ưu Đãi 20% (Bottom-Left) */
+.sky-wanderlust__offer-pill {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s ease;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 
-.voyage-drawer-region:hover {
-  color: #ffffff;
+.sky-wanderlust__offer-rate {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2563eb;
+  letter-spacing: -0.02em;
 }
 
-.voyage-drawer-region-text {
+.sky-wanderlust__offer-expiry {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.3;
+  text-align: right;
 }
 
-.voyage-drawer-flag {
-  font-size: 14px;
-}
-
-.voyage-drawer-arrow {
-  font-size: 14px;
-  transition: transform 0.15s ease;
-}
-
-.voyage-drawer-region:hover .voyage-drawer-arrow {
-  transform: translateX(3px);
-}
-
-.voyage-drawer-copy {
-  margin: 0;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 400;
-  letter-spacing: 0.01em;
-}
-
-@media (max-width: 960px) {
-  .voyage-drawer-overlay {
-    padding: 12px;
-  }
-
-  .voyage-drawer {
-    height: calc(100vh - 24px);
-    width: min(380px, 85vw);
-  }
-}
-
-@media (max-width: 640px) {
-  .voyage-drawer-overlay {
-    padding: 8px;
-  }
-
-  .voyage-drawer {
-    width: calc(100% - 16px);
-    height: calc(100vh - 16px);
-    border-radius: 12px;
-    padding: 22px 20px;
-  }
-
-  .voyage-drawer-link {
-    font-size: 24px;
-  }
-}
-
-/* User Dropdown Menu */
-.voyage-user-dropdown {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  background: #ffffff;
-  border-radius: 14px;
-  color: var(--ink);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  min-width: 220px;
-  padding: 8px;
-  z-index: 50;
-  animation: dropdownIn 0.2s ease;
-}
-
-@keyframes dropdownIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.voyage-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  color: #3b444b;
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  background: transparent;
-  border: 0;
+/* 4. Nút Mây Trời (Bottom-Right - Dóng thẳng mép phải) */
+.sky-wanderlust__action {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
   width: 100%;
-  text-align: left;
-  transition: background 0.15s ease, color 0.15s ease;
+  height: 64px;
 }
 
-.voyage-dropdown-item:hover {
-  background: #f4f5f2;
-  color: var(--ink);
+.btn-cloud-1 {
+  position: relative;
+  width: 100%;
+  height: 64px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  text-decoration: none;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(186, 219, 243, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
-.voyage-dropdown-item--danger:hover {
-  background: #fef2f2;
-  color: #b91c1c;
+.btn-cloud-1:hover {
+  
+  box-shadow: 0 8px 24px rgba(186, 219, 243, 0.7);
+}
+
+.btn-cloud-1:hover {
+  
+  box-shadow: 0 8px 24px rgba(186, 219, 243, 0.7);
+}
+
+.btn-cloud-1 svg.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.btn-cloud-1 span {
+  position: relative;
+  z-index: 1;
+}
+
+.sky-arrow {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.btn-cloud-1:hover .sky-arrow {
+  transform: translateX(4px);
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN (Matching prototype breakpoints)
+   RESPONSIVE QUERIES
    ========================================================================== */
-@media (max-width: 960px) {
-  .voyage-home {
-    padding: 12px;
+@media (max-width: 1024px) {
+  .sky-hero__container {
+    grid-template-columns: 36px 1fr;
+    padding: 40px 32px;
   }
 
-  .voyage-home::after,
-  .voyage-bg {
-    inset: 12px;
+  .sky-hero__visual {
+    width: 50%;
   }
 
-  .voyage-inner {
-    min-height: calc(100vh - 24px);
+  .sky-journey__grid {
+    grid-template-columns: 1fr;
   }
 
-  .voyage-shell {
-    width: min(100% - 24px, 1280px);
+  .sky-wanderlust__grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
   }
 
-  .voyage-navlinks {
+  .sky-wanderlust__photo-box {
+    height: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sky-header {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .sky-nav {
     display: none;
   }
 
-  .voyage-hero-copy {
-    padding-top: 60px;
-  }
-
-  .voyage-hero-title {
-    font-size: clamp(44px, 11vw, 76px);
-  }
-
-  .voyage-choices {
+  .sky-popular__grid {
     grid-template-columns: 1fr;
-    gap: 14px;
-    padding-bottom: 20px;
   }
 
-  .voyage-choice-card {
-    min-height: 270px;
-    border-radius: 18px !important;
-    padding: 30px 26px;
+  .sky-brand-logos {
+    gap: 24px;
   }
 
-  .voyage-choice-card p {
-    width: 85%;
-  }
-}
-
-@media (max-width: 640px) {
-  .voyage-home {
-    padding: 8px;
+  .sky-stepper {
+    display: none;
   }
 
-  .voyage-home::after,
-  .voyage-bg {
-    inset: 8px;
-    border-radius: 12px;
+  .sky-hero__container {
+    grid-template-columns: 1fr;
   }
 
-  .voyage-brand {
-    font-size: 24px;
+  .sky-know-more {
+    position: static;
+    margin-top: 24px;
+    width: 100%;
   }
 
-  .voyage-hero-title {
-    font-size: 42px;
-    line-height: 1;
-    margin-bottom: 14px;
+  .sky-editorial-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
-  .voyage-hero-desc {
-    font-size: 15px;
-  }
-
-  .voyage-choice-card {
-    padding: 24px 20px;
-    min-height: 230px;
-    border-radius: 16px !important;
-  }
-
-  .voyage-choice-title {
-    font-size: 24px;
-  }
-
-  .voyage-choice-desc {
-    font-size: 13.5px;
-    width: 85%;
-  }
-
-  .voyage-choice-action {
-    bottom: 20px;
-    right: 20px;
-    font-size: 13.5px;
-  }
-
-  .voyage-footer-quote {
-    font-size: 15px;
-  }
-
-  .voyage-nav-search--open {
-    width: clamp(170px, 48vw, 220px);
-  }
-}
-
-/* ==========================================================================
-   HIỆU ỨNG TIẾP NHẬN TỪ TRANG LOGIN (TRANSITION ENTRANCE)
-   ========================================================================== */
-.voyage-home--from-login .voyage-shell {
-  animation: homeEmergeFromLogin 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes homeEmergeFromLogin {
-  from {
-    opacity: 0;
-    transform: translateY(22px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .voyage-home--from-login .voyage-shell {
-    animation: none;
+  .sky-editorial-text--top,
+  .sky-editorial-text--bottom {
+    text-align: left;
+    max-width: 100%;
   }
 }

@@ -1,1146 +1,888 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../../shared/api";
-import VoyageDrawer from "../../shared/layout/VoyageDrawer";
-import AuraHeader from "../../shared/layout/AuraHeader";
+import AppNavbar from "../../shared/layout/AppNavbar";
+import TourEmptyState from "./components/TourEmptyState";
 import "./Tours.css";
-import "../trips/home/Home.css";
 
-function cleanText(str) {
-  if (!str) return "";
-  return String(str).replaceAll("—", " - ").replaceAll("–", "-");
-}
-
-function formatVnDate(dateStr) {
-  if (!dateStr) return "";
-  const parts = String(dateStr).split("T")[0].split("-");
-  if (parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
-  }
-  return dateStr;
-}
-
-function formatPrice(val) {
-  return Number(val || 0).toLocaleString("vi-VN");
-}
-
-const REGION_MAP = {
-  bac: ["Hà Nội", "Quảng Ninh", "Lào Cai", "Ninh Bình", "Hà Giang", "Cao Bằng", "Yên Bái", "Hải Phòng"],
-  trung: ["Đà Nẵng", "Quảng Nam", "Thừa Thiên Huế", "Khánh Hòa", "Lâm Đồng", "Bình Định", "Quảng Bình"],
-  nam: ["Hồ Chí Minh", "Kiên Giang", "Cần Thơ", "Bà Rịa - Vũng Tàu", "An Giang", "Tây Ninh"],
+// Bản đồ ảnh dự phòng nội bộ theo tỉnh/địa danh đảm bảo không bao giờ bị lỗi ảnh
+const LOCAL_PROVINCE_IMAGES = {
+  "quảng ninh": "/images/tour-halong.jpg",
+  "đà nẵng": "/images/tour-danang.jpg",
+  "kiên giang": "/images/tour-phuquoc.jpg",
+  "phú quốc": "/images/tour-phuquoc.jpg",
+  "lào cai": "/images/tour-sapa.jpg",
+  "sapa": "/images/tour-sapa.jpg",
+  "khánh hòa": "/images/provinces/khanh-hoa.jpg",
+  "nha trang": "/images/provinces/khanh-hoa.jpg",
+  "lâm đồng": "/images/provinces/lam-dong.jpg",
+  "đà lạt": "/images/provinces/lam-dong.jpg",
+  "hà nội": "/images/provinces/ha-noi.jpg",
+  "hồ chí minh": "/images/provinces/ho-chi-minh.jpg",
+  "bắc ninh": "/images/provinces/bac-ninh.jpg",
 };
 
-const CATEGORY_OPTIONS = [
-  { value: "Tất cả", label: "Tất cả các loại" },
-  { value: "Tour trọn gói", label: "Tour trọn gói" },
-  { value: "Tour tiết kiệm", label: "Tour tiết kiệm" },
-  { value: "City tour", label: "City tour" },
-  { value: "Biển đảo", label: "Biển đảo" },
-  { value: "Văn hóa", label: "Văn hóa & Di sản" },
-  { value: "Lịch sử", label: "Lịch sử" },
-  { value: "Ẩm thực", label: "Ẩm thực" },
-  { value: "Nghỉ dưỡng", label: "Nghỉ dưỡng" },
+function resolveTourImage(tour) {
+  const prov = (tour?.province_name || tour?.province || "").toLowerCase();
+  const slug = (tour?.slug || "").toLowerCase();
+
+  for (const [key, path] of Object.entries(LOCAL_PROVINCE_IMAGES)) {
+    if (prov.includes(key) || slug.includes(key)) {
+      return path;
+    }
+  }
+
+  if (tour?.cover_url && !tour.cover_url.includes("example.com") && !tour.cover_url.includes("uploads/tours")) {
+    return tour.cover_url;
+  }
+
+  return "/images/tour-halong.jpg";
+}
+
+// CẤU HÌNH CÁC TÙY CHỌN BỘ LỌC
+export const DURATION_OPTIONS = [
+  { value: "", label: "Tất cả thời lượng" },
+  { value: "1", label: "1 ngày" },
+  { value: "2", label: "2 ngày 1 đêm" },
+  { value: "3", label: "3 ngày 2 đêm" },
+  { value: "4", label: "Từ 4 ngày trở lên" },
 ];
 
-const DEPARTURE_OPTIONS = [
-  { value: "Tất cả", label: "Tất cả điểm khởi hành" },
-  { value: "Đà Nẵng", label: "TP. Đà Nẵng" },
-  { value: "Hồ Chí Minh", label: "TP. Hồ Chí Minh" },
-  { value: "Hà Nội", label: "Hà Nội" },
-  { value: "Khánh Hòa", label: "Khánh Hòa / Cam Ranh" },
-  { value: "Lâm Đồng", label: "Lâm Đồng / Đà Lạt" },
-  { value: "Bắc Ninh", label: "Bắc Ninh" },
-  { value: "Theo điểm hẹn", label: "Theo điểm hẹn nhà điều hành" },
+export const PRICE_OPTIONS = [
+  { value: "", label: "Tất cả mức giá" },
+  { value: "under2m", label: "Dưới 2.000.000₫" },
+  { value: "2mto4m", label: "2 - 4 triệu" },
+  { value: "above4m", label: "Trên 4 triệu" },
 ];
 
-const DESTINATION_OPTIONS = [
-  { value: "Tất cả", label: "Tất cả điểm đến" },
-  { value: "Đà Nẵng", label: "Đà Nẵng" },
-  { value: "Hồ Chí Minh", label: "TP. Hồ Chí Minh" },
-  { value: "Hà Nội", label: "Hà Nội" },
-  { value: "Khánh Hòa", label: "Khánh Hòa / Nha Trang" },
-  { value: "Lâm Đồng", label: "Lâm Đồng / Đà Lạt" },
-  { value: "Bắc Ninh", label: "Bắc Ninh" },
-  { value: "Quảng Ninh", label: "Quảng Ninh / Hạ Long" },
-  { value: "Kiên Giang", label: "Kiên Giang / Phú Quốc" },
-];
-
-const DATE_OPTIONS = [
-  { value: "Tất cả", label: "Tất cả ngày" },
-  { value: "Tháng 10/2026", label: "Tháng 10/2026" },
-  { value: "06/10", label: "06/10/2026 (3 tour)" },
-  { value: "09/10", label: "09/10/2026 (8 tour)" },
-  { value: "13/10", label: "13/10/2026 (8 tour)" },
-  { value: "15/10", label: "15/10/2026 (11 tour)" },
-  { value: "17/10", label: "17/10/2026 (14 tour)" },
-  { value: "22/10", label: "22/10/2026 (27 tour)" },
-  { value: "29/10", label: "29/10/2026 (22 tour)" },
-];
-
-const SORT_OPTIONS = [
-  { value: "date_asc", label: "Ngày khởi hành gần nhất" },
+export const SORT_OPTIONS = [
+  { value: "default", label: "Mặc định" },
+  { value: "sale_first", label: "Ưu đãi nhiều nhất" },
   { value: "price_asc", label: "Giá tăng dần" },
   { value: "price_desc", label: "Giá giảm dần" },
 ];
 
-const SIDEBAR_DEST_OPTIONS = [
-  { value: "", label: "Chọn điểm đến" },
-  { value: "Hồ Chí Minh", label: "TP. Hồ Chí Minh" },
-  { value: "Hà Nội", label: "Hà Nội" },
-  { value: "Đà Nẵng", label: "Đà Nẵng" },
-  { value: "Quảng Ninh", label: "Quảng Ninh / Hạ Long" },
-  { value: "Kiên Giang", label: "Phú Quốc / Kiên Giang" },
-  { value: "Lâm Đồng", label: "Đà Lạt / Lâm Đồng" },
-  { value: "Khánh Hòa", label: "Khánh Hòa / Nha Trang" },
-  { value: "Bắc Ninh", label: "Bắc Ninh" },
-];
-
-const ATTRACTION_OPTIONS = [
-  { value: "", label: "Chọn điểm tham quan" },
-  { value: "Dinh Độc Lập", label: "Dinh Độc Lập" },
-  { value: "Bà Nà Hills", label: "Bà Nà Hills" },
-  { value: "Hồ Gươm", label: "Hồ Gươm" },
-  { value: "Chợ Bến Thành", label: "Chợ Bến Thành" },
-];
-
-
-
-// Dữ liệu Featured Destinations cho Hero Carousel
-const FEATURED_HERO_DESTINATIONS = [
-  {
-    id: "halong",
-    title: "Vịnh Hạ Long",
-    subtitle: "DI SẢN THIÊN NHIÊN THẾ GIỚI",
-    image:
-      "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=80",
-    slug: "tour-ha-long-tiet-kiem",
-  },
-  {
-    id: "hoian",
-    title: "Phố Cổ Hội An",
-    subtitle: "DI SẢN VĂN HÓA THẾ GIỚI",
-    image:
-      "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=1600&q=80",
-    slug: "tour-hoi-an-di-san",
-  },
-  {
-    id: "trangan",
-    title: "Tràng An Ninh Bình",
-    subtitle: "QUẦN THỂ DANH THẮNG KÉP",
-    image:
-      "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=1600&q=80",
-    slug: "tour-ninh-binh-trang-an",
-  },
-  {
-    id: "dalat",
-    title: "Đà Lạt Mộng Mơ",
-    subtitle: "CAO NGUYÊN NGHỈ DƯỠNG",
-    image:
-      "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=1600&q=80",
-    slug: "tour-da-lat-mong-mo-4n3d",
-  },
-];
-
-const TOUR_TYPES = [
-  { id: "cultural", label: "Cultural", viLabel: "Văn hóa" },
-  { id: "nature", label: "Nature", viLabel: "Thiên nhiên" },
-  { id: "adventure", label: "Adventure", viLabel: "Khám phá" },
-  { id: "relaxation", label: "Relaxation", viLabel: "Nghỉ dưỡng" },
-  { id: "family", label: "Family", viLabel: "Gia đình" },
-];
+function formatPrice(val) {
+  return Number(val || 0).toLocaleString("vi-VN") + "₫";
+}
 
 export default function Tours({ user, onNeedAuth, onLogout }) {
-  const [sp, setSp] = useSearchParams();
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isSearchStaggered, setIsSearchStaggered] = useState(false);
-  const [isToursStaggered, setIsToursStaggered] = useState(false);
-  const navigate = useNavigate();
-  const [searchInput, setSearchInput] = useState(sp.get("q") || "");
-  const searchInputRef = useRef(null);
-  const cardsRowRef = useRef(null);
+  const [sp] = useSearchParams();
 
-  // Danh sách tour phổ biến lấy từ dữ liệu tour thật của hệ thống
-  const popularSearchTours = useMemo(() => {
-    const list = data?.items ? [...data.items] : [];
-    list.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0) || Number(b.view_count || 0) - Number(a.view_count || 0));
-    return list.slice(0, 4);
-  }, [data]);
+  // Danh sách tỉnh thành từ Backend API
+  const [provinces, setProvinces] = useState([]);
 
-  // Kết quả tìm kiếm theo thời gian thực (Live Search) từ toàn bộ tour thật
-  const liveSearchResults = useMemo(() => {
-    if (!searchInput.trim()) return [];
-    const q = searchInput.trim().toLowerCase();
-    const list = data?.items ? [...data.items] : [];
-    return list.filter((t) => {
-      const title = (t.title || t.name || "").toLowerCase();
-      const prov = (t.province_name || "").toLowerCase();
-      const desc = (t.overview || t.description || "").toLowerCase();
-      const tags = Array.isArray(t.tags) ? t.tags.join(" ").toLowerCase() : "";
-      return title.includes(q) || prov.includes(q) || desc.includes(q) || tags.includes(q);
-    });
-  }, [searchInput, data]);
+  // Dữ liệu tour và phân trang từ Backend API
+  const [tours, setTours] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
 
-  const scrollCardsLeft = () => {
-    if (cardsRowRef.current) {
-      cardsRowRef.current.scrollBy({ left: -310, behavior: "smooth" });
-    }
-  };
+  // Bộ lọc
+  const [searchQuery, setSearchQuery] = useState(sp.get("q") || "");
+  const [debouncedQuery, setDebouncedQuery] = useState(sp.get("q") || "");
+  const [selectedProvinceIds, setSelectedProvinceIds] = useState([]);
+  const [selectedDuration, setSelectedDuration] = useState("");
+  const [selectedPriceRange, setSelectedPriceRange] = useState("");
+  const [selectedSort, setSelectedSort] = useState("default");
 
-  const scrollCardsRight = () => {
-    if (cardsRowRef.current) {
-      cardsRowRef.current.scrollBy({ left: 310, behavior: "smooth" });
-    }
-  };
+  // Popover đang mở: null | "province" | "duration" | "price" | "sort"
+  const [openPopover, setOpenPopover] = useState(null);
+  const [provSearch, setProvSearch] = useState("");
+  const filterBarRef = useRef(null);
 
-  // Hero Carousel State
-  const [heroIndex, setHeroIndex] = useState(0);
-  const currentHero = FEATURED_HERO_DESTINATIONS[heroIndex] || FEATURED_HERO_DESTINATIONS[0];
-  const [heroProgress, setHeroProgress] = useState(0);
-
-  // Tự động chạy thanh tiến trình 5s mỗi điểm đến nổi bật chuẩn xác theo thời gian thực
+  // Đóng popover khi click bên ngoài
   useEffect(() => {
-    let startTime = Date.now();
-    const DURATION = 5000; // 5s mỗi điểm đến
-
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const pct = Math.min(100, (elapsed / DURATION) * 100);
-      setHeroProgress(pct);
-
-      if (elapsed >= DURATION) {
-        startTime = Date.now();
-        setHeroProgress(0);
-        setHeroIndex((idx) => (idx + 1) % FEATURED_HERO_DESTINATIONS.length);
+    function handleClickOutside(e) {
+      if (filterBarRef.current && !filterBarRef.current.contains(e.target)) {
+        setOpenPopover(null);
       }
-    }, 40);
+    }
+    if (openPopover) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openPopover]);
 
-    return () => clearInterval(timer);
+  // Lọc danh sách tỉnh thành theo từ khóa tìm nhanh trong popover
+  const filteredProvinces = useMemo(() => {
+    if (!provSearch.trim()) return provinces;
+    const q = provSearch.trim().toLowerCase();
+    return provinces.filter((p) => p.name.toLowerCase().includes(q));
+  }, [provinces, provSearch]);
+
+  // Danh sách các tỉnh đang được chọn làm active chips
+  const activeProvinces = useMemo(() => {
+    if (!selectedProvinceIds || selectedProvinceIds.length === 0) return [];
+    return provinces.filter((p) => selectedProvinceIds.includes(p.id));
+  }, [provinces, selectedProvinceIds]);
+
+  const hasAnyFilter = useMemo(() => {
+    return Boolean(
+      searchQuery.trim() ||
+      selectedProvinceIds.length > 0 ||
+      selectedDuration ||
+      selectedPriceRange ||
+      selectedSort !== "default"
+    );
+  }, [searchQuery, selectedProvinceIds, selectedDuration, selectedPriceRange, selectedSort]);
+
+  // Thao tác toggle tỉnh thành trong bộ lọc
+  const handleToggleProvince = (id) => {
+    setSelectedProvinceIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+    setPage(1);
+  };
+
+  const handleRemoveProvince = (id) => {
+    setSelectedProvinceIds((prev) => prev.filter((x) => x !== id));
+    setPage(1);
+  };
+
+  const handleClearAllProvinces = () => {
+    setSelectedProvinceIds([]);
+    setPage(1);
+  };
+
+  // Hero carousel (Lấy các tour giảm giá/nổi bật nhất từ backend)
+  const [heroSlides, setHeroSlides] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Yêu thích
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem("aura_tour_favorites");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const isInitialMount = useRef(true);
+
+  // 1. Lấy danh sách tỉnh thành và tour nổi bật cho Hero từ Backend khi khởi động
+  useEffect(() => {
+    // Lấy tỉnh thành có tour mở bán
+    api
+      .tourProvinces(false)
+      .then((res) => {
+        if (res?.provinces && Array.isArray(res.provinces)) {
+          setProvinces(res.provinces);
+        }
+      })
+      .catch((err) => console.warn("Lỗi tải tỉnh thành:", err?.message));
+
+    // Lấy top 3-5 tour ưu đãi nhất làm Hero Carousel
+    api
+      .tours({ sort: "sale_first", page: 1, page_size: 5 })
+      .then((res) => {
+        if (res?.items && res.items.length > 0) {
+          setHeroSlides(res.items.slice(0, 3));
+        }
+      })
+      .catch((err) => console.warn("Lỗi tải hero tours:", err?.message));
   }, []);
 
-  const nextHeroSlide = () => {
-    setHeroProgress(0);
-    setHeroIndex((prev) => (prev + 1) % FEATURED_HERO_DESTINATIONS.length);
-  };
-
-  // Filter States matching 71e1395b-bccc-4a83-a52e-cbac8550f078.png
-  const [filterDestination, setFilterDestination] = useState(sp.get("destination") || "all");
-  const [filterDate, setFilterDate] = useState(sp.get("date") || "");
-  const [filterDuration, setFilterDuration] = useState(Number(sp.get("max_days")) || 14);
-  const [filterPrice, setFilterPrice] = useState(Number(sp.get("max_price")) || 50000000);
-  const [selectedTypes, setSelectedTypes] = useState(new Set());
-  const [sortBy, setSortBy] = useState("popular");
-
-  const searchQuery = sp.get("q") || "";
-
-  const resetFilters = () => {
-    setFilterDestination("all");
-    setFilterDate("");
-    setFilterDuration(14);
-    setFilterPrice(50000000);
-    setSelectedTypes(new Set());
-    setSortBy("popular");
-    setSp({});
-  };
-
-  const toggleType = (typeId) => {
-    setSelectedTypes((prev) => {
-      const next = new Set(prev);
-      if (next.has(typeId)) next.delete(typeId);
-      else next.add(typeId);
-      return next;
-    });
-  };
-
+  // 2. Debounce tìm kiếm từ khóa 350ms
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsToursStaggered(true);
-    }, 80);
+      setDebouncedQuery(searchQuery);
+      setPage(1); // Reset về trang 1 khi gõ tìm kiếm mới
+    }, 350);
     return () => clearTimeout(timer);
-  }, []);
+  }, [searchQuery]);
 
-  const openSearch = () => {
-    setIsSearchOpen(true);
-    setIsSearchStaggered(false);
-    setTimeout(() => {
-      setIsSearchStaggered(true);
-      searchInputRef.current?.focus();
-    }, 80);
-  };
-
-  const closeSearch = () => {
-    setIsSearchStaggered(false);
-    setIsSearchOpen(false);
-    setTimeout(() => {
-      setIsToursStaggered(true);
-    }, 80);
-  };
-
+  // 3. Tự động chuyển slide Hero mỗi 6s
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        if (isDrawerOpen) {
-          setIsDrawerOpen(false);
-        } else if (isSearchOpen) {
-          closeSearch();
-        }
-      }
+    if (heroSlides.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [heroSlides.length]);
+
+  // 4. Hàm gọi Backend API tìm kiếm và lọc tour
+  const fetchToursFromBackend = useCallback(() => {
+    setLoading(true);
+
+    const params = {
+      page,
+      page_size: pageSize,
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isDrawerOpen, isSearchOpen]);
 
-  useEffect(() => {
-    let isMounted = true;
-    setIsLoading(true);
+    if (debouncedQuery.trim()) {
+      params.q = debouncedQuery.trim();
+    }
 
-    const params = { limit: 40 };
-    if (searchQuery) params.q = searchQuery;
+    if (selectedProvinceIds.length > 0) {
+      params.province_ids = selectedProvinceIds.join(",");
+    }
+
+    if (selectedDuration === "1") {
+      params.min_days = 1;
+      params.max_days = 1;
+    } else if (selectedDuration === "2") {
+      params.min_days = 2;
+      params.max_days = 2;
+    } else if (selectedDuration === "3") {
+      params.min_days = 3;
+      params.max_days = 3;
+    } else if (selectedDuration === "4") {
+      params.min_days = 4;
+    }
+
+    if (selectedPriceRange === "under2m") {
+      params.price_max = 2000000;
+    } else if (selectedPriceRange === "2mto4m") {
+      params.price_min = 2000000;
+      params.price_max = 4000000;
+    } else if (selectedPriceRange === "above4m") {
+      params.price_min = 4000000;
+    }
+
+    if (selectedSort === "price-asc" || selectedSort === "price_asc") {
+      params.sort = "price_asc";
+    } else if (selectedSort === "price-desc" || selectedSort === "price_desc") {
+      params.sort = "price_desc";
+    } else if (selectedSort === "sale-first" || selectedSort === "sale_first") {
+      params.sort = "sale_first";
+    }
 
     api
       .tours(params)
       .then((res) => {
-        if (isMounted) {
-          setData(res);
-          setIsLoading(false);
+        if (res?.items) {
+          setTours(res.items);
+          setTotal(res.total ?? res.items.length);
+        } else {
+          setTours([]);
+          setTotal(0);
         }
       })
       .catch((err) => {
-        console.error("Lỗi tải danh sách tour:", err);
-        if (isMounted) setIsLoading(false);
+        console.error("Lỗi khi gọi API tìm kiếm tour:", err);
+        setTours([]);
+        setTotal(0);
+      })
+      .finally(() => {
+        setLoading(false);
       });
+  }, [
+    page,
+    pageSize,
+    debouncedQuery,
+    selectedProvinceIds,
+    selectedDuration,
+    selectedPriceRange,
+    selectedSort,
+  ]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [searchQuery]);
+  // Gọi API mỗi khi filter hoặc page thay đổi
+  useEffect(() => {
+    fetchToursFromBackend();
+  }, [fetchToursFromBackend]);
 
-  const handleRegionFilter = (regionKey) => {
-    const next = new URLSearchParams(sp);
-    if (!regionKey || regionKey === activeRegion) {
-      next.delete("region");
-    } else {
-      next.set("region", regionKey);
+  // Xử lý chuyển trang
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(total / pageSize));
+  }, [total, pageSize]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+      setPage(newPage);
+      const gridEl = document.getElementById("toursListAnchor");
+      if (gridEl) {
+        gridEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
-    setSp(next);
   };
 
-  const handleSearchSubmit = (e) => {
-    e?.preventDefault();
-    const next = new URLSearchParams(sp);
-    if (searchInput.trim()) {
-      next.set("q", searchInput.trim());
-    } else {
-      next.delete("q");
-    }
-    setSp(next);
-    closeSearch();
+  // Đặt lại toàn bộ bộ lọc về mặc định
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setDebouncedQuery("");
+    setSelectedProvinceIds([]);
+    setSelectedDuration("");
+    setSelectedPriceRange("");
+    setSelectedSort("default");
+    setPage(1);
+    setOpenPopover(null);
   };
 
-  // Đếm số lượng tour động cho từng loại (Cultural, Nature, Adventure, Relaxation, Family)
-  const typeCounts = useMemo(() => {
-    const counts = { cultural: 0, nature: 0, adventure: 0, relaxation: 0, family: 0 };
-    const toursList = data?.items || [];
-    toursList.forEach((t) => {
-      const text = `${t.title || t.name || ""} ${t.description || ""} ${t.overview || ""} ${(t.tags || []).join(" ")}`.toLowerCase();
-      if (text.includes("văn hóa") || text.includes("di sản") || text.includes("chùa") || text.includes("lịch sử") || text.includes("cultural")) counts.cultural++;
-      if (text.includes("thiên nhiên") || text.includes("vịnh") || text.includes("núi") || text.includes("rừng") || text.includes("biển") || text.includes("nature")) counts.nature++;
-      if (text.includes("khám phá") || text.includes("trải nghiệm") || text.includes("trekking") || text.includes("adventure") || text.includes("safari")) counts.adventure++;
-      if (text.includes("nghỉ dưỡng") || text.includes("resort") || text.includes("relaxation") || text.includes("spa")) counts.relaxation++;
-      if (text.includes("gia đình") || text.includes("tiết kiệm") || text.includes("family") || text.includes("trẻ em")) counts.family++;
+  // Chọn nhanh gợi ý điểm đến từ Empty State
+  const handleSelectSuggestion = (destName) => {
+    const term = destName.toLowerCase();
+    const matched = provinces.find((p) => p.name.toLowerCase().includes(term));
+    if (matched) {
+      setSelectedProvinceIds([matched.id]);
+      setSearchQuery("");
+      setDebouncedQuery("");
+    } else {
+      setSelectedProvinceIds([]);
+      setSearchQuery(destName);
+      setDebouncedQuery(destName);
+    }
+    setSelectedDuration("");
+    setSelectedPriceRange("");
+    setSelectedSort("default");
+    setPage(1);
+  };
+
+  // Toggle favorite
+  const toggleFavorite = (tourId) => {
+    setFavorites((prev) => {
+      const next = prev.includes(tourId)
+        ? prev.filter((id) => id !== tourId)
+        : [...prev, tourId];
+      try {
+        localStorage.setItem("aura_tour_favorites", JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
     });
-    return counts;
-  }, [data]);
-
-  const filteredTours = useMemo(() => {
-    let list = data?.items ? [...data.items] : [];
-
-    // Search query từ ô tìm kiếm nhanh nếu có
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter((t) => {
-        const title = (t.title || t.name || "").toLowerCase();
-        const prov = (t.province_name || "").toLowerCase();
-        const desc = (t.overview || t.description || "").toLowerCase();
-        return title.includes(q) || prov.includes(q) || desc.includes(q);
-      });
-    }
-
-    // 1. Lọc theo Điểm đến (Destination)
-    if (filterDestination && filterDestination !== "all") {
-      const destTarget = filterDestination.toLowerCase();
-      list = list.filter((t) => {
-        const prov = (t.province_name || "").toLowerCase();
-        const title = (t.title || t.name || "").toLowerCase();
-        return prov.includes(destTarget) || title.includes(destTarget);
-      });
-    }
-
-    // 2. Lọc theo Ngày đi (Date)
-    if (filterDate.trim()) {
-      const dTarget = filterDate.trim().toLowerCase();
-      list = list.filter((t) => {
-        if (Array.isArray(t.departures)) {
-          return t.departures.some((dep) => (dep.depart_date || "").includes(dTarget));
-        }
-        return (t.ngay_gan_nhat || "").includes(dTarget);
-      });
-    }
-
-    // 3. Lọc theo Thời gian (Duration in days)
-    if (filterDuration < 14) {
-      list = list.filter((t) => {
-        const days = Number(t.duration_days || t.num_days || 1);
-        return days <= filterDuration;
-      });
-    }
-
-    // 4. Lọc theo Giá (Price max)
-    if (filterPrice < 50000000) {
-      list = list.filter((t) => {
-        const price = Number(t.price_from || 0);
-        return price <= filterPrice;
-      });
-    }
-
-    // 5. Lọc theo Loại tour (Selected Types)
-    if (selectedTypes.size > 0) {
-      list = list.filter((t) => {
-        const text = `${t.title || t.name || ""} ${t.description || ""} ${t.overview || ""} ${(t.tags || []).join(" ")}`.toLowerCase();
-        if (selectedTypes.has("cultural") && (text.includes("văn hóa") || text.includes("di sản") || text.includes("chùa") || text.includes("lịch sử") || text.includes("cultural"))) return true;
-        if (selectedTypes.has("nature") && (text.includes("thiên nhiên") || text.includes("vịnh") || text.includes("núi") || text.includes("rừng") || text.includes("biển") || text.includes("nature"))) return true;
-        if (selectedTypes.has("adventure") && (text.includes("khám phá") || text.includes("trải nghiệm") || text.includes("trekking") || text.includes("adventure") || text.includes("safari"))) return true;
-        if (selectedTypes.has("relaxation") && (text.includes("nghỉ dưỡng") || text.includes("resort") || text.includes("relaxation") || text.includes("spa"))) return true;
-        if (selectedTypes.has("family") && (text.includes("gia đình") || text.includes("tiết kiệm") || text.includes("family") || text.includes("trẻ em"))) return true;
-        return false;
-      });
-    }
-
-    // Sắp xếp
-    if (sortBy === "price_asc") {
-      list.sort((a, b) => Number(a.price_from || 0) - Number(b.price_from || 0));
-    } else if (sortBy === "price_desc") {
-      list.sort((a, b) => Number(b.price_from || 0) - Number(a.price_from || 0));
-    } else if (sortBy === "duration_asc") {
-      list.sort((a, b) => Number(a.duration_days || 1) - Number(b.duration_days || 1));
-    } else {
-      // popular
-      list.sort((a, b) => (b.is_sale ? 1 : 0) - (a.is_sale ? 1 : 0) || Number(b.view_count || 0) - Number(a.view_count || 0));
-    }
-
-    return list;
-  }, [data, searchQuery, filterDestination, filterDate, filterDuration, filterPrice, selectedTypes, sortBy]);
+  };
 
   return (
-    <div className="aura-tours">
-      <main className="aura-tours__container">
-        {/* =================================================== */}
-        {/* VIEW 2: Tour Listing View (Staggered Animation)     */}
-        {/* =================================================== */}
-        <div
-          className={`aura-tours__main-view ${
-            isSearchOpen ? "aura-tours__main-view--hidden" : "aura-tours__main-view--active"
-          } ${isToursStaggered ? "aura-tours--stagger-active" : ""}`}
-          id="toursView"
-        >
-          <div className="aura-tours__layout-grid">
-            {/* CỘT TRÁI: SIDEBAR (Logo + Menu dọc dùng chung + Bộ lọc Filters) */}
-            <aside className="aura-tours__sidebar">
-              <div className="aura-tours__sidebar-brand">
-                <Link to="/" className="aura-home__brand" aria-label="Aura Voyage">
-                  <svg
-                    className="aura-home__brand-icon"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
-                  </svg>
-                </Link>
-              </div>
+    <div className="tours-page-shell">
+      {/* 1. TOP NAVBAR HỆ THỐNG */}
+      <AppNavbar user={user} onNeedAuth={onNeedAuth} onLogout={onLogout} />
 
-              {/* Dùng chung chuẩn nav hệ thống: aura-home__nav */}
-              <nav className="aura-home__nav" aria-label="Main Editorial Navigation">
-                <Link to="/" className="aura-home__nav-link">
-                  <span>About</span>
-                  <span>→</span>
-                </Link>
-                <span className="aura-home__nav-link aura-home__nav-link--active">
-                  <span>/ Tours</span>
-                </span>
-                <Link to="/chuyen-di" className="aura-home__nav-link">
-                  <span>Experiences</span>
-                  <span>→</span>
-                </Link>
-                <Link to="/tai-khoan" className="aura-home__nav-link">
-                  <span>Account</span>
-                  <span>→</span>
-                </Link>
-              </nav>
+      <div className="tours-page-wrap">
+        {/* HEADER SECTION */}
+        <div className="matdash-page-header">
+          <h1 className="matdash-page-title">Hành trình du lịch nổi bật</h1>
+        </div>
 
-              {/* Bộ lọc Sidebar theo đúng mockup */}
-              <div className="aura-tours__sidebar-filters">
-                {/* 1. DESTINATION */}
-                <div className="aura-tours__filter-group">
-                  <label className="aura-tours__filter-title">DESTINATION</label>
-                  <div className="aura-tours__select-wrapper">
-                    <select
-                      value={filterDestination}
-                      onChange={(e) => setFilterDestination(e.target.value)}
-                      className="aura-tours__filter-select"
-                    >
-                      <option value="all">All destinations</option>
-                      <option value="Hà Nội">Hà Nội</option>
-                      <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                      <option value="Đà Nẵng">Đà Nẵng</option>
-                      <option value="Quảng Ninh">Hạ Long / Quảng Ninh</option>
-                      <option value="Ninh Bình">Ninh Bình</option>
-                      <option value="Lâm Đồng">Đà Lạt</option>
-                      <option value="Kiên Giang">Phú Quốc</option>
-                    </select>
-                    <span className="aura-tours__select-chevron">⌵</span>
-                  </div>
-                </div>
+        {/* ====================================================================
+             PHẦN 1: HERO FEATURED SPLIT CARD (CAROUSEL TỪ BACKEND TOURS)
+             ==================================================================== */}
+        {heroSlides.length > 0 && (
+          <section className="hero-featured-card" aria-label="Tour nổi bật ưu đãi">
+            <div className="carousel-window">
+              <div
+                className="carousel-track"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              >
+                {heroSlides.map((slide) => {
+                  const imgUrl = resolveTourImage(slide);
+                  const isSale = slide.is_sale || (slide.discount_pct && slide.discount_pct > 0);
+                  const discountPct = slide.discount_pct || (slide.original_price && slide.price_from ? Math.round(((slide.original_price - slide.price_from) / slide.original_price) * 100) : 0);
 
-                {/* 2. DATE */}
-                <div className="aura-tours__filter-group">
-                  <label className="aura-tours__filter-title">DATE</label>
-                  <div className="aura-tours__input-wrapper">
-                    <input
-                      type="text"
-                      placeholder="Any date"
-                      value={filterDate}
-                      onChange={(e) => setFilterDate(e.target.value)}
-                      className="aura-tours__filter-input"
-                    />
-                    <svg className="aura-tours__input-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6"/>
-                      <line x1="8" y1="2" x2="8" y2="6"/>
-                      <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                  </div>
-                </div>
-
-                {/* 3. DURATION */}
-                <div className="aura-tours__filter-group">
-                  <label className="aura-tours__filter-title">DURATION</label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="14"
-                    value={filterDuration}
-                    onChange={(e) => setFilterDuration(Number(e.target.value))}
-                    className="aura-tours__filter-range"
-                  />
-                  <div className="aura-tours__range-labels">
-                    <span>1 day</span>
-                    <span>14+ days</span>
-                  </div>
-                </div>
-
-                {/* 4. PRICE (VND) */}
-                <div className="aura-tours__filter-group">
-                  <label className="aura-tours__filter-title">PRICE (VND)</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="50000000"
-                    step="1000000"
-                    value={filterPrice}
-                    onChange={(e) => setFilterPrice(Number(e.target.value))}
-                    className="aura-tours__filter-range"
-                  />
-                  <div className="aura-tours__range-labels">
-                    <span>0</span>
-                    <span>50.000.000+</span>
-                  </div>
-                </div>
-
-                {/* 5. TYPE */}
-                <div className="aura-tours__filter-group">
-                  <label className="aura-tours__filter-title">TYPE</label>
-                  <div className="aura-tours__type-list">
-                    {[
-                      { key: "cultural", label: "Cultural", count: 24 },
-                      { key: "nature", label: "Nature", count: 18 },
-                      { key: "adventure", label: "Adventure", count: 16 },
-                      { key: "relaxation", label: "Relaxation", count: 12 },
-                      { key: "family", label: "Family", count: 9 },
-                    ].map((typeItem) => (
-                      <label key={typeItem.key} className="aura-tours__checkbox-row">
-                        <div className="aura-tours__checkbox-left">
-                          <input
-                            type="checkbox"
-                            checked={selectedTypes.has(typeItem.key)}
-                            onChange={() => {
-                              setSelectedTypes((prev) => {
-                                const next = new Set(prev);
-                                if (next.has(typeItem.key)) next.delete(typeItem.key);
-                                else next.add(typeItem.key);
-                                return next;
-                              });
-                            }}
-                            className="aura-tours__checkbox"
-                          />
-                          <span className="aura-tours__checkbox-label">{typeItem.label}</span>
+                  return (
+                    <div className="carousel-slide" key={slide.id}>
+                      <div className="slide-copy">
+                        <div className="slide-tag-row">
+                          <span className="slide-category-pill">
+                            {slide.province_name || "Việt Nam"}
+                          </span>
+                          {isSale && discountPct > 0 && (
+                            <span className="slide-deal-badge">
+                              Ưu đãi độc quyền giảm {discountPct}%
+                            </span>
+                          )}
                         </div>
-                        <span className="aura-tours__type-count">{typeItem.count}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </aside>
 
-            {/* CỘT PHẢI: NỘI DUNG CHÍNH (Hero tiêu đề bên cạnh ảnh + Hàng card kết quả) */}
-            <div className="aura-tours__main-content">
-              {/* 1. TOP HERO SECTION */}
-              <section className="aura-tours__hero aura-tours__stagger aura-tours__stagger--header">
-                {/* Tiêu đề Hero: Đặt bên cạnh Menu, đứng bên trái ảnh */}
-                <div className="aura-tours__hero-headline-block">
-                  <span className="aura-tours__hero-subtitle">EXPLORE</span>
-                  <h1 className="aura-tours__hero-title">
-                    Find your<br />
-                    <span className="aura-tours__hero-title-accent">tour</span>
-                  </h1>
-                  <p className="aura-tours__hero-desc">
-                    Curated journeys to extraordinary places, from cultural gems to natural wonders.
-                  </p>
-                </div>
+                        <h2 className="slide-title">{slide.name}</h2>
 
-                {/* Banner ảnh Hero: Chạm sát mép trên & mép phải, bo góc dưới bên trái */}
-                <div className="aura-tours__hero-banner">
-                  <img
-                    src={currentHero.image}
-                    alt={currentHero.title}
-                    className="aura-tours__hero-img"
-                  />
+                        <p className="slide-desc">
+                          {slide.summary || slide.description || "Hành trình khám phá trọn gói chuẩn mực kết hợp lưu trú cao cấp, ẩm thực bản địa và lịch trình được thiết kế tỉ mỉ."}
+                        </p>
 
-                  {/* Top-Right Circle Controls (Search & Menu) */}
-                  <div className="aura-tours__hero-controls">
-                    <button
-                      type="button"
-                      className="aura-tours__circle-btn"
-                      onClick={openSearch}
-                      aria-label="Tìm kiếm tour"
-                    >
-                      <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      className="aura-tours__circle-btn"
-                      onClick={() => setIsDrawerOpen(true)}
-                      aria-label="Mở Menu"
-                    >
-                      <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <line x1="4" y1="7" x2="20" y2="7" />
-                        <line x1="4" y1="12" x2="20" y2="12" />
-                        <line x1="4" y1="17" x2="20" y2="17" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Bottom-Right Featured Destination Info */}
-                  <div className="aura-tours__hero-featured-card">
-                    <div className="aura-tours__featured-header">
-                      <span className="aura-tours__featured-label">{currentHero.subtitle}</span>
-                      <div className="aura-tours__featured-title-row">
-                        <h2 className="aura-tours__featured-title">{currentHero.title}</h2>
-                        <button
-                          type="button"
-                          className="aura-tours__featured-arrow-btn"
-                          onClick={nextHeroSlide}
-                          aria-label="Chuyển điểm đến nổi bật tiếp theo"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                            <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="aura-tours__featured-progress-row">
-                      <div className="aura-tours__featured-track">
-                        <div
-                          className="aura-tours__featured-fill"
-                          style={{
-                            width: `${heroProgress}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="aura-tours__featured-count">
-                        {String(heroIndex + 1).padStart(2, "0")} / {String(FEATURED_HERO_DESTINATIONS.length).padStart(2, "0")}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* 2. BOTTOM RESULTS SECTION */}
-              <section className="aura-tours__results-section aura-tours__stagger aura-tours__stagger--content">
-              {/* Header kết quả: Số lượng tour & Sắp xếp */}
-              <div className="aura-tours__results-header">
-                <span className="aura-tours__results-count">
-                  {filteredTours.length} {filteredTours.length === 1 ? "tour" : "tours"}
-                </span>
-
-                <div className="aura-tours__results-actions">
-                  <div className="aura-tours__sort-group">
-                    <span className="aura-tours__sort-label">Sort by:</span>
-                    <select
-                      className="aura-tours__sort-select"
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                    >
-                      <option value="popular">Most popular</option>
-                      <option value="price_asc">Price: Low to high</option>
-                      <option value="price_desc">Price: High to low</option>
-                      <option value="duration_asc">Duration</option>
-                    </select>
-                  </div>
-
-
-                </div>
-              </div>
-
-              {/* Skeleton loading */}
-              {isLoading && (
-                <div className="aura-tours__cards-grid">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="aura-tours__skeleton aura-tours__skeleton--card" />
-                  ))}
-                </div>
-              )}
-
-              {/* Empty state */}
-              {!isLoading && filteredTours.length === 0 && (
-                <div className="aura-tours__empty">
-                  <h3 className="aura-tours__empty-title">Không tìm thấy tour phù hợp</h3>
-                  <p className="aura-tours__empty-desc">
-                    Hiện không có hành trình nào khớp với tiêu chí tìm kiếm. Hãy thử bỏ chọn bộ lọc để xem toàn bộ tour.
-                  </p>
-                  <button
-                    type="button"
-                    className="aura-tours__filter-reset-link"
-                    onClick={resetFilters}
-                  >
-                    Reset all filters
-                  </button>
-                </div>
-              )}
-
-              {/* Dạng 1 hàng ngang có nút di chuyển sang phải, trái */}
-              {!isLoading && filteredTours.length > 0 && (
-                <div className="aura-tours__cards-slider-container">
-                  <button
-                    type="button"
-                    className="aura-tours__cards-arrow-btn aura-tours__cards-arrow-btn--left"
-                    onClick={scrollCardsLeft}
-                    aria-label="Di chuyển sang trái"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                      <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-
-                  <div ref={cardsRowRef} className="aura-tours__cards-grid aura-tours__cards-grid--horizontal">
-                  {filteredTours.map((tour, index) => {
-                    const cleanProvince =
-                      tour.province_name?.replace(/^(Thành phố|Tỉnh)\s+/, "") ||
-                      "Việt Nam";
-                    const durationDays = tour.duration_days || 1;
-                    const priceVal = Number(tour.price_from || 0);
-                    const priceFormatted = formatPrice(priceVal);
-
-                    const heroImage =
-                      tour.primary_image ||
-                      tour.cover_image ||
-                      tour.image_url ||
-                      (tour.images && tour.images[0]) ||
-                      "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80";
-
-                    // Xác định nhãn badge (Popular, Cultural, Nature, Adventure...)
-                    let badgeLabel = "";
-                    let isPopular = false;
-                    if (index === 0 || tour.is_featured) {
-                      badgeLabel = "Popular";
-                      isPopular = true;
-                    } else if (tour.is_sale) {
-                      badgeLabel = "Special Offer";
-                    } else {
-                      const text = `${tour.title || tour.name || ""} ${tour.overview || ""}`.toLowerCase();
-                      if (text.includes("văn hóa") || text.includes("chùa") || text.includes("di sản")) {
-                        badgeLabel = "Cultural";
-                      } else if (text.includes("vịnh") || text.includes("thiên nhiên") || text.includes("núi") || text.includes("biển")) {
-                        badgeLabel = "Nature";
-                      } else if (text.includes("khám phá") || text.includes("trekking") || text.includes("trải nghiệm")) {
-                        badgeLabel = "Adventure";
-                      } else if (text.includes("nghỉ dưỡng") || text.includes("resort")) {
-                        badgeLabel = "Relaxation";
-                      } else {
-                        badgeLabel = "Featured";
-                      }
-                    }
-
-                    return (
-                      <article key={tour.id || tour.tour_id || index} className="aura-tours__vcard">
-                        <Link
-                          to={`/tour/${tour.slug || tour.id}`}
-                          className="aura-tours__vcard-img-link"
-                          aria-label={tour.title || tour.name}
-                        >
-                          <div className="aura-tours__vcard-img-wrap">
-                            <img
-                              src={heroImage}
-                              alt={tour.title || tour.name}
-                              className="aura-tours__vcard-img"
-                              loading="lazy"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80";
-                              }}
-                            />
-                            {badgeLabel && (
-                              <span
-                                className={`aura-tours__vcard-badge ${isPopular ? "aura-tours__vcard-badge--popular" : ""}`}
-                              >
-                                {badgeLabel}
+                        <div className="slide-footer-row">
+                          <div className="slide-price-box">
+                            <span className="slide-price-main">
+                              {formatPrice(slide.price_from)}
+                            </span>
+                            {slide.original_price && slide.original_price > slide.price_from && (
+                              <span className="slide-price-struck">
+                                {formatPrice(slide.original_price)}
                               </span>
                             )}
                           </div>
-                        </Link>
-
-                        <div className="aura-tours__vcard-body">
-                          <h4 className="aura-tours__vcard-title" title={tour.title || tour.name}>
-                            <Link to={`/tour/${tour.slug || tour.id}`}>
-                              {tour.title || tour.name}
-                            </Link>
-                          </h4>
-
-                          <div className="aura-tours__vcard-meta">
-                            <span>{durationDays} Days</span>
-                            <span className="aura-tours__vcard-dot">·</span>
-                            <span>{cleanProvince}</span>
-                          </div>
-
-                          <div className="aura-tours__vcard-footer">
-                            <span className="aura-tours__vcard-price">
-                              {priceFormatted}₫
-                            </span>
-
-                            <Link
-                              to={`/tour/${tour.slug || tour.id}`}
-                              className="aura-tours__vcard-action-btn"
-                              aria-label={`Xem tour ${tour.title || tour.name}`}
-                            >
-                              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                                <path d="M5 12h14m-6-6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </Link>
-                          </div>
+                          <Link
+                            to={`/tours/${slide.slug || slide.id}`}
+                            className="slide-cta-button"
+                          >
+                            Đặt chuyến đi ngay →
+                          </Link>
                         </div>
-                      </article>
-                    );
-                  })}
-                </div>
+                      </div>
 
-                  <button
-                    type="button"
-                    className="aura-tours__cards-arrow-btn aura-tours__cards-arrow-btn--right"
-                    onClick={scrollCardsRight}
-                    aria-label="Di chuyển sang phải"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                      <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-              </section>
-            </div>
-          </div>
-        </div>
-
-        {/* VIEW 3: In-Container Search View (Staggered BEM)    */}
-        {/* =================================================== */}
-        <section
-          className={`aura-search ${
-            isSearchOpen ? "aura-search--active" : "aura-search--hidden"
-          } ${isSearchStaggered ? "aura-search--stagger-active" : ""}`}
-          id="searchView"
-        >
-          <header className="aura-search__header aura-search__stagger aura-search__stagger--header">
-            <div className="aura-search__header-left">
-              <button
-                type="button"
-                className="aura-search__logo-btn"
-                onClick={closeSearch}
-                aria-label="Back to Tours"
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className="aura-search__back-btn"
-                  onClick={closeSearch}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Tours
-                </button>
-              </div>
-
-              <button
-                type="button"
-                className="aura-search__close-btn"
-                onClick={closeSearch}
-                aria-label="Close search"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </header>
-
-            <div className="aura-search__input-wrap aura-search__stagger aura-search__stagger--title">
-              <form onSubmit={handleSearchSubmit} className="aura-search__input-box">
-                <span
-                  className="aura-search__caret"
-                  style={{ display: searchInput ? "none" : "inline-block" }}
-                />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  className="aura-search__input"
-                  placeholder="Find your tour"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
-                {searchInput && (
-                  <button
-                    type="button"
-                    className="aura-search__clear-btn"
-                    onClick={() => {
-                      setSearchInput("");
-                      searchInputRef.current?.focus();
-                    }}
-                    aria-label="Clear search"
-                  >
-                    ✕
-                  </button>
-                )}
-              </form>
-            </div>
-
-            <div className="aura-search__content aura-search__stagger aura-search__stagger--content">
-              {!searchInput ? (
-                <>
-                  <div className="aura-search__subhead">
-                    <span className="aura-search__subhead-title">Tour thịnh hành</span>
-                    <span className="aura-search__subhead-desc">Hành trình chọn lọc tại Việt Nam</span>
-                  </div>
-
-                  <div className="aura-search__grid">
-                    {popularSearchTours.map((t, idx) => {
-                      const heroImage =
-                        t.primary_image ||
-                        t.cover_image ||
-                        (t.images && t.images[0]) ||
-                        "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80";
-                      return (
-                        <article
-                          key={t.id || t.slug || idx}
-                          className="aura-search__card"
-                          onClick={() => {
-                            navigate(`/tour/${t.slug || t.id}`);
-                            closeSearch();
+                      <div className="slide-visual-box">
+                        {isSale && discountPct > 0 && (
+                          <span className="ribbon-tag">-{discountPct}%</span>
+                        )}
+                        <img
+                          src={imgUrl}
+                          alt={slide.name}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "/images/tour-halong.jpg";
                           }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {heroSlides.length > 1 && (
+              <div className="carousel-nav-row">
+                <div className="carousel-indicators">
+                  {heroSlides.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className={`carousel-dot ${idx === currentSlide ? "active" : ""}`}
+                      onClick={() => setCurrentSlide(idx)}
+                      aria-label={`Slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+                <div className="carousel-btn-group">
+                  <button
+                    type="button"
+                    className="carousel-arrow"
+                    onClick={() =>
+                      setCurrentSlide(
+                        (prev) => (prev - 1 + heroSlides.length) % heroSlides.length
+                      )
+                    }
+                    aria-label="Trước"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    className="carousel-arrow"
+                    onClick={() =>
+                      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
+                    }
+                    aria-label="Tiếp"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ====================================================================
+             PHẦN 2: THANH BỘ LỌC DU LỊCH TINH GỌN (FLOATING POPOVERS TỰ ĐỘNG ĐÓNG)
+             ==================================================================== */}
+        <div className="travel-filter-bar" ref={filterBarRef} id="all-tours">
+          {/* Ô TÌM KIẾM TỪ KHÓA */}
+          <div className="filter-search-box">
+            <svg className="filter-search-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              type="text"
+              className="filter-search-field"
+              placeholder="Tìm theo tên tour, điểm đến..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="filter-clear-search-btn"
+                onClick={() => setSearchQuery("")}
+                title="Xóa tìm kiếm"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="filter-pills-cluster">
+            {/* 1. NÚT ĐIỂM ĐẾN (POPOVER) */}
+            <div className="popover-anchor">
+              <button
+                type="button"
+                className={`filter-dropdown-pill ${selectedProvinceIds.length > 0 ? "has-value" : ""} ${openPopover === "province" ? "is-open" : ""}`}
+                onClick={() => setOpenPopover(openPopover === "province" ? null : "province")}
+              >
+                <span>{selectedProvinceIds.length > 0 ? `Điểm đến (${selectedProvinceIds.length})` : "Điểm đến"}</span>
+                <span className="pill-arrow">▾</span>
+              </button>
+
+              {openPopover === "province" && (
+                <div className="floating-popover-menu">
+                  <div className="floating-popover-header">
+                    <span>Chọn điểm đến</span>
+                    {selectedProvinceIds.length > 0 && (
+                      <button type="button" className="popover-reset-btn" onClick={handleClearAllProvinces}>Bỏ chọn</button>
+                    )}
+                  </div>
+                  {provinces.length > 6 && (
+                    <div className="popover-search-input">
+                      <input
+                        type="text"
+                        placeholder="Tìm tỉnh thành..."
+                        value={provSearch}
+                        onChange={(e) => setProvSearch(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                  )}
+                  <div className="popover-items-list">
+                    {filteredProvinces.map((p) => {
+                      const isChecked = selectedProvinceIds.includes(p.id);
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className={`popover-row-item ${isChecked ? "checked" : ""}`}
+                          onClick={() => handleToggleProvince(p.id)}
                         >
-                          <div className="aura-search__card-thumb">
-                            <img
-                              src={heroImage}
-                              alt={t.title || t.name}
-                              className="aura-search__card-img"
-                            />
-                            <span className="aura-search__card-duration">
-                              {t.duration_days || 1} Days
-                            </span>
-                          </div>
-                          <h4 className="aura-search__card-title">{t.title || t.name}</h4>
-                          <p className="aura-search__card-price">{formatPrice(t.price_from)}₫</p>
-                        </article>
+                          <span className="checkbox-indicator">{isChecked ? "✓" : ""}</span>
+                          <span>{p.name.replace(/^(Thành phố|Tỉnh)\s+/i, "")}</span>
+                        </button>
                       );
                     })}
                   </div>
-                </>
-              ) : (
-                <>
-                  <div className="aura-search__subhead">
-                    <div className="aura-search__subhead-title">
-                      <span>Kết quả tìm kiếm</span>
-                      <span className="aura-search__badge">
-                        {liveSearchResults.length} {liveSearchResults.length === 1 ? "tour" : "tours"}
-                      </span>
-                    </div>
-                    <span className="aura-search__subhead-desc">Khớp với từ khóa "{searchInput}"</span>
-                  </div>
-
-                  {liveSearchResults.length > 0 ? (
-                    <>
-                      <div className="aura-search__grid">
-                        {liveSearchResults.slice(0, 8).map((t, idx) => {
-                          const heroImage =
-                            t.primary_image ||
-                            t.cover_image ||
-                            (t.images && t.images[0]) ||
-                            "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80";
-                          return (
-                            <article
-                              key={t.id || t.slug || idx}
-                              className="aura-search__card"
-                              onClick={() => {
-                                navigate(`/tour/${t.slug || t.id}`);
-                                closeSearch();
-                              }}
-                            >
-                              <div className="aura-search__card-thumb">
-                                <img
-                                  src={heroImage}
-                                  alt={t.title || t.name}
-                                  className="aura-search__card-img"
-                                />
-                                <span className="aura-search__card-duration">
-                                  {t.duration_days || 1} Days
-                                </span>
-                              </div>
-                              <h4 className="aura-search__card-title">{t.title || t.name}</h4>
-                              <p className="aura-search__card-price">{formatPrice(t.price_from)}₫</p>
-                            </article>
-                          );
-                        })}
-                      </div>
-
-                      {/* CTA xem tất cả kết quả trên trang danh sách */}
-                      <div className="aura-search__cta">
-                        <div className="aura-search__cta-left">
-                          <div className="aura-search__cta-icon">
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M12 4v16m8-8H4" strokeLinecap="round" />
-                            </svg>
-                          </div>
-                          <div className="aura-search__cta-text">
-                            <h5 className="aura-search__cta-title">
-                              Xem toàn bộ {liveSearchResults.length} tour trên trang danh sách
-                            </h5>
-                            <p className="aura-search__cta-desc">
-                              Áp dụng từ khóa "{searchInput}" vào bộ lọc chính để tiếp tục tinh chỉnh theo ngày khởi hành, khoảng giá và loại hình tour.
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          className="aura-search__cta-btn"
-                          onClick={handleSearchSubmit}
-                        >
-                          Áp dụng bộ lọc →
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="aura-search__empty-box">
-                      <p className="aura-search__empty-title">
-                        Không tìm thấy tour phù hợp với "{searchInput}"
-                      </p>
-                      <p className="aura-search__empty-desc">
-                        Thử tìm kiếm theo tỉnh thành hoặc địa danh nổi tiếng:
-                      </p>
-                      <div className="aura-search__quick-tags">
-                        {["Hạ Long", "Hà Nội", "Sài Gòn", "Đà Nẵng", "Ninh Bình", "Đà Lạt", "Phú Quốc"].map((tag) => (
-                          <button
-                            key={tag}
-                            type="button"
-                            className="aura-search__tag-chip"
-                            onClick={() => setSearchInput(tag)}
-                          >
-                            {tag}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </div>
 
-            <footer className="aura-search__footer aura-search__stagger aura-search__stagger--footer">
-              <nav className="aura-search__footer-nav">
-                <Link to="/" className="aura-search__footer-link">
-                  About
-                </Link>
-                <button
-                  type="button"
-                  className="aura-search__footer-link aura-search__footer-link--active"
-                  onClick={closeSearch}
-                >
-                  / Tours
-                </button>
-                <Link to="/chuyen-di" className="aura-search__footer-link">
-                  Experiences
-                </Link>
-                <Link to="/tai-khoan" className="aura-search__footer-link">
-                  Account
-                </Link>
-              </nav>
-            </footer>
-          </section>
-      </main>
+            {/* 2. NÚT THỜI LƯỢNG (POPOVER) */}
+            <div className="popover-anchor">
+              <button
+                type="button"
+                className={`filter-dropdown-pill ${selectedDuration ? "has-value" : ""} ${openPopover === "duration" ? "is-open" : ""}`}
+                onClick={() => setOpenPopover(openPopover === "duration" ? null : "duration")}
+              >
+                <span>{selectedDuration ? (DURATION_OPTIONS.find((d) => d.value === selectedDuration)?.label || "Thời lượng") : "Thời lượng"}</span>
+                {selectedDuration ? (
+                  <span
+                    className="pill-clear-x"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedDuration("");
+                      setPage(1);
+                    }}
+                  >
+                    ✕
+                  </span>
+                ) : (
+                  <span className="pill-arrow">▾</span>
+                )}
+              </button>
 
-      {/* Slide-out Menu Drawer dùng chung */}
-      <VoyageDrawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        user={user}
-        onNeedAuth={onNeedAuth}
-        onLogout={onLogout}
-      />
+              {openPopover === "duration" && (
+                <div className="floating-popover-menu small-menu">
+                  <div className="floating-popover-header">
+                    <span>Thời lượng chuyến đi</span>
+                  </div>
+                  <div className="popover-items-list">
+                    {DURATION_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`popover-row-item ${selectedDuration === opt.value ? "checked" : ""}`}
+                        onClick={() => {
+                          setSelectedDuration(opt.value);
+                          setPage(1);
+                          setOpenPopover(null);
+                        }}
+                      >
+                        <span className="radio-indicator">{selectedDuration === opt.value ? "●" : "○"}</span>
+                        <span>{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 3. NÚT MỨC GIÁ (POPOVER) */}
+            <div className="popover-anchor">
+              <button
+                type="button"
+                className={`filter-dropdown-pill ${selectedPriceRange ? "has-value" : ""} ${openPopover === "price" ? "is-open" : ""}`}
+                onClick={() => setOpenPopover(openPopover === "price" ? null : "price")}
+              >
+                <span>{selectedPriceRange ? (PRICE_OPTIONS.find((p) => p.value === selectedPriceRange)?.label || "Mức giá") : "Mức giá"}</span>
+                {selectedPriceRange ? (
+                  <span
+                    className="pill-clear-x"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPriceRange("");
+                      setPage(1);
+                    }}
+                  >
+                    ✕
+                  </span>
+                ) : (
+                  <span className="pill-arrow">▾</span>
+                )}
+              </button>
+
+              {openPopover === "price" && (
+                <div className="floating-popover-menu small-menu">
+                  <div className="floating-popover-header">
+                    <span>Khoảng giá ngân sách</span>
+                  </div>
+                  <div className="popover-items-list">
+                    {PRICE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`popover-row-item ${selectedPriceRange === opt.value ? "checked" : ""}`}
+                        onClick={() => {
+                          setSelectedPriceRange(opt.value);
+                          setPage(1);
+                          setOpenPopover(null);
+                        }}
+                      >
+                        <span className="radio-indicator">{selectedPriceRange === opt.value ? "●" : "○"}</span>
+                        <span>{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 4. NÚT SẮP XẾP (POPOVER) */}
+            <div className="popover-anchor">
+              <button
+                type="button"
+                className={`filter-dropdown-pill ${selectedSort !== "default" ? "has-value" : ""} ${openPopover === "sort" ? "is-open" : ""}`}
+                onClick={() => setOpenPopover(openPopover === "sort" ? null : "sort")}
+              >
+                <span>{selectedSort !== "default" ? (SORT_OPTIONS.find((s) => s.value === selectedSort)?.label || "Sắp xếp") : "Sắp xếp"}</span>
+                {selectedSort !== "default" ? (
+                  <span
+                    className="pill-clear-x"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedSort("default");
+                      setPage(1);
+                    }}
+                  >
+                    ✕
+                  </span>
+                ) : (
+                  <span className="pill-arrow">▾</span>
+                )}
+              </button>
+
+              {openPopover === "sort" && (
+                <div className="floating-popover-menu small-menu">
+                  <div className="floating-popover-header">
+                    <span>Ưu tiên hiển thị</span>
+                  </div>
+                  <div className="popover-items-list">
+                    {SORT_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`popover-row-item ${selectedSort === opt.value ? "checked" : ""}`}
+                        onClick={() => {
+                          setSelectedSort(opt.value);
+                          setPage(1);
+                          setOpenPopover(null);
+                        }}
+                      >
+                        <span className="radio-indicator">{selectedSort === opt.value ? "●" : "○"}</span>
+                        <span>{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* NÚT ĐẶT LẠI NẾU CÓ BỘ LỌC */}
+            {hasAnyFilter && (
+              <button type="button" className="filter-clear-all-pill" onClick={handleResetFilters}>
+                ✕ Xóa lọc
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* CÁC CHIP TỈNH ĐANG CHỌN (NẾU CÓ NHIỀU TỈNH) */}
+        {activeProvinces.length > 0 && (
+          <div className="active-provinces-ribbon">
+            <span className="active-provinces-lead">Đang lọc theo:</span>
+            {activeProvinces.map((prov) => (
+              <span className="active-prov-tag" key={prov.id}>
+                {prov.name.replace(/^(Thành phố|Tỉnh)\s+/i, "")}
+                <button type="button" onClick={() => handleRemoveProvince(prov.id)}>✕</button>
+              </span>
+            ))}
+            <button type="button" className="active-prov-clear-all" onClick={handleClearAllProvinces}>Xóa tất cả tỉnh</button>
+          </div>
+        )}
+
+        <div id="toursListAnchor" />
+
+        {/* ====================================================================
+             PHẦN 3: LƯỚI CARD DU LỊCH TỪ BACKEND
+             ==================================================================== */}
+        {loading ? (
+          <div className="matdash-grid" aria-busy="true" aria-label="Đang tải danh sách tour">
+            {Array.from({ length: pageSize }).map((_, idx) => (
+              <div className="tour-card tour-card-skeleton" key={idx}>
+                <div className="card-photo-wrap skeleton-box skeleton-photo" />
+                <div className="card-body-wrap">
+                  <div className="card-content-top">
+                    <div className="card-kicker-row">
+                      <span className="skeleton-box skeleton-pill" />
+                      <span className="skeleton-box skeleton-rating" />
+                    </div>
+                    <div className="skeleton-box skeleton-title-line-1" />
+                    <div className="skeleton-box skeleton-title-line-2" />
+                  </div>
+                  <div className="card-bottom-action-row">
+                    <div className="skeleton-price-stack">
+                      <div className="skeleton-box skeleton-price-val" />
+                      <div className="skeleton-box skeleton-price-sub" />
+                    </div>
+                    <div className="skeleton-box skeleton-cta-btn" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : tours.length === 0 ? (
+          <TourEmptyState
+            onReset={handleResetFilters}
+            onSelectSuggestion={handleSelectSuggestion}
+            hasActiveFilters={hasAnyFilter}
+          />
+        ) : (
+          <div className="matdash-grid">
+            {tours.map((tour) => {
+              const isFav = favorites.includes(tour.id);
+              const imgUrl = resolveTourImage(tour);
+              const durDays = tour.duration_days || 3;
+              const durText = `${durDays}N${Math.max(1, durDays - 1)}Đ`;
+              const isSale = tour.is_sale || (tour.discount_pct && tour.discount_pct > 0);
+              const discountPct = tour.discount_pct || (tour.original_price && tour.price_from ? Math.round(((tour.original_price - tour.price_from) / tour.original_price) * 100) : 0);
+
+              return (
+                <article className="tour-card" key={tour.id}>
+                  <div className="card-photo-wrap">
+                    <Link to={`/tours/${tour.slug || tour.id}`}>
+                      <img
+                        src={imgUrl}
+                        alt={tour.name}
+                        className="card-photo-img"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "/images/tour-halong.jpg";
+                        }}
+                      />
+                    </Link>
+
+                    {isSale && discountPct > 0 && (
+                      <span className="ribbon-tag">-{discountPct}%</span>
+                    )}
+
+                    <button
+                      type="button"
+                      className={`card-heart-btn ${isFav ? "active" : ""}`}
+                      aria-label="Lưu vào yêu thích"
+                      onClick={() => toggleFavorite(tour.id)}
+                    >
+                      <svg viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                    </button>
+
+                    <span className="card-duration-badge">{durText}</span>
+                  </div>
+
+                  <div className="card-body-wrap">
+                    <div className="card-content-top">
+                      <div className="card-kicker-row">
+                        <span className="card-tag-pill">
+                          {tour.province_name ? tour.province_name.replace(/^(Thành phố|Tỉnh)\s+/i, "") : "Việt Nam"}
+                        </span>
+                        <div className="card-rating-group">
+                          <span className="star">★</span> 4.9{" "}
+                          <span className="card-reviews-num">(450+)</span>
+                        </div>
+                      </div>
+
+                      <h3 className="card-title-heading">
+                        <Link to={`/tours/${tour.slug || tour.id}`}>{tour.name}</Link>
+                      </h3>
+                    </div>
+
+                    <div className="card-bottom-action-row">
+                      <div className="card-price-group">
+                        <span className="card-price-current">
+                          {formatPrice(tour.price_from)}
+                        </span>
+                        {tour.original_price && tour.original_price > tour.price_from ? (
+                          <span className="card-price-old">
+                            {formatPrice(tour.original_price)}
+                          </span>
+                        ) : (
+                          <span className="card-price-sub">/ khách trọn gói</span>
+                        )}
+                      </div>
+
+                      <Link
+                        to={`/tours/${tour.slug || tour.id}`}
+                        className="card-cta-btn"
+                      >
+                        Đặt tour →
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {/* PHÂN TRANG TƯƠNG TÁC THẬT */}
+        {totalPages > 1 && (
+          <div className="pagination-bar">
+            <button
+              type="button"
+              className="page-btn"
+              disabled={page <= 1}
+              onClick={() => handlePageChange(page - 1)}
+              style={{ opacity: page <= 1 ? 0.4 : 1, cursor: page <= 1 ? "not-allowed" : "pointer" }}
+            >
+              ‹
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pNum) => (
+              <button
+                key={pNum}
+                type="button"
+                className={`page-btn ${pNum === page ? "active" : ""}`}
+                onClick={() => handlePageChange(pNum)}
+              >
+                {pNum}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="page-btn"
+              disabled={page >= totalPages}
+              onClick={() => handlePageChange(page + 1)}
+              style={{ opacity: page >= totalPages ? 0.4 : 1, cursor: page >= totalPages ? "not-allowed" : "pointer" }}
+            >
+              →
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

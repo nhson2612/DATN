@@ -3,10 +3,83 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../../shared/api";
 import "./TourBookingWizard.css";
 
-// Cấu hình tài khoản ngân hàng đọc từ biến môi trường (hoặc fallback mặc định)
-const BANK_NAME = import.meta.env.VITE_BANK_NAME || "MB Bank (Ngân hàng Quân Đội)";
-const BANK_ACCOUNT_NO = import.meta.env.VITE_BANK_ACCOUNT_NO || "0987654321";
-const BANK_ACCOUNT_NAME = import.meta.env.VITE_BANK_ACCOUNT_NAME || "VOYAGE TRAVEL VIETNAM";
+/* Logo vector chính thức chuẩn e-commerce & payment gateways */
+function StripeLogo({ className = "tour-checkout-logo-stripe" }) {
+  return (
+    <svg className={className} viewBox="54 36 360.02 149.84" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Stripe">
+      <g fill="#635BFF" fillRule="evenodd" clipRule="evenodd">
+        <path d="M414 113.4c0-25.6-12.4-45.8-36.1-45.8c-23.8 0-38.2 20.2-38.2 45.6c0 30.1 17 45.3 41.4 45.3 11.9 0 20.9-2.7 27.7-6.5v-20c-6.8 3.4-14.6 5.5-24.5 5.5c-9.7 0-18.3-3.4-19.4-15.2h48.9c.2-1.4.4-6.6.4-9zm-49.4-9.5c0-11.3 6.9-16 13.2-16c6.1 0 12.6 4.7 12.6 16h-25.8z" />
+        <path d="M301.1 67.6c-9.8 0-16.1 4.6-19.6 7.8l-1.3-6.2h-22v116.6l25-5.3.1-28.3c3.6 2.6 8.9 6.3 17.7 6.3 17.9 0 34.2-14.4 34.2-46.1 0-28.7-16.5-44.5-34.1-44.5zm-6 68.9c-5.9 0-9.4-2.1-11.8-4.7l-.1-37.1c2.6-2.9 6.2-4.9 11.9-4.9 9.1 0 15.4 10.2 15.4 23.3 0 13.2-6.2 23.4-15.4 23.4z" />
+        <polygon points="223.8 61.7 248.9 56.3 248.9 36 223.8 41.3" />
+        <rect x="223.8" y="69.3" width="25.1" height="87.5" />
+        <path d="M196.9 76.7l-1.6-7.4h-21.6v87.5h25V97.5c5.9-7.7 15.9-6.3 19-5.2v-23c-3.8-1.2-15.5-3.4-21.4 7.4z" />
+        <path d="M146.9 47.6l-24.4 5.2-.1 80.1c0 14.8 11.1 25.7 25.9 25.7c8.2 0 14.2-1.5 17.5-3.3V135c-3.2 1.3-19 5.9-19-8.9V90.6h19V69.3h-19l.1-21.7z" />
+        <path d="M79.3 94.7c0-3.9 3.2-5.4 8.5-5.4c7.6 0 17.2 2.3 24.8 6.4V72.2c-8.3-3.3-16.5-4.6-24.8-4.6C67.5 67.6 54 78.2 54 95.9c0 27.6 38 23.2 38 35.1 0 4.6-4 6.1-9.6 6.1-8.3 0-18.9-3.4-27.3-8v23.8c9.3 4 18.7 5.7 27.3 5.7 20.8 0 35.1-10.3 35.1-28.2 0-26.8-38.1-21.5-38.1-32.7z" />
+      </g>
+    </svg>
+  );
+}
+
+function VisaBadge() {
+  return (
+    <span className="tour-checkout-card-pill" title="Thẻ Visa">
+      <svg className="tour-checkout-logo-visa" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Visa">
+        <path
+          fill="#1434CB"
+          d="M9.112 8.262L5.97 15.758H3.92L2.374 9.775c-.094-.368-.175-.503-.461-.658C1.447 8.864.677 8.627 0 8.479l.046-.217h3.3a.904.904 0 01.894.764l.817 4.338 2.018-5.102zm8.033 5.049c.008-1.979-2.736-2.088-2.717-2.972.006-.269.262-.555.822-.628a3.66 3.66 0 011.913.336l.34-1.59a5.207 5.207 0 00-1.814-.333c-1.917 0-3.266 1.02-3.278 2.479-.012 1.079.963 1.68 1.698 2.04.756.367 1.01.603 1.006.931-.005.504-.602.725-1.16.734-.975.015-1.54-.263-1.992-.473l-.351 1.642c.453.208 1.289.39 2.156.398 2.037 0 3.37-1.006 3.377-2.564m5.061 2.447H24l-1.565-7.496h-1.656a.883.883 0 00-.826.55l-2.909 6.946h2.036l.405-1.12h2.488zm-2.163-2.656l1.02-2.815.588 2.815zm-8.16-4.84l-1.603 7.496H8.34l1.605-7.496z"
+        />
+      </svg>
+    </span>
+  );
+}
+
+function MastercardBadge() {
+  return (
+    <span className="tour-checkout-card-pill" title="Thẻ Mastercard">
+      <svg className="tour-checkout-logo-mc" viewBox="0 0 32 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Mastercard">
+        <circle cx="10" cy="10" r="10" fill="#EB001B" />
+        <circle cx="22" cy="10" r="10" fill="#F79E1B" />
+        <path
+          fill="#FF5F00"
+          d="M16 3.1a9.96 9.96 0 0 0-3.9 6.9 9.96 9.96 0 0 0 3.9 6.9 9.96 9.96 0 0 0 3.9-6.9A9.96 9.96 0 0 0 16 3.1z"
+        />
+      </svg>
+    </span>
+  );
+}
+
+function JCBBadge() {
+  return (
+    <span className="tour-checkout-card-pill" title="Thẻ JCB">
+      <svg className="tour-checkout-logo-jcb" viewBox="0 0 28 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="JCB">
+        <rect width="28" height="18" rx="3" fill="#ffffff" />
+        <rect x="2.5" y="2" width="6.5" height="14" rx="2" fill="#0079C1" />
+        <rect x="10.5" y="2" width="6.5" height="14" rx="2" fill="#C8102E" />
+        <rect x="18.5" y="2" width="6.5" height="14" rx="2" fill="#00A651" />
+        <text x="14" y="11.5" textAnchor="middle" fill="#ffffff" fontSize="6.5" fontWeight="900" fontFamily="sans-serif">JCB</text>
+      </svg>
+    </span>
+  );
+}
+
+function StripeBrandBadge() {
+  return (
+    <span className="tour-checkout-stripe-badge" title="Cổng thanh toán quốc tế Stripe">
+      <span className="tour-checkout-stripe-label">Cổng</span>
+      <StripeLogo />
+    </span>
+  );
+}
+
+function VietQRBadge() {
+  return (
+    <div className="tour-checkout-vietqr-badge" title="VietQR Napas 24/7">
+      <span className="tour-checkout-vietqr-viet">Viet</span>
+      <span className="tour-checkout-vietqr-qr">QR</span>
+      <span className="tour-checkout-vietqr-napas">NAPAS 247</span>
+    </div>
+  );
+}
 
 export default function TourBookingWizard({
   open,
@@ -45,14 +118,14 @@ export default function TourBookingWizard({
   // Cảnh báo thay đổi giá (Edge Case A3/E12)
   const [priceAlert, setPriceAlert] = useState(null);
 
-  // Kết quả sau khi book và pay
+  // Kết quả sau khi book
   const [bookingResult, setBookingResult] = useState(null);
-  const [paymentResult, setPaymentResult] = useState(null);
 
-  // State thanh toán Stripe / chuyển khoản
+  // State thanh toán Stripe & payOS
+  const [paymentMethod, setPaymentMethod] = useState("payos");
   const [checkoutError, setCheckoutError] = useState("");
   const [isCreatingStripe, setIsCreatingStripe] = useState(false);
-  const [isCreatingManual, setIsCreatingManual] = useState(false);
+  const [isCreatingPayos, setIsCreatingPayos] = useState(false);
 
   // Hiệu ứng checkmark Apple xuất hiện rồi ẩn đi ở Bước 4
   const [showIntroCheck, setShowIntroCheck] = useState(false);
@@ -72,11 +145,10 @@ export default function TourBookingWizard({
     setIsSoldOutError(false);
     setPriceAlert(null);
     setBookingResult(null);
-    setPaymentResult(null);
     setShowIntroCheck(false);
     setCheckoutError("");
     setIsCreatingStripe(false);
-    setIsCreatingManual(false);
+    setIsCreatingPayos(false);
     setPendingAuthAdvance(false);
 
     // Chọn departure phù hợp: ưu tiên initialDeparture nếu còn chỗ
@@ -322,9 +394,8 @@ export default function TourBookingWizard({
 
       const bookRes = await api.bookTour(bookData);
       setBookingResult(bookRes);
-      setPaymentResult(null);
 
-      // 4. Vào Bước 4 chọn phương thức thanh toán
+      // 4. Vào Bước 4 thanh toán qua Stripe
       setStep(4);
     } catch (err) {
       // Bắt lỗi 409 (E1: hết chỗ / tranh chấp chỗ cuối)
@@ -354,28 +425,27 @@ export default function TourBookingWizard({
         setCheckoutError("Không nhận được liên kết thanh toán Stripe.");
       }
     } catch (err) {
-      setCheckoutError(err.message || "Không thể kết nối Stripe. Vui lòng thử lại hoặc chọn chuyển khoản.");
+      setCheckoutError(err.message || "Không thể kết nối cổng Stripe. Vui lòng thử lại sau ít phút.");
     } finally {
       setIsCreatingStripe(false);
     }
   };
 
-  // Xử lý thanh toán chuyển khoản ngân hàng thủ công
-  const handlePayByBankTransfer = async () => {
+  const handlePayByPayos = async () => {
     if (!bookingResult?.id) return;
-    setIsCreatingManual(true);
     setCheckoutError("");
+    setIsCreatingPayos(true);
     try {
-      const payRes = await api.payTourBooking(bookingResult.id, {
-        method: "CHUYEN_KHOAN",
-      });
-      setPaymentResult(payRes);
-    } catch (payErr) {
-      console.warn("Không thể tự tạo thanh toán ngay:", payErr);
-      setPaymentResult(null);
-      setCheckoutError(payErr.message || "Không thể tạo thông tin chuyển khoản lúc này.");
+      const res = await api.checkoutPayosBooking(bookingResult.id, window.location.origin);
+      if (res?.checkout_url) {
+        window.location.assign(res.checkout_url);
+      } else {
+        setCheckoutError("Không nhận được liên kết thanh toán payOS.");
+      }
+    } catch (err) {
+      setCheckoutError(err.message || "Không thể kết nối cổng thanh toán payOS. Vui lòng thử lại sau ít phút.");
     } finally {
-      setIsCreatingManual(false);
+      setIsCreatingPayos(false);
     }
   };
 
@@ -506,7 +576,6 @@ export default function TourBookingWizard({
             <div className="tour-booking-wizard__step-content tour-booking-wizard__step-departure">
               <div className="tour-booking-wizard__section">
                 <label className="tour-booking-wizard__section-label">
-                  <span className="material-symbols-outlined">calendar_month</span>
                   1. Chọn đợt khởi hành còn chỗ
                 </label>
 
@@ -515,23 +584,24 @@ export default function TourBookingWizard({
                     Hiện chưa có lịch khởi hành mở bán cho tour này. Vui lòng liên hệ hotline 1900 6868.
                   </p>
                 ) : (
-                  <div className="tour-booking-wizard__departure-grid">
+                  <div className="tour-booking-wizard__departure-list" role="radiogroup" aria-label="Chọn đợt khởi hành">
                     {tour.departures.map((dep) => {
                       const isSoldOut = dep.seats_left <= 0;
                       const isSelected = selectedDeparture?.id === dep.id;
                       const effPrice = dep.effective_price || dep.price;
                       const lPrice = dep.list_price || dep.price;
                       const hasSale = lPrice > effPrice;
+                      const depDateObj = new Date(dep.depart_date);
 
                       return (
-                        <button
-                          type="button"
+                        <div
                           key={dep.id}
-                          className={`tour-booking-wizard__dep-card ${
-                            isSelected ? "tour-booking-wizard__dep-card--selected" : ""
-                          } ${isSoldOut ? "tour-booking-wizard__dep-card--disabled" : ""}`}
-                          aria-pressed={isSelected}
-                          disabled={isSoldOut}
+                          className={`tour-booking-wizard__dep-row ${
+                            isSelected ? "tour-booking-wizard__dep-row--selected" : ""
+                          } ${isSoldOut ? "tour-booking-wizard__dep-row--disabled" : ""}`}
+                          role="radio"
+                          aria-checked={isSelected}
+                          tabIndex={isSoldOut ? -1 : 0}
                           onClick={() => {
                             if (!isSoldOut) {
                               setSelectedDeparture(dep);
@@ -545,16 +615,32 @@ export default function TourBookingWizard({
                               }
                             }
                           }}
+                          onKeyDown={(e) => {
+                            if (!isSoldOut && (e.key === "Enter" || e.key === " ")) {
+                              setSelectedDeparture(dep);
+                            }
+                          }}
                         >
-                          <div className="tour-booking-wizard__dep-card-header">
-                            <span className="tour-booking-wizard__dep-date">
-                              {new Date(dep.depart_date).toLocaleDateString("vi-VN", {
-                                weekday: "short",
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                              })}
-                            </span>
+                          <div className="tour-booking-wizard__dep-row-left">
+                            <div className={`tour-booking-wizard__dep-radio-circle ${isSelected ? "tour-booking-wizard__dep-radio-circle--active" : ""}`}>
+                              {isSelected && <div className="tour-booking-wizard__dep-radio-dot" />}
+                            </div>
+                            <div className="tour-booking-wizard__dep-date-wrap">
+                              <span className="tour-booking-wizard__dep-date-main">
+                                {depDateObj.toLocaleDateString("vi-VN", {
+                                  weekday: "long",
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                })}
+                              </span>
+                              <span className="tour-booking-wizard__dep-duration">
+                                {tour?.duration_days ? `${tour.duration_days} ngày ${tour.duration_nights || tour.duration_days - 1} đêm` : "Khởi hành định kỳ"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="tour-booking-wizard__dep-row-right">
                             {isSoldOut ? (
                               <span className="tour-booking-wizard__badge tour-booking-wizard__badge--soldout">
                                 Hết chỗ
@@ -564,19 +650,19 @@ export default function TourBookingWizard({
                                 Còn {dep.seats_left} chỗ
                               </span>
                             )}
-                          </div>
 
-                          <div className="tour-booking-wizard__dep-card-price">
-                            <span className="tour-booking-wizard__dep-price-current">
-                              {effPrice.toLocaleString("vi-VN")}₫
-                            </span>
-                            {hasSale && (
-                              <span className="tour-booking-wizard__dep-price-old">
-                                {lPrice.toLocaleString("vi-VN")}₫
+                            <div className="tour-booking-wizard__dep-row-pricing">
+                              <span className="tour-booking-wizard__dep-price-current">
+                                {effPrice.toLocaleString("vi-VN")}₫
                               </span>
-                            )}
+                              {hasSale && (
+                                <span className="tour-booking-wizard__dep-price-old">
+                                  {lPrice.toLocaleString("vi-VN")}₫
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -591,7 +677,6 @@ export default function TourBookingWizard({
               {/* Bộ chọn số lượng khách */}
               <div className="tour-booking-wizard__section">
                 <label className="tour-booking-wizard__section-label">
-                  <span className="material-symbols-outlined">group</span>
                   2. Số lượng khách tham gia
                 </label>
 
@@ -627,20 +712,23 @@ export default function TourBookingWizard({
                 </div>
               </div>
 
-              {/* Tạm tính chi phí */}
+              {/* Tạm tính chi phí - Dạng bảng dòng tinh tế, không đóng hộp xám */}
               <div className="tour-booking-wizard__calc-summary">
                 <div className="tour-booking-wizard__calc-row">
-                  <span>Đơn giá áp dụng:</span>
-                  <b>{unitPrice.toLocaleString("vi-VN")}₫ / khách</b>
+                  <span className="tour-booking-wizard__calc-label">Đơn giá áp dụng:</span>
+                  <span className="tour-booking-wizard__calc-val">{unitPrice.toLocaleString("vi-VN")}₫ / khách</span>
                 </div>
                 {isSale && (
                   <div className="tour-booking-wizard__calc-row tour-booking-wizard__calc-row--sale">
-                    <span>Tiết kiệm:</span>
-                    <b>{((listPrice - unitPrice) * guests).toLocaleString("vi-VN")}₫</b>
+                    <span className="tour-booking-wizard__calc-label">Tiết kiệm ưu đãi:</span>
+                    <span className="tour-booking-wizard__calc-val font-semibold">
+                      -{((listPrice - unitPrice) * guests).toLocaleString("vi-VN")}₫
+                    </span>
                   </div>
                 )}
+                <div className="tour-booking-wizard__calc-divider" />
                 <div className="tour-booking-wizard__calc-row tour-booking-wizard__calc-row--total">
-                  <span>Tạm tính ({guests} khách):</span>
+                  <span className="tour-booking-wizard__calc-total-label">Tổng tạm tính ({guests} khách):</span>
                   <span className="tour-booking-wizard__total-amount">
                     {totalPrice.toLocaleString("vi-VN")}₫
                   </span>
@@ -949,213 +1037,154 @@ export default function TourBookingWizard({
               ) : (
                 /* Nội dung thanh toán xuất hiện mượt mà sau splash */
                 <div className="tour-booking-wizard__payment-reveal">
-                  <div className="tour-booking-wizard__payment-meta-bar">
-                    <span className="tour-booking-wizard__payment-meta-code">
-                      Mã đơn: <strong className="font-mono">{bookingResult?.code || `TX-#${bookingResult?.id}`}</strong>
-                    </span>
-                    <span className="tour-booking-wizard__payment-meta-sep">•</span>
-                    <span className="tour-booking-wizard__payment-meta-timer">
-                      Thời hạn giữ chỗ:{" "}
-                      <strong className={`font-mono ${timeLeft <= 300 ? "text-danger" : ""}`}>
-                        {timeLeft > 0 ? formatTime(timeLeft) : "00:00 (Hết hạn)"}
-                      </strong>
-                    </span>
+                  {/* Đồng hồ giữ chỗ to rõ ràng ở trên cùng - Không bọc trong card, không icon */}
+                  <div className="tour-checkout-countdown-banner">
+                    <span className="tour-checkout-countdown-label">Thời gian giữ chỗ còn lại</span>
+                    <div className={`tour-checkout-countdown-digits font-mono ${timeLeft <= 300 ? "tour-checkout-countdown-digits--urgent" : ""}`}>
+                      {timeLeft > 0 ? formatTime(timeLeft) : "00:00"}
+                    </div>
                   </div>
 
-                  {/* Chọn phương thức thanh toán khi chưa có paymentResult */}
-                  {!paymentResult ? (
-                    <div className="tour-booking-wizard__pay-methods">
-                      <div className="tour-booking-wizard__pay-methods-header">
-                        <h4 className="tour-booking-wizard__payment-heading">
-                          Phương thức thanh toán
-                        </h4>
-                        <p className="tour-booking-wizard__pay-methods-desc">
-                          Chọn hình thức phù hợp để hoàn tất việc giữ chỗ cho chuyến đi của bạn.
-                        </p>
-                      </div>
-
-                      <div className="tour-booking-wizard__pay-method-options">
+                  {/* Tóm tắt đơn hàng thanh toán - Thiết kế kiểu receipt liền mạch, không hộp xám */}
+                  <div className="tour-checkout-receipt">
+                    <div className="tour-checkout-receipt-info">
+                      <span className="tour-checkout-receipt-eyebrow">MÃ ĐƠN HÀNG</span>
+                      <div className="tour-checkout-receipt-code-row">
+                        <strong className="tour-checkout-receipt-code font-mono">
+                          {bookingResult?.code || `TX-#${bookingResult?.id}`}
+                        </strong>
                         <button
                           type="button"
-                          className="tour-booking-wizard__method-card"
-                          onClick={handlePayByBankTransfer}
-                          disabled={isCreatingStripe || isCreatingManual}
+                          className="tour-checkout-copy-btn"
+                          onClick={() => handleCopy(bookingResult?.code || `TX-#${bookingResult?.id}`, "code")}
+                          title="Sao chép mã đơn"
                         >
-                          <div className="tour-booking-wizard__method-info">
-                            <div className="tour-booking-wizard__method-title">
-                              Chuyển khoản VietQR
-                              <span className="tour-booking-wizard__method-pill">Nhanh nhất</span>
-                            </div>
-                            <div className="tour-booking-wizard__method-desc">
-                              Quét mã QR từ app ngân hàng (MB, Vietcombank, Techcombank, Momo...)
-                            </div>
-                          </div>
-                          <span className="tour-booking-wizard__method-arrow">→</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="tour-booking-wizard__method-card"
-                          onClick={handlePayByStripe}
-                          disabled={isCreatingStripe || isCreatingManual}
-                        >
-                          <div className="tour-booking-wizard__method-info">
-                            <div className="tour-booking-wizard__method-title">
-                              Thẻ quốc tế & Ví điện tử
-                              <span className="tour-booking-wizard__method-tag">Stripe</span>
-                            </div>
-                            <div className="tour-booking-wizard__method-desc">
-                              Hỗ trợ Visa, Mastercard, Apple Pay, Google Pay an toàn toàn cầu
-                            </div>
-                          </div>
-                          <span className="tour-booking-wizard__method-arrow">→</span>
-                        </button>
-                      </div>
-
-                      {isCreatingStripe && (
-                        <div className="tour-booking-wizard__checkout-loading">
-                          <span className="tour-booking-wizard__spinner tour-booking-wizard__spinner--dark" />
-                          <span>Đang kết nối cổng thanh toán quốc tế...</span>
-                        </div>
-                      )}
-
-                      {isCreatingManual && (
-                        <div className="tour-booking-wizard__checkout-loading">
-                          <span className="tour-booking-wizard__spinner tour-booking-wizard__spinner--dark" />
-                          <span>Đang tạo thông tin mã VietQR...</span>
-                        </div>
-                      )}
-
-                      {checkoutError && (
-                        <div className="tour-booking-wizard__checkout-error">
-                          <span>{checkoutError}</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    /* Chi tiết thanh toán VietQR & thông tin tài khoản */
-                    <div className="tour-booking-wizard__payment-box">
-                      <div className="tour-booking-wizard__payment-box-header">
-                        <div>
-                          <h4 className="tour-booking-wizard__payment-heading">
-                            Chuyển khoản thanh toán (VietQR)
-                          </h4>
-                          <p className="tour-booking-wizard__payment-sub">
-                            Mở ứng dụng ngân hàng và quét mã để thanh toán tự động
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          className="tour-booking-wizard__btn-change-method"
-                          onClick={() => setPaymentResult(null)}
-                          title="Chọn lại phương thức thanh toán"
-                        >
-                          Đổi phương thức
-                        </button>
-                      </div>
-
-                      {/* Khung VietQR code */}
-                      <div className="tour-booking-wizard__qr-container">
-                        <div className="tour-booking-wizard__qr-image-wrap">
-                          <img
-                            src={`https://img.vietqr.io/image/970422-${BANK_ACCOUNT_NO}-compact2.png?amount=${
-                              paymentResult?.amount || bookingResult?.total_price || totalPrice
-                            }&addInfo=VOYAGE%20${
-                              paymentResult?.txn_ref || bookingResult?.code || `BK${bookingResult?.id}`
-                            }&accountName=${encodeURIComponent(BANK_ACCOUNT_NAME)}`}
-                            alt="Mã QR Chuyển khoản"
-                            className="tour-booking-wizard__qr-img"
-                          />
-                        </div>
-                        <div className="tour-booking-wizard__qr-meta">
-                          <div className="tour-booking-wizard__qr-meta-item">
-                            <span className="tour-booking-wizard__qr-label">Số tiền cần chuyển</span>
-                            <div className="tour-booking-wizard__qr-amount-row">
-                              <span className="tour-booking-wizard__qr-amount">
-                                {(paymentResult?.amount || bookingResult?.total_price || totalPrice).toLocaleString(
-                                  "vi-VN"
-                                )} ₫
-                              </span>
-                              <button
-                                type="button"
-                                className="tour-booking-wizard__mini-copy"
-                                onClick={() =>
-                                  handleCopy(
-                                    String(paymentResult?.amount || bookingResult?.total_price || totalPrice),
-                                    "amount"
-                                  )
-                                }
-                              >
-                                {copiedField === "amount" ? "Đã chép" : "Sao chép"}
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="tour-booking-wizard__qr-meta-item">
-                            <span className="tour-booking-wizard__qr-label">Nội dung chuyển khoản (Bắt buộc)</span>
-                            <div className="tour-booking-wizard__qr-content-row">
-                              <code className="tour-booking-wizard__qr-code">
-                                VOYAGE {paymentResult?.txn_ref || bookingResult?.code || `BK${bookingResult?.id}`}
-                              </code>
-                              <button
-                                type="button"
-                                className="tour-booking-wizard__mini-copy"
-                                onClick={() =>
-                                  handleCopy(
-                                    `VOYAGE ${paymentResult?.txn_ref || bookingResult?.code || `BK${bookingResult?.id}`}`,
-                                    "content"
-                                  )
-                                }
-                              >
-                                {copiedField === "content" ? "Đã chép" : "Sao chép"}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Chi tiết tài khoản ngân hàng */}
-                      <div className="tour-booking-wizard__payment-details">
-                        <div className="tour-booking-wizard__pay-row">
-                          <span className="tour-booking-wizard__pay-label">Ngân hàng thụ hưởng:</span>
-                          <span className="tour-booking-wizard__pay-val">{BANK_NAME}</span>
-                        </div>
-                        <div className="tour-booking-wizard__pay-row">
-                          <span className="tour-booking-wizard__pay-label">Số tài khoản:</span>
-                          <div className="tour-booking-wizard__pay-val-wrap">
-                            <b className="tour-booking-wizard__pay-val font-mono">{BANK_ACCOUNT_NO}</b>
-                            <button
-                              type="button"
-                              className="tour-booking-wizard__copy-btn"
-                              onClick={() => handleCopy(BANK_ACCOUNT_NO, "acc")}
-                            >
-                              {copiedField === "acc" ? "Đã chép" : "Sao chép"}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="tour-booking-wizard__pay-row">
-                          <span className="tour-booking-wizard__pay-label">Chủ tài khoản:</span>
-                          <span className="tour-booking-wizard__pay-val uppercase font-semibold">
-                            {BANK_ACCOUNT_NAME}
+                          <span className="material-symbols-outlined text-[14px]">
+                            {copiedField === "code" ? "check" : "content_copy"}
                           </span>
+                        </button>
+                      </div>
+                      <span className="tour-checkout-receipt-tour-title">{tour?.name}</span>
+                    </div>
+
+                    <div className="tour-checkout-receipt-side">
+                      <div className="tour-checkout-receipt-total-block">
+                        <span className="tour-checkout-receipt-total-label">Số tiền cần thanh toán</span>
+                        <span className="tour-checkout-receipt-total-value">
+                          {(bookingResult?.total_price || totalPrice).toLocaleString("vi-VN")} ₫
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Nhóm chọn phương thức thanh toán - Single Unified Container chuẩn Stripe/Shopify, không dùng các box vuông rời rạc */}
+                  <div className="tour-checkout-section">
+                    <div className="tour-checkout-section-header">
+                      <h4 className="tour-checkout-section-title">Phương thức thanh toán</h4>
+                      <span className="tour-checkout-section-sub">Lựa chọn 1 cổng thanh toán bảo mật</span>
+                    </div>
+
+                    <div className="tour-checkout-group" role="radiogroup" aria-label="Phương thức thanh toán">
+                      {/* Lựa chọn 1: Chuyển khoản VietQR (payOS) */}
+                      <div
+                        className={`tour-checkout-row ${paymentMethod === "payos" ? "tour-checkout-row--selected tour-checkout-row--payos" : ""}`}
+                        onClick={() => setPaymentMethod("payos")}
+                        role="radio"
+                        aria-checked={paymentMethod === "payos"}
+                        tabIndex={0}
+                        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setPaymentMethod("payos")}
+                      >
+                        <div className="tour-checkout-row-main">
+                          <div className="tour-checkout-row-left">
+                            <div className={`tour-checkout-radio-circle ${paymentMethod === "payos" ? "tour-checkout-radio-circle--active-payos" : ""}`}>
+                              {paymentMethod === "payos" && <div className="tour-checkout-radio-dot tour-checkout-radio-dot--payos" />}
+                            </div>
+                            <div className="tour-checkout-row-text">
+                              <div className="tour-checkout-row-title-line">
+                                <span className="tour-checkout-row-name">Chuyển khoản VietQR (Napas 24/7)</span>
+                                <span className="tour-checkout-badge-pill tour-checkout-badge-pill--green">
+                                  Tự động 24/7 • Miễn phí
+                                </span>
+                              </div>
+                              <p className="tour-checkout-row-hint">
+                                Quét mã QR bằng App mọi ngân hàng để thanh toán tức thì. Đơn tự động xác nhận sau 3 giây.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="tour-checkout-row-right">
+                            <VietQRBadge />
+                          </div>
                         </div>
-                        <div className="tour-booking-wizard__pay-row">
-                          <span className="tour-booking-wizard__pay-label">Mã đơn đặt tour:</span>
-                          <div className="tour-booking-wizard__pay-val-wrap">
-                            <span className="font-mono text-zinc-900 font-semibold">
-                              {bookingResult?.code || `TX-#${bookingResult?.id}`}
+
+                        {paymentMethod === "payos" && (
+                          <div className="tour-checkout-row-detail">
+                            <span className="tour-checkout-bank-support-text">
+                              <b>Hỗ trợ 40+ ngân hàng:</b> TPBank, Techcombank, MB Bank, Vietcombank, BIDV, VPBank, ACB...
                             </span>
                           </div>
-                        </div>
+                        )}
                       </div>
 
-                      <div className="tour-booking-wizard__safe-instruction">
-                        <p className="tour-booking-wizard__safe-text">
-                          Hệ thống sẽ tự động xác nhận đơn ngay khi nhận được tín hiệu ngân hàng. Quý khách cũng có thể truy cập <b>Tài khoản › Quản lý tour</b> để kiểm tra trạng thái bất kỳ lúc nào.
-                        </p>
+                      {/* Hairline Divider */}
+                      <div className="tour-checkout-group-divider" />
+
+                      {/* Lựa chọn 2: Thẻ quốc tế Stripe */}
+                      <div
+                        className={`tour-checkout-row ${paymentMethod === "stripe" ? "tour-checkout-row--selected tour-checkout-row--stripe" : ""}`}
+                        onClick={() => setPaymentMethod("stripe")}
+                        role="radio"
+                        aria-checked={paymentMethod === "stripe"}
+                        tabIndex={0}
+                        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setPaymentMethod("stripe")}
+                      >
+                        <div className="tour-checkout-row-main">
+                          <div className="tour-checkout-row-left">
+                            <div className={`tour-checkout-radio-circle ${paymentMethod === "stripe" ? "tour-checkout-radio-circle--active-stripe" : ""}`}>
+                              {paymentMethod === "stripe" && <div className="tour-checkout-radio-dot tour-checkout-radio-dot--stripe" />}
+                            </div>
+                            <div className="tour-checkout-row-text">
+                              <div className="tour-checkout-row-title-line">
+                                <span className="tour-checkout-row-name">Thẻ quốc tế (Visa / Mastercard / JCB)</span>
+                                <span className="tour-checkout-badge-pill tour-checkout-badge-pill--purple">
+                                  Cổng quốc tế Stripe
+                                </span>
+                              </div>
+                              <p className="tour-checkout-row-hint">
+                                Xử lý bảo mật PCI-DSS cấp 1 qua Stripe. Chấp nhận thẻ tín dụng/ghi nợ quốc tế, Apple Pay & Google Pay.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="tour-checkout-row-right tour-checkout-row-right--stripe">
+                            <VisaBadge />
+                            <MastercardBadge />
+                            <JCBBadge />
+                            <span className="tour-checkout-logo-divider" />
+                            <StripeBrandBadge />
+                          </div>
+                        </div>
+
+                        {paymentMethod === "stripe" && (
+                          <div className="tour-checkout-row-detail">
+                            <span className="tour-checkout-stripe-support-text">
+                              Bảo mật tuyệt đối PCI-DSS Cấp 1 toàn cầu bởi Stripe.
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  )}
+
+                    {/* Hiển thị lỗi nếu có */}
+                    {checkoutError && (
+                      <div className="tour-checkout-error-alert">
+                        <span>{checkoutError}</span>
+                      </div>
+                    )}
+
+                    {/* Dòng bảo mật dạng text tinh tế, KHÔNG đóng hộp xám */}
+                    <div className="tour-checkout-trust-line">
+                      <span>Thanh toán bảo mật mã hóa SSL 256-bit • Đơn hàng được giữ chỗ an toàn trong thời gian thanh toán</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -1243,17 +1272,42 @@ export default function TourBookingWizard({
               <button
                 type="button"
                 className="tour-booking-wizard__btn-secondary"
-                onClick={onClose}
-              >
-                Đóng
-              </button>
-              <button
-                type="button"
-                className="tour-booking-wizard__btn-primary"
                 onClick={handleGoToMyBookings}
               >
                 <span className="material-symbols-outlined">receipt_long</span>
                 <span>Xem đơn của tôi</span>
+              </button>
+              <button
+                type="button"
+                className={`tour-booking-wizard__btn-primary tour-checkout-pay-btn ${
+                  paymentMethod === "payos"
+                    ? "tour-checkout-pay-btn--payos"
+                    : "tour-checkout-pay-btn--stripe"
+                }`}
+                onClick={paymentMethod === "payos" ? handlePayByPayos : handlePayByStripe}
+                disabled={isCreatingPayos || isCreatingStripe || timeLeft <= 0}
+              >
+                {isCreatingPayos ? (
+                  <>
+                    <span className="tour-booking-wizard__spinner" />
+                    <span>Đang kết nối VietQR payOS...</span>
+                  </>
+                ) : isCreatingStripe ? (
+                  <>
+                    <span className="tour-booking-wizard__spinner" />
+                    <span>Đang kết nối Stripe...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">lock</span>
+                    <span>
+                      {paymentMethod === "payos"
+                        ? `Thanh toán VietQR • ${(bookingResult?.total_price || totalPrice).toLocaleString("vi-VN")} ₫`
+                        : `Thanh toán qua Stripe • ${(bookingResult?.total_price || totalPrice).toLocaleString("vi-VN")} ₫`}
+                    </span>
+                    <span className="material-symbols-outlined">arrow_forward</span>
+                  </>
+                )}
               </button>
             </>
           )}

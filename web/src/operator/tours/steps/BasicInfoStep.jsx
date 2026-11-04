@@ -252,7 +252,12 @@ export default function BasicInfoStep({ form, setForm, provinces, loi = {}, hien
         </section>
 
         <section className="op-basic-step__section op-basic-step__section--operations">
-          <h2 className="op-wizard__card-title">Vận hành và phân loại</h2>
+          <div className="op-wizard__card-head">
+            <h2 className="op-wizard__card-title">
+              <span className="material-symbols-outlined">commute</span>
+              Vận hành và phân loại
+            </h2>
+          </div>
 
           <div className={lop("departure_location")}>
             <label className="op-wizard__label" htmlFor="tourDepartureLocation">

@@ -83,6 +83,11 @@ class Settings(BaseSettings):
     stripe_publishable_key: str | None = None
     web_base_url: str = "http://localhost:5173"
 
+    # ---- payOS (Cổng thanh toán tự động VietQR ngân hàng) ----
+    payos_client_id: str | None = None
+    payos_api_key: str | None = None
+    payos_checksum_key: str | None = None
+
     # Job nội bộ trả chỗ cho đơn tour quá hạn. Mỗi tiến trình API đều có thể chạy
     # job này vì cập nhật trạng thái/nhả chỗ đã được khóa và idempotent ở DB.
     booking_expiry_interval_seconds: int = Field(default=60, ge=15, le=3600)

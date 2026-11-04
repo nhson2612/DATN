@@ -47,11 +47,43 @@ export default function StatusTag({ value }) {
     tone = "danger";
   }
 
+  const dotColors = {
+    success: "#16a34a",
+    info: "#2563eb",
+    danger: "#dc2626",
+    neutral: "#94a3b8",
+  };
+
+  const textColors = {
+    success: "#16a34a",
+    info: "#2563eb",
+    danger: "#dc2626",
+    neutral: "#64748b",
+  };
+
   return (
     <span
-      className={`op-status-tag__span-1 op-status-tag--${tone}`}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        fontSize: "13px",
+        fontWeight: "500",
+        color: textColors[tone],
+        background: "transparent",
+        border: "none",
+        padding: 0,
+      }}
     >
-      <span className={`op-status-tag__span-2 op-status-tag__dot--${tone}`}></span>
+      <span
+        style={{
+          width: "6px",
+          height: "6px",
+          borderRadius: "50%",
+          backgroundColor: dotColors[tone],
+          flexShrink: 0,
+        }}
+      />
       <span>{text}</span>
     </span>
   );

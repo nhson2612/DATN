@@ -23,7 +23,7 @@
   transition: transform 160ms ease, background 160ms ease;
 }
 
-.planner-assistant__fab:hover { background: #d9483a; transform: translateY(-2px); }
+.planner-assistant__fab:hover { background: #d9483a;  }
 .planner-assistant__fab:active { transform: translateY(0) scale(0.97); }
 
 .planner-assistant__panel {

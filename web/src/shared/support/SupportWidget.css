@@ -1,607 +1,972 @@
 /* ==========================================================================
-   SUPPORT WIDGET — Nâng cấp giao diện Hiện đại & Sang trọng
+   SUPPORT WIDGET — PHONG CÁCH CHATGPT HIỆN ĐẠI (LIGHT THEME ĐỒNG BỘ WEB)
    ========================================================================== */
 
-/* 1. Nút mở Floating Action Button (FAB) - Liquid Dark Glass Circle */
+/* 1. Nút nổi Floating Action Button (FAB) - Linh vật đứng tự do */
 .sp-fab {
   position: fixed;
-  right: 28px;
-  bottom: 28px;
+  right: 24px;
+  bottom: 20px;
   z-index: 50;
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(15, 23, 42, 0.82);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  color: #ffffff;
-  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
   padding: 0;
-}
-
-.sp-fab:hover {
-  transform: translateY(-2px) scale(1.05);
-  background: rgba(2, 6, 23, 0.95);
-  border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 14px 35px -4px rgba(0, 0, 0, 0.55);
-  color: #ffffff;
-}
-
-.sp-fab:active {
-  transform: translateY(0) scale(0.95);
-}
-
-.sp-fab--open {
-  background: rgba(15, 23, 42, 0.95);
-  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.4);
+  outline: none;
 }
 
 .sp-fab__icon-wrap {
   position: relative;
-  width: 24px;
-  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.sp-fab__icon {
+.sp-fab__mascot-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 96px;
+  height: 125px;
+  transform-origin: 50% 90%;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sp-fab__mascot-img {
+  width: 86px;
+  height: auto;
+  display: block;
+  z-index: 2;
+  filter: drop-shadow(0 10px 20px rgba(15, 23, 42, 0.28));
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 50% 92%;
+}
+
+/* Đổ bóng tự nhiên dưới chân */
+.sp-fab__ground-shadow {
   position: absolute;
-  font-size: 22px;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.32) 0%, rgba(15, 23, 42, 0) 72%);
+  z-index: 1;
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
-.sp-fab__icon--close {
-  opacity: 0;
-  transform: rotate(-90deg) scale(0.6);
-}
-
-.sp-fab--open .sp-fab__icon--chat {
-  opacity: 0;
-  transform: rotate(90deg) scale(0.6);
-}
-
-.sp-fab--open .sp-fab__icon--close {
-  opacity: 1;
-  transform: rotate(0deg) scale(1);
-}
-
-.sp-fab__badge-dot {
+/* Sóng vẫy chào bên cánh tay phải */
+.sp-fab__wave-lines {
   position: absolute;
-  top: 9px;
-  right: 9px;
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background-color: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
-  animation: sp-pulse 2s infinite;
+  top: 18px;
+  right: 2px;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.85);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-@keyframes sp-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.25); opacity: 0.75; }
+/* HOVER: Vẫy chào năng động và tia sóng nhấp nháy */
+.sp-fab:hover .sp-fab__mascot-img,
+.sp-fab:focus-visible .sp-fab__mascot-img {
+  animation: mascot-wave-bounce 0.85s ease-in-out infinite;
 }
 
-/* 2. Cửa sổ chat Widget */
+.sp-fab:hover .sp-fab__wave-lines,
+.sp-fab:focus-visible .sp-fab__wave-lines {
+  opacity: 1;
+  transform: scale(1.05);
+  animation: wave-lines-flash 0.42s ease-in-out infinite alternate;
+}
+
+.sp-fab:hover .sp-fab__ground-shadow {
+  transform: translateX(-50%) scale(0.92);
+  opacity: 0.25;
+}
+
+@keyframes mascot-wave-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1.05);
+  }
+  20% {
+    transform: translateY(-6px) rotate(-8deg) scale(1.08);
+  }
+  40% {
+    transform: translateY(-2px) rotate(5deg) scale(1.07);
+  }
+  65% {
+    transform: translateY(-5px) rotate(-6deg) scale(1.08);
+  }
+  85% {
+    transform: translateY(-1px) rotate(3deg) scale(1.06);
+  }
+}
+
+@keyframes wave-lines-flash {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.15) translateX(2px);
+  }
+}
+
+/* BUBBLE TOOLTIP KHI HOVER */
+.sp-fab__mascot-bubble {
+  position: absolute;
+  right: calc(100% + 6px);
+  bottom: 42px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 14px;
+  border-bottom-right-radius: 2px;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(8px) scale(0.92);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: -0.01em;
+}
+
+.sp-fab:hover .sp-fab__mascot-bubble,
+.sp-fab:focus-visible .sp-fab__mascot-bubble {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+/* ==========================================================================
+   2. CỬA SỔ CHAT GIAO DIỆN CHATGPT (LIGHT THEME)
+   ========================================================================== */
 .sp-window {
   position: fixed;
   right: 24px;
-  bottom: 88px;
+  bottom: 24px;
   z-index: 60;
   display: flex;
   flex-direction: column;
-  width: min(400px, calc(100vw - 32px));
-  height: min(600px, calc(100dvh - 110px));
+  width: min(440px, calc(100vw - 32px));
+  height: min(640px, calc(100dvh - 48px));
   overflow: hidden;
-  border-radius: 24px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 22px;
+  border: 1px solid #e2e8f0;
   background: #ffffff;
-  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.25), 0 6px 18px -4px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.18), 0 8px 20px -5px rgba(15, 23, 42, 0.08);
   color: #0f172a;
-  font-family: inherit;
-  animation: sp-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  animation: sp-slide-up 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes sp-slide-up {
-  from { opacity: 0; transform: translateY(16px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-/* 3. Header */
-.sp-header {
+/* 2.1 Header ChatGPT (Nền trắng sạch) */
+.sp-gpt-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #ffffff;
-  shrink: 0;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  user-select: none;
 }
 
-.sp-header__main {
+.sp-gpt-header__left {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 0;
-  flex: 1;
+  gap: 8px;
 }
 
-.sp-header__avatar {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-blur: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  shrink: 0;
-}
-
-.sp-header__info {
-  min-width: 0;
-  flex: 1;
-}
-
-.sp-header__title {
-  font-size: 15px;
+.sp-gpt-header__title {
+  font-size: 15.5px;
   font-weight: 700;
+  color: #0f172a;
   letter-spacing: -0.01em;
-  color: #ffffff;
-  margin: 0;
 }
 
-.sp-header__subtitle {
+.sp-gpt-header__badge {
   font-size: 11px;
-  color: rgba(239, 246, 255, 0.85);
-  margin: 2px 0 0;
-  font-weight: 500;
-}
-
-.sp-header__pulse-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
   border-radius: 9999px;
-  background-color: #4ade80;
+  padding: 2px 8px;
+  font-weight: 600;
 }
 
-.sp-header__back-btn,
-.sp-header__close-btn {
+.sp-gpt-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sp-gpt-icon-btn {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
-  border: 0;
+  border-radius: 8px;
+  border: none;
   background: transparent;
-  color: #ffffff;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  flex-shrink: 0;
+  transition: all 0.15s ease;
 }
 
-.sp-header__back-btn:hover,
-.sp-header__close-btn:hover {
-  opacity: 0.8;
+.sp-gpt-icon-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
-/* 4. Thông báo lỗi */
-.sp-error {
-  margin: 10px 14px 0;
-  padding: 10px 12px;
-  border-radius: 12px;
+.sp-gpt-icon-btn--active {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.sp-gpt-icon-btn--close:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+/* 2.2 Thông báo lỗi */
+.sp-gpt-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background: #fef2f2;
   border: 1px solid #fee2e2;
   color: #b91c1c;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  padding: 8px 14px;
+  font-size: 12.5px;
 }
 
-/* 5. Thân cửa sổ */
-.sp-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  background: #f8fafc;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.sp-welcome-card {
-  padding: 14px 16px;
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-/* 6. Tabs chuyển đổi */
-.sp-tabs {
-  display: flex;
-  padding: 3px;
-  background: #e2e8f0;
-  border-radius: 12px;
-}
-
-.sp-tabs__btn {
-  flex: 1;
-  padding: 7px 12px;
-  border: 0;
-  border-radius: 9px;
+.sp-gpt-error__close {
   background: transparent;
-  color: #64748b;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-  text-align: center;
-}
-
-.sp-tabs__btn--active {
-  background: #ffffff;
-  color: #1e40af;
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-/* 7. Danh sách hội thoại */
-.sp-conversations {
-  display: flex;
-  flex-direction: column;
-}
-
-.sp-conversation-card {
-  width: 100%;
-  display: block;
-  padding: 12px 14px;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  background: transparent;
-}
-
-.sp-conversation-card:hover {
-  background: #f8fafc;
-}
-
-.sp-conversation-card__main {
-  width: 100%;
-}
-
-.sp-conversation-card__subject {
-  display: block;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.3;
-}
-
-.sp-conversation-card__date {
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-
-.sp-conversation-card__preview {
-  margin: 4px 0 8px;
-  font-size: 12px;
-  line-height: 1.45;
-  color: #64748b;
-}
-
-.sp-conversation-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.sp-conversation-card__tag {
-  display: inline-block;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #2563eb;
-  border-radius: 4px;
-  max-width: 80%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sp-conversation-card__arrow {
+  border: none;
+  color: #b91c1c;
   font-size: 16px;
-  color: #94a3b8;
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s ease, color 0.15s ease;
-}
-
-.sp-conversation-card:hover .sp-conversation-card__arrow {
-  color: #2563eb;
-  transform: translateX(3px);
-}
-
-/* 8. Form tạo yêu cầu mới */
-.sp-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: #ffffff;
-  padding: 16px;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.sp-form__field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.sp-form__label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #334155;
-}
-
-.sp-form__input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.sp-form__field-icon {
-  position: absolute;
-  left: 12px;
-  color: #94a3b8;
-  font-size: 18px;
-  pointer-events: none;
-}
-
-.sp-form__input {
-  width: 100%;
-  height: 42px;
-  padding: 0 14px 0 38px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
-  font-size: 13px;
-  outline: none;
-  transition: all 0.15s ease;
-}
-
-.sp-form__textarea {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
-  font-size: 13px;
-  outline: none;
-  resize: vertical;
-  min-height: 80px;
-  transition: all 0.15s ease;
-}
-
-.sp-form__input:focus,
-.sp-form__textarea:focus {
-  border-color: #059669;
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
-}
-
-.sp-btn-submit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 44px;
-  margin-top: 4px;
-  border: 0;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #047857 0%, #059669 100%);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
-}
-
-.sp-btn-submit:hover:not(:disabled) {
-  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
-}
-
-.sp-btn-submit:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* 9. Giao diện Chat trực tiếp */
-.sp-chat {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  height: calc(100% - 72px);
-  background: #f8fafc;
-}
-
-.sp-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.sp-messages__empty {
-  margin: auto;
-  text-align: center;
-  padding: 24px;
-  color: #64748b;
-  font-size: 12px;
-}
-
-.sp-bubble-wrap {
-  display: flex;
-  gap: 8px;
-  max-width: 85%;
-}
-
-.sp-bubble-wrap--customer {
-  align-self: flex-end;
-  flex-direction: row-reverse;
-}
-
-.sp-bubble-wrap--operator {
-  align-self: flex-start;
-}
-
-.sp-bubble__avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 9999px;
-  background: #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  shrink: 0;
-  margin-top: 2px;
-}
-
-.sp-bubble-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.sp-bubble-wrap--customer .sp-bubble-content {
-  align-items: flex-end;
-}
-
-.sp-bubble {
-  padding: 10px 14px;
-  font-size: 13px;
-  line-height: 1.45;
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-
-.sp-bubble--customer {
-  background: #059669;
-  color: #ffffff;
-  border-radius: 18px 18px 4px 18px;
-  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
-}
-
-.sp-bubble--operator {
-  background: #ffffff;
-  color: #1e293b;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px 18px 18px 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.sp-bubble__time {
-  margin-top: 3px;
-  font-size: 10px;
-  color: #94a3b8;
   padding: 0 4px;
 }
 
-/* 10. Thanh soạn tin nhắn */
-.sp-compose {
+/* 2.3 Luồng chat ChatGPT */
+.sp-gpt-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  background: #ffffff;
+}
+
+.sp-gpt-stream {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #ffffff;
+}
+
+.sp-gpt-stream::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sp-gpt-stream::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+/* Timestamp ở giữa như mẫu */
+.sp-gpt-timestamp {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 6px 0 10px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* 2.4 Trạng thái Welcome rỗng */
+.sp-gpt-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 8px 16px;
+  margin: auto 0;
+}
+
+.sp-gpt-welcome__icon {
+  margin-bottom: 12px;
+  filter: drop-shadow(0 8px 18px rgba(2, 132, 199, 0.2));
+}
+
+.sp-gpt-welcome__title {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.sp-gpt-welcome__subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 20px;
+  max-width: 330px;
+  line-height: 1.5;
+}
+
+.sp-gpt-prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.sp-gpt-prompt-chip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sp-gpt-prompt-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+/* 2.5 Định dạng tin nhắn */
+.sp-gpt-msg {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Tin nhắn người dùng: Viên thuốc xanh bên phải */
+.sp-gpt-msg--user {
+  align-items: flex-end;
+}
+
+.sp-gpt-pill {
+  background: #0284c7;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 22px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  max-width: 82%;
+  word-break: break-word;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+  letter-spacing: -0.01em;
+}
+
+/* Tin nhắn AI: KHÔNG avatar, KHÔNG bubble nền */
+.sp-gpt-msg--ai {
+  align-items: flex-start;
+  padding-right: 8px;
+}
+
+/* Khối Accordion 'Worked for ...s >' chuẩn ChatGPT */
+.sp-gpt-thought {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.sp-gpt-thought__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  color: #64748b;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  width: fit-content;
+  transition: color 0.15s ease;
+  user-select: none;
+}
+
+.sp-gpt-thought__btn:hover {
+  color: #0f172a;
+}
+
+.sp-gpt-thought__chevron {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #94a3b8;
+}
+
+.sp-gpt-thought__chevron--open {
+  transform: rotate(90deg);
+}
+
+/* Đường kẻ ngang phân cách mỏng bên dưới Worked for ...s */
+.sp-gpt-thought__divider {
+  width: 100%;
+  height: 1px;
+  background: #e2e8f0;
+  margin: 6px 0 10px;
+}
+
+.sp-gpt-thought__details {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: #475569;
+  animation: sp-slide-down 0.2s ease;
+}
+
+@keyframes sp-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sp-gpt-thought__step {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: #ffffff;
-  border-top: 1px solid #e2e8f0;
+  gap: 6px;
 }
 
-.sp-compose__input {
-  flex: 1;
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 9999px;
-  border: 1px solid #cbd5e1;
-  background: #f1f5f9;
+.sp-gpt-thought__check {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.sp-gpt-ai-content {
   color: #0f172a;
-  font-size: 13px;
-  outline: none;
-  transition: all 0.15s ease;
+  font-size: 14.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.sp-compose__input:focus {
-  border-color: #059669;
-  background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+/* Liên kết chuyển hướng trực tiếp đến trang Tour Detail (Inline Hyperlink tự nhiên) */
+.sp-gpt-tour-link {
+  color: #0284c7;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2.5px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: inline;
 }
 
-.sp-compose__send-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 9999px;
-  border: 0;
-  background: #059669;
-  color: #ffffff;
+.sp-gpt-tour-link:hover {
+  color: #0369a1;
+  text-decoration: underline;
+}
+
+/* Checklist hành lý tương tác trực tiếp trong tin nhắn AI */
+.sp-gpt-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 0;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.5;
+}
+
+.sp-gpt-checklist-box {
+  margin-top: 3.5px;
+  width: 15px;
+  height: 15px;
+  accent-color: #0284c7;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sp-gpt-checklist-item--checked .sp-gpt-checklist-text {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+/* Con trỏ nhấp nháy khi đang streaming theo thời gian thực */
+.sp-gpt-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 16px;
+  background: #0284c7;
+  border-radius: 1px;
+  margin-left: 3px;
+  vertical-align: -2.5px;
+  animation: sp-cursor-blink 0.75s ease-in-out infinite;
+}
+
+@keyframes sp-cursor-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.sp-gpt-ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.sp-gpt-action-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  border-radius: 6px;
+  padding: 5px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   transition: all 0.15s ease;
-  shrink: 0;
-  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
 }
 
-.sp-compose__send-btn:hover:not(:disabled) {
-  background: #047857;
+.sp-gpt-action-btn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.sp-gpt-action-btn--active {
+  color: #0284c7;
+  background: #e0f2fe;
+}
+
+/* Đang suy nghĩ */
+.sp-gpt-thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  padding: 4px 0;
+}
+
+.sp-gpt-thinking__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #0284c7;
+  animation: sp-thinking-pulse 1.2s infinite;
+}
+
+@keyframes sp-thinking-pulse {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+/* 2.6 Khung nhập liệu ChatGPT (Nền sáng) */
+.sp-gpt-input-area {
+  padding: 12px 18px 14px;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+}
+
+.sp-gpt-input-capsule {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 6px 8px 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.sp-gpt-input-capsule:focus-within {
+  background: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.sp-gpt-input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.4;
+  font-family: inherit;
+}
+
+.sp-gpt-input-field::placeholder {
+  color: #94a3b8;
+}
+
+.sp-gpt-send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #e2e8f0;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: not-allowed;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sp-gpt-send-btn--active {
+  background: #0284c7;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.sp-gpt-send-btn--active:hover {
+  background: #0369a1;
   transform: scale(1.05);
 }
 
-.sp-compose__send-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
+.sp-gpt-disclaimer {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+  margin: 8px 0 0;
+  letter-spacing: -0.01em;
 }
 
-/* 11. Tối ưu trên thiết bị di động */
-@media (max-width: 600px) {
-  .sp-fab {
-    right: 16px;
-    bottom: 16px;
-    height: 48px;
-    padding: 0 16px 0 14px;
-  }
+/* 2.7 Bảng Lịch sử trò chuyện (Nền sáng) */
+.sp-gpt-history {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
 
-  .sp-window {
-    right: 12px;
-    bottom: 74px;
-    width: calc(100vw - 24px);
-    height: min(620px, calc(100dvh - 88px));
-    border-radius: 20px;
-  }
+.sp-gpt-history__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sp-gpt-history__header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sp-gpt-history__back-btn {
+  background: transparent;
+  border: none;
+  color: #0284c7;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.sp-gpt-history__back-btn:hover {
+  background: #e0f2fe;
+}
+
+.sp-gpt-history__empty {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 40px 0;
+}
+
+.sp-gpt-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sp-gpt-history__item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: inherit;
+}
+
+.sp-gpt-history__item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.sp-gpt-history__item--active {
+  border-color: #0284c7;
+  background: #e0f2fe;
+}
+
+.sp-gpt-history__item-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.sp-gpt-history__item-preview {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.sp-gpt-history__item-time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* ==========================================================================
+   2.8 DARK MODE CHUẨN CHATGPT (THEME TÙY CHỌN THEO SCREENSHOT)
+   ========================================================================== */
+.sp-window--dark {
+  background: #000000;
+  border-color: #262626;
+  color: #f1f5f9;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7);
+}
+
+.sp-window--dark .sp-gpt-header {
+  background: #000000;
+  border-bottom-color: #212121;
+}
+
+.sp-window--dark .sp-gpt-header__title {
+  color: #f8fafc;
+}
+
+.sp-window--dark .sp-gpt-header__badge {
+  background: #172554;
+  color: #60a5fa;
+  border-color: #1e3a8a;
+}
+
+.sp-window--dark .sp-gpt-icon-btn {
+  color: #94a3b8;
+}
+
+.sp-window--dark .sp-gpt-icon-btn:hover {
+  background: #1e1e1e;
+  color: #ffffff;
+}
+
+.sp-window--dark .sp-gpt-chat,
+.sp-window--dark .sp-gpt-stream {
+  background: #000000;
+}
+
+.sp-window--dark .sp-gpt-timestamp {
+  color: #71717a;
+}
+
+/* Viên thuốc chat người dùng màu xanh biển tối như ảnh chụp */
+.sp-window--dark .sp-gpt-pill {
+  background: #104f9c;
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(16, 79, 156, 0.35);
+}
+
+/* Accordion Worked for ...s > ở Dark Mode */
+.sp-window--dark .sp-gpt-thought__btn {
+  color: #a1a1aa;
+}
+
+.sp-window--dark .sp-gpt-thought__btn:hover {
+  color: #f4f4f5;
+}
+
+.sp-window--dark .sp-gpt-thought__chevron {
+  color: #71717a;
+}
+
+.sp-window--dark .sp-gpt-thought__divider {
+  background: #27272a;
+}
+
+.sp-window--dark .sp-gpt-thought__details {
+  background: #121212;
+  border-color: #27272a;
+  color: #d4d4d8;
+}
+
+.sp-window--dark .sp-gpt-ai-content {
+  color: #f4f4f5;
+}
+
+/* Style link tour trong Dark Mode (Inline Hyperlink tự nhiên) */
+.sp-window--dark .sp-gpt-tour-link {
+  color: #38bdf8;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: inline;
+}
+
+.sp-window--dark .sp-gpt-tour-link:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+.sp-window--dark .sp-gpt-cursor {
+  background: #38bdf8;
+}
+
+.sp-window--dark .sp-gpt-action-btn {
+  color: #71717a;
+}
+
+.sp-window--dark .sp-gpt-action-btn:hover {
+  color: #f4f4f5;
+  background: #27272a;
+}
+
+.sp-window--dark .sp-gpt-action-btn--active {
+  color: #38bdf8;
+  background: #1e293b;
+}
+
+.sp-window--dark .sp-gpt-welcome__title {
+  color: #f8fafc;
+}
+
+.sp-window--dark .sp-gpt-welcome__subtitle {
+  color: #94a3b8;
+}
+
+.sp-window--dark .sp-gpt-prompt-chip {
+  background: #18181b;
+  border-color: #27272a;
+  color: #e4e4e7;
+}
+
+.sp-window--dark .sp-gpt-prompt-chip:hover {
+  background: #27272a;
+  color: #ffffff;
+}
+
+.sp-window--dark .sp-gpt-input-area {
+  background: #000000;
+  border-top-color: #212121;
+}
+
+.sp-window--dark .sp-gpt-input-capsule {
+  background: #1c1c1f;
+  border-color: #2e2e33;
+}
+
+.sp-window--dark .sp-gpt-input-capsule:focus-within {
+  background: #232328;
+  border-color: #404048;
+}
+
+.sp-window--dark .sp-gpt-input-field {
+  color: #ffffff;
+}
+
+.sp-window--dark .sp-gpt-input-field::placeholder {
+  color: #71717a;
+}
+
+.sp-window--dark .sp-gpt-history {
+  background: #000000;
+}
+
+.sp-window--dark .sp-gpt-history__header {
+  border-bottom-color: #212121;
+}
+
+.sp-window--dark .sp-gpt-history__header h4 {
+  color: #f8fafc;
+}
+
+.sp-window--dark .sp-gpt-history__back-btn {
+  color: #60a5fa;
+}
+
+.sp-window--dark .sp-gpt-history__item {
+  background: #18181b;
+  border-color: #27272a;
+  color: inherit;
+}
+
+.sp-window--dark .sp-gpt-history__item:hover {
+  background: #27272a;
+}
+
+.sp-window--dark .sp-gpt-history__item-title {
+  color: #f4f4f5;
+}
+
+.sp-window--dark .sp-gpt-history__item-preview {
+  color: #a1a1aa;
 }

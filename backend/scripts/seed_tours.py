@@ -189,6 +189,73 @@ TOURS = [
             ("Bảo tàng – Chợ Bến Thành", "Tham quan bảo tàng, thưởng thức ẩm thực và mua quà tại chợ.", ["bao-tang-chung-tich", "cho-ben-thanh"]),
         ],
     },
+    {
+        "slug": "tour-kham-pha-vinh-ha-long",
+        "name": "Khám Phá Vịnh Hạ Long & Vịnh Lan Hạ – Du Thuyền 5 Sao",
+        "province": "Quảng Ninh",
+        "duration_days": 3,
+        "transportation": ["Xe Limousine", "Du thuyền 5 sao"],
+        "departure_location": "Cảng tàu khách quốc tế Tuần Châu, Hạ Long",
+        "tags": ["Du thuyền", "Kỳ quan", "Biển đảo", "3N2Đ"],
+        "price": 3_600_000,
+        "sale_price": 2_500_000,
+        "summary": "Nghỉ dưỡng thượng lưu trên du thuyền 5 sao, chèo kayak hang Sáng Tối và thưởng thức tiệc BBQ hải sản.",
+        "description": "Trọn gói du thuyền 5 sao khám phá vịnh Hạ Long và vịnh Lan Hạ với phòng cabin ban công riêng view trọn vịnh.",
+        "places": [
+            dia_diem("vinh-ha-long", "Vịnh Hạ Long", "Hạ Long, Quảng Ninh", 20.9101, 107.1839, "Kỳ quan thiên nhiên", "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80"),
+            dia_diem("dao-ti-top", "Đảo Ti Tốp", "Vịnh Hạ Long, Quảng Ninh", 20.8587, 107.0805, "Đảo", "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"),
+            dia_diem("hang-suong-sot", "Hang Sửng Sốt", "Đảo Bồ Hòn, Vịnh Hạ Long", 20.8732, 107.0911, "Hang động", "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80"),
+        ],
+        "days": [
+            ("Hà Nội – Hạ Long – Check-in Du Thuyền", "Đón khách từ Hà Nội đến cảng Tuần Châu, nhận phòng cabin hướng biển.", ["vinh-ha-long"]),
+            ("Vịnh Lan Hạ – Chèo Kayak – Hang Sửng Sốt", "Chèo kayak khám phá vụng nước trong xanh và thăm hang Sửng Sốt.", ["hang-suong-sot", "dao-ti-top"]),
+            ("Bình Minh Trên Vịnh – Tiễn Khách", "Tập thái cực quyền đón bình minh, dùng brunch và về lại đất liền.", ["vinh-ha-long"]),
+        ],
+    },
+    {
+        "slug": "tour-phu-quoc-nghi-duong",
+        "name": "Thiên Đường Biển Ngọc Phú Quốc – Hòn Thơm & Bãi Sao",
+        "province": "Kiên Giang",
+        "duration_days": 3,
+        "transportation": ["Máy bay", "Cáp treo vượt biển", "Xe đưa đón"],
+        "departure_location": "Sân bay quốc tế Phú Quốc, Kiên Giang",
+        "tags": ["Biển đảo", "Resort", "Nghỉ dưỡng", "3N2Đ"],
+        "price": 4_500_000,
+        "sale_price": 4_500_000,
+        "summary": "Đắm mình trong làn nước ngọc bích tại Bãi Sao, trải nghiệm cáp treo Hòn Thơm và ngắm hoàng hôn Sunset Sanato.",
+        "description": "Nghỉ dưỡng cao cấp tại đảo ngọc Phú Quốc với bãi cát trắng mịn, tour cano 4 đảo và công viên nước Aquatopia.",
+        "places": [
+            dia_diem("bai-sao", "Bãi Sao Phú Quốc", "An Thới, Phú Quốc, Kiên Giang", 10.0543, 104.0321, "Bãi biển", "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"),
+            dia_diem("hon-thom", "Hòn Thơm Nature Park", "An Thới, Phú Quốc, Kiên Giang", 9.9572, 104.0189, "Công viên giải trí", "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80"),
+        ],
+        "days": [
+            ("Đón Khách – Check-in Resort – Bãi Sao", "Xe đón tại sân bay Phú Quốc, nhận phòng resort và thư giãn tại Bãi Sao.", ["bai-sao"]),
+            ("Cáp Treo Hòn Thơm – Tour Cano Đảo", "Trải nghiệm cáp treo 3 dây vượt biển, lặn ngắm san hô tại hòn Mây Rút.", ["hon-thom"]),
+            ("Chợ Dương Đông – Mua Đặc Sản – Tiễn Khách", "Thăm vườn tiêu, nhà thùng nước mắm và mua đặc sản hải sản khô.", ["bai-sao"]),
+        ],
+    },
+    {
+        "slug": "tour-sapa-fansipan",
+        "name": "Sapa Mù Sương – Chinh Phục Đỉnh Fansipan 3.143m",
+        "province": "Lào Cai",
+        "duration_days": 3,
+        "transportation": ["Xe giường nằm Cabin VIP", "Cáp treo"],
+        "departure_location": "Bến xe trung tâm Sa Pa, Lào Cai",
+        "tags": ["Núi rừng", "Trekking", "Săn mây", "3N2Đ"],
+        "price": 2_800_000,
+        "sale_price": 2_800_000,
+        "summary": "Chinh phục nóc nhà Đông Dương Fansipan 3.143m, dạo bản Cát Cát thơ mộng và thưởng thức ẩm thực Tây Bắc.",
+        "description": "Khám phá thị xã trong sương Sa Pa với cảnh sắc thung lũng Mường Hoa, đỉnh Fansipan hùng vĩ và ruộng bậc thang.",
+        "places": [
+            dia_diem("dinh-fansipan", "Đỉnh Fansipan 3.143m", "Tam Đường, Lai Châu / Sa Pa, Lào Cai", 22.3033, 103.7750, "Đỉnh núi", "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"),
+            dia_diem("ban-cat-cat", "Bản Cát Cát", "San Sả Hồ, Sa Pa, Lào Cai", 22.3278, 103.8345, "Bản làng văn hóa", "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"),
+        ],
+        "days": [
+            ("Hà Nội – Sa Pa – Bản Cát Cát", "Xe cabin đưa khách đến Sa Pa, nhận phòng khách sạn và dạo bản Cát Cát.", ["ban-cat-cat"]),
+            ("Chinh Phục Đỉnh Fansipan – Săn Mây", "Trải nghiệm tàu hỏa leo núi Mường Hoa và cáp treo lên đỉnh Fansipan 3.143m.", ["dinh-fansipan"]),
+            ("Nhà Thờ Đá – Chợ Sa Pa – Tiễn Khách", "Tự do chụp ảnh nhà thờ đá cổ, mua đặc sản thịt trâu gác bếp và trở về.", ["ban-cat-cat"]),
+        ],
+    },
 ]
 
 
@@ -365,9 +432,15 @@ def upsert_tour(tx, tour: dict, operator_id: int, province_id: int) -> int:
 
 def seed_departures(tx, tour_id: int, tour: dict, start_date: date) -> None:
     now = datetime.now(MUI_GIO)
+    effective_sale_price = (
+        tour["sale_price"]
+        if tour.get("sale_price") and tour["sale_price"] < tour["price"]
+        else None
+    )
     for week in range(6):
         depart_date = start_date + timedelta(days=7 * week)
-        sale_end = datetime.combine(depart_date - timedelta(days=2), time(23, 59), MUI_GIO)
+        sale_end = datetime.combine(depart_date - timedelta(days=2), time(23, 59), MUI_GIO) if effective_sale_price else None
+        sale_start = now if effective_sale_price else None
         tx.execute(
             """
             INSERT INTO tour_departures (
@@ -381,7 +454,7 @@ def seed_departures(tx, tour_id: int, tour: dict, start_date: date) -> None:
                 status = CASE WHEN tour_departures.status IN ('CANCELLED', 'COMPLETED')
                     THEN tour_departures.status ELSE 'OPEN' END
             """,
-            (tour_id, depart_date, tour["price"], tour["sale_price"], now, sale_end),
+            (tour_id, depart_date, tour["price"], effective_sale_price, sale_start, sale_end),
         )
 
     tx.execute(
@@ -435,6 +508,13 @@ def main() -> None:
 
     seeded = []
     with transaction() as tx:
+        # Vô hiệu hóa các tour test nháp cũ
+        tx.execute(
+            """
+            UPDATE tours SET active = false
+            WHERE name ILIKE '%chay du%' OR name ILIKE '%herhe%' OR name ILIKE '%kiem tra%'
+            """
+        )
         operator_id = dam_bao_operator(tx)
         for tour in TOURS:
             province = tim_tinh(tx, tour["province"])

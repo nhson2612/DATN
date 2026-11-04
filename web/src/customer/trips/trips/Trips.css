@@ -1,7 +1,344 @@
 /* ==========================================================================
-   BLOCK: .trips-screen
-   Thiết kế giao diện Chuyến đi (/chuyen-di) theo phong cách Voyage luxury
+   BLOCK: .trips-screen & .trips-page-root
+   Thiết kế giao diện Chuyến đi (/chuyen-di) đồng bộ với hệ thống Aura Voyage
    ========================================================================== */
+
+.trips-page-root {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--tours-bg-page, #f4f6fa) !important;
+  color: #0f172a;
+}
+
+.trips-main-container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 16px 24px 60px;
+  box-sizing: border-box;
+}
+
+.trips-header-banner {
+  margin-bottom: 24px;
+}
+
+.trips-header-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #0284c7;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.trips-header-title {
+  font-size: clamp(28px, 3.2vw, 40px);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  margin: 0 0 8px 0;
+  line-height: 1.15;
+}
+
+.trips-header-desc {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+.trips-bar-wrapper {
+  margin-bottom: 28px;
+}
+
+/* Shell container */
+.tours-shell {
+  width: min(1240px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+/* Hero Section (.page-hero) tích hợp Navbar và Hero Copy, mờ dần khi cuộn */
+.page-hero {
+  height: 280px;
+  min-height: 280px;
+  flex-shrink: 0;
+  margin-bottom: -36px;
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  background: #111a20;
+}
+
+.page-hero-inner {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 50px;
+}
+
+.page-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  will-change: transform, opacity, filter, -webkit-mask-image, mask-image;
+  pointer-events: none;
+}
+
+.page-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 18, 23, 0.42) 0%, rgba(10, 18, 23, 0.22) 40%, rgba(10, 18, 23, 0.72) 100%);
+  will-change: opacity, -webkit-mask-image, mask-image;
+  pointer-events: none;
+}
+
+.page-hero-content {
+  position: relative;
+  z-index: 2;
+  will-change: transform, opacity;
+}
+
+.page-hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(38px, 4.5vw, 56px);
+  font-weight: 500;
+  margin: 0 0 8px;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+}
+
+.page-hero p {
+  margin: 0;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Top Navigation Bar */
+.voyage-nav {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  position: relative;
+  z-index: 20;
+  color: #ffffff;
+}
+
+.voyage-brand {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  color: #ffffff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: opacity 0.2s ease;
+}
+
+.voyage-brand:hover {
+  opacity: 0.9;
+}
+
+.voyage-navlinks {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              gap 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.3s ease;
+}
+
+.voyage-navlinks--shifted {
+  transform: translateX(-48px);
+  gap: 22px;
+}
+
+.voyage-navlink {
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+  position: relative;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.voyage-navlink:hover {
+  color: #ffffff;
+  
+}
+
+.voyage-navlink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1.5px;
+  background: #ffffff;
+  transition: width 0.25s ease;
+}
+
+.voyage-navlink:hover::after {
+  width: 100%;
+}
+
+.voyage-navlink--active {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.voyage-navlink--active::after {
+  width: 100% !important;
+}
+
+.voyage-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Expandable Search Bar in Navbar */
+.voyage-nav-search {
+  position: relative;
+  height: 48px;
+  width: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.voyage-nav-search:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.voyage-nav-search--open {
+  width: clamp(340px, 32vw, 480px);
+  background: rgba(3, 7, 18, 0.68) !important;
+  border-color: rgba(255, 255, 255, 0.38) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
+}
+
+.voyage-nav-search-trigger {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.voyage-nav-search-trigger:hover {
+  opacity: 0.85;
+}
+
+.voyage-nav-search-form {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding-right: 14px;
+}
+
+.voyage-nav-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-family: var(--sans);
+  font-size: 15px;
+  padding: 0 8px;
+}
+
+.voyage-nav-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.voyage-nav-search-close {
+  background: none;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.voyage-nav-search-close:hover {
+  color: #ffffff;
+  transform: scale(1.18);
+}
+
+/* Icon Buttons (Menu, etc.) */
+.voyage-iconbtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: 18px;
+}
+
+.voyage-iconbtn:hover {
+  
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
 
 .trips-screen {
   --ink: #141a1f;
@@ -144,7 +481,7 @@
 
 .trips-plan-cta:hover {
   background: #232d32;
-  transform: translateY(-1px);
+  
   box-shadow: 0 6px 18px rgba(18, 24, 27, 0.22);
 }
 
@@ -205,7 +542,7 @@
 }
 
 .voyage-trip-card:hover {
-  transform: translateY(-4px);
+  
   box-shadow: 0 16px 36px rgba(18, 24, 27, 0.09);
   border-color: rgba(0, 0, 0, 0.14);
 }
@@ -377,111 +714,31 @@
   gap: 4px;
 }
 
-/* 5. Trạng thái đón khách (Guest Hero) */
-.trips-guest-hero {
-  padding: 30px 0 60px;
-  display: flex;
-  justify-content: center;
+/* 5 & 6. Trạng thái trống (Empty State & Guest State) đồng bộ chuẩn TourEmptyState */
+.trips-empty-state-card {
+  margin-top: 8px;
 }
 
-.trips-guest-card {
-  max-width: 580px;
-  text-align: center;
-  background: #ffffff;
-  padding: 48px 36px;
-  border-radius: 20px;
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 14px 40px rgba(18, 24, 27, 0.05);
-}
-
-.trips-guest-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #f1f5f9;
-  color: #12181b;
-  display: grid;
-  place-items: center;
-  margin: 0 auto 20px;
-}
-
-.trips-guest-card h2 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #12181b;
-  margin: 0 0 12px;
-  letter-spacing: -0.02em;
-}
-
-.trips-guest-card p {
-  font-size: 15px;
-  color: #64748b;
-  line-height: 1.6;
-  margin: 0 0 28px;
-}
-
-.trips-guest-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.trips-guest-secondary-btn {
+.trips-empty-secondary-btn {
   display: inline-flex;
   align-items: center;
-  padding: 11px 22px;
-  border-radius: 999px;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 10px;
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  background: #f1f5f9;
-  color: #334155;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.trips-guest-secondary-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-/* 6. Danh sách trống (Empty State) */
-.trips-empty-box {
-  background: #ffffff;
-  border-radius: 18px;
-  border: 1px dashed #cbd5e1;
-  padding: 60px 24px;
-  text-align: center;
-  margin: 20px 0;
-}
-
-.trips-empty-icon {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: #f8fafc;
-  color: #64748b;
-  display: grid;
-  place-items: center;
-  margin: 0 auto 16px;
-}
-
-.trips-empty-box h3 {
-  font-size: 18px;
+  font-size: 13.5px;
   font-weight: 700;
-  color: #12181b;
-  margin: 0 0 8px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  text-decoration: none;
+  transition: all 0.18s ease;
 }
 
-.trips-empty-box p {
-  font-size: 14.5px;
-  color: #64748b;
-  margin: 0 0 22px;
-  max-width: 440px;
-  margin-left: auto;
-  margin-right: auto;
+.trips-empty-secondary-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 /* 7. Luồng tạo chuyến đi toàn màn hình (Planner: Stage 1 & Stage 2) */
@@ -888,7 +1145,7 @@
 }
 
 .planner-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
+  
   box-shadow: 0 8px 24px rgba(20, 26, 31, 0.2);
   background: #232e36;
 }
@@ -907,7 +1164,7 @@
 
 .planner-btn.ghost:hover {
   background: rgba(20, 26, 31, 0.06);
-  transform: translateY(-1px);
+  
 }
 
 /* Stage 2: Interests Grid */
@@ -935,7 +1192,7 @@
 }
 
 .planner-interest:hover {
-  transform: translateY(-3px);
+  
   background: #ffffff;
   border-color: #b5bec4;
   box-shadow: 0 6px 18px rgba(20, 26, 31, 0.06);

@@ -62,11 +62,74 @@ export default function BookingsScreen() {
               <StatusTag value={booking.status} />
             </td>
             <td>
-              {booking.status === "PAID" && <button onClick={() => confirm(booking.id)}>Xác nhận</button>}
-              {booking.status === "CONFIRMED" && <>
-                <button onClick={() => setOperationalStatus(booking.id, "COMPLETED")}>Đã hoàn thành</button>
-                <button onClick={() => setOperationalStatus(booking.id, "NO_SHOW")}>Vắng mặt</button>
-              </>}
+              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                {booking.status === "PAID" && (
+                  <button
+                    type="button"
+                    onClick={() => confirm(booking.id)}
+                    title="Xác nhận đơn đặt tour"
+                    aria-label="Xác nhận"
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: "6px",
+                      border: "none",
+                      background: "#0f172a",
+                      color: "#ffffff",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check</span>
+                  </button>
+                )}
+                {booking.status === "CONFIRMED" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setOperationalStatus(booking.id, "COMPLETED")}
+                      title="Đánh dấu đã hoàn thành"
+                      aria-label="Đã hoàn thành"
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "6px",
+                        border: "1px solid #e2e8f0",
+                        background: "#ffffff",
+                        color: "#16a34a",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>task_alt</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOperationalStatus(booking.id, "NO_SHOW")}
+                      title="Đánh dấu khách vắng mặt (No-show)"
+                      aria-label="Khách vắng mặt"
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "6px",
+                        border: "1px solid #fee2e2",
+                        background: "#fff1f2",
+                        color: "#dc2626",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>person_off</span>
+                    </button>
+                  </>
+                )}
+              </div>
             </td>
           </tr>
         ))}

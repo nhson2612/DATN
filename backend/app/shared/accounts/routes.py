@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.core.database import transaction
 from app.core.security import (
     create_access_token,
     get_current_user,
@@ -10,6 +11,7 @@ from app.core.security import (
 )
 from app.shared.accounts import repository as user_repo
 from app.shared.schemas.requests import UserLogin, UserRegister
+from app.tours.operator import repository as operator_repo
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -23,8 +25,33 @@ ADMIN_DEMO_PASSWORD = "123456"
 def register(data: UserRegister):
     if user_repo.email_exists(data.email):
         raise HTTPException(status_code=400, detail="Email đã được sử dụng.")
-    user_repo.create(data.email, hash_password(data.password), data.full_name)
-    return {"success": True, "message": "Đăng ký thành công."}
+    role = "operator" if str(data.role or "").lower() == "operator" else "user"
+    hashed = hash_password(data.password)
+    with transaction() as tx:
+        user_id = user_repo.create(data.email, hashed, data.full_name, role=role, tx=tx)
+        if role == "operator":
+            company = (data.company_name or "").strip() or f"Đơn vị lữ hành {data.full_name}"
+            operator_repo.create_operator(
+                user_id=user_id,
+                company_name=company,
+                tax_code=(data.tax_code or "").strip() or None,
+                commission_rate=0.10,
+                status="ACTIVE",
+                tx=tx,
+            )
+    token = create_access_token({"sub": data.email})
+    return {
+        "success": True,
+        "message": "Đăng ký thành công.",
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user_id,
+            "email": data.email,
+            "full_name": data.full_name,
+            "role": role,
+        },
+    }
 
 
 @router.post("/login")

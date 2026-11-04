@@ -97,9 +97,10 @@
 }
 
 .aura-drawer__close {
-  background: transparent;
-  border: 1px solid #e4e4e7;
-  border-radius: 8px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none;
   width: 32px;
   height: 32px;
   display: flex;
@@ -109,13 +110,15 @@
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
-  transition: all 0.15s ease;
+  border-radius: 0;
+  transition: color 0.15s ease;
 }
 
 .aura-drawer__close:hover {
-  background-color: #f4f4f5;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   color: #09090b;
-  border-color: #d4d4d8;
 }
 
 /* ==========================================================================
@@ -192,22 +195,29 @@
   color: #18181b;
   display: flex;
   flex-direction: column;
-  gap: 20px;
   background-color: #ffffff;
 }
 
-/* Section Labels */
+/* Step container: tạo khoảng cách rõ rệt giữa các phần (Phần 1, Phần 2, v.v.) */
+.tour-booking-wizard__step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Section Labels & Wrappers */
 .tour-booking-wizard__section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  margin: 0;
 }
 
 .tour-booking-wizard__section-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #09090b;
   letter-spacing: -0.01em;
@@ -219,86 +229,131 @@
 }
 
 /* ==========================================================================
-   BƯỚC 1: ĐỢT KHỞI HÀNH & SỐ KHÁCH
+   BƯỚC 1: ĐỢT KHỞI HÀNH & SỐ KHÁCH (DẠNG SCHEDULE ROWS LIỀN MẠCH, KHÔNG CARD VUÔNG)
    ========================================================================== */
-.tour-booking-wizard__departure-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px;
-}
-
-.tour-booking-wizard__dep-card {
-  border: 1px solid #e4e4e7;
-  border-radius: 10px;
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  background: #ffffff;
+.tour-booking-wizard__departure-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  text-align: left;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.tour-booking-wizard__dep-card:hover:not(.tour-booking-wizard__dep-card--disabled) {
-  border-color: #a1a1aa;
-  background: #fafafa;
-}
-
-.tour-booking-wizard__dep-card--selected {
-  border-color: #09090b;
-  background: #fdfdfd;
-  box-shadow: 0 0 0 1px #09090b;
-}
-
-.tour-booking-wizard__dep-card--disabled {
-  opacity: 0.45;
-  background: #f4f4f5;
-  cursor: not-allowed;
-  border-color: #e4e4e7;
-}
-
-.tour-booking-wizard__dep-card-header {
+.tour-booking-wizard__dep-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: #ffffff;
+  border-bottom: 1px solid #f4f4f5;
+  outline: none;
 }
 
-.tour-booking-wizard__dep-date {
-  font-size: 13px;
+.tour-booking-wizard__dep-row:last-child {
+  border-bottom: none;
+}
+
+.tour-booking-wizard__dep-row:hover:not(.tour-booking-wizard__dep-row--disabled) {
+  background: #f8fafc;
+}
+
+.tour-booking-wizard__dep-row--selected {
+  background: #f8fafc;
+}
+
+.tour-booking-wizard__dep-row--disabled {
+  opacity: 0.45;
+  background: #fafafa;
+  cursor: not-allowed;
+}
+
+.tour-booking-wizard__dep-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tour-booking-wizard__dep-radio-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.tour-booking-wizard__dep-radio-circle--active {
+  border-color: #09090b;
+}
+
+.tour-booking-wizard__dep-radio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #09090b;
+}
+
+.tour-booking-wizard__dep-date-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tour-booking-wizard__dep-date-main {
+  font-size: 13.5px;
   font-weight: 600;
   color: #09090b;
+  text-transform: capitalize;
+}
+
+.tour-booking-wizard__dep-duration {
+  font-size: 11.5px;
+  color: #71717a;
+}
+
+.tour-booking-wizard__dep-row-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .tour-booking-wizard__badge {
-  font-size: 10.5px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 500;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
 }
 
 .tour-booking-wizard__badge--available {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
 }
 
 .tour-booking-wizard__badge--soldout {
   background: #fef2f2;
-  color: #991b1b;
+  color: #b91c1c;
   border: 1px solid #fecaca;
 }
 
-.tour-booking-wizard__dep-card-price {
+.tour-booking-wizard__dep-row-pricing {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-top: 2px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 90px;
 }
 
 .tour-booking-wizard__dep-price-current {
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 700;
   color: #09090b;
 }
@@ -361,13 +416,10 @@
   color: #71717a;
 }
 
-/* Tạm tính */
+/* Tạm tính chi phí - Bỏ hộp xám đóng khung, chuyển sang typography thanh thoát */
 .tour-booking-wizard__calc-summary {
-  margin-top: 6px;
-  padding: 16px;
-  border: 1px solid #f4f4f5;
-  background: #fafafa;
-  border-radius: 10px;
+  margin-top: 4px;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -381,26 +433,40 @@
   color: #52525b;
 }
 
-.tour-booking-wizard__calc-row b {
-  color: #09090b;
+.tour-booking-wizard__calc-label {
+  color: #71717a;
 }
 
-.tour-booking-wizard__calc-row--sale {
-  color: #166534;
+.tour-booking-wizard__calc-val {
+  color: #09090b;
+  font-weight: 500;
+}
+
+.tour-booking-wizard__calc-row--sale .tour-booking-wizard__calc-val {
+  color: #16a34a;
+}
+
+.tour-booking-wizard__calc-divider {
+  height: 1px;
+  background: #e4e4e7;
+  margin: 4px 0;
 }
 
 .tour-booking-wizard__calc-row--total {
-  border-top: 1px solid #e4e4e7;
-  padding-top: 10px;
-  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #09090b;
+}
+
+.tour-booking-wizard__calc-total-label {
   font-size: 14px;
   font-weight: 600;
   color: #09090b;
 }
 
 .tour-booking-wizard__total-amount {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   color: #09090b;
 }
 
@@ -739,215 +805,512 @@
   margin: 0;
 }
 
-.tour-booking-wizard__pay-method-options {
+/* ==========================================================================
+   MODERN E-COMMERCE CHECKOUT STYLES (OTA STANDARDS: KLOOK / TRAVELOKA / STRIPE)
+   ========================================================================== */
+/* ==========================================================================
+   BƯỚC 4: CHECKOUT HIỆN ĐẠI (KHÔNG CARD VUÔNG, SINGLE UNIFIED GROUP)
+   ========================================================================== */
+.tour-booking-wizard__payment-reveal {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 18px;
 }
 
-.tour-booking-wizard__method-card {
+/* 0. Đồng hồ giữ chỗ thanh toán - Không bọc card, to rõ ràng, không icon */
+.tour-checkout-countdown-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px 0 14px 0;
+  gap: 4px;
+}
+
+.tour-checkout-countdown-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tour-checkout-countdown-digits {
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #0f172a;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
+}
+
+.tour-checkout-countdown-digits--urgent {
+  color: #dc2626 !important;
+  animation: countdownPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes countdownPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.03);
+  }
+}
+
+/* 1. Hóa đơn tóm tắt liền mạch (Voucher/Receipt) */
+.tour-checkout-receipt {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  background: #ffffff;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.15s ease;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
 }
 
-.tour-booking-wizard__method-card:hover:not(:disabled) {
-  border-color: #09090b;
-  background: #fafafa;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.tour-booking-wizard__method-info {
+.tour-checkout-receipt-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.tour-booking-wizard__method-title {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: #09090b;
+.tour-checkout-receipt-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.tour-checkout-receipt-code-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.tour-booking-wizard__method-pill {
-  font-size: 10.5px;
-  font-weight: 600;
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-  padding: 1px 6px;
-  border-radius: 4px;
+.tour-checkout-receipt-code {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-.tour-booking-wizard__method-tag {
-  font-size: 10.5px;
-  font-weight: 600;
-  background: #f4f4f5;
-  color: #52525b;
-  border: 1px solid #e4e4e7;
-  padding: 1px 6px;
-  border-radius: 4px;
+.tour-checkout-copy-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 2px 5px;
+  cursor: pointer;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
 }
 
-.tour-booking-wizard__method-desc {
+.tour-checkout-copy-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.tour-checkout-receipt-tour-title {
   font-size: 12.5px;
-  color: #71717a;
+  color: #475569;
+  font-weight: 500;
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.tour-booking-wizard__method-arrow {
-  font-size: 18px;
-  color: #a1a1aa;
-  transition: transform 0.15s ease, color 0.15s ease;
-}
-
-.tour-booking-wizard__method-card:hover .tour-booking-wizard__method-arrow {
-  color: #09090b;
-  transform: translateX(3px);
-}
-
-/* Payment Box Details (VietQR) */
-.tour-booking-wizard__payment-box {
+.tour-checkout-receipt-side {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  align-items: flex-end;
+  gap: 6px;
 }
 
-.tour-booking-wizard__payment-box-header {
+.tour-checkout-timer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.tour-checkout-receipt-total-block {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.tour-checkout-receipt-total-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.tour-checkout-receipt-total-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+/* 2. Tiêu đề chọn phương thức */
+.tour-checkout-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tour-checkout-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tour-checkout-section-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.tour-checkout-section-sub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* 3. Cụm thanh toán thống nhất (Single Unified Group - Chuẩn Stripe / Shopify) */
+.tour-checkout-group {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.tour-checkout-group-divider {
+  height: 1px;
+  background: #e2e8f0;
+  width: 100%;
+}
+
+.tour-checkout-row {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: background 0.15s ease;
+  outline: none;
+}
+
+.tour-checkout-row:hover {
+  background: #f8fafc;
+}
+
+.tour-checkout-row--selected.tour-checkout-row--payos {
+  background: #f0fdf4;
+}
+
+.tour-checkout-row--selected.tour-checkout-row--stripe {
+  background: #faf5ff;
+}
+
+.tour-checkout-row-main {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.tour-booking-wizard__btn-change-method {
-  background: transparent;
-  border: 1px solid #e4e4e7;
-  color: #52525b;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-}
-
-.tour-booking-wizard__btn-change-method:hover {
-  border-color: #09090b;
-  color: #09090b;
-  background: #f4f4f5;
-}
-
-/* VietQR Container */
-.tour-booking-wizard__qr-container {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 18px;
-  padding: 16px;
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  align-items: center;
-}
-
-.tour-booking-wizard__qr-image-wrap {
-  background: #ffffff;
-  padding: 6px;
-  border-radius: 8px;
-  border: 1px solid #e4e4e7;
+.tour-checkout-row-left {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.tour-booking-wizard__qr-img {
-  width: 128px;
-  height: 128px;
-  object-fit: contain;
-  border-radius: 4px;
-}
-
-.tour-booking-wizard__qr-meta {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
 }
 
-.tour-booking-wizard__qr-meta-item {
+.tour-checkout-row-text {
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
-.tour-booking-wizard__qr-label {
-  font-size: 11px;
-  color: #71717a;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 600;
-}
-
-.tour-booking-wizard__qr-amount-row,
-.tour-booking-wizard__qr-content-row {
+.tour-checkout-row-title-line {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
-.tour-booking-wizard__qr-amount {
-  font-size: 17px;
+.tour-checkout-row-name {
+  font-size: 14px;
   font-weight: 700;
-  color: #09090b;
+  color: #0f172a;
 }
 
-.tour-booking-wizard__qr-code {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #09090b;
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
-  padding: 3px 8px;
-  border-radius: 6px;
-}
-
-.tour-booking-wizard__mini-copy {
-  background: #ffffff;
-  border: 1px solid #d4d4d8;
-  color: #52525b;
+.tour-checkout-badge-pill {
   font-size: 11px;
-  font-weight: 500;
-  padding: 3px 7px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
 }
 
-.tour-booking-wizard__mini-copy:hover {
-  background: #f4f4f5;
-  color: #09090b;
-  border-color: #a1a1aa;
+.tour-checkout-badge-pill--green {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
-/* Payment Details Grid */
-.tour-booking-wizard__payment-details {
+.tour-checkout-badge-pill--purple {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.tour-checkout-row-hint {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.tour-checkout-row-right {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 14px 16px;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tour-checkout-row-detail {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.06);
+  font-size: 11.5px;
+  color: #475569;
+}
+
+.tour-checkout-bank-support-text,
+.tour-checkout-stripe-support-text {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Custom Radio */
+.tour-checkout-radio-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #ffffff;
-  border: 1px solid #e4e4e7;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.tour-checkout-radio-circle--active-payos {
+  border-color: #16a34a;
+}
+
+.tour-checkout-radio-circle--active-stripe {
+  border-color: #635bff;
+}
+
+.tour-checkout-radio-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.tour-checkout-radio-dot--payos {
+  background: #16a34a;
+}
+
+.tour-checkout-radio-dot--stripe {
+  background: #635bff;
+}
+
+/* VietQR Badge */
+.tour-checkout-vietqr-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.tour-checkout-vietqr-viet {
+  font-weight: 800;
+  color: #005baa;
+}
+
+.tour-checkout-vietqr-qr {
+  font-weight: 800;
+  color: #e31837;
+}
+
+.tour-checkout-vietqr-napas {
+  font-size: 9.5px;
+  font-weight: 700;
+  background: #005baa;
+  color: #ffffff;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 5px;
+  letter-spacing: 0.03em;
+}
+
+.tour-checkout-row-right--stripe {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Card Badges & Brand Logos */
+.tour-checkout-card-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  min-width: 34px;
+  padding: 0 4px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+}
+
+.tour-checkout-stripe-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 7px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+}
+
+.tour-checkout-stripe-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tour-checkout-logo-stripe {
+  height: 14px;
+  width: auto;
+  display: block;
+}
+
+.tour-checkout-logo-visa {
+  height: 11px;
+  width: auto;
+  display: block;
+}
+
+.tour-checkout-logo-mc {
+  height: 14px;
+  width: auto;
+  display: block;
+}
+
+.tour-checkout-logo-jcb {
+  height: 13px;
+  width: auto;
+  display: block;
+}
+
+.tour-checkout-logo-divider {
+  width: 1px;
+  height: 16px;
+  background: #e2e8f0;
+}
+
+/* Error Alert */
+.tour-checkout-error-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+/* 4. Dòng bảo mật dạng text tinh tế, không hộp xám */
+.tour-checkout-trust-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #64748b;
+  padding: 4px 0;
+}
+
+/* Footer Primary Payment Button */
+.tour-checkout-pay-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 12px 22px;
   border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tour-checkout-pay-btn--payos {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+}
+
+.tour-checkout-pay-btn--payos:hover:not(:disabled) {
+  background: #15803d !important;
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.4);
+  transform: translateY(-1px);
+}
+
+.tour-checkout-pay-btn--stripe {
+  background: #635bff !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(99, 91, 255, 0.3);
+}
+
+.tour-checkout-pay-btn--stripe:hover:not(:disabled) {
+  background: #4f46e5 !important;
+  box-shadow: 0 6px 18px rgba(99, 91, 255, 0.4);
+  transform: translateY(-1px);
 }
 
 .tour-booking-wizard__pay-row {

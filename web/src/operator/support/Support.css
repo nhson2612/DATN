@@ -1,10 +1,83 @@
-/* Support Desk (Màn hỗ trợ khách hàng của Operator) — Chuẩn Shadcn UI */
+/* Support Desk (Màn hỗ trợ khách hàng của Operator) — Đồng bộ chuẩn giao diện ChatGPT với SupportWidget */
 
 .border-l-3 {
   border-left-width: 3px;
 }
 
-/* Tinh chỉnh thanh cuộn cho danh sách hội thoại và khung chat */
+/* Ghi đè lỗi font chữ Serif và khung viền thừa từ OperatorBem.css, đồng bộ font Sans-serif với SupportWidget */
+.op-support__div-1,
+.op-support__div-1 *:not(.material-symbols-outlined) {
+  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.op-support__div-1 .material-symbols-outlined {
+  font-family: "Material Symbols Outlined" !important;
+}
+
+.op-support__div-1 {
+  border: none !important;
+}
+
+/* Sửa lỗi lệch dòng 16px của thanh Segmented Tabs (Đang chờ / Đã phản hồi / Đã đóng / Tất cả) */
+.op-support-tabs {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: #f4f4f5 !important;
+  padding: 4px !important;
+  border-radius: 10px !important;
+  border: 1px solid #e4e4e7 !important;
+}
+
+.op-support-tabs__btn {
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 7px !important;
+  padding: 6px 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  color: #52525b !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.op-support-tabs__btn:hover {
+  color: #18181b !important;
+}
+
+.op-support-tabs__btn--active {
+  background: #ffffff !important;
+  color: #09090b !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Khóa chiều cao chuẩn cho Grid 2 cột để không bị tràn chiều dọc 1575px */
+.op-support__div-24 {
+  grid-template-rows: minmax(0, 1fr) !important;
+  height: calc(100vh - 190px) !important;
+  min-height: 560px !important;
+  max-height: calc(100vh - 150px) !important;
+  overflow: hidden !important;
+}
+
+.op-support__aside-25,
+.op-support__main-46 {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.op-support__conversation-list {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
 aside::-webkit-scrollbar,
 main div::-webkit-scrollbar {
   width: 5px;
@@ -12,11 +85,561 @@ main div::-webkit-scrollbar {
 
 aside::-webkit-scrollbar-thumb,
 main div::-webkit-scrollbar-thumb {
-  background-color: #e4e4e7;
+  background-color: #cbd5e1;
   border-radius: 9999px;
 }
 
 aside::-webkit-scrollbar-thumb:hover,
 main div::-webkit-scrollbar-thumb:hover {
-  background-color: #d4d4d8;
+  background-color: #94a3b8;
+}
+
+/* Nhãn AI & Sentiment trong danh sách hội thoại */
+.op-gpt-badge-ai {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.op-gpt-badge-sentiment {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.op-gpt-badge-sentiment--neg {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.op-gpt-badge-sentiment--pos {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+/* Header trạng thái AI / Người trực */
+.op-gpt-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.op-gpt-mode-pill--ai {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.op-gpt-mode-pill--human {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.op-gpt-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.op-gpt-theme-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Luồng chat chính chuẩn ChatGPT */
+.op-gpt-pane {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.op-gpt-stream {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #ffffff;
+}
+
+.op-gpt-timestamp {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 4px 0 8px;
+  font-weight: 500;
+}
+
+.op-gpt-msg {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.op-gpt-msg--right {
+  align-items: flex-end;
+}
+
+.op-gpt-msg--customer {
+  align-items: flex-start;
+}
+
+.op-gpt-msg--ai {
+  align-items: flex-start;
+  padding-right: 12px;
+}
+
+.op-gpt-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #64748b;
+  margin-bottom: 5px;
+  padding: 0 4px;
+}
+
+/* Viên thuốc tin nhắn */
+.op-gpt-pill {
+  padding: 10px 18px;
+  border-radius: 22px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  max-width: 78%;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.op-gpt-pill--operator {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.22);
+}
+
+.op-gpt-pill--operator .op-gpt-tour-link {
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.op-gpt-pill--customer {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+/* Khối Accordion 'Worked for 11s >' của Aura AI chuẩn ChatGPT */
+.op-gpt-thought {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.op-gpt-thought__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  color: #64748b;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  width: fit-content;
+  transition: color 0.15s ease;
+}
+
+.op-gpt-thought__btn:hover {
+  color: #0f172a;
+}
+
+.op-gpt-thought__chevron {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #94a3b8;
+}
+
+.op-gpt-thought__chevron--open {
+  transform: rotate(90deg);
+}
+
+.op-gpt-thought__time {
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.op-gpt-thought__divider {
+  width: 100%;
+  height: 1px;
+  background: #e2e8f0;
+  margin: 6px 0 10px;
+}
+
+.op-gpt-thought__details {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.op-gpt-thought__step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.op-gpt-thought__check {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+/* Nội dung tin nhắn AI phẳng, không bong bóng nền */
+.op-gpt-ai-content {
+  color: #0f172a;
+  font-size: 14.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  width: 100%;
+}
+
+/* Liên kết Tour Inline tự nhiên (Không đóng khung thẻ/badge) */
+.op-gpt-tour-link {
+  color: #0284c7;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2.5px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: inline;
+}
+
+.op-gpt-tour-link:hover {
+  color: #0369a1;
+  text-decoration: underline;
+}
+
+/* Checklist hành lý tương tác */
+.op-gpt-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.5;
+}
+
+.op-gpt-checklist-box {
+  margin-top: 3.5px;
+  width: 15px;
+  height: 15px;
+  accent-color: #0284c7;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.op-gpt-checklist-item--checked .op-gpt-checklist-text {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+/* Thanh hành động bên dưới câu trả lời AI */
+.op-gpt-ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.op-gpt-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 5px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.op-gpt-action-btn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.op-gpt-action-btn--active {
+  color: #0284c7;
+  background: #e0f2fe;
+}
+
+/* Khung soạn thảo hiện đại kiểu ChatGPT ở đáy cột phải */
+.op-gpt-composer-wrap {
+  padding: 12px 20px 16px;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+}
+
+.op-gpt-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 12px 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.op-gpt-composer:focus-within {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.op-gpt-composer__input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #0f172a;
+  outline: none;
+  font-family: inherit;
+}
+
+.op-gpt-composer__input::placeholder {
+  color: #94a3b8;
+}
+
+.op-gpt-composer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.op-gpt-draft-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid #bae6fd;
+  background: #f0f9ff;
+  color: #0284c7;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.op-gpt-draft-btn:hover:not(:disabled) {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.op-gpt-draft-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.op-gpt-draft-btn__icon {
+  font-size: 15px;
+}
+
+.op-gpt-composer__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.op-gpt-composer__hint {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.op-gpt-send-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: #e2e8f0;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: not-allowed;
+  transition: all 0.18s ease;
+}
+
+.op-gpt-send-btn--active {
+  background: #0284c7;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+
+.op-gpt-send-btn--active:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   CHẾ ĐỘ NỀN TỐI (DARK MODE) ĐỒNG BỘ VỚI WIDGET
+   ========================================================= */
+.op-gpt-pane--dark,
+.op-gpt-pane--dark .op-gpt-stream,
+.op-gpt-pane--dark .op-gpt-composer-wrap {
+  background: #000000;
+  color: #f4f4f5;
+  border-color: #1f1f22;
+}
+
+.op-gpt-pane--dark .op-gpt-header {
+  background: #09090b;
+  border-bottom-color: #1f1f22;
+}
+
+.op-gpt-pane--dark .op-gpt-header__name,
+.op-gpt-pane--dark .op-gpt-header__subject {
+  color: #f4f4f5;
+}
+
+.op-gpt-pane--dark .op-gpt-header__sub {
+  color: #a1a1aa;
+}
+
+.op-gpt-pane--dark .op-gpt-theme-btn {
+  background: #18181b;
+  border-color: #27272a;
+  color: #e4e4e7;
+}
+
+.op-gpt-pane--dark .op-gpt-ai-banner {
+  background: #0c192c;
+  border-bottom-color: #1e3a5f;
+  color: #7dd3fc;
+}
+
+.op-gpt-pane--dark .op-gpt-pill--operator {
+  background: #104f9c;
+  color: #ffffff;
+}
+
+.op-gpt-pane--dark .op-gpt-pill--customer {
+  background: #18181b;
+  border-color: #27272a;
+  color: #f4f4f5;
+}
+
+.op-gpt-pane--dark .op-gpt-thought__btn {
+  color: #a1a1aa;
+}
+
+.op-gpt-pane--dark .op-gpt-thought__btn:hover {
+  color: #f4f4f5;
+}
+
+.op-gpt-pane--dark .op-gpt-thought__divider {
+  background: #27272a;
+}
+
+.op-gpt-pane--dark .op-gpt-thought__details {
+  background: #121212;
+  border-color: #27272a;
+  color: #d4d4d8;
+}
+
+.op-gpt-pane--dark .op-gpt-ai-content {
+  color: #f4f4f5;
+}
+
+.op-gpt-pane--dark .op-gpt-tour-link {
+  color: #38bdf8;
+}
+
+.op-gpt-pane--dark .op-gpt-tour-link:hover {
+  color: #7dd3fc;
+}
+
+.op-gpt-pane--dark .op-gpt-action-btn {
+  color: #71717a;
+}
+
+.op-gpt-pane--dark .op-gpt-action-btn:hover {
+  color: #f4f4f5;
+  background: #27272a;
+}
+
+.op-gpt-pane--dark .op-gpt-composer {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+.op-gpt-pane--dark .op-gpt-composer:focus-within {
+  background: #1f1f23;
+  border-color: #3f3f46;
+}
+
+.op-gpt-pane--dark .op-gpt-composer__input {
+  color: #f4f4f5;
+}
+
+.op-gpt-pane--dark .op-gpt-draft-btn {
+  background: #0c192c;
+  border-color: #1e3a5f;
+  color: #38bdf8;
+}
+
+.op-gpt-pane--dark .op-gpt-send-btn {
+  background: #27272a;
+  color: #71717a;
+}
+
+.op-gpt-pane--dark .op-gpt-send-btn--active {
+  background: #ffffff;
+  color: #000000;
 }

@@ -4,7 +4,8 @@ import { api } from "../../../shared/api";
 import Dropdown from "../../../shared/common/Dropdown";
 import CardSkeleton from "../../../shared/skeletons/CardSkeleton";
 import { getProvinceImage } from "./provinceImages";
-import VoyageDrawer from "../../../shared/layout/VoyageDrawer";
+import AppNavbar from "../../../shared/layout/AppNavbar";
+import { AuraMascotSvg } from "../../tours/components/TourEmptyState";
 import "../home/Home.css";
 import "../../tours/Tours.css";
 import "./Trips.css";
@@ -180,11 +181,29 @@ export default function Trips({ user, onNeedAuth, onLogout }) {
     setForm(khoiTaoForm());
   }
 
+  function handleQuickStartDestination(destName) {
+    if (!user) {
+      onNeedAuth?.();
+      return;
+    }
+    setIsCreatingTrip(true);
+    setPlannerStep(1);
+    setSelectedInterests(["nature", "food", "culture"]);
+    const baseForm = khoiTaoForm();
+    const cleanName = destName.replace(/^(Thành phố|Tỉnh)\s+/i, "");
+    setForm({
+      ...baseForm,
+      name: `Chuyến đi ${cleanName}`,
+    });
+    setModalSearchQuery(destName);
+    setIsDestDropdownOpen(false);
+  }
+
   function handleSelectDestination(destName) {
     const cleanName = destName.replace(/^(Thành phố|Tỉnh)\s+/i, "");
     setForm((cu) => ({
       ...cu,
-      name: `Trip to ${cleanName}`,
+      name: `Chuyến đi ${cleanName}`,
     }));
     setModalSearchQuery(destName);
     setIsDestDropdownOpen(false);
@@ -214,7 +233,7 @@ export default function Trips({ user, onNeedAuth, onLogout }) {
         sections: [{ key: "muon-di", name: "Địa điểm muốn đi" }],
         stops: [],
       });
-      nav(`/chuyen-di/${d.id}`);
+      nav(`/trips/${d.id}`);
     } catch (err) {
       console.error("Lỗi khi tạo chuyến đi:", err);
     } finally {
@@ -651,138 +670,24 @@ export default function Trips({ user, onNeedAuth, onLogout }) {
   }
 
   return (
-    <section className="trips-screen" ref={screenRef} onScroll={handleScroll}>
-      {/* 1. Hero Banner với hình nền núi đèo và Navbar */}
-      <div
-        className="page-hero"
-        ref={heroRef}
-        style={{
-          visibility: scrollProgress >= 1 ? "hidden" : "visible",
-          pointerEvents: scrollProgress >= 0.9 ? "none" : "auto",
-        }}
-      >
-        <div
-          className="page-hero-bg"
-          style={{
-            backgroundImage:
-              'url("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=2400&q=85")',
-            ...heroBgStyle,
-          }}
-        />
-        <div className="page-hero-overlay" style={heroOverlayStyle} />
+    <div className="sky-page trips-page-root">
+      {/* 1. Thanh điều hướng đồng bộ toàn hệ thống */}
+      <AppNavbar user={user} onNeedAuth={onNeedAuth} onLogout={onLogout} />
 
-        <div className="page-hero-inner tours-shell">
-          {/* Top Navbar */}
-          <header className="voyage-nav" style={navFadeStyle}>
-            <Link to="/" className="voyage-brand">
-              Voyage
-            </Link>
-
-            <nav className="voyage-navlinks">
-              <Link to="/" className="voyage-navlink">
-                Destinations
-              </Link>
-              <Link to="/tour" className="voyage-navlink">
-                Tours
-              </Link>
-              <Link to="/chuyen-di" className="voyage-navlink voyage-navlink--active">
-                Experiences
-              </Link>
-            </nav>
-
-            <div className="voyage-actions">
-              {/* Expandable Search Bar */}
-              <div
-                className={`voyage-nav-search ${
-                  isNavSearchOpen ? "voyage-nav-search--open" : ""
-                }`}
-                ref={navSearchRef}
-              >
-                <button
-                  type="button"
-                  className="voyage-nav-search-trigger"
-                  onClick={() => {
-                    if (!isNavSearchOpen) {
-                      setIsNavSearchOpen(true);
-                      setTimeout(() => navSearchInputRef.current?.focus(), 100);
-                    } else if (navSearchQuery.trim()) {
-                      handleNavSearchSubmit();
-                    } else {
-                      navSearchInputRef.current?.focus();
-                    }
-                  }}
-                  title="Search destinations & tours"
-                  aria-label="Search"
-                >
-                  <span className="material-symbols-outlined text-[19px]">
-                    search
-                  </span>
-                </button>
-
-                <form
-                  className="voyage-nav-search-form"
-                  onSubmit={handleNavSearchSubmit}
-                >
-                  <input
-                    ref={navSearchInputRef}
-                    type="text"
-                    className="voyage-nav-search-input"
-                    placeholder="Search destinations, tours..."
-                    value={navSearchQuery}
-                    onChange={(e) => setNavSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") {
-                        setIsNavSearchOpen(false);
-                      }
-                    }}
-                    tabIndex={isNavSearchOpen ? 0 : -1}
-                  />
-                  {isNavSearchOpen && (
-                    <button
-                      type="button"
-                      className="voyage-nav-search-close"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsNavSearchOpen(false);
-                        setNavSearchQuery("");
-                      }}
-                      aria-label="Close search"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </form>
-              </div>
-
-              {/* Menu Hamburger */}
-              <button
-                type="button"
-                className="voyage-iconbtn"
-                onClick={() => setIsDrawerOpen(true)}
-                aria-label="Open menu"
-                title="Menu"
-              >
-                <span className="material-symbols-outlined text-[20px]">
-                  menu
-                </span>
-              </button>
-            </div>
-          </header>
-
-          {/* Hero Content */}
-          <div className="page-hero-content" style={heroContentStyle}>
-            <h1>Plan your journeys</h1>
-            <p>Bespoke itineraries, curated stays, and effortless routes across Vietnam.</p>
+      {/* 2. Tiêu đề trang & Giới thiệu */}
+      <main className="trips-main-container tours-shell">
+        <header className="trips-header-banner">
+          <div className="trips-header-copy">
+            <span className="trips-header-eyebrow">AURA VOYAGE • LỊCH TRÌNH CÁ NHÂN</span>
+            <h1 className="trips-header-title">Lập Lịch Trình Chuyến Đi</h1>
+            <p className="trips-header-desc">
+              Tự do kiến tạo hành trình, tối ưu hóa cung đường và lưu lại những kỷ niệm đáng nhớ khắp Việt Nam.
+            </p>
           </div>
-        </div>
-      </div>
+        </header>
 
-      {/* 2. Floating Sticky Action Bar */}
-      <div
-        ref={searchbarRef}
-        className={`searchbar-sticky-outer ${isSticky ? "is-sticky" : ""}`}
-      >
-        <div className="tours-shell">
+        {/* 3. Thanh tìm kiếm và bộ lọc chuyến đi */}
+        <div className="trips-bar-wrapper">
           <div className="trips-bar">
             {/* Search within trips */}
             <div className="trips-search-box">
@@ -791,7 +696,7 @@ export default function Trips({ user, onNeedAuth, onLogout }) {
               </span>
               <input
                 type="text"
-                placeholder="Search trips by name or destination..."
+                placeholder="Tìm kiếm chuyến đi theo tên hoặc điểm đến..."
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
                 className="trips-search-input"
@@ -814,8 +719,8 @@ export default function Trips({ user, onNeedAuth, onLogout }) {
                 variant="minimal"
                 value={filterOption}
                 options={[
-                  { value: "recent", label: "Recently updated" },
-                  { value: "upcoming", label: "Upcoming trips" },
+                  { value: "recent", label: "Mới cập nhật" },
+                  { value: "upcoming", label: "Sắp khởi hành" },
                   { value: "name", label: "Tên chuyến (A – Z)" },
                 ]}
                 onChange={(val) => setFilterOption(val)}
@@ -827,116 +732,187 @@ export default function Trips({ user, onNeedAuth, onLogout }) {
                 className="trips-plan-cta"
               >
                 <span className="material-symbols-outlined text-[19px]">add</span>
-                <span>Plan new trip</span>
+                <span>Lên Lịch Ngay</span>
               </button>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 3. Main Content Area */}
-      <div className="tours-shell trips-content-wrapper">
-        {/* Guest state */}
-        {!user && (
-          <div className="trips-guest-hero">
-            <div className="trips-guest-card">
-              <div className="trips-guest-icon">
-                <span className="material-symbols-outlined text-[32px]">route</span>
-              </div>
-              <h2>Your travel stories, organized effortlessly</h2>
-              <p>
-                Sign in to create, customize, and save interactive itineraries with
-                AI-powered route optimization and local recommendations.
-              </p>
-              <div className="trips-guest-actions">
-                <button
-                  type="button"
-                  onClick={onNeedAuth}
-                  className="trips-plan-cta"
-                >
-                  Sign in to your account
-                </button>
-                <Link to="/tour" className="trips-guest-secondary-btn">
-                  Explore curated tours
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Loading skeleton */}
-        {user && ds === null && (
-          <div className="voyage-trips-grid pt-6">
-            <CardSkeleton count={3} />
-          </div>
-        )}
-
-        {/* Empty state */}
-        {user && ds !== null && tripsHienThi.length === 0 && (
-          <div className="trips-empty-box">
-            <div className="trips-empty-icon">
-              <span className="material-symbols-outlined text-[28px]">
-                flight_takeoff
-              </span>
-            </div>
-            <h3>
-              {searchFilter
-                ? "No matching itineraries found"
-                : "No trips planned yet"}
-            </h3>
-            <p>
-              {searchFilter
-                ? "Try adjusting your search query or clear the filter."
-                : "Click 'Plan new trip' to craft your first bespoke route with AI assistance."}
-            </p>
-            {!searchFilter && (
-              <button
-                type="button"
-                onClick={startCreateTrip}
-                className="trips-plan-cta"
-              >
-                <span className="material-symbols-outlined text-[19px]">add</span>
-                <span>Plan your first trip</span>
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Trips Grid */}
-        {user && tripsHienThi.length > 0 && (
-          <>
-            <div className="trips-meta-header">
-              <h2 className="trips-meta-title">Your itineraries</h2>
-              <div className="trips-meta-count">
-                <span>{tripsHienThi.length}</span>{" "}
-                {tripsHienThi.length === 1 ? "itinerary" : "itineraries"}
-              </div>
-            </div>
-
-            <div className="voyage-trips-grid">
-              {tripsHienThi.map((t) => (
-                <VoyageTripCard
-                  key={t.id}
-                  t={t}
-                  user={user}
-                  nav={nav}
-                  xoa={xoa}
+        {/* 4. Main Content Area */}
+        <div className="trips-content-wrapper">
+          {/* Guest state */}
+          {!user && (
+            <div className="tour-empty-state-card trips-empty-state-card" role="region" aria-label="Chưa đăng nhập">
+              <div className="empty-mascot-container">
+                <img
+                  src="/images/aura-mascot.png"
+                  alt="Linh vật du lịch Aura Voyage"
+                  className="empty-mascot-img"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const next = e.currentTarget.nextElementSibling;
+                    if (next) next.style.display = "block";
+                  }}
                 />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+                <div style={{ display: "none" }}>
+                  <AuraMascotSvg width={180} height={180} className="empty-mascot-graphic" />
+                </div>
+              </div>
 
-      {/* 4. Slide-out Menu Drawer dùng chung */}
-      <VoyageDrawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        user={user}
-        onNeedAuth={onNeedAuth}
-        onLogout={onLogout}
-      />
-    </section>
+              <div className="empty-content-box">
+                <span className="empty-kicker-tag">LỊCH TRÌNH CÁ NHÂN HÓA</span>
+                <h3 className="empty-title">Lên kế hoạch hành trình dễ dàng & trực quan</h3>
+                <p className="empty-desc">
+                  Đăng nhập để tự do thiết kế lịch trình theo ngày, tối ưu hóa cung đường di chuyển trên bản đồ số và lưu lại các điểm đến yêu thích khắp Việt Nam.
+                </p>
+
+                <div className="empty-action-group">
+                  <button
+                    type="button"
+                    onClick={onNeedAuth}
+                    className="empty-reset-btn"
+                  >
+                    <span>Lên Lịch Ngay</span>
+                  </button>
+                  <Link to="/tour" className="trips-empty-secondary-btn">
+                    <span>Khám phá Tour trọn gói</span>
+                  </Link>
+                </div>
+
+                <div className="empty-suggestions-tray">
+                  <span className="empty-suggestions-label">Gợi ý điểm đến:</span>
+                  <div className="empty-chips-wrap">
+                    {["Hạ Long", "Đà Nẵng", "Phú Quốc", "Sa Pa", "Nha Trang", "Đà Lạt"].map(
+                      (city) => (
+                        <button
+                          key={city}
+                          type="button"
+                          onClick={() => handleQuickStartDestination(city)}
+                          className="empty-suggest-chip"
+                        >
+                          {city}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Loading skeleton */}
+          {user && ds === null && (
+            <div className="voyage-trips-grid pt-6">
+              <CardSkeleton count={3} />
+            </div>
+          )}
+
+          {/* Empty state */}
+          {user && ds !== null && tripsHienThi.length === 0 && (
+            <div className="tour-empty-state-card trips-empty-state-card" role="region" aria-label="Chưa có lịch trình">
+              <div className="empty-mascot-container">
+                <img
+                  src="/images/aura-mascot.png"
+                  alt="Linh vật du lịch Aura Voyage"
+                  className="empty-mascot-img"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const next = e.currentTarget.nextElementSibling;
+                    if (next) next.style.display = "block";
+                  }}
+                />
+                <div style={{ display: "none" }}>
+                  <AuraMascotSvg width={180} height={180} className="empty-mascot-graphic" />
+                </div>
+              </div>
+
+              <div className="empty-content-box">
+                <span className="empty-kicker-tag">
+                  {searchFilter ? "CHƯA TÌM THẤY CHUYẾN ĐI" : "CHƯA CÓ LỊCH TRÌNH"}
+                </span>
+                <h3 className="empty-title">
+                  {searchFilter
+                    ? "Không tìm thấy lịch trình phù hợp"
+                    : "Bạn chưa có lịch trình chuyến đi nào"}
+                </h3>
+                <p className="empty-desc">
+                  {searchFilter
+                    ? "Từ khóa tìm kiếm hiện tại chưa khớp với chuyến đi nào đã lưu. Bạn có thể đặt lại từ khóa hoặc tạo một lịch trình mới bên dưới."
+                    : "Chỉ mất vài giây để khởi tạo một chuyến đi mới. Chọn điểm đến yêu thích bên dưới để bắt đầu thiết kế lộ trình của riêng bạn."}
+                </p>
+
+                <div className="empty-action-group">
+                  {searchFilter ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearchFilter("")}
+                      className="empty-reset-btn"
+                    >
+                      <span>Xóa bộ lọc tìm kiếm</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={startCreateTrip}
+                        className="empty-reset-btn"
+                      >
+                        <span>+ Lên Lịch Ngay</span>
+                      </button>
+                      <Link to="/tour" className="trips-empty-secondary-btn">
+                        <span>Tham khảo Tour trọn gói</span>
+                      </Link>
+                    </>
+                  )}
+                </div>
+
+                <div className="empty-suggestions-tray">
+                  <span className="empty-suggestions-label">Chọn nhanh điểm đến:</span>
+                  <div className="empty-chips-wrap">
+                    {["Hạ Long", "Đà Nẵng", "Phú Quốc", "Sa Pa", "Nha Trang", "Đà Lạt"].map(
+                      (city) => (
+                        <button
+                          key={city}
+                          type="button"
+                          onClick={() => handleQuickStartDestination(city)}
+                          className="empty-suggest-chip"
+                        >
+                          {city}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Trips Grid */}
+          {user && tripsHienThi.length > 0 && (
+            <>
+              <div className="trips-meta-header">
+                <h2 className="trips-meta-title">Lịch trình của bạn</h2>
+                <div className="trips-meta-count">
+                  <span>{tripsHienThi.length}</span> chuyến đi
+                </div>
+              </div>
+
+              <div className="voyage-trips-grid">
+                {tripsHienThi.map((t) => (
+                  <VoyageTripCard
+                    key={t.id}
+                    t={t}
+                    user={user}
+                    nav={nav}
+                    xoa={xoa}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
 
@@ -960,7 +936,7 @@ function VoyageTripCard({ t, user, nav, xoa }) {
 
   const handleShare = (e) => {
     e.stopPropagation();
-    const url = `${window.location.origin}/chuyen-di/${t.id}`;
+    const url = `${window.location.origin}/trips/${t.id}`;
     navigator.clipboard?.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -980,7 +956,7 @@ function VoyageTripCard({ t, user, nav, xoa }) {
   return (
     <article
       className="voyage-trip-card"
-      onClick={() => nav(`/chuyen-di/${t.id}`)}
+      onClick={() => nav(`/trips/${t.id}`)}
     >
       {/* Vùng ảnh */}
       <div className="voyage-trip-card__image-wrap">
@@ -993,7 +969,7 @@ function VoyageTripCard({ t, user, nav, xoa }) {
 
         {/* Badges */}
         <div className="voyage-trip-card__badge">
-          <span>{t.duration_days ? `${t.duration_days} Days` : "Custom"}</span>
+          <span>{t.duration_days ? `${t.duration_days} Ngày` : "Tùy chỉnh"}</span>
         </div>
 
         {/* Overlay buttons: Share & Options */}
@@ -1005,7 +981,7 @@ function VoyageTripCard({ t, user, nav, xoa }) {
             type="button"
             onClick={handleShare}
             className="voyage-trip-card__action-btn"
-            title="Share itinerary link"
+            title="Chia sẻ liên kết lịch trình"
           >
             <span className="material-symbols-outlined text-[16px]">
               {copied ? "check" : "ios_share"}
@@ -1017,7 +993,7 @@ function VoyageTripCard({ t, user, nav, xoa }) {
               type="button"
               onClick={() => setShowMenu(!showMenu)}
               className="voyage-trip-card__action-btn"
-              title="More options"
+              title="Tùy chọn khác"
             >
               <span className="material-symbols-outlined text-[18px]">
                 more_horiz
@@ -1028,13 +1004,13 @@ function VoyageTripCard({ t, user, nav, xoa }) {
               <div className="voyage-trip-card__dropdown">
                 <button
                   type="button"
-                  onClick={() => nav(`/chuyen-di/${t.id}`)}
+                  onClick={() => nav(`/trips/${t.id}`)}
                   className="voyage-trip-card__dropdown-item"
                 >
                   <span className="material-symbols-outlined text-[16px]">
                     open_in_new
                   </span>
-                  <span>Open itinerary</span>
+                  <span>Mở lịch trình</span>
                 </button>
                 <button
                   type="button"

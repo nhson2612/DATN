@@ -1,1382 +1,1760 @@
 /* ==========================================================================
-   BLOCK: .aura-detail
-   Trang chi tiết Tour chuẩn phong cách Aura Editorial từ 4cd5a1a0-6d23-46a2-8034-31377ed3cf07.png
-   - Khung chứa bo góc 40px, nền #F6F4EE, cuộn ẩn thanh scrollbar
-   - Cột Sidebar trái: Logo + Menu + Back button + Section tabs
-   - Cột phải: Hero cắt chéo + Dải Gallery 4 ảnh + Floating Booking Card + Nội dung chi tiết
+   AURA VOYAGE — TOUR DETAIL REDESIGN (MODERN TRAVEL PLATFORM EXPERIENCE)
    ========================================================================== */
 
-.aura-detail {
-  background-color: #B8ACA2;
-  color: #141619;
-  height: 100vh;
-  max-height: 100vh;
-  overflow: hidden;
-  padding: 12px;
+:root {
+  --tour-page-bg: #f4f6fa;
+  --tour-card-bg: #ffffff;
+  --tour-text-main: #0f172a;
+  --tour-text-body: #334155;
+  --tour-text-muted: #64748b;
+  --tour-text-light: #94a3b8;
+  --tour-primary: #0284c7;
+  --tour-primary-hover: #0369a1;
+  --tour-primary-light: #e0f2fe;
+  --tour-royal: #2563eb;
+  --tour-emerald: #059669;
+  --tour-emerald-light: #ecfdf5;
+  --tour-rose: #e11d48;
+  --tour-rose-light: #fff1f2;
+  --tour-amber: #f59e0b;
+  --tour-border: #e2e8f0;
+  --tour-border-light: #f1f5f9;
+  --tour-radius-sm: 8px;
+  --tour-radius-md: 14px;
+  --tour-radius-lg: 20px;
+  --tour-radius-xl: 24px;
+  --tour-shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.04);
+  --tour-shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  --tour-shadow-hover: 0 16px 35px -4px rgba(15, 23, 42, 0.12);
+}
+
+.tour-detail-page {
+  background-color: var(--tour-page-bg);
+  color: var(--tour-text-body);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+.tour-detail-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
   box-sizing: border-box;
+}
+
+/* Toast thông báo */
+.tour-detail-toast {
+  position: fixed;
+  top: 84px;
+  right: 28px;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.25);
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  gap: 8px;
+  z-index: 1000;
+  animation: slideToastIn 0.25s ease-out;
 }
 
-.aura-detail__container {
-  width: 100%;
-  height: calc(100vh - 24px);
-  min-height: calc(100vh - 24px);
-  max-height: calc(100vh - 24px);
-  background-color: #F6F4EE;
-  border-radius: 40px;
-  overflow: hidden;
-  box-shadow: none;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  padding: 24px 36px;
-  box-sizing: border-box;
-  position: relative;
-}
-
-/* --------------------------------------------------------------------------
-   0. MAIN LAYOUT GRID (Sidebar trái cố định + Cột phải cuộn độc lập)
-   -------------------------------------------------------------------------- */
-.aura-detail__layout-grid {
-  display: flex;
-  gap: 36px;
-  width: 100%;
-  height: 100%;
-  max-height: 100%;
-  min-height: 0;
-  align-items: stretch;
-  overflow: hidden;
-}
-
-@media (max-width: 1024px) {
-  .aura-detail__layout-grid {
-    flex-direction: column;
-    gap: 24px;
-    overflow-y: auto;
+@keyframes slideToastIn {
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-/* SIDEBAR DỌC BÊN TRÁI - CỐ ĐỊNH HOÀN TOÀN KHÔNG CUỘN */
-.aura-detail__sidebar {
-  width: 200px;
-  flex-shrink: 0;
+/* ==========================================================================
+   1. HEADER TIÊU ĐỀ TOUR
+   ========================================================================== */
+.tour-detail-header {
+  background: #ffffff;
+  padding: 24px 0 4px;
+}
+
+.detail-breadcrumbs {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-bottom: 8px;
-  height: 100%;
-  max-height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.aura-detail__sidebar-top {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.aura-detail__sidebar .aura-home__nav {
-  margin-top: 4px;
-  gap: 10px;
-}
-
-.aura-detail__sidebar-middle {
-  margin: 32px 0 24px;
-}
-
-.aura-detail__back-link {
-  display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  font-weight: 500;
-  color: #52525B;
+  color: var(--tour-text-muted);
+  margin-bottom: 14px;
+}
+
+.detail-breadcrumbs a {
+  color: var(--tour-text-muted);
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color 0.15s;
 }
 
-.aura-detail__back-link:hover {
-  color: #141619;
+.detail-breadcrumbs a:hover {
+  color: var(--tour-primary);
 }
 
-/* In-page Anchor Navigation */
-.aura-detail__page-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: auto;
+.detail-breadcrumbs .sep {
+  color: #cbd5e1;
 }
 
-.aura-detail__page-nav-item {
-  background: none;
-  border: none;
-  border-left: 2px solid transparent;
-  padding: 5px 0 5px 12px;
-  text-align: left;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: #71717A;
-  cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  line-height: 1.4;
-}
-
-.aura-detail__page-nav-item:hover {
-  color: #141619;
-  transform: translateX(3px);
-}
-
-.aura-detail__page-nav-item--active {
-  border-left-color: #141619;
-  color: #141619;
-  font-weight: 700;
-  transform: translateX(4px);
-}
-
-/* CỘT PHẢI: NỘI DUNG CHÍNH (Cuộn độc lập, ẩn scrollbar, sidebar bên trái đứng yên) */
-.aura-detail__main-content {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  max-height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-  display: flex;
-  flex-direction: column;
-  margin-top: -24px;
-  margin-right: -36px;
-  padding-top: 0;
-  padding-right: 36px;
-  padding-bottom: 48px;
-}
-
-.aura-detail__main-content::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
-}
-
-/* --------------------------------------------------------------------------
-   1. HERO SECTION (Tiêu đề + Banner cắt chéo)
-   -------------------------------------------------------------------------- */
-.aura-detail__hero {
-  display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: 28px;
-  width: calc(100% + 36px);
-  margin-top: 0;
-  margin-right: -36px;
-  margin-bottom: 20px;
-  min-height: 380px;
-  align-items: stretch;
-}
-
-@media (max-width: 1200px) {
-  .aura-detail__hero {
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .aura-detail__hero {
-    grid-template-columns: 1fr;
-    min-height: auto;
-    width: 100%;
-    margin-top: 0;
-    margin-right: 0;
-  }
-}
-
-.aura-detail__hero-text {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 24px 0 12px;
-}
-
-.aura-detail__breadcrumbs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #71717A;
-  margin-bottom: 16px;
-}
-
-.aura-detail__breadcrumbs a {
-  color: #52525B;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-
-.aura-detail__breadcrumbs a:hover {
-  color: #141619;
-}
-
-.aura-detail__bread-sep {
-  color: #A1A1AA;
-}
-
-.aura-detail__bread-current {
-  color: #141619;
+.detail-breadcrumbs .current {
+  color: var(--tour-text-main);
   font-weight: 600;
 }
 
-.aura-detail__hero-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 54px;
-  line-height: 0.95;
-  color: #141619;
-  margin: 0 0 16px 0;
-  letter-spacing: -0.02em;
-}
-
-.aura-detail__hero-title-main {
-  display: block;
-  font-weight: 600;
-}
-
-.aura-detail__hero-title-sub {
-  display: block;
-  color: #A39B8E;
-  font-weight: 400;
-  font-size: 48px;
-}
-
-.aura-detail__hero-lead {
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: #71717A;
-  max-width: 380px;
-  margin: 0 0 22px 0;
-}
-
-.aura-detail__hero-meta-row {
+.detail-header-main-row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 18px;
-  font-size: 12.5px;
-  color: #52525B;
-  font-weight: 500;
-}
-
-.aura-detail__hero-meta-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Banner cắt chéo */
-.aura-detail__hero-banner-wrap {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 380px;
-}
-
-.aura-detail__hero-banner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 380px;
-  overflow: hidden;
-  background: #141619;
-  clip-path: polygon(55px 0, 100% 0, 100% 100%, 0 100%);
-}
-
-@media (max-width: 1024px) {
-  .aura-detail__hero-banner {
-    clip-path: none;
-    border-radius: 24px;
-    min-height: 300px;
-  }
-}
-
-.aura-detail__hero-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.6s ease;
-}
-
-.aura-detail__hero-banner:hover .aura-detail__hero-img {
-  transform: scale(1.02);
-}
-
-.aura-detail__hero-controls {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  gap: 10px;
-  z-index: 10;
-}
-
-.aura-detail__circle-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #141619;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.aura-detail__circle-btn:hover {
-  background: #FFFFFF;
-  transform: scale(1.06);
-}
-
-.aura-detail__hero-slider-bar {
-  position: absolute;
-  bottom: 24px;
-  right: 24px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  z-index: 10;
-}
-
-.aura-detail__hero-track {
-  width: 90px;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.35);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.aura-detail__hero-track-fill {
-  height: 100%;
-  background: #FFFFFF;
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
-
-.aura-detail__hero-count {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #FFFFFF;
-  letter-spacing: 0.05em;
-}
-
-.aura-detail__hero-arrows {
-  display: flex;
-  gap: 8px;
-}
-
-.aura-detail__arrow-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.aura-detail__arrow-btn:hover {
-  background: rgba(0, 0, 0, 0.85);
-  transform: scale(1.08);
-}
-
-/* --------------------------------------------------------------------------
-   2. MIDDLE PHOTO GALLERY STRIP (Dải 4 ảnh ngang sát mép chuẩn mockup)
-   -------------------------------------------------------------------------- */
-.aura-detail__gallery-strip {
-  display: flex;
-  gap: 0;
-  width: calc(100% + 36px);
-  margin-right: -36px;
-  height: 210px;
-  min-height: 210px;
-  overflow: hidden;
-  margin-bottom: 28px;
-  position: relative;
-  z-index: 1;
-}
-
-.aura-detail__gallery-strip-item {
-  flex: 1;
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-  cursor: pointer;
-  background-color: #E7E3DC;
-  border-right: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.aura-detail__gallery-strip-item:last-child {
-  border-right: none;
-}
-
-.aura-detail__gallery-strip-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.5s ease;
-}
-
-.aura-detail__gallery-strip-item:hover .aura-detail__gallery-strip-img {
-  transform: scale(1.06);
-}
-
-/* --------------------------------------------------------------------------
-   3. CONTENT SPLIT LAYOUT (Cột thông tin chính + Cột Booking Sticky)
-   -------------------------------------------------------------------------- */
-.aura-detail__content-split {
-  display: flex;
-  gap: 48px;
-  align-items: flex-start;
-  width: 100%;
-  position: relative;
-  margin-bottom: 48px;
-}
-
-@media (max-width: 1100px) {
-  .aura-detail__content-split {
-    flex-direction: column-reverse;
-    gap: 32px;
-  }
-}
-
-.aura-detail__left-flow {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* --------------------------------------------------------------------------
-   3. TAB CONTENT ANIMATION & TRANSITIONS (Hiệu ứng chữ xuất hiện khi đổi tab)
-   -------------------------------------------------------------------------- */
-@keyframes auraTabFadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes auraTextReveal {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-    letter-spacing: -0.04em;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    letter-spacing: -0.01em;
-  }
-}
-
-.aura-detail__tab-wrapper {
-  width: 100%;
-  min-height: 400px;
-}
-
-.aura-detail__tab-panel {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  animation: auraTabFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.aura-detail__tab-panel .aura-detail__section-label {
-  animation: auraTabFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.aura-detail__tab-panel .aura-detail__section-heading {
-  animation: auraTextReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
-}
-
-.aura-detail__tab-panel .aura-detail__section-desc,
-.aura-detail__tab-panel .aura-detail__overview-badges,
-.aura-detail__tab-panel .aura-detail__highlights-editorial,
-.aura-detail__tab-panel .aura-detail__itinerary-list,
-.aura-detail__tab-panel .aura-detail__inclusions-grid,
-.aura-detail__tab-panel .aura-detail__reviews-box,
-.aura-detail__tab-panel .aura-detail__faq-list {
-  animation: auraTabFadeIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
-}
-
-/* Stagger cascade animation cho từng dòng phần tử con */
-.aura-detail__tab-panel .aura-detail__hl-row:nth-child(1) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-.aura-detail__tab-panel .aura-detail__hl-row:nth-child(2) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.13s both; }
-.aura-detail__tab-panel .aura-detail__hl-row:nth-child(3) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
-.aura-detail__tab-panel .aura-detail__hl-row:nth-child(4) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.23s both; }
-.aura-detail__tab-panel .aura-detail__hl-row:nth-child(5) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both; }
-
-.aura-detail__tab-panel .aura-detail__day-card:nth-child(1) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-.aura-detail__tab-panel .aura-detail__day-card:nth-child(2) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both; }
-.aura-detail__tab-panel .aura-detail__day-card:nth-child(3) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.20s both; }
-
-.aura-detail__tab-panel .aura-detail__review-item:nth-child(1) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-.aura-detail__tab-panel .aura-detail__review-item:nth-child(2) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
-.aura-detail__tab-panel .aura-detail__review-item:nth-child(3) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
-
-.aura-detail__tab-panel .aura-detail__faq-item:nth-child(1) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-.aura-detail__tab-panel .aura-detail__faq-item:nth-child(2) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
-.aura-detail__tab-panel .aura-detail__faq-item:nth-child(3) { animation: auraTabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
-
-/* Overview Extra Badges */
-.aura-detail__overview-badges {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 28px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-@media (max-width: 680px) {
-  .aura-detail__overview-badges {
-    grid-template-columns: 1fr;
-  }
-}
-
-.aura-detail__overview-badge {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 14px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.aura-detail__badge-num {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 26px;
-  font-weight: 700;
-  color: #192D23;
-  line-height: 1;
-}
-
-.aura-detail__badge-txt {
-  font-size: 12.5px;
-  color: #71717A;
-  font-weight: 500;
-}
-
-/* Reviews Tab Styling */
-.aura-detail__reviews-box {
-  display: flex;
-  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 24px;
-  margin-top: 12px;
 }
 
-.aura-detail__reviews-score-card {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 16px;
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.aura-detail__score-main {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 44px;
-  font-weight: 700;
-  color: #192D23;
-  line-height: 1;
-}
-
-.aura-detail__score-stars {
-  color: #F59E0B;
-  font-size: 18px;
-  letter-spacing: 2px;
-}
-
-.aura-detail__score-caption {
-  font-size: 13px;
-  color: #71717A;
-  font-weight: 500;
-}
-
-.aura-detail__reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.aura-detail__review-item {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 16px;
-  padding: 18px 22px;
-}
-
-.aura-detail__review-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.aura-detail__review-author {
-  font-size: 14px;
-  font-weight: 600;
-  color: #141619;
-}
-
-.aura-detail__review-date {
-  font-size: 12px;
-  color: #A1A1AA;
-}
-
-.aura-detail__review-stars {
-  color: #F59E0B;
-  font-size: 13px;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
-}
-
-.aura-detail__review-text {
-  font-size: 13.5px;
-  line-height: 1.65;
-  color: #52525B;
-  margin: 0;
-}
-
-/* Section Common Styling */
-.aura-detail__section-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #8C827A;
-  display: block;
-  margin-bottom: 12px;
-}
-
-.aura-detail__section-heading {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 32px;
-  font-weight: 600;
-  color: #141619;
-  line-height: 1.2;
-  margin: 0 0 16px 0;
-  letter-spacing: -0.01em;
-}
-
-.aura-detail__section-desc {
-  font-size: 14px;
-  line-height: 1.75;
-  color: #52525B;
-  max-width: 720px;
-}
-
-.aura-detail__section-desc p {
-  margin: 0 0 12px 0;
-}
-
-.aura-detail__section-desc p:last-child {
-  margin-bottom: 0;
-}
-
-/* Highlights Editorial List */
-.aura-detail__highlights-editorial {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 8px;
-}
-
-.aura-detail__hl-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: #27272A;
-}
-
-.aura-detail__hl-dash {
-  color: #A39B8E;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.aura-detail__hl-text {
+.detail-header-left {
   flex: 1;
+  min-width: 0;
 }
 
-/* Itinerary Daily Accordion */
-.aura-detail__itinerary-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.aura-detail__day-card {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 16px;
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.aura-detail__day-card--open {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
-}
-
-.aura-detail__day-header {
-  width: 100%;
+.detail-tags-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 
-.aura-detail__day-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.aura-detail__day-badge {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #1E3A2B;
-  background: #EAF2EC;
+.detail-province-pill {
+  background: var(--tour-primary-light);
+  color: var(--tour-primary);
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   padding: 4px 10px;
   border-radius: 6px;
 }
 
-.aura-detail__day-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #141619;
-  margin: 0;
-}
-
-.aura-detail__day-icon {
-  font-size: 20px;
-  font-weight: 300;
-  color: #71717A;
-  line-height: 1;
-}
-
-/* Tab Header Row (Tiêu đề tab + Nút mở rộng/thu gọn) */
-.aura-detail__tab-head-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.aura-detail__expand-toggle-btn {
-  background: none;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #52525B;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  margin-bottom: 16px;
-}
-
-.aura-detail__expand-toggle-btn:hover {
-  background: #FFFFFF;
-  color: #141619;
-  border-color: #141619;
-}
-
-.aura-detail__day-body {
-  padding: 0 20px 20px 20px;
-  border-top: 1px solid rgba(0, 0, 0, 0.04);
-}
-
-.aura-detail__day-p {
-  font-size: 13.5px;
-  line-height: 1.7;
-  color: #52525B;
-  margin: 14px 0 16px 0;
-}
-
-/* Danh sách điểm tham quan trong ngày */
-.aura-detail__day-places-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px dashed rgba(0, 0, 0, 0.08);
-}
-
-.aura-detail__day-subhead {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #192D23;
-  margin: 0 0 12px 0;
-}
-
-.aura-detail__day-places-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.aura-detail__day-place-chip {
-  background: #FAF9F6;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 12px;
-  padding: 12px 14px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.aura-detail__day-place-chip:hover {
-  background: #F4F1EA;
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-.aura-detail__place-order {
-  font-size: 11px;
-  font-weight: 700;
-  color: #192D23;
-  background: #EAF2EC;
-  padding: 3px 7px;
+.detail-sale-pill {
+  background: var(--tour-rose-light);
+  color: var(--tour-rose);
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 10px;
   border-radius: 6px;
-  line-height: 1;
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 
-.aura-detail__place-details {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
+.detail-operator-tag {
+  font-size: 12.5px;
+  color: var(--tour-text-muted);
 }
 
-.aura-detail__place-title-row {
+.detail-operator-tag strong {
+  color: var(--tour-text-main);
+  font-weight: 600;
+}
+
+.detail-tour-name {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--tour-text-main);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+
+.detail-meta-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  font-size: 13.5px;
+  color: var(--tour-text-muted);
   flex-wrap: wrap;
 }
 
-.aura-detail__place-name {
-  font-size: 13.5px;
+.detail-rating-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-weight: 700;
-  color: #141619;
+  color: var(--tour-text-main);
 }
 
-.aura-detail__place-cat {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #71717A;
-  background: rgba(0, 0, 0, 0.04);
-  padding: 2px 7px;
-  border-radius: 4px;
+.detail-rating-pill .star-icon {
+  color: #f59e0b;
+  font-size: 15px;
 }
 
-.aura-detail__place-address {
-  font-size: 12px;
-  color: #71717A;
-  line-height: 1.4;
+.detail-rating-pill .count {
+  color: var(--tour-text-muted);
+  font-weight: 500;
+  margin-left: 2px;
 }
 
-/* Checklist lưu ý trong ngày */
-.aura-detail__day-checklist-box {
-  margin-top: 14px;
-  background: #F8FAFC;
-  border-radius: 10px;
-  padding: 10px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+.meta-divider {
+  color: #cbd5e1;
 }
 
-.aura-detail__checklist-title {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #475569;
-  display: block;
-  margin-bottom: 4px;
+.detail-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.aura-detail__checklist-items {
-  list-style: none;
+.detail-meta-item svg {
+  color: var(--tour-text-light);
+}
+
+.detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
   padding: 0;
-  margin: 0;
+}
+
+.detail-action-btn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.detail-action-btn.active {
+  color: #f43f5e;
+  background: #fff1f2;
+}
+
+.detail-action-btn.active:hover {
+  background: #ffe4e6;
+}
+
+/* ==========================================================================
+   2. BENTO 5-GRID PHOTO GALLERY
+   ========================================================================== */
+.tour-gallery-wrap {
+  margin-top: 24px;
+}
+
+.gallery-bento-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 12px;
+  height: 440px;
+  border-radius: var(--tour-radius-xl);
+  overflow: hidden;
+  box-shadow: var(--tour-shadow-card);
+}
+
+.gallery-hero-tile {
+  position: relative;
+  height: 100%;
+  cursor: pointer;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.gallery-sub-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  height: 100%;
+}
+
+.gallery-sub-tile {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.gallery-img-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gallery-hero-tile:hover .gallery-img-cover,
+.gallery-sub-tile:hover .gallery-img-cover {
+  transform: scale(1.04);
+}
+
+.view-all-photos-pill {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.view-all-photos-pill:hover {
+  background: #0f172a;
+  transform: scale(1.03);
+}
+
+.detail-ribbon-tag {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 10px 14px 18px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), 50% 100%, 0 calc(100% - 8px));
+  z-index: 3;
+  box-shadow: 0 6px 14px rgba(225, 29, 72, 0.35);
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   3. KEY FACTS STRIP BAR (DẢI THÔNG SỐ NỔI ĐỒNG BỘ MÀU CHỦ ĐẠO)
+   ========================================================================== */
+.key-facts-strip-bar {
+  margin-top: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 18px;
+  box-shadow: var(--tour-shadow-card);
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr 1.35fr 0.95fr;
+  padding: 20px 28px;
+}
+
+.key-fact-cell {
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  border-right: 1px solid #e2e8f0;
+}
+
+.key-fact-cell:first-child {
+  padding-left: 0;
+}
+
+.key-fact-cell:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.fact-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--tour-primary);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.fact-value {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   4. STICKY NAV TABS BAR
+   ========================================================================== */
+.detail-sticky-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e2e8f0;
+  margin-top: 22px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+}
+
+.sticky-nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.sticky-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 16px 2px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.sticky-tab-btn:hover {
+  color: var(--tour-primary);
+}
+
+.sticky-tab-btn.active {
+  color: var(--tour-primary);
+  font-weight: 800;
+  border-bottom-color: var(--tour-primary);
+}
+
+/* ==========================================================================
+   5. BỐ CỤC 2 CỘT CHÍNH (KHÔNG DÙNG CARD LỒNG CARD)
+   ========================================================================== */
+.tour-detail-main {
+  margin-top: 28px;
+}
+
+.detail-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 390px;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.detail-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail-section-surface {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 22px;
+  padding: 32px 34px;
+  box-shadow: var(--tour-shadow-card);
+}
+
+.detail-section-surface.detail-section-sky {
+  background: linear-gradient(135deg, #d3e7f6 0%, #dfedf8 45%, #cae3f4 100%);
+  border-color: rgba(186, 230, 253, 0.9);
+}
+
+.detail-section-sky .section-eyebrow-tag {
+  color: #0369a1;
+}
+
+.section-eyebrow-tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tour-primary);
+  margin-bottom: 6px;
+}
+
+.section-heading {
+  font-size: 23px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.section-heading-row .section-heading {
+  margin-bottom: 0;
+}
+
+.section-kicker-pill {
+  background: var(--tour-primary-light);
+  color: var(--tour-primary);
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 9999px;
+}
+
+.tour-lead-summary {
+  font-size: 16px;
+  line-height: 1.75;
+  color: #1e293b;
+  margin: 0 0 14px;
+}
+
+.tour-full-desc {
+  font-size: 15px;
+  line-height: 1.75;
+  color: #475569;
+  margin: 0 0 24px;
+}
+
+/* Dải cam kết phân cột trực tiếp không bọc hộp con */
+.overview-sky-banner {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 22px;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 28px;
+  align-items: center;
+  margin-top: 22px;
+}
+
+.sky-banner-divider {
+  width: 1px;
+  height: 100%;
+  background: #e2e8f0;
+}
+
+.sky-banner-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sky-banner-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--tour-primary);
+  text-transform: uppercase;
+}
+
+.sky-banner-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.sky-banner-desc {
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Mục 2: Điểm nổi bật — Bố cục ảnh trực quan sống động (kiểu Home Journey)
+   -------------------------------------------------------------------------- */
+.highlights-visual-showcase {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.highlight-visual-tile {
+  position: relative;
+  height: 220px;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: 20px;
+  box-sizing: border-box;
+  background: #0f172a;
+}
+
+.highlight-tile-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.highlight-visual-tile:hover .highlight-tile-img {
+  transform: scale(1.06);
+}
+
+.highlight-tile-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(15, 23, 42, 0.86) 0%,
+    rgba(15, 23, 42, 0.35) 55%,
+    rgba(15, 23, 42, 0.05) 100%
+  );
+  z-index: 1;
+}
+
+.highlight-tile-content {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.aura-detail__checklist-item {
+.highlight-tile-num {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+}
+
+.highlight-tile-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.35;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   Mục 3: Lịch trình chi tiết theo ngày (Timeline màu chủ đạo, không card con)
+   -------------------------------------------------------------------------- */
+.itinerary-day-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.day-selector-pill {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 8px 20px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.day-selector-pill:hover {
+  border-color: var(--tour-primary);
+  color: var(--tour-primary);
+}
+
+.day-selector-pill.active {
+  background: var(--tour-royal);
+  color: #ffffff;
+  border-color: var(--tour-royal);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+}
+
+.itinerary-flat-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #e2e8f0;
+}
+
+.itinerary-day-row {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.itinerary-day-header {
+  padding: 20px 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.day-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+
+.day-num-label {
   font-size: 12px;
-  color: #64748B;
-}
-
-.aura-detail__checklist-dot {
-  color: #16A34A;
-  font-weight: 700;
-}
-
-/* Inclusions Grid */
-.aura-detail__inclusions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-  margin-top: 16px;
-}
-
-@media (max-width: 768px) {
-  .aura-detail__inclusions-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-}
-
-.aura-detail__inclusions-subhead {
-  font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #141619;
-  margin: 0 0 12px 0;
+  color: var(--tour-primary);
+  min-width: 72px;
+  flex-shrink: 0;
 }
 
-.aura-detail__check-list {
+.day-main-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.day-toggle-indicator {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tour-primary);
+}
+
+.itinerary-day-body {
+  padding: 0 0 24px 90px;
+}
+
+.day-overview-desc {
+  font-size: 15px;
+  color: #334155;
+  line-height: 1.65;
+  margin: 0 0 18px;
+}
+
+/* Timeline địa điểm */
+.itinerary-places-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-node {
+  display: flex;
+  gap: 16px;
+  position: relative;
+}
+
+.node-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 14px;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.node-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--tour-primary);
+  box-shadow: 0 0 0 3px var(--tour-primary-light);
+}
+
+.node-line {
+  width: 2px;
+  flex: 1;
+  background: #bae6fd;
+  margin: 4px 0;
+  min-height: 30px;
+}
+
+.node-content {
+  flex: 1;
+  padding-bottom: 18px;
+}
+
+.node-top-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.place-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.place-category-chip {
+  color: var(--tour-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.place-address {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Checklist lưu ý phẳng */
+.day-checklist-flat {
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 14px;
+  margin-top: 6px;
+}
+
+.checklist-heading {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0f172a;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.checklist-items {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
-.aura-detail__check-list li {
+.checklist-items li {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: baseline;
+  gap: 8px;
   font-size: 13.5px;
-  line-height: 1.5;
-  color: #3F3F46;
+  color: #334155;
 }
 
-.aura-detail__check-icon {
-  color: #16A34A;
-  font-weight: 700;
-  flex-shrink: 0;
+.check-bullet {
+  color: var(--tour-emerald);
+  font-weight: 800;
 }
 
-.aura-detail__dash-icon {
-  color: #A1A1AA;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-/* FAQ List */
-.aura-detail__faq-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.aura-detail__faq-item {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 14px;
-  padding: 18px 22px;
-}
-
-.aura-detail__faq-q {
+.empty-itinerary-note {
   font-size: 14.5px;
-  font-weight: 600;
-  color: #141619;
-  margin: 0 0 8px 0;
-}
-
-.aura-detail__faq-a {
-  font-size: 13px;
-  line-height: 1.65;
-  color: #52525B;
+  color: #64748b;
   margin: 0;
 }
 
 /* --------------------------------------------------------------------------
-   4. FLOATING BOOKING CARD (Thẻ đặt tour nổi bên phải)
+   Mục 4: Dịch vụ bao gồm & Chính sách (Không bọc card con)
    -------------------------------------------------------------------------- */
-.aura-detail__booking-card-wrap {
-  width: 320px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 20px;
-  margin-top: -65px;
-  z-index: 5;
-  align-self: flex-start;
+.inclusions-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 32px;
 }
 
-@media (max-width: 1100px) {
-  .aura-detail__booking-card-wrap {
-    width: 100%;
-    margin-top: 0;
-    position: static;
-  }
-}
-
-.aura-detail__booking-card {
-  background: #FFFFFF;
-  border-radius: 24px;
-  padding: 24px 22px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06);
+.inclusion-col {
   display: flex;
   flex-direction: column;
 }
 
-.aura-detail__card-from {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #8C827A;
-  margin-bottom: 4px;
+.inclusion-col-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f1f5f9;
 }
 
-.aura-detail__card-price-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 20px;
+.inclusion-col-title.included-heading {
+  color: #059669;
+  border-bottom-color: #a7f3d0;
 }
 
-.aura-detail__card-price {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 36px;
-  font-weight: 700;
-  color: #141619;
-  line-height: 1;
-  letter-spacing: -0.02em;
+.inclusion-col-title.excluded-heading {
+  color: #e11d48;
+  border-bottom-color: #fecdd3;
 }
 
-.aura-detail__card-unit {
-  font-size: 13px;
-  color: #71717A;
-  font-weight: 500;
-}
-
-.aura-detail__book-now-btn {
-  background: #192D23;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 9999px;
-  padding: 15px 22px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 14.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.aura-detail__book-now-btn:hover {
-  background: #112019;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(25, 45, 35, 0.25);
-}
-
-.aura-detail__btn-arrow {
-  font-size: 16px;
-  transition: transform 0.2s ease;
-}
-
-.aura-detail__book-now-btn:hover .aura-detail__btn-arrow {
-  transform: translateX(4px);
-}
-
-.aura-detail__card-fields {
+.inclusions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
+  gap: 11px;
+}
+
+.inclusions-list li {
+  display: flex;
+  align-items: flex-start;
   gap: 10px;
-  margin-bottom: 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #334155;
 }
 
-.aura-detail__card-field-row {
-  background: #FAF9F6;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 14px;
-  padding: 10px 14px;
+.bullet-check {
+  color: #059669;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.bullet-cross {
+  color: #e11d48;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* Chính sách hoàn hủy — Dải ngang trực tiếp không bọc hộp con */
+.cancellation-policy-flat {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 26px;
+}
+
+.policy-flat-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 18px;
+}
+
+.policy-milestones-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+  gap: 16px 0;
+  padding-top: 4px;
+}
+
+.milestone-step {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 1px solid #e2e8f0;
+}
+
+.milestone-step:first-child {
+  padding-left: 0;
+}
+
+.milestone-step:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.step-time {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.step-percent {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.step-percent.high {
+  color: #059669;
+}
+
+.step-percent.mid {
+  color: #0284c7;
+}
+
+.step-percent.low {
+  color: #e11d48;
+}
+
+.step-note {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* --------------------------------------------------------------------------
+   Mục 5: Đánh giá thực tế
+   -------------------------------------------------------------------------- */
+.reviews-summary-flat {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 36px;
+  padding-bottom: 28px;
+  margin-bottom: 26px;
+  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+}
+
+.score-main-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-right: 1px solid #e2e8f0;
+  padding-right: 24px;
+}
+
+.score-top-line {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  transition: all 0.15s ease;
+  gap: 10px;
 }
 
-.aura-detail__card-field-row:hover {
-  background: #F4F1EA;
-  border-color: rgba(0, 0, 0, 0.1);
+.big-rating {
+  font-size: 46px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 
-.aura-detail__field-left {
+.score-badge-pill {
+  background: var(--tour-royal);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 9999px;
+}
+
+.stars-row {
+  color: #f59e0b;
+  font-size: 17px;
+  margin: 6px 0 4px;
+}
+
+.sub-count {
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.score-bars-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rating-bar-line {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #52525B;
+  font-size: 12.5px;
 }
 
-.aura-detail__field-texts {
+.star-name {
+  width: 42px;
+  color: #475569;
+  font-weight: 700;
+}
+
+.bar-track {
+  flex: 1;
+  height: 7px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7, #2563eb);
+  border-radius: 999px;
+}
+
+.bar-pct {
+  width: 34px;
+  text-align: right;
+  color: #475569;
+  font-weight: 700;
+}
+
+.reviews-feedback-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.review-comment-item {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
-.aura-detail__field-label {
-  font-size: 10.5px;
+.comment-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.tour-badge {
+  font-size: 12px;
+  color: var(--tour-primary);
   font-weight: 600;
-  text-transform: uppercase;
+}
+
+.comment-stars {
+  color: #f59e0b;
+  font-size: 14px;
+}
+
+.comment-content {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #334155;
+  margin: 0;
+}
+
+/* ==========================================================================
+   6. STICKY BOOKING WIDGET (CỘT PHẢI — ĐỒNG BỘ MÀU CHỦ ĐẠO #0284C7)
+   ========================================================================== */
+.detail-sidebar-col {
+  position: relative;
+}
+
+.sticky-booking-widget {
+  position: sticky;
+  top: 84px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 22px;
+  box-shadow: 0 12px 32px -6px rgba(15, 23, 42, 0.08);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.widget-price-header {
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 16px;
+}
+
+.price-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
   letter-spacing: 0.06em;
-  color: #8C827A;
+  display: block;
+  margin-bottom: 6px;
 }
 
-.aura-detail__field-value {
-  font-size: 13px;
-  font-weight: 600;
-  color: #141619;
-  margin-top: 1px;
+.price-main-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
-.aura-detail__field-chevron {
-  font-size: 18px;
-  color: #A1A1AA;
+.price-number {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--tour-primary);
+  letter-spacing: -0.02em;
   line-height: 1;
 }
 
-.aura-detail__card-divider {
-  height: 1px;
-  background: rgba(0, 0, 0, 0.06);
-  margin-bottom: 14px;
+.price-unit {
+  font-size: 13.5px;
+  color: #64748b;
+  font-weight: 600;
 }
 
-.aura-detail__wishlist-btn {
-  background: none;
-  border: none;
+.price-strikethrough-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.old-price {
+  font-size: 13.5px;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.discount-tag {
+  background: #fff1f2;
+  color: #e11d48;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.widget-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: 0.04em;
+}
+
+.seats-available-badge {
+  color: var(--tour-primary);
+  font-weight: 700;
+  font-size: 11.5px;
+}
+
+.departure-select-input {
+  width: 100%;
+  height: 44px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.departure-select-input:focus {
+  border-color: var(--tour-primary);
+  background: #ffffff;
+}
+
+.departure-fallback-box {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Đếm số khách */
+.pax-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pax-counter-row:last-child {
+  border-bottom: none;
+}
+
+.pax-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pax-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pax-sub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.counter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.counter-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.counter-btn:hover:not(:disabled) {
+  border-color: var(--tour-primary);
+  color: var(--tour-primary);
+  background: var(--tour-primary-light);
+}
+
+.counter-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.counter-val {
+  min-width: 18px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+/* Tóm tắt chi phí */
+.widget-summary-breakdown {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.breakdown-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 10px;
+  margin-top: 4px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.breakdown-total-row .total-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.breakdown-total-row .total-val {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--tour-primary);
+}
+
+/* Nút đặt tour chính (phong cách mây trời như trang Home) */
+.btn-primary-book {
+  position: relative;
+  width: 100%;
+  height: 50px;
+  background: radial-gradient(120% 120% at 20% 20%, rgba(255, 255, 255, 0.75) 0%, transparent 60%),
+              linear-gradient(135deg, #b8e0f6 0%, #d7ebf8 40%, #e8f3fa 70%, #cbe6f7 100%);
+  color: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #71717A;
-  cursor: pointer;
-  padding: 6px;
-  transition: color 0.15s ease;
-  width: 100%;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 18px rgba(186, 219, 243, 0.6);
+  box-sizing: border-box;
 }
 
-.aura-detail__wishlist-btn:hover {
-  color: #141619;
+.btn-primary-book:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(186, 219, 243, 0.85);
 }
 
-.aura-detail__wishlist-btn--active {
-  color: #DC2626;
+.btn-primary-book .book-arrow {
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.2s ease;
 }
 
-/* --------------------------------------------------------------------------
-   5. SIMILAR TOURS SECTION (Cuối trang)
-   -------------------------------------------------------------------------- */
-.aura-detail__similar-section {
-  padding-top: 36px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  width: 100%;
+.btn-primary-book:hover .book-arrow {
+  transform: translateX(4px);
 }
 
-.aura-detail__similar-head {
+/* Cam kết tin cậy */
+.widget-trust-points {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--tour-border-light);
+}
+
+.trust-point-item {
   display: flex;
   align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--tour-text-muted);
+}
+
+.trust-point-item svg {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   7. GỢI Ý TOUR TƯƠNG TỰ
+   ========================================================================== */
+.detail-similar-tours-section {
+  margin-top: 48px;
+  padding-top: 40px;
+  border-top: 1px solid var(--tour-border);
+}
+
+.similar-header-row {
+  display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.aura-detail__similar-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 26px;
-  font-weight: 600;
-  color: #141619;
+.similar-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--tour-primary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.similar-section-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--tour-text-main);
   margin: 0;
+  letter-spacing: -0.015em;
 }
 
-.aura-detail__similar-more {
-  font-size: 13px;
-  font-weight: 600;
-  color: #52525B;
+.similar-all-link {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--tour-primary);
   text-decoration: none;
-  transition: color 0.15s ease;
 }
 
-.aura-detail__similar-more:hover {
-  color: #141619;
+.similar-all-link:hover {
+  text-decoration: underline;
 }
 
-.aura-detail__similar-cards {
+.similar-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
-@media (max-width: 900px) {
-  .aura-detail__similar-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .aura-detail__similar-cards {
-    grid-template-columns: 1fr;
-  }
-}
-
-.aura-detail__sim-card {
-  background: #FFFFFF;
-  border-radius: 18px;
+.similar-tour-card {
+  background: #ffffff;
+  border: 1px solid var(--tour-border);
+  border-radius: var(--tour-radius-md);
   overflow: hidden;
   text-decoration: none;
-  color: inherit;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 12px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s, box-shadow 0.25s;
 }
 
-.aura-detail__sim-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+.similar-tour-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--tour-shadow-hover);
 }
 
-.aura-detail__sim-thumb {
+.similar-card-photo {
+  height: 180px;
   position: relative;
-  width: 100%;
-  height: 140px;
-  border-radius: 12px;
   overflow: hidden;
-  background: #E7E3DC;
+  background: #e2e8f0;
 }
 
-.aura-detail__sim-thumb img {
+.similar-card-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s;
 }
 
-.aura-detail__sim-badge {
+.similar-tour-card:hover .similar-card-photo img {
+  transform: scale(1.05);
+}
+
+.similar-duration-tag {
   position: absolute;
   top: 10px;
-  left: 10px;
-  background: rgba(20, 22, 25, 0.75);
-  backdrop-filter: blur(6px);
-  color: #FFFFFF;
-  font-size: 10.5px;
-  font-weight: 600;
+  right: 10px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
   padding: 3px 8px;
   border-radius: 6px;
 }
 
-.aura-detail__sim-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #141619;
-  margin: 12px 0 6px 0;
+.similar-card-info {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.similar-tour-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tour-text-main);
+  margin: 0;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.4;
 }
 
-.aura-detail__sim-price {
+.similar-tour-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.similar-price {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--tour-primary);
+}
+
+.similar-btn-link {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tour-text-muted);
+}
+
+/* ==========================================================================
+   8. SKELETON LOADING
+   ========================================================================== */
+.tour-detail-skeleton-shell {
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeleton-line {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+.skeleton-title {
+  width: 60%;
+  height: 32px;
+}
+
+.skeleton-meta {
+  width: 40%;
+  height: 20px;
+}
+
+.skeleton-gallery-box {
+  width: 100%;
+  height: 420px;
+  border-radius: var(--tour-radius-xl);
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ==========================================================================
+   9. LIGHTBOX MODAL
+   ========================================================================== */
+.tour-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tour-lightbox__panel {
+  width: 90vw;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tour-lightbox__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ffffff;
+}
+
+.tour-lightbox__counter {
   font-size: 13px;
   font-weight: 700;
-  color: #1E3A2B;
-  margin-top: auto;
+  color: #94a3b8;
 }
 
-/* --------------------------------------------------------------------------
-   6. RESPONSIVE MOBILE ADAPTATIONS
-   -------------------------------------------------------------------------- */
-@media (max-width: 768px) {
-  .aura-detail {
-    padding: 0;
-    height: auto;
-    min-height: 100vh;
-  }
+.tour-lightbox__tour-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
 
-  .aura-detail__container {
-    height: auto;
-    min-height: 100vh;
-    border-radius: 0;
-    padding: 20px 16px 40px;
-  }
+.tour-lightbox__close-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
 
-  .aura-detail__sidebar {
-    width: 100%;
-    min-height: auto;
+.tour-lightbox__close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.tour-lightbox__stage {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tour-lightbox__nav-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #ffffff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.tour-lightbox__nav-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.tour-lightbox__viewport {
+  flex: 1;
+  height: 65vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--tour-radius-lg);
+}
+
+.tour-lightbox__active-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* ==========================================================================
+   10. RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .detail-layout-grid {
+    grid-template-columns: 1fr;
+  }
+  .sticky-booking-widget {
     position: static;
   }
-
-  .aura-detail__hero-title {
-    font-size: 38px;
+  .gallery-bento-grid {
+    height: 340px;
   }
-
-  .aura-detail__hero-title-sub {
-    font-size: 34px;
-  }
-
-  .aura-detail__gallery-strip {
+  .key-facts-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .key-fact-item:nth-child(2) {
+    border-right: none;
+  }
+  .key-fact-item:nth-child(1),
+  .key-fact-item:nth-child(2) {
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .similar-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .detail-header-main-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .gallery-bento-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .gallery-hero-tile {
+    height: 240px;
+  }
+  .gallery-sub-grid {
+    display: none;
+  }
+  .key-facts-grid {
+    grid-template-columns: 1fr;
+  }
+  .key-fact-item {
+    border-right: none;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .key-fact-item:last-child {
+    border-bottom: none;
+  }
+  .inclusions-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+  .policy-milestones-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .reviews-summary-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .score-main-box {
+    border-right: none;
+    border-bottom: 1px solid var(--tour-border);
+    padding-right: 0;
+    padding-bottom: 16px;
+  }
+  .similar-cards-grid {
+    grid-template-columns: 1fr;
   }
 }

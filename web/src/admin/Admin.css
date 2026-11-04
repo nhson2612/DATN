@@ -1,14 +1,15 @@
 /* ==========================================================================
-   SHADCN UI ADMIN DASHBOARD SYSTEM
-   Strict Monochrome (#09090b / #ffffff / #f4f4f5 / #e4e4e7 / #71717a)
+   NEO-BENTO ADMIN DASHBOARD SYSTEM
+   Pastel Canvas (#edf1f7), Lime Accent (#ccff00), Sky Pastel (#bae6fd),
+   Dark Slate (#0f172a / #334155), Clean Rounded Cards (20px-24px)
    ========================================================================== */
 
 .admin-shell {
   min-height: 100vh;
   display: flex;
-  background: #fafafa;
-  color: #09090b;
-  font-family: inherit;
+  background: var(--bento-bg-canvas, #edf1f7);
+  color: var(--bento-text-dark, #0f172a);
+  font-family: var(--bento-font-sans, "Plus Jakarta Sans", system-ui, -apple-system, sans-serif);
 }
 
 /* ==================== SIDEBAR ==================== */
@@ -16,11 +17,11 @@
   width: 260px;
   min-width: 260px;
   background: #ffffff;
-  border-right: 1px solid #e4e4e7;
+  border-right: 1px solid rgba(226, 232, 240, 0.8);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 16px 14px;
+  padding: 20px 16px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -31,98 +32,104 @@
 .admin-shell__brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 6px 18px;
-  border-bottom: 1px solid #f4f4f5;
-  margin-bottom: 16px;
+  gap: 12px;
+  padding: 4px 6px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 18px;
 }
 
 .admin-shell__brand-mark {
-  width: 32px;
-  height: 32px;
-  background: #09090b;
+  width: 36px;
+  height: 36px;
+  background: #0f172a;
   color: #ffffff;
   border-radius: 8px;
   display: grid;
   place-items: center;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.02em;
   flex: none;
+  box-shadow: none;
 }
 
 .admin-shell__brand-title {
   display: block;
-  font-size: 14px;
-  font-weight: 700;
-  color: #09090b;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
   line-height: 1.2;
 }
 
 .admin-shell__brand-sub {
   display: block;
   font-size: 11px;
-  color: #71717a;
+  color: #64748b;
   margin-top: 2px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .admin-shell__group {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .admin-shell__group-title {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #71717a;
-  padding: 0 10px 6px;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  padding: 0 12px 8px;
 }
 
 .admin-shell__nav {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .admin-shell__nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 12px;
+  padding: 10px 14px;
   font-size: 13.5px;
-  font-weight: 500;
-  color: #52525b;
-  border-radius: 8px;
+  font-weight: 600;
+  color: #475569;
+  border-radius: 12px;
   border: 0;
   background: transparent;
   cursor: pointer;
   text-align: left;
   width: 100%;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: all 0.2s ease;
   user-select: none;
 }
 
 .admin-shell__nav-item:hover {
-  background: #f4f4f5;
-  color: #09090b;
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .admin-shell__nav-item--active {
-  background: #09090b !important;
+  background: #0f172a !important;
   color: #ffffff !important;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.admin-shell__nav-item--active .admin-shell__nav-icon {
+  color: #ffffff !important;
 }
 
 .admin-shell__nav-icon {
-  font-size: 19px !important;
+  font-size: 20px !important;
   flex: none;
 }
 
 .admin-shell__foot {
-  border-top: 1px solid #e4e4e7;
-  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
   margin-top: auto;
 }
 
@@ -131,7 +138,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 4px;
+  padding: 6px;
+  background: #f8fafc;
+  border-radius: 14px;
 }
 
 .admin-shell__account-row {
@@ -142,15 +151,14 @@
 }
 
 .admin-shell__avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 9999px;
-  background: #f4f4f5;
-  border: 1px solid #e4e4e7;
-  color: #09090b;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #e2e8f0;
+  color: #0f172a;
   display: grid;
   place-items: center;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   flex: none;
 }
@@ -163,8 +171,8 @@
 .admin-shell__account-name {
   display: block;
   font-size: 13px;
-  font-weight: 600;
-  color: #09090b;
+  font-weight: 700;
+  color: #0f172a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -173,7 +181,7 @@
 .admin-shell__account-role {
   display: block;
   font-size: 11px;
-  color: #71717a;
+  color: #64748b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -182,18 +190,18 @@
 .admin-shell__logout-btn {
   border: 0;
   background: transparent;
-  color: #71717a;
+  color: #64748b;
   cursor: pointer;
   padding: 6px;
-  border-radius: 6px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
   transition: all 0.15s ease;
 }
 
 .admin-shell__logout-btn:hover {
-  background: #f4f4f5;
-  color: #09090b;
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 /* ==================== MAIN BODY ==================== */
@@ -206,13 +214,13 @@
 }
 
 .admin-shell__header {
-  height: 56px;
-  border-bottom: 1px solid #e4e4e7;
+  height: 60px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 28px;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -226,13 +234,13 @@
 
 .admin-shell__header-icon {
   font-size: 20px;
-  color: #71717a;
+  color: #64748b;
 }
 
 .admin-shell__header-divider {
   width: 1px;
   height: 16px;
-  background: #e4e4e7;
+  background: #cbd5e1;
 }
 
 .admin-shell__crumb {
@@ -240,42 +248,42 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #71717a;
-  font-weight: 500;
+  color: #64748b;
+  font-weight: 600;
 }
 
 .admin-shell__crumb-root {
-  color: #71717a;
+  color: #64748b;
 }
 
 .admin-shell__crumb-active {
-  color: #09090b;
-  font-weight: 600;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 .admin-shell__home-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   font-size: 12px;
-  font-weight: 500;
-  color: #52525b;
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
-  border-radius: 6px;
+  font-weight: 700;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
 .admin-shell__home-btn:hover {
-  background: #f4f4f5;
-  color: #09090b;
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .admin-shell__main {
   flex: 1;
-  padding: 28px;
+  padding: 24px 28px 48px;
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
@@ -291,40 +299,40 @@
   justify-content: center;
   padding: 24px;
   text-align: center;
-  background: #fafafa;
+  background: #edf1f7;
 }
 
 .admin-shell__gate-card {
-  max-width: 400px;
+  max-width: 420px;
   width: 100%;
   background: #ffffff;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  padding: 32px 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  padding: 36px 28px;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
 }
 
 .admin-shell__gate-title {
   margin: 0 0 8px 0;
   font-size: 20px;
-  font-weight: 700;
-  color: #09090b;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .admin-shell__gate-text {
   margin: 0 0 20px 0;
   font-size: 13.5px;
-  color: #71717a;
+  color: #64748b;
   line-height: 1.5;
 }
 
-/* ==================== SHADCN FORM MODAL ==================== */
+/* ==================== BENTO FORM MODAL ==================== */
 .admin-modal {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(9, 9, 11, 0.45);
-  backdrop-filter: blur(2px);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
   padding: 16px;
@@ -332,12 +340,12 @@
 
 .admin-modal__card {
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   background: #ffffff;
-  border: 1px solid #e4e4e7;
-  border-radius: 14px;
-  padding: 24px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.15);
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -351,10 +359,10 @@
     height: auto;
     position: static;
     border-right: 0;
-    border-bottom: 1px solid #e4e4e7;
+    border-bottom: 1px solid #e2e8f0;
   }
   .admin-shell__main {
-    padding: 20px 14px;
+    padding: 18px 14px;
   }
 }
 
@@ -1045,26 +1053,26 @@
 
 .admin-page-heading__title {
   margin: 0;
-  color: #18181b;
-  font-size: 24px;
-  font-weight: 700;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.025em;
 }
 
 .admin-page-heading__description {
   margin: 6px 0 0;
-  color: #71717a;
-  font-size: 13px;
+  color: #64748b;
+  font-size: 13.5px;
   line-height: 1.5;
 }
 
 .admin-data-card {
   overflow: hidden;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
   background: #ffffff;
-  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
 }
 
 .admin-data-card__scroll {
@@ -1074,29 +1082,29 @@
 .admin-data-table {
   width: 100%;
   border-collapse: collapse;
-  color: #27272a;
-  font-size: 13px;
+  color: #1e293b;
+  font-size: 13.5px;
   text-align: left;
 }
 
 .admin-data-table thead {
-  background: #fafafa;
+  background: #f8fafc;
 }
 
 .admin-data-table th {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e4e4e7;
-  color: #71717a;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #64748b;
   font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.045em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .admin-data-table td {
-  padding: 15px 16px;
-  border-bottom: 1px solid #f4f4f5;
+  padding: 16px 18px;
+  border-bottom: 1px solid #f8fafc;
   vertical-align: middle;
 }
 
@@ -1106,10 +1114,11 @@
 
 .admin-data-table tbody tr {
   background: #ffffff;
+  transition: background 0.15s ease;
 }
 
 .admin-data-table tbody tr:hover {
-  background: #fafafa;
+  background: #f8fafc;
 }
 
 /* Cơ sở lưu trú: công cụ tìm kiếm ở ngoài card dữ liệu. */
@@ -1134,33 +1143,37 @@
 
 .admin-places__search > .material-symbols-outlined {
   position: absolute;
-  left: 12px;
+  left: 14px;
   z-index: 1;
-  color: #a1a1aa;
-  font-size: 18px;
+  color: #94a3b8;
+  font-size: 20px;
   pointer-events: none;
 }
 
 .admin-places__search-input {
   width: 100%;
-  min-height: 40px;
-  border: 1px solid #d4d4d8;
-  border-radius: 8px;
-  padding: 0 42px 0 38px;
+  min-height: 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0 42px 0 44px;
   background: #ffffff;
-  color: #18181b;
+  color: #0f172a;
   font: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
 }
 
 .admin-places__search-input:focus {
-  border-color: #71717a;
-  outline: 3px solid #f4f4f5;
+  border-color: #38bdf8;
+  outline: 3px solid rgba(56, 189, 248, 0.15);
+  background: #ffffff;
 }
 
 .admin-places__search-clear {
   position: absolute;
-  right: 8px;
+  right: 10px;
   display: grid;
   width: 28px;
   height: 28px;
@@ -1168,8 +1181,12 @@
   border: 0;
   padding: 0;
   background: transparent;
-  color: #71717a;
+  color: #94a3b8;
   cursor: pointer;
+}
+
+.admin-places__search-clear:hover {
+  color: #0f172a;
 }
 
 .admin-places__search-clear .material-symbols-outlined {
@@ -1178,27 +1195,38 @@
 
 .admin-places__create {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 44px;
   flex: none;
   align-items: center;
-  gap: 7px;
-  border: 1px solid #18181b;
-  border-radius: 8px;
-  padding: 0 14px;
-  background: #18181b;
+  gap: 8px;
+  border: 0;
+  border-radius: 12px;
+  padding: 0 18px;
+  background: #0f172a;
   color: #ffffff;
   font: inherit;
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.admin-header__btn:hover {
+  background: #1e293b;
+}
+
+.admin-places__create:hover {
+  
+  box-shadow: 0 4px 14px rgba(204, 255, 0, 0.45);
 }
 
 .admin-places__create .material-symbols-outlined {
-  font-size: 17px;
+  font-size: 18px;
 }
 
 .admin-places__results > .admin-shell__div-58 {
-  border-top: 1px solid #e4e4e7;
+  border-top: 1px solid #f1f5f9;
 }
 
 /* Giao dịch: filter là segmented control, dữ liệu vẫn là table. */
@@ -1211,38 +1239,40 @@
   display: inline-flex;
   width: fit-content;
   max-width: 100%;
-  gap: 2px;
+  gap: 4px;
   overflow-x: auto;
-  border: 1px solid #e4e4e7;
-  border-radius: 9px;
-  padding: 3px;
-  background: #f4f4f5;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 4px;
+  background: #f1f5f9;
 }
 
 .admin-filter-tabs__item {
-  min-height: 32px;
+  min-height: 34px;
   border: 0;
-  border-radius: 6px;
-  padding: 0 11px;
+  border-radius: 10px;
+  padding: 0 14px;
   background: transparent;
-  color: #71717a;
+  color: #64748b;
   font: inherit;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .admin-filter-tabs__item--active {
   background: #ffffff;
-  color: #18181b;
-  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.08);
+  color: #0f172a;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .admin-filter-tabs__item:focus-visible,
 .admin-places__create:focus-visible,
 .admin-places__search-clear:focus-visible {
-  outline: 2px solid #18181b;
+  outline: 2px solid #0f172a;
   outline-offset: 2px;
 }
 
@@ -1250,6 +1280,112 @@
 .admin-approval,
 .admin-bookings {
   width: 100%;
+}
+
+/* ==================== ĐẶT TOUR: TOOLBAR, SEARCH, FILTER & SORT ==================== */
+.admin-bookings__wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.admin-bookings__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-bookings__toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.admin-bookings__search-box {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 280px;
+  max-width: 520px;
+  align-items: center;
+}
+
+.admin-bookings__search-box > .material-symbols-outlined {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  font-size: 20px;
+  pointer-events: none;
+}
+
+.admin-bookings__search-input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0 40px 0 44px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.admin-bookings__search-input:focus {
+  border-color: #38bdf8;
+  outline: 3px solid rgba(56, 189, 248, 0.15);
+}
+
+.admin-bookings__search-clear {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.admin-bookings__search-clear:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.admin-bookings__th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.admin-bookings__th-sortable:hover {
+  color: #0f172a;
+}
+
+.admin-bookings__th-sort-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-bookings__sort-icon {
+  font-size: 15px;
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.admin-bookings__sort-icon--active {
+  color: #0284c7;
+  font-weight: 800;
 }
 
 .admin-approval__results .tour-duyet__tom-tat {

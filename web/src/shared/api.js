@@ -108,17 +108,131 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ redirect_base: redirectBase }),
     }),
+  checkoutPayosBooking: (bookingId, redirectBase = "") =>
+    request(`/tours/bookings/${bookingId}/checkout-payos`, {
+      method: "POST",
+      body: JSON.stringify({ redirect_base: redirectBase }),
+    }),
   tourBookingStatus: (bookingId) =>
     request(`/tours/bookings/${bookingId}/status`),
 
   supportConversations: () => request("/support/conversations/me"),
   createSupportConversation: (body) => request("/support/conversations", { method: "POST", body: JSON.stringify(body) }),
+  streamSupportConversation: async (body, { onInit, onChunk, onDone }) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE}/support/conversations/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Lỗi ${res.status}`);
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() || "";
+      for (const block of lines) {
+        const trimmed = block.trim();
+        if (!trimmed.startsWith("data: ")) continue;
+        try {
+          const evt = JSON.parse(trimmed.slice(6));
+          if (evt.type === "init" && onInit) onInit(evt);
+          else if (evt.type === "chunk" && onChunk) onChunk(evt.text);
+          else if (evt.type === "done" && onDone) onDone(evt);
+        } catch (e) {
+          console.error("SSE parse error:", e);
+        }
+      }
+    }
+  },
   supportMessages: (id) => request(`/support/conversations/${id}/messages`),
   sendSupportMessage: (id, body) => request(`/support/conversations/${id}/messages`, { method: "POST", body: JSON.stringify(body) }),
+  streamSupportMessage: async (id, body, { onInit, onChunk, onDone }) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE}/support/conversations/${id}/messages/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Lỗi ${res.status}`);
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() || "";
+      for (const block of lines) {
+        const trimmed = block.trim();
+        if (!trimmed.startsWith("data: ")) continue;
+        try {
+          const evt = JSON.parse(trimmed.slice(6));
+          if (evt.type === "init" && onInit) onInit(evt);
+          else if (evt.type === "chunk" && onChunk) onChunk(evt.text);
+          else if (evt.type === "done" && onDone) onDone(evt);
+        } catch (e) {
+          console.error("SSE parse error:", e);
+        }
+      }
+    }
+  },
   supportInbox: (status = "") => request(`/support/inbox${status ? `?status=${status}` : ""}`),
   updateSupportConversation: (id, body) => request(`/support/conversations/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   takeOverSupportConversation: (id) => request(`/support/conversations/${id}/take-over`, { method: "POST" }),
   supportAiDraft: (id) => request(`/support/conversations/${id}/ai-draft`, { method: "POST" }),
+  streamSupportAiDraft: async (id, { onChunk, onDone }) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE}/support/conversations/${id}/ai-draft/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Lỗi ${res.status}`);
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() || "";
+      for (const block of lines) {
+        const trimmed = block.trim();
+        if (!trimmed.startsWith("data: ")) continue;
+        try {
+          const evt = JSON.parse(trimmed.slice(6));
+          if (evt.type === "chunk" && onChunk) onChunk(evt.text);
+          else if (evt.type === "done" && onDone) onDone(evt);
+        } catch (e) {
+          console.error("SSE parse error:", e);
+        }
+      }
+    }
+  },
 
   // Yêu thích
   favorites: () => request("/favorites"),
@@ -182,6 +296,11 @@ export const api = {
   adminDuyetTour: (id) => request(`/admin/tours/${id}/approve`, { method: "POST" }),
   adminTuChoiTour: (id, reason) =>
     request(`/admin/tours/${id}/reject`, { method: "POST", body: JSON.stringify({ reason }) }),
+  adminOperators: () => request("/admin/operators"),
+  adminCreateOperator: (body) =>
+    request("/admin/operators", { method: "POST", body: JSON.stringify(body) }),
+  adminUpdateOperator: (id, body) =>
+    request(`/admin/operators/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   createPlace: (type, body) =>
     request(`/${type}`, { method: "POST", body: JSON.stringify(body) }),
   updatePlace: (type, id, body) =>

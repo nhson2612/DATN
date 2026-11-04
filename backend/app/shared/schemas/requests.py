@@ -26,6 +26,9 @@ class UserRegister(BaseModel):
     email: str
     password: str
     full_name: str
+    role: Optional[str] = "user"
+    company_name: Optional[str] = None
+    tax_code: Optional[str] = None
 
 
 class UserLogin(BaseModel):
@@ -63,6 +66,7 @@ class ItineraryCreateUpdate(BaseModel):
     start_date: Optional[date] = None
     destination: Optional[str] = None
     sections: List[dict] = []
+    reservations: Optional[List[dict]] = []
 
 
 class RecommendRequest(BaseModel):
@@ -135,6 +139,16 @@ class OperatorCreate(BaseModel):
     tax_code: Optional[str] = None
     commission_rate: Optional[float] = 0.10
     status: Optional[str] = "ACTIVE"
+
+
+class OperatorUpdate(BaseModel):
+    """Admin cập nhật thông tin hoặc trạng thái Nhà điều hành tour."""
+    full_name: Optional[str] = None
+    company_name: Optional[str] = None
+    tax_code: Optional[str] = None
+    commission_rate: Optional[float] = None
+    status: Optional[str] = None
+    password: Optional[str] = None
 
 
 class TourUpsert(BaseModel):

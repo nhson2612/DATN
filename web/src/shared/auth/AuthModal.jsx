@@ -7,6 +7,8 @@ export default function AuthModal({ open, onClose, onSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [role, setRole] = useState("user");
+  const [companyName, setCompanyName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,6 +30,8 @@ export default function AuthModal({ open, onClose, onSuccess }) {
           email,
           password,
           full_name: fullName,
+          role,
+          company_name: role === "operator" ? companyName : undefined,
         });
         localStorage.setItem("token", res.access_token);
         localStorage.setItem("user", JSON.stringify(res.user));
@@ -61,17 +65,69 @@ export default function AuthModal({ open, onClose, onSuccess }) {
 
         <form onSubmit={handleSubmit} className="auth-form">
           {!isLogin && (
-            <div>
-              <label className="auth-label">Họ và tên</label>
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Nguyễn Văn A"
-                className="auth-input"
-              />
-            </div>
+            <>
+              <div>
+                <label className="auth-label">Loại tài khoản</label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setRole("user")}
+                    style={{
+                      padding: "8px 10px",
+                      borderRadius: "8px",
+                      border: role === "user" ? "1.5px solid #0f172a" : "1px solid #e2e8f0",
+                      background: role === "user" ? "#0f172a" : "#ffffff",
+                      color: role === "user" ? "#ffffff" : "#334155",
+                      fontSize: "12.5px",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Khách du lịch
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("operator")}
+                    style={{
+                      padding: "8px 10px",
+                      borderRadius: "8px",
+                      border: role === "operator" ? "1.5px solid #0f172a" : "1px solid #e2e8f0",
+                      background: role === "operator" ? "#0f172a" : "#ffffff",
+                      color: role === "operator" ? "#ffffff" : "#334155",
+                      fontSize: "12.5px",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Nhà điều hành Tour
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="auth-label">Họ và tên</label>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Nguyễn Văn A"
+                  className="auth-input"
+                />
+              </div>
+              {role === "operator" && (
+                <div>
+                  <label className="auth-label">Tên công ty / Đơn vị lữ hành</label>
+                  <input
+                    type="text"
+                    required
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Công ty Lữ hành..."
+                    className="auth-input"
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <div>

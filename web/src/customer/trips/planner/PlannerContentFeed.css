@@ -266,7 +266,7 @@
 
 .planner-feed__browse-all-btn:hover {
   background-color: #232e36;
-  transform: translateY(-1px);
+  
 }
 
 .planner-feed__explore-body {
@@ -426,7 +426,7 @@
 .planner-feed__res-icon-item:hover .planner-feed__res-circle {
   background-color: #e2e8f0;
   color: #0f172a;
-  transform: translateY(-2px);
+  
 }
 
 .planner-feed__res-circle {
@@ -899,7 +899,7 @@
 
 .planner-feed__new-list-btn:hover {
   background-color: #232e36;
-  transform: translateY(-1px);
+  
 }
 
 .planner-feed__new-list-form {
@@ -1025,7 +1025,7 @@
 
 .planner-feed__add-expense-btn:hover {
   background-color: #232e36;
-  transform: translateY(-1px);
+  
 }
 
 /* Khối Card xám tóm tắt ngân sách (ảnh w5.png) */

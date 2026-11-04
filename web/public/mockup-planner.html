@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mockup 3 Phương Án: Khu vực Tự lập lịch trình</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      padding: 2rem 1.5rem 5rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* Top Banner / Switcher */
+    .mockup-header {
+      margin-bottom: 2rem;
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .mockup-header h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+
+    .mockup-header p {
+      color: #64748b;
+      font-size: 0.875rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .tab-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      padding: 0.375rem;
+      border-radius: 0.75rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.625rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    /* Context Simulation (The layout context) */
+    .view-wrapper {
+      display: none;
+      animation: fadeIn 0.25s ease forwards;
+    }
+
+    .view-wrapper.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .option-intro {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.25rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      color: #1e40af;
+    }
+
+    .option-intro strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.9375rem;
+    }
+
+    /* Shared Row Layout (matches PlannerContentFeed.css) */
+    .planner-feed__cards-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .planner-feed__cards-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .planner-card {
+      background: #ffffff;
+      border-radius: 1rem;
+      border: 1px solid #e2e8f0;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .planner-card-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .planner-card-subtitle {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #64748b;
+    }
+
+    /* Budget Quick Card */
+    .budget-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1;
+      padding: 0.5rem 0;
+    }
+
+    .budget-amount {
+      font-size: 1.625rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .budget-sub {
+      font-size: 0.75rem;
+      color: #10b981;
+      font-weight: 600;
+      margin-top: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .budget-link {
+      margin-top: 1rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #2563eb;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .budget-link:hover {
+      text-decoration: underline;
+    }
+
+    /* =========================================================================
+       OPTION 1: RESERVATIONS & TICKETS (INTERACTIVE)
+       ========================================================================= */
+    .res-icons-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.5rem;
+    }
+
+    @media (max-width: 600px) {
+      .res-icons-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .res-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.25rem;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      border-radius: 0.75rem;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .res-btn:hover {
+      background: #f8fafc;
+    }
+
+    .res-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .res-btn:hover .res-circle {
+      background: #e2e8f0;
+      color: #0f172a;
+      transform: translateY(-2px);
+    }
+
+    .res-btn.has-items .res-circle {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+
+    .res-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: #2563eb;
+      color: white;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ffffff;
+      padding: 0 4px;
+    }
+
+    .res-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #475569;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* Modal for Option 1 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #ffffff;
+      border-radius: 1rem;
+      max-width: 480px;
+      width: 100%;
+      padding: 1.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-header h3 {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #94a3b8;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+    }
+    .modal-close-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .modal-form-group {
+      margin-bottom: 1rem;
+    }
+
+    .modal-form-group label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 0.375rem;
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.5rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .modal-input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .saved-list {
+      max-height: 180px;
+      overflow-y: auto;
+      margin-bottom: 1.25rem;
+      border: 1px solid #f1f5f9;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+    }
+
+    .saved-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.625rem 0.75rem;
+      background: #f8fafc;
+      border-radius: 0.375rem;
+      margin-bottom: 0.375rem;
+      font-size: 0.8125rem;
+    }
+
+    .saved-item-title {
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .saved-item-sub {
+      color: #64748b;
+      font-size: 0.75rem;
+    }
+    .saved-item-cost {
+      font-weight: 700;
+      color: #2563eb;
+    }
+
+    .del-item-btn {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      padding: 0.25rem;
+      margin-left: 0.5rem;
+      border-radius: 0.25rem;
+    }
+    .del-item-btn:hover {
+      background: #fee2e2;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: #0f172a;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-submit:hover {
+      background: #1e293b;
+    }
+
+    /* =========================================================================
+       OPTION 2: TRIP CHECKLIST (INTERACTIVE)
+       ========================================================================= */
+    .checklist-progress-wrap {
+      margin-bottom: 0.875rem;
+    }
+
+    .checklist-progress-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 0.375rem;
+    }
+
+    .checklist-progress-bar {
+      height: 6px;
+      background: #f1f5f9;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .checklist-progress-fill {
+      height: 100%;
+      background: #10b981;
+      width: 50%;
+      transition: width 0.3s ease;
+    }
+
+    .checklist-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.5rem 0.625rem;
+      background: #f8fafc;
+      border-radius: 0.5rem;
+      border: 1px solid #f1f5f9;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .check-item:hover {
+      background: #f1f5f9;
+    }
+
+    .check-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #2563eb;
+      cursor: pointer;
+    }
+
+    .check-item span.text {
+      flex: 1;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #1e293b;
+      transition: all 0.2s ease;
+    }
+
+    .check-item.done span.text {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+
+    .check-item-del {
+      opacity: 0;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+    .check-item:hover .check-item-del {
+      opacity: 1;
+    }
+    .check-item-del:hover {
+      color: #ef4444;
+    }
+
+    .add-task-form {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .add-task-input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: 1px dashed #cbd5e1;
+      border-radius: 0.5rem;
+      font-size: 0.8125rem;
+      outline: none;
+    }
+
+    .add-task-input:focus {
+      border-style: solid;
+      border-color: #2563eb;
+    }
+
+    .add-task-btn {
+      background: #f1f5f9;
+      border: none;
+      padding: 0 0.875rem;
+      border-radius: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #334155;
+    }
+    .add-task-btn:hover {
+      background: #e2e8f0;
+    }
+
+    /* =========================================================================
+       OPTION 3: TRIP DASHBOARD & STATS (INTERACTIVE)
+       ========================================================================= */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.625rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-pill {
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      border-radius: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-pill-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-pill-val {
+      font-size: 1.125rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .quick-actions-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 0.875rem;
+    }
+
+    .quick-act-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.4375rem 0.75rem;
+      background: #f1f5f9;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .quick-act-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+      transform: translateY(-1px);
+    }
+
+    .quick-act-btn.primary {
+      background: #0f172a;
+      color: white;
+    }
+
+    .quick-act-btn.primary:hover {
+      background: #1e293b;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Comparison Section */
+    .comparison-table {
+      margin-top: 3rem;
+      background: #ffffff;
+      border-radius: 1rem;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    .comparison-table table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      text-align: left;
+    }
+
+    .comparison-table th {
+      background: #f8fafc;
+      padding: 0.875rem 1rem;
+      font-weight: 700;
+      color: #334155;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .comparison-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+
+    .badge-recom {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      background: #dcfce7;
+      color: #15803d;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      border-radius: 999px;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Switcher -->
+    <header class="mockup-header">
+      <h1>Trực quan hoá 3 Phương Án: Khu vực Đặt chỗ & Ngân sách</h1>
+      <p>Chọn từng tab bên dưới để trải nghiệm trực tiếp cách thức hoạt động, giao diện tương tác và mức độ phù hợp với phần tự lập lịch trình.</p>
+
+      <div class="tab-pills">
+        <button class="tab-btn active" onclick="switchTab(1)">
+          <i class="fa-solid fa-ticket"></i>
+          <span>Phương án 1: Đặt chỗ & Vé</span>
+          <span class="badge-recom">Đề xuất</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab(2)">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Phương án 2: Checklist chuẩn bị</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab(3)">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>Phương án 3: Chỉ số & Tác vụ</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- =======================================================================
+         VIEW 1: RESERVATIONS & TICKETS (HOT)
+         ======================================================================= -->
+    <div id="view-1" class="view-wrapper active">
+      <div class="option-intro">
+        <strong>Phương án 1: Đặt chỗ & Vé di chuyển / Nơi ở (Kết nối tự động với Ngân sách)</strong>
+        Giữ nguyên các icon quen thuộc nhưng việt hoá và làm cho nó hoạt động thật 100%. Bấm vào từng icon để lưu vé/đặt chỗ. Chi phí nhập vào sẽ <strong>tự động cộng dồn ngay vào thẻ Ngân sách (Budgeting) bên cạnh</strong>.
+      </div>
+
+      <div class="planner-feed__cards-row">
+        <!-- Card 1: Reservations -->
+        <div class="planner-card">
+          <div class="planner-card-title">
+            <span>Đặt chỗ & Vé chuyến đi</span>
+            <span class="planner-card-subtitle" id="opt1-total-res">Đã lưu: 2 mục</span>
+          </div>
+
+          <div class="res-icons-grid">
+            <!-- Flight -->
+            <button type="button" class="res-btn has-items" onclick="openResModal('flight')">
+              <div class="res-circle">
+                <span class="material-symbols-outlined text-[20px]">flight</span>
+                <span class="res-badge" id="badge-flight">1</span>
+              </div>
+              <span class="res-label">Chuyến bay</span>
+            </button>
+
+            <!-- Lodging -->
+            <button type="button" class="res-btn has-items" onclick="openResModal('lodging')">
+              <div class="res-circle">
+                <span class="material-symbols-outlined text-[20px]">hotel</span>
+                <span class="res-badge" id="badge-lodging">1</span>
+              </div>
+              <span class="res-label">Khách sạn</span>
+            </button>
+
+            <!-- Rental Car -->
+            <button type="button" class="res-btn" onclick="openResModal('car')">
+              <div class="res-circle">
+                <span class="material-symbols-outlined text-[20px]">directions_car</span>
+                <span class="res-badge" id="badge-car" style="display:none">0</span>
+              </div>
+              <span class="res-label">Thuê xe</span>
+            </button>
+
+            <!-- Train -->
+            <button type="button" class="res-btn" onclick="openResModal('train')">
+              <div class="res-circle">
+                <span class="material-symbols-outlined text-[20px]">train</span>
+                <span class="res-badge" id="badge-train" style="display:none">0</span>
+              </div>
+              <span class="res-label">Vé tàu hoả</span>
+            </button>
+
+            <!-- Attachment -->
+            <button type="button" class="res-btn" onclick="openResModal('attachment')">
+              <div class="res-circle">
+                <span class="material-symbols-outlined text-[20px]">attach_file</span>
+                <span class="res-badge" id="badge-attachment" style="display:none">0</span>
+              </div>
+              <span class="res-label">Tệp / PDF</span>
+            </button>
+
+            <!-- Other -->
+            <button type="button" class="res-btn" onclick="openResModal('other')">
+              <div class="res-circle">
+                <span class="material-symbols-outlined text-[20px]">more_horiz</span>
+                <span class="res-badge" id="badge-other" style="display:none">0</span>
+              </div>
+              <span class="res-label">Ghi chú khác</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2: Budgeting Quick Card -->
+        <div class="planner-card">
+          <div class="planner-card-title">
+            <span>Ngân sách dự tính</span>
+            <span class="material-symbols-outlined text-slate-400 text-[18px]">payments</span>
+          </div>
+
+          <div class="budget-body">
+            <div class="budget-amount" id="opt1-budget-val">3.650.000 ₫</div>
+            <div class="budget-sub">
+              <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
+              <span>Gồm 2.800.000₫ vé & dịch vụ</span>
+            </div>
+          </div>
+
+          <button type="button" class="budget-link" onclick="showToast('Mở chi tiết bảng phân bổ ngân sách...')">
+            <span>Xem chi tiết chi tiêu</span>
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         VIEW 2: TRIP CHECKLIST
+         ======================================================================= -->
+    <div id="view-2" class="view-wrapper">
+      <div class="option-intro">
+        <strong>Phương án 2: Checklist chuẩn bị trước chuyến đi</strong>
+        Thay thế hàng nút bằng danh sách kiểm tra các công việc quan trọng cần chuẩn bị trước khi lên đường. Người dùng có thể tích chọn hoàn thành (checkbox) hoặc thêm việc cá nhân.
+      </div>
+
+      <div class="planner-feed__cards-row">
+        <!-- Card 1: Checklist -->
+        <div class="planner-card">
+          <div class="planner-card-title">
+            <span>Checklist chuẩn bị trước chuyến đi</span>
+            <span class="planner-card-subtitle" id="checklist-counter">3/5 hoàn thành</span>
+          </div>
+
+          <div class="checklist-progress-wrap">
+            <div class="checklist-progress-head">
+              <span>Tiến độ chuẩn bị</span>
+              <span id="checklist-pct">60%</span>
+            </div>
+            <div class="checklist-progress-bar">
+              <div class="checklist-progress-fill" id="checklist-fill" style="width: 60%"></div>
+            </div>
+          </div>
+
+          <div class="checklist-items" id="checklist-container">
+            <!-- Items rendered via JS -->
+          </div>
+
+          <form class="add-task-form" onsubmit="addChecklistTask(event)">
+            <input type="text" class="add-task-input" id="new-task-input" placeholder="+ Thêm đầu việc cần chuẩn bị..." required>
+            <button type="submit" class="add-task-btn">Thêm</button>
+          </form>
+        </div>
+
+        <!-- Card 2: Budgeting -->
+        <div class="planner-card">
+          <div class="planner-card-title">
+            <span>Ngân sách dự tính</span>
+            <span class="material-symbols-outlined text-slate-400 text-[18px]">payments</span>
+          </div>
+
+          <div class="budget-body">
+            <div class="budget-amount">850.000 ₫</div>
+            <div class="budget-sub" style="color:#64748b">
+              <span>(Tính từ vé tham quan trong lịch trình)</span>
+            </div>
+          </div>
+
+          <button type="button" class="budget-link" onclick="showToast('Xem chi tiết ngân sách...')">
+            <span>Xem chi tiết chi tiêu</span>
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         VIEW 3: TRIP STATS & DASHBOARD
+         ======================================================================= -->
+    <div id="view-3" class="view-wrapper">
+      <div class="option-intro">
+        <strong>Phương án 3: Bảng chỉ số tóm tắt & Lối tắt tác vụ thông minh</strong>
+        Biến card thành trung tâm điều khiển chuyến đi: đếm ngược ngày đi, tổng số điểm dừng, ước tính quãng đường và các phím tắt tối ưu lịch trình (TSP, thời tiết, in PDF).
+      </div>
+
+      <div class="planner-feed__cards-row">
+        <!-- Card 1: Dashboard Stats -->
+        <div class="planner-card">
+          <div class="planner-card-title">
+            <span>Tổng quan hành trình</span>
+            <span class="planner-card-subtitle">Hà Nội &bull; 3 Ngày 2 Đêm</span>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-pill">
+              <span class="stat-pill-label">Khởi hành</span>
+              <span class="stat-pill-val" style="color: #2563eb;">Còn 6 ngày</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-pill-label">Thời lượng</span>
+              <span class="stat-pill-val">3 Ngày</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-pill-label">Điểm dừng</span>
+              <span class="stat-pill-val">8 địa điểm</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-pill-label">Ước tính lộ trình</span>
+              <span class="stat-pill-val">~42 km</span>
+            </div>
+          </div>
+
+          <div class="quick-actions-bar">
+            <button type="button" class="quick-act-btn primary" onclick="showToast('Đang tính toán tuyến đường ngắn nhất (TSP)...')">
+              <span class="material-symbols-outlined text-[15px]">route</span>
+              <span>Tối ưu tuyến đường</span>
+            </button>
+            <button type="button" class="quick-act-btn" onclick="showToast('Đã chia đều các điểm vào 3 ngày!')">
+              <span class="material-symbols-outlined text-[15px]">auto_awesome</span>
+              <span>Chia đều theo ngày</span>
+            </button>
+            <button type="button" class="quick-act-btn" onclick="showToast('Mở cửa sổ chuẩn bị in / xuất file PDF...')">
+              <span class="material-symbols-outlined text-[15px]">print</span>
+              <span>Xuất PDF / In</span>
+            </button>
+            <button type="button" class="quick-act-btn" onclick="showToast('Thời tiết Hà Nội 3 ngày tới: Nắng nhẹ 26-30°C')">
+              <span class="material-symbols-outlined text-[15px]">partly_cloudy_day</span>
+              <span>Thời tiết</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2: Budgeting -->
+        <div class="planner-card">
+          <div class="planner-card-title">
+            <span>Ngân sách dự tính</span>
+            <span class="material-symbols-outlined text-slate-400 text-[18px]">payments</span>
+          </div>
+
+          <div class="budget-body">
+            <div class="budget-amount">850.000 ₫</div>
+            <div class="budget-sub" style="color:#64748b">
+              <span>Trung bình: 283.000 ₫/ngày</span>
+            </div>
+          </div>
+
+          <button type="button" class="budget-link" onclick="showToast('Xem chi tiết ngân sách...')">
+            <span>Xem chi tiết chi tiêu</span>
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         COMPARISON TABLE
+         ======================================================================= -->
+    <div class="comparison-table">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 28%;">Tiêu chí so sánh</th>
+            <th style="width: 24%;">Phương án 1 (Đặt chỗ & Vé)</th>
+            <th style="width: 24%;">Phương án 2 (Checklist)</th>
+            <th style="width: 24%;">Phương án 3 (Chỉ số Dashboard)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Đúng bản chất kế hoạch</strong></td>
+            <td>Rất cao (Lưu chuyến bay, khách sạn, vé tàu thực tế)</td>
+            <td>Cao (Giúp chuẩn bị đồ trước khi đi)</td>
+            <td>Cao (Tóm tắt hành trình)</td>
+          </tr>
+          <tr>
+            <td><strong>Liên kết Ngân sách</strong></td>
+            <td><strong>Có</strong> (Cộng tiền vé/khách sạn vào Budget)</td>
+            <td>Không liên kết trực tiếp</td>
+            <td>Hiện trung bình chi tiêu/ngày</td>
+          </tr>
+          <tr>
+            <td><strong>Độ phức tạp dev</strong></td>
+            <td>Khoảng 2-3h (Lưu jsonb vào lịch trình)</td>
+            <td>Khoảng 1h (Lưu list task jsonb)</td>
+            <td>Khoảng 1.5h (Tính toán từ stops có sẵn)</td>
+          </tr>
+          <tr>
+            <td><strong>Đánh giá thực tế</strong></td>
+            <td><strong style="color:#15803d;">Khuyên dùng nhất</strong> vì tận dụng đúng giao diện hiện tại mà có tính năng thật.</td>
+            <td>Rất hữu ích cho người hay quên đồ đạc.</td>
+            <td>Đẹp mắt, chuyên nghiệp, hỗ trợ tối ưu lộ trình GIS.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- =========================================================================
+       MODAL FOR OPTION 1 (RESERVATIONS)
+       ========================================================================= -->
+  <div class="modal-backdrop" id="res-modal" onclick="closeResModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modal-title">
+          <span class="material-symbols-outlined text-blue-600" id="modal-icon">flight</span>
+          <span id="modal-title-text">Thông tin chuyến bay</span>
+        </h3>
+        <button type="button" class="modal-close-btn" onclick="closeResModal()">&times;</button>
+      </div>
+
+      <!-- Saved items for this type -->
+      <div id="modal-saved-container">
+        <label style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 0.375rem; display: block;">DANH SÁCH ĐÃ LƯU</label>
+        <div class="saved-list" id="modal-saved-list"></div>
+      </div>
+
+      <!-- Form rendered dynamically per type -->
+      <form id="dynamic-res-form" onsubmit="saveReservation(event)">
+        <div id="dynamic-form-fields"></div>
+        <button type="submit" class="btn-submit" style="margin-top: 1rem;">+ Lưu thông tin</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">Thông báo</div>
+
+  <script>
+    // ==========================================
+    // TAB SWITCHER
+    // ==========================================
+    function switchTab(idx) {
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i + 1 === idx);
+      });
+      document.querySelectorAll('.view-wrapper').forEach((vw, i) => {
+        vw.classList.toggle('active', i + 1 === idx);
+      });
+    }
+
+    // ==========================================
+    // TOAST HELPER
+    // ==========================================
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ==========================================
+    // OPTION 1 LOGIC (SPECIALIZED FORMS PER TYPE)
+    // ==========================================
+    const mockReservations = {
+      flight: [
+        {
+          id: 1,
+          title: 'Vietnam Airlines VN123',
+          route: 'Nội Bài (HAN) → Đà Nẵng (DAD)',
+          code: 'VN-4982',
+          seat: 'Ghế 12A • 20kg ký gửi',
+          time: '10/11/2026 • 08:30 - 09:50',
+          cost: 1800000,
+          notes: 'Có mặt trước 90 phút tại sảnh T1'
+        }
+      ],
+      lodging: [
+        {
+          id: 2,
+          title: 'Khách sạn Meliá Đà Nẵng Beach Resort',
+          address: '19 Trường Sa, Ngũ Hành Sơn, Đà Nẵng',
+          room: 'Deluxe Ocean View (1 giường đôi)',
+          dates: '10/11 - 12/11/2026 (2 đêm)',
+          code: 'AGD-98124',
+          cost: 2100000,
+          notes: 'Check-in: 14:00 • Đã bao gồm ăn sáng'
+        }
+      ],
+      car: [],
+      train: [],
+      attachment: [],
+      other: []
+    };
+
+    const typeMeta = {
+      flight: {
+        label: 'Chuyến bay',
+        icon: 'flight',
+        renderForm: () => `
+          <div class="modal-form-group">
+            <label>Hãng bay & Số hiệu chuyến bay *</label>
+            <input type="text" class="modal-input" id="inp-flight-name" placeholder="VD: Vietnam Airlines VN123" required>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Sân bay cất cánh (Đi) *</label>
+              <input type="text" class="modal-input" id="inp-flight-from" placeholder="VD: Sân bay Nội Bài (HAN)" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Sân bay hạ cánh (Đến) *</label>
+              <input type="text" class="modal-input" id="inp-flight-to" placeholder="VD: Sân bay Đà Nẵng (DAD)" required>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Giờ khởi hành *</label>
+              <input type="datetime-local" class="modal-input" id="inp-flight-dept" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Giờ hạ cánh</label>
+              <input type="datetime-local" class="modal-input" id="inp-flight-arr">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Mã đặt chỗ (PNR / Code) *</label>
+              <input type="text" class="modal-input" id="inp-flight-code" placeholder="VD: PNR-83921" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Giá vé (VNĐ) *</label>
+              <input type="number" class="modal-input" id="inp-flight-cost" placeholder="VD: 1800000" step="10000" required>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Số ghế & Hành lý</label>
+              <input type="text" class="modal-input" id="inp-flight-seat" placeholder="VD: 12A • 20kg ký gửi">
+            </div>
+            <div class="modal-form-group">
+              <label>Ghi chú thêm</label>
+              <input type="text" class="modal-input" id="inp-flight-notes" placeholder="VD: Cửa khởi hành số 4">
+            </div>
+          </div>
+        `,
+        extractData: () => ({
+          title: document.getElementById('inp-flight-name').value.trim(),
+          route: `${document.getElementById('inp-flight-from').value.trim()} → ${document.getElementById('inp-flight-to').value.trim()}`,
+          code: document.getElementById('inp-flight-code').value.trim(),
+          seat: document.getElementById('inp-flight-seat').value.trim(),
+          time: document.getElementById('inp-flight-dept').value ? `Khởi hành: ${document.getElementById('inp-flight-dept').value.replace('T', ' ')}` : '',
+          cost: Number(document.getElementById('inp-flight-cost').value || 0),
+          notes: document.getElementById('inp-flight-notes').value.trim()
+        })
+      },
+      lodging: {
+        label: 'Khách sạn / Lưu trú',
+        icon: 'hotel',
+        renderForm: () => `
+          <div class="modal-form-group">
+            <label>Tên khách sạn / Homestay / Resort *</label>
+            <input type="text" class="modal-input" id="inp-hotel-name" placeholder="VD: Meliá Đà Nẵng Beach Resort" required>
+          </div>
+          <div class="modal-form-group">
+            <label>Địa chỉ</label>
+            <input type="text" class="modal-input" id="inp-hotel-addr" placeholder="VD: 19 Trường Sa, Ngũ Hành Sơn, Đà Nẵng">
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Ngày nhận phòng (Check-in) *</label>
+              <input type="date" class="modal-input" id="inp-hotel-in" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Ngày trả phòng (Check-out) *</label>
+              <input type="date" class="modal-input" id="inp-hotel-out" required>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Hạng phòng / Loại phòng</label>
+              <input type="text" class="modal-input" id="inp-hotel-room" placeholder="VD: Deluxe Ocean King">
+            </div>
+            <div class="modal-form-group">
+              <label>Mã xác nhận (Agoda/Booking ID) *</label>
+              <input type="text" class="modal-input" id="inp-hotel-code" placeholder="VD: AGD-98124" required>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Tổng chi phí phòng (VNĐ) *</label>
+              <input type="number" class="modal-input" id="inp-hotel-cost" placeholder="VD: 2100000" step="10000" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Số ĐT Lễ tân / Ghi chú</label>
+              <input type="text" class="modal-input" id="inp-hotel-notes" placeholder="VD: 0236.392.9999 • Bao gồm ăn sáng">
+            </div>
+          </div>
+        `,
+        extractData: () => ({
+          title: document.getElementById('inp-hotel-name').value.trim(),
+          address: document.getElementById('inp-hotel-addr').value.trim(),
+          room: document.getElementById('inp-hotel-room').value.trim(),
+          dates: `${document.getElementById('inp-hotel-in').value} → ${document.getElementById('inp-hotel-out').value}`,
+          code: document.getElementById('inp-hotel-code').value.trim(),
+          cost: Number(document.getElementById('inp-hotel-cost').value || 0),
+          notes: document.getElementById('inp-hotel-notes').value.trim()
+        })
+      },
+      car: {
+        label: 'Thuê xe di chuyển',
+        icon: 'directions_car',
+        renderForm: () => `
+          <div class="modal-form-group">
+            <label>Đơn vị cho thuê / Nhà xe *</label>
+            <input type="text" class="modal-input" id="inp-car-provider" placeholder="VD: Thuê xe tự lái Gia Huy / Xanh SM" required>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Loại xe & Số chỗ *</label>
+              <input type="text" class="modal-input" id="inp-car-type" placeholder="VD: Toyota Vios 5 chỗ / Xe máy Honda Vision" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Biển số xe (nếu có)</label>
+              <input type="text" class="modal-input" id="inp-car-plate" placeholder="VD: 43A-981.22">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Địa điểm nhận xe *</label>
+              <input type="text" class="modal-input" id="inp-car-pickup" placeholder="VD: Cửa ga Sân bay Đà Nẵng" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Địa điểm trả xe</label>
+              <input type="text" class="modal-input" id="inp-car-dropoff" placeholder="VD: Trả tại khách sạn">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Thời gian nhận xe</label>
+              <input type="datetime-local" class="modal-input" id="inp-car-time-start">
+            </div>
+            <div class="modal-form-group">
+              <label>Thời gian trả xe</label>
+              <input type="datetime-local" class="modal-input" id="inp-car-time-end">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Tiền thuê xe (VNĐ) *</label>
+              <input type="number" class="modal-input" id="inp-car-cost" placeholder="VD: 1400000" step="10000" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Tiền cọc / Ghi chú</label>
+              <input type="text" class="modal-input" id="inp-car-notes" placeholder="VD: Đã cọc CCCD + 2.000.000đ">
+            </div>
+          </div>
+        `,
+        extractData: () => ({
+          title: document.getElementById('inp-car-provider').value.trim(),
+          route: `${document.getElementById('inp-car-type').value.trim()}${document.getElementById('inp-car-plate').value ? ` (${document.getElementById('inp-car-plate').value.trim()})` : ''}`,
+          address: `Nhận tại: ${document.getElementById('inp-car-pickup').value.trim()}`,
+          time: document.getElementById('inp-car-time-start').value ? `Nhận: ${document.getElementById('inp-car-time-start').value.replace('T', ' ')}` : '',
+          cost: Number(document.getElementById('inp-car-cost').value || 0),
+          notes: document.getElementById('inp-car-notes').value.trim()
+        })
+      },
+      train: {
+        label: 'Vé tàu hoả / Xe khách',
+        icon: 'train',
+        renderForm: () => `
+          <div class="modal-form-group">
+            <label>Tên tàu / Nhà xe *</label>
+            <input type="text" class="modal-input" id="inp-train-name" placeholder="VD: Tàu Thống Nhất SE3 / Xe Limousine Hải Vân" required>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Ga / Bến xuất phát *</label>
+              <input type="text" class="modal-input" id="inp-train-from" placeholder="VD: Ga Hà Nội" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Ga / Bến đến *</label>
+              <input type="text" class="modal-input" id="inp-train-to" placeholder="VD: Ga Đà Nẵng" required>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Giờ khởi hành *</label>
+              <input type="datetime-local" class="modal-input" id="inp-train-dept" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Mã vé điện tử</label>
+              <input type="text" class="modal-input" id="inp-train-code" placeholder="VD: DSVN-88219">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Toa & Vị trí chỗ *</label>
+              <input type="text" class="modal-input" id="inp-train-seat" placeholder="VD: Toa 4 - Giường số 12 (Khoang 4)" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Giá vé (VNĐ) *</label>
+              <input type="number" class="modal-input" id="inp-train-cost" placeholder="VD: 750000" step="10000" required>
+            </div>
+          </div>
+          <div class="modal-form-group">
+            <label>Ghi chú thêm</label>
+            <input type="text" class="modal-input" id="inp-train-notes" placeholder="VD: Cần in thẻ lên tàu trước 30p">
+          </div>
+        `,
+        extractData: () => ({
+          title: document.getElementById('inp-train-name').value.trim(),
+          route: `${document.getElementById('inp-train-from').value.trim()} → ${document.getElementById('inp-train-to').value.trim()}`,
+          code: document.getElementById('inp-train-code').value.trim(),
+          seat: document.getElementById('inp-train-seat').value.trim(),
+          time: document.getElementById('inp-train-dept').value ? `Khởi hành: ${document.getElementById('inp-train-dept').value.replace('T', ' ')}` : '',
+          cost: Number(document.getElementById('inp-train-cost').value || 0),
+          notes: document.getElementById('inp-train-notes').value.trim()
+        })
+      },
+      attachment: {
+        label: 'Tệp đính kèm / Tài liệu',
+        icon: 'attach_file',
+        renderForm: () => `
+          <div class="modal-form-group">
+            <label>Tên tài liệu / Tệp *</label>
+            <input type="text" class="modal-input" id="inp-att-name" placeholder="VD: Vé điện tử PDF / Hợp đồng bảo hiểm du lịch" required>
+          </div>
+          <div class="modal-form-group">
+            <label>Đường dẫn tệp (URL / Google Drive) hoặc Chọn tệp</label>
+            <input type="text" class="modal-input" id="inp-att-url" placeholder="VD: https://drive.google.com/file/d/...">
+            <input type="file" class="modal-input" style="margin-top: 0.5rem; padding: 0.375rem;">
+          </div>
+          <div class="modal-form-group">
+            <label>Ghi chú tóm tắt</label>
+            <input type="text" class="modal-input" id="inp-att-notes" placeholder="VD: Xuất trình khi làm thủ tục check-in">
+          </div>
+        `,
+        extractData: () => ({
+          title: document.getElementById('inp-att-name').value.trim(),
+          code: 'FILE-PDF',
+          cost: 0,
+          notes: document.getElementById('inp-att-notes').value.trim() || document.getElementById('inp-att-url').value.trim() || 'Tệp đính kèm'
+        })
+      },
+      other: {
+        label: 'Ghi chú & Đặt chỗ khác',
+        icon: 'more_horiz',
+        renderForm: () => `
+          <div class="modal-form-group">
+            <label>Nội dung đặt chỗ / Ghi chú *</label>
+            <input type="text" class="modal-input" id="inp-other-name" placeholder="VD: Vé cáp treo Bà Nà Hills / Tour lặn biển Cù Lao Chàm" required>
+          </div>
+          <div class="form-row-2">
+            <div class="modal-form-group">
+              <label>Mã voucher / Xác nhận</label>
+              <input type="text" class="modal-input" id="inp-other-code" placeholder="VD: KLOOK-8812">
+            </div>
+            <div class="modal-form-group">
+              <label>Chi phí (VNĐ)</label>
+              <input type="number" class="modal-input" id="inp-other-cost" placeholder="VD: 900000" step="10000">
+            </div>
+          </div>
+          <div class="modal-form-group">
+            <label>Thời gian & Ghi chú</label>
+            <input type="text" class="modal-input" id="inp-other-notes" placeholder="VD: Áp dụng ngày 11/11, bao gồm buffet trưa">
+          </div>
+        `,
+        extractData: () => ({
+          title: document.getElementById('inp-other-name').value.trim(),
+          code: document.getElementById('inp-other-code').value.trim(),
+          cost: Number(document.getElementById('inp-other-cost').value || 0),
+          notes: document.getElementById('inp-other-notes').value.trim()
+        })
+      }
+    };
+
+    let currentResType = 'flight';
+
+    function openResModal(type) {
+      currentResType = type;
+      const meta = typeMeta[type];
+      document.getElementById('modal-icon').innerText = meta.icon;
+      document.getElementById('modal-title-text').innerText = 'Thông tin ' + meta.label;
+
+      // Render specialized form
+      document.getElementById('dynamic-form-fields').innerHTML = meta.renderForm();
+
+      renderSavedList(type);
+      document.getElementById('res-modal').classList.add('open');
+    }
+
+    function closeResModal(e) {
+      if (e && e.target !== e.currentTarget) return;
+      document.getElementById('res-modal').classList.remove('open');
+    }
+
+    function renderSavedList(type) {
+      const listEl = document.getElementById('modal-saved-list');
+      const container = document.getElementById('modal-saved-container');
+      const items = mockReservations[type] || [];
+
+      if (items.length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+      listEl.innerHTML = items.map(it => `
+        <div class="saved-item">
+          <div>
+            <div class="saved-item-title">
+              ${it.title}
+              ${it.code ? `<span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(#${it.code})</span>` : ''}
+            </div>
+            ${it.route ? `<div class="saved-item-sub"><i class="fa-solid fa-arrow-right text-[10px]"></i> ${it.route}</div>` : ''}
+            ${it.dates ? `<div class="saved-item-sub"><i class="fa-regular fa-calendar text-[10px]"></i> ${it.dates}</div>` : ''}
+            ${it.room ? `<div class="saved-item-sub"><i class="fa-solid fa-bed text-[10px]"></i> ${it.room}</div>` : ''}
+            ${it.seat ? `<div class="saved-item-sub"><i class="fa-solid fa-couch text-[10px]"></i> ${it.seat}</div>` : ''}
+            ${it.time ? `<div class="saved-item-sub"><i class="fa-regular fa-clock text-[10px]"></i> ${it.time}</div>` : ''}
+            ${it.notes ? `<div class="saved-item-sub" style="color:#0f172a; font-weight:500;">&bull; ${it.notes}</div>` : ''}
+          </div>
+          <div style="display:flex; align-items:center; text-align:right;">
+            <div>
+              <span class="saved-item-cost">${Number(it.cost || 0).toLocaleString('vi-VN')} ₫</span>
+            </div>
+            <button type="button" class="del-item-btn" onclick="deleteReservation('${type}', ${it.id})" title="Xoá mục này">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function saveReservation(e) {
+      e.preventDefault();
+      const meta = typeMeta[currentResType];
+      const data = meta.extractData();
+
+      if (!data.title) return;
+
+      const newItem = { id: Date.now(), ...data };
+      mockReservations[currentResType].push(newItem);
+
+      updateResBadges();
+      closeResModal();
+      showToast('Đã lưu ' + meta.label + ' thành công!');
+    }
+
+    function deleteReservation(type, id) {
+      mockReservations[type] = mockReservations[type].filter(x => x.id !== id);
+      renderSavedList(type);
+      updateResBadges();
+      showToast('Đã xoá mục này');
+    }
+
+    function updateResBadges() {
+      let totalItems = 0;
+      let totalCost = 850000; // Base attractions
+
+      for (const t in mockReservations) {
+        const count = mockReservations[t].length;
+        totalItems += count;
+        const b = document.getElementById('badge-' + t);
+        if (b) {
+          b.innerText = count;
+          b.style.display = count > 0 ? 'flex' : 'none';
+          const btn = b.closest('.res-btn');
+          if (btn) btn.classList.toggle('has-items', count > 0);
+        }
+        mockReservations[t].forEach(x => {
+          totalCost += Number(x.cost || 0);
+        });
+      }
+
+      document.getElementById('opt1-total-res').innerText = `Đã lưu: ${totalItems} mục`;
+      document.getElementById('opt1-budget-val').innerText = totalCost.toLocaleString('vi-VN') + ' ₫';
+    }
+
+    // ==========================================
+    // OPTION 2 LOGIC (CHECKLIST)
+    // ==========================================
+    let checklistTasks = [
+      { id: 1, text: 'Kiểm tra CCCD / Hộ chiếu còn hạn', done: true },
+      { id: 2, text: 'Đặt phòng khách sạn & lưu mã xác nhận', done: true },
+      { id: 3, text: 'Chuẩn bị sạc dự phòng & dây cáp', done: true },
+      { id: 4, text: 'Mang thuốc say xe, thuốc cảm dự phòng', done: false },
+      { id: 5, text: 'Chuẩn bị tiền mặt & kích hoạt thẻ ngân hàng', done: false }
+    ];
+
+    function renderChecklist() {
+      const c = document.getElementById('checklist-container');
+      c.innerHTML = checklistTasks.map(t => `
+        <div class="check-item ${t.done ? 'done' : ''}" onclick="toggleChecklist(${t.id})">
+          <input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleChecklist(${t.id})">
+          <span class="text">${t.text}</span>
+          <button type="button" class="check-item-del" onclick="event.stopPropagation(); deleteChecklistTask(${t.id})">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      `).join('');
+
+      const doneCount = checklistTasks.filter(x => x.done).length;
+      const total = checklistTasks.length;
+      const pct = total === 0 ? 0 : Math.round((doneCount / total) * 100);
+
+      document.getElementById('checklist-counter').innerText = `${doneCount}/${total} hoàn thành`;
+      document.getElementById('checklist-pct').innerText = `${pct}%`;
+      document.getElementById('checklist-fill').style.width = `${pct}%`;
+    }
+
+    function toggleChecklist(id) {
+      checklistTasks = checklistTasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+      renderChecklist();
+    }
+
+    function deleteChecklistTask(id) {
+      checklistTasks = checklistTasks.filter(t => t.id !== id);
+      renderChecklist();
+    }
+
+    function addChecklistTask(e) {
+      e.preventDefault();
+      const inp = document.getElementById('new-task-input');
+      const text = inp.value.trim();
+      if (!text) return;
+      checklistTasks.push({ id: Date.now(), text, done: false });
+      inp.value = '';
+      renderChecklist();
+      showToast('Đã thêm đầu việc mới vào checklist!');
+    }
+
+    // Init
+    updateResBadges();
+    renderChecklist();
+  </script>
+</body>
+</html>

@@ -23,6 +23,9 @@ export default function LoginPage({ _user, onSuccess, initialMode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [accountRole, setAccountRole] = useState("user");
+  const [companyName, setCompanyName] = useState("");
+  const [taxCode, setTaxCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -58,6 +61,11 @@ export default function LoginPage({ _user, onSuccess, initialMode }) {
       return;
     }
 
+    if (!isLogin && accountRole === "operator" && !companyName.trim()) {
+      setError("Vui lòng nhập tên công ty / đơn vị lữ hành.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -69,22 +77,39 @@ export default function LoginPage({ _user, onSuccess, initialMode }) {
           email,
           password,
           full_name: fullName,
+          role: accountRole,
+          company_name: accountRole === "operator" ? companyName : undefined,
+          tax_code: accountRole === "operator" ? taxCode : undefined,
         });
       }
 
       localStorage.setItem("token", res.access_token);
       localStorage.setItem("user", JSON.stringify(res.user));
 
-      const targetPath =
-        location.state?.from ||
-        (res.user?.role === "admin"
-          ? "/quan-tri"
-          : res.user?.role === "operator"
-          ? "/nha-dieu-hanh"
-          : "/");
+      // Phân quyền chuyển hướng nghiêm ngặt theo vai trò tài khoản:
+      let targetPath;
+      if (res.user?.role === "operator") {
+        targetPath = (location.state?.from && location.state.from.startsWith("/operator"))
+          ? location.state.from
+          : "/operator";
+      } else if (res.user?.role === "admin") {
+        targetPath = (location.state?.from && location.state.from.startsWith("/admin"))
+          ? location.state.from
+          : "/admin";
+      } else {
+        targetPath = (location.state?.from && !location.state.from.startsWith("/login") && !location.state.from.startsWith("/dang-nhap"))
+          ? location.state.from
+          : "/";
+      }
 
-      // Nếu chuyển về trang Home ("/") hoặc luồng khách thông thường:
-      // Kích hoạt hiệu ứng đổi ảnh nền hero sang ảnh nền của Home và phóng to tràn màn hình
+      // Với Operator hoặc Admin: Chuyển thẳng lập tức vào khu vực nghiệp vụ
+      if (targetPath.startsWith("/operator") || targetPath.startsWith("/admin")) {
+        if (onSuccess) onSuccess(res.user, false);
+        navigate(targetPath, { replace: true });
+        return;
+      }
+
+      // Với tài khoản khách hàng thông thường về Home ("/"):
       if (targetPath === "/") {
         setIsTransitioning(true);
         if (onSuccess) onSuccess(res.user, false);
@@ -97,7 +122,7 @@ export default function LoginPage({ _user, onSuccess, initialMode }) {
           navigate("/", { replace: true, state: { fromLoginTransition: true } });
         }, transitionDuration);
       } else {
-        if (onSuccess) onSuccess(res.user, true);
+        if (onSuccess) onSuccess(res.user, false);
         navigate(targetPath, { replace: true });
       }
     } catch (err) {
@@ -128,23 +153,26 @@ export default function LoginPage({ _user, onSuccess, initialMode }) {
           {/* Lớp overlay hiệu ứng chuyển giao */}
           <div className="voyage-login-transition-curtain" aria-hidden="true">
             <div className="voyage-login-transition-pulse">
-              <span className="voyage-login-transition-brand">Voyage</span>
+              <span className="voyage-login-transition-brand">Aura Voyage</span>
             </div>
           </div>
           <header className="voyage-login-nav">
-            <Link to="/" className="voyage-login-brand">
-              Voyage
+            <Link to="/" className="voyage-login-brand" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <svg style={{ width: "20px", height: "20px" }} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
+              </svg>
+              <span>Aura Voyage</span>
             </Link>
 
-            <nav className="voyage-login-nav-links" aria-label="Primary navigation">
+            <nav className="voyage-login-nav-links" aria-label="Điều hướng chính">
               <Link to="/" className="voyage-login-nav-link">
-                Destinations
+                Giới thiệu
               </Link>
               <Link to="/tour" className="voyage-login-nav-link">
-                Tours
+                Tour trọn gói
               </Link>
-              <Link to="/chuyen-di" className="voyage-login-nav-link">
-                Experiences
+              <Link to="/trips" className="voyage-login-nav-link">
+                Lập lịch trình
               </Link>
             </nav>
 
@@ -220,6 +248,47 @@ export default function LoginPage({ _user, onSuccess, initialMode }) {
             )}
 
             <form onSubmit={handleSubmit} noValidate>
+              {/* Chọn loại tài khoản khi đăng ký */}
+              {!isLogin && (
+                <div className="voyage-login-field">
+                  <label>Account type</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setAccountRole("user")}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: "10px",
+                        border: accountRole === "user" ? "1.5px solid #0f172a" : "1px solid #e2e8f0",
+                        background: accountRole === "user" ? "#0f172a" : "#ffffff",
+                        color: accountRole === "user" ? "#ffffff" : "#334155",
+                        fontSize: "13px",
+                        fontWeight: "700",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Khách du lịch
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountRole("operator")}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: "10px",
+                        border: accountRole === "operator" ? "1.5px solid #0f172a" : "1px solid #e2e8f0",
+                        background: accountRole === "operator" ? "#0f172a" : "#ffffff",
+                        color: accountRole === "operator" ? "#ffffff" : "#334155",
+                        fontSize: "13px",
+                        fontWeight: "700",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Nhà điều hành Tour
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Họ tên khi đăng ký */}
               {!isLogin && (
                 <div className="voyage-login-field">
@@ -239,6 +308,44 @@ export default function LoginPage({ _user, onSuccess, initialMode }) {
                     />
                   </div>
                 </div>
+              )}
+
+              {/* Thông tin doanh nghiệp khi đăng ký làm Operator */}
+              {!isLogin && accountRole === "operator" && (
+                <>
+                  <div className="voyage-login-field">
+                    <label htmlFor="companyName">Tên công ty / Đơn vị lữ hành</label>
+                    <div className="voyage-login-input-shell">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" />
+                      </svg>
+                      <input
+                        id="companyName"
+                        type="text"
+                        placeholder="VD: Công ty Du lịch Aura Travel"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="voyage-login-field">
+                    <label htmlFor="taxCode">Mã số thuế (tuỳ chọn)</label>
+                    <div className="voyage-login-input-shell">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                        <rect x="3" y="4" width="18" height="16" rx="2" />
+                        <path d="M7 8h10M7 12h6" />
+                      </svg>
+                      <input
+                        id="taxCode"
+                        type="text"
+                        placeholder="VD: 0101234567"
+                        value={taxCode}
+                        onChange={(e) => setTaxCode(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Email */}
