@@ -4,6 +4,11 @@
 
 set -e
 
+# Khắc phục lỗi pyexpat trên macOS Homebrew Python
+if [ -d "/opt/homebrew/opt/expat/lib" ]; then
+  export DYLD_LIBRARY_PATH="/opt/homebrew/opt/expat/lib:${DYLD_LIBRARY_PATH:-}"
+fi
+
 # Chuyển về thư mục gốc của script
 CDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$CDIR"
