@@ -1,10 +1,47 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api";
-import { MAU_NGAY } from "../../customer/trips/planner/plannerUtils";
+import { MAU_NGAY, getMauNgay } from "../../customer/trips/planner/plannerUtils";
 import MapOverlayImage from "./MapOverlayImage";
 import "./TripMap.css";
 
-const laToaDo = (s) => Number.isFinite(+s?.lon) && Number.isFinite(+s?.lat);
+const laToaDo = (s) => {
+  if (!s || typeof s !== "object") return false;
+  if (
+    s.role === "note" ||
+    s.role === "checklist" ||
+    s.role === "expense" ||
+    s.type === "note" ||
+    s.type === "checklist" ||
+    s.type === "expense"
+  ) {
+    return false;
+  }
+  if (s.lon == null || s.lat == null || s.lon === "" || s.lat === "") {
+    return false;
+  }
+  const lon = Number(s.lon);
+  const lat = Number(s.lat);
+  if (!Number.isFinite(lon) || !Number.isFinite(lat)) {
+    return false;
+  }
+  // Loại bỏ tọa độ (0, 0) - Null Island ngoài khơi Tây Phi
+  if (Math.abs(lon) < 0.001 && Math.abs(lat) < 0.001) {
+    return false;
+  }
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    return false;
+  }
+  return true;
+};
+
+const laKhongPhaiPoi = (p) =>
+  !p ||
+  p.role === "note" ||
+  p.role === "checklist" ||
+  p.role === "expense" ||
+  p.type === "note" ||
+  p.type === "checklist" ||
+  p.type === "expense";
 
 function veVungNhin(map, diem, opts) {
   const hopLe = (diem || []).filter(laToaDo);
@@ -33,6 +70,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
   const [enrichment, setEnrichment] = useState(null);
   const [enrichmentState, setEnrichmentState] = useState("idle");
   const [localFocusDay, setLocalFocusDay] = useState(null);
+  const [mapReady, setMapReady] = useState(false);
   const [dayRoutes, setDayRoutes] = useState({});
   const [isRouting, setIsRouting] = useState(false);
 
@@ -68,7 +106,10 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
   }, [diemChon]);
 
   useEffect(() => {
-    if (!selectedPlace?.type || selectedPlace?.id == null) return;
+    if (!selectedPlace?.type || selectedPlace?.id == null || laKhongPhaiPoi(selectedPlace)) {
+      setPlaceDetail(null);
+      return;
+    }
     let cancelled = false;
     setPlaceDetail(null);
     api.place(selectedPlace.type, selectedPlace.id)
@@ -78,7 +119,11 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
   }, [selectedPlace?.type, selectedPlace?.id]);
 
   useEffect(() => {
-    if (!selectedPlace?.type || selectedPlace?.id == null) return;
+    if (!selectedPlace?.type || selectedPlace?.id == null || laKhongPhaiPoi(selectedPlace)) {
+      setEnrichment(null);
+      setEnrichmentState("idle");
+      return;
+    }
     let cancelled = false;
     const timers = [];
     const load = async (attempt = 0) => {
@@ -117,6 +162,15 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
         if (!e.originalEvent?.target?.closest(".maplibregl-marker")) setSelectedPlace(null);
       });
 
+      const capNhatReady = () => {
+        if (!huy) setMapReady(true);
+      };
+      if (map.isStyleLoaded()) capNhatReady();
+      map.on("load", capNhatReady);
+      map.on("styledata", () => {
+        if (!huy && map.isStyleLoaded()) setMapReady(true);
+      });
+
       mapRef.current = map;
       const ro = new ResizeObserver(() => map.resize());
       ro.observe(ref.current);
@@ -140,13 +194,14 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
       mapRef.current?._roDoiKichThuoc?.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
+      setMapReady(false);
       activeDayRouteLayersRef.current.clear();
     };
   }, []);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !window.maplibregl) return;
+    if (!map || !mapReady || !window.maplibregl) return;
 
     const ve = () => {
       (map._tripMarkers || []).forEach((m) => m.remove());
@@ -158,14 +213,20 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
       const cacChoNgu = hopLe.filter((s) => s.role === "lodging");
 
       for (const hotelStop of cacChoNgu) {
+        const ngay = Number(hotelStop.day) || 0;
+        const mauChoNgu = getMauNgay(ngay);
+
         const el = document.createElement("div");
-        el.style.cssText = `width:30px;height:30px;border-radius:50%;background:#f15b4a;
-          color:#fff;font-size:14px;text-align:center;
-          box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;border:2px solid #fff;
-          display:flex;align-items:center;justify-content:center;`;
-        el.innerHTML = '<i class="fa-solid fa-house"></i>';
-        el.title = hotelStop.day
-          ? `Chỗ ngủ ngày ${hotelStop.day}: ${hotelStop.name}`
+        el.style.cssText = `width:30px;height:30px;border-radius:50%;background:${mauChoNgu};
+          color:#fff;font-size:13px;text-align:center;opacity:1;
+          box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;border:2px solid #fff;
+          display:flex;align-items:center;justify-content:center;position:relative;`;
+        el.innerHTML = `
+          <i class="fa-solid fa-house"></i>
+          ${ngay > 0 ? `<span style="position:absolute;top:-5px;right:-5px;background:#0f172a;color:#fff;font-size:9px;font-weight:800;padding:1px 3.5px;border-radius:999px;border:1.5px solid #fff;line-height:1.2;">N${ngay}</span>` : ""}
+        `;
+        el.title = ngay
+          ? `Chỗ ngủ Ngày ${ngay}: ${hotelStop.name}`
           : `Chỗ ngủ: ${hotelStop.name}`;
 
         el.addEventListener("click", (e) => {
@@ -179,24 +240,45 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
         );
       }
 
+      // Xây dựng map đánh số thứ tự liên tục xuyên suốt toàn bộ chuyến đi (1, 2, 3, 4, 5...)
       const theoNgay = {};
       hopLe.filter((s) => s.role !== "lodging")
            .forEach((s) => (theoNgay[s.day ?? 0] ||= []).push(s));
 
-      Object.entries(theoNgay).forEach(([ngay, ds]) => {
-        const isWishlist = Number(ngay) === 0;
-        const mau = MAU_NGAY;
-        const mo = isWishlist
-          ? (currentFocusDay == null ? 0.8 : 0.2)
-          : (currentFocusDay == null || Number(ngay) === currentFocusDay ? 1 : 0.25);
+      const globalIndexMap = new Map();
+      let globalCount = 0;
+      const cacNgaySapXep = Object.keys(theoNgay)
+        .map(Number)
+        .filter((d) => d > 0)
+        .sort((a, b) => a - b);
+
+      cacNgaySapXep.forEach((ngay) => {
+        const ds = theoNgay[ngay] || [];
+        ds.forEach((s) => {
+          globalCount += 1;
+          globalIndexMap.set(`${s.type}-${s.id}`, globalCount);
+        });
+      });
+
+      Object.entries(theoNgay).forEach(([ngayStr, ds]) => {
+        const ngay = Number(ngayStr);
+        const isWishlist = ngay === 0;
+        const mau = getMauNgay(ngay);
 
         ds.forEach((s, i) => {
+          const soThuTu = globalIndexMap.get(`${s.type}-${s.id}`) || i + 1;
+          const nhan = isWishlist ? "•" : `${soThuTu}`;
+
           const el = document.createElement("div");
-          el.style.cssText = `width:26px;height:26px;border-radius:50%;background:${mau};
-            color:#fff;font:700 12px/26px system-ui;text-align:center;opacity:${mo};
-            box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:pointer;border:2px solid #fff;`;
-          el.textContent = isWishlist ? "•" : i + 1;
-          el.title = isWishlist ? `Muốn đi: ${s.name}` : `Ngày ${ngay} (#${i + 1}): ${s.name}`;
+          el.style.cssText = `width:28px;height:28px;border-radius:50%;background:${mau};
+            color:#fff;font:800 12px/28px system-ui, -apple-system, sans-serif;
+            text-align:center;opacity:1;
+            box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;border:2px solid #fff;
+            display:flex;align-items:center;justify-content:center;`;
+          el.textContent = nhan;
+          el.title = isWishlist
+            ? `Muốn đi: ${s.name}`
+            : `Điểm #${soThuTu} (Ngày ${ngay}): ${s.name}`;
 
           el.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -226,7 +308,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
 
     if (map.isStyleLoaded()) ve();
     else map.once("load", ve);
-  }, [stops, currentFocusDay]);
+  }, [stops, currentFocusDay, mapReady]);
 
   // 1. Tự động tính đường bộ thực tế (pgRouting) theo từng ngày với debounce và AbortController
   useEffect(() => {
@@ -329,17 +411,19 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
                   err.message
                 );
                 // Xử lý lỗi (snap quá xa / không tìm được đường): bỏ qua chặng đó, fallback vẽ đường thẳng
-                dayFeatures.push({
-                  type: "Feature",
-                  properties: { name: "Đường thẳng" },
-                  geometry: {
-                    type: "LineString",
-                    coordinates: [
-                      [+start.lon, +start.lat],
-                      [+end.lon, +end.lat],
-                    ],
-                  },
-                });
+                if (laToaDo(start) && laToaDo(end)) {
+                  dayFeatures.push({
+                    type: "Feature",
+                    properties: { name: "Đường thẳng" },
+                    geometry: {
+                      type: "LineString",
+                      coordinates: [
+                        [+start.lon, +start.lat],
+                        [+end.lon, +end.lat],
+                      ],
+                    },
+                  });
+                }
               }
             }
 
@@ -413,11 +497,11 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
         if (!features || !features.length) return;
 
         const layerId = `route-day-${day}`;
-        const mau = MAU_NGAY;
-        const mo =
-          currentFocusDay == null || Number(day) === currentFocusDay
-            ? 0.85
-            : 0.2;
+        const mau = getMauNgay(day);
+        const isCurrent =
+          currentFocusDay == null || Number(day) === currentFocusDay;
+        const mo = 0.85;
+        const doRong = isCurrent ? 5 : 4;
 
         const sourceData = {
           type: "FeatureCollection",
@@ -429,6 +513,8 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
           existingSource.setData(sourceData);
           if (map.getLayer(layerId)) {
             map.setPaintProperty(layerId, "line-opacity", mo);
+            map.setPaintProperty(layerId, "line-color", mau);
+            map.setPaintProperty(layerId, "line-width", doRong);
           }
         } else {
           map.addSource(layerId, {
@@ -445,7 +531,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
             },
             paint: {
               "line-color": mau,
-              "line-width": 4.5,
+              "line-width": doRong,
               "line-opacity": mo,
             },
           });
@@ -456,11 +542,11 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
 
     if (map.isStyleLoaded()) veTuyenDuong();
     else map.once("load", veTuyenDuong);
-  }, [dayRoutes, currentFocusDay]);
+  }, [dayRoutes, currentFocusDay, mapReady]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !window.maplibregl) return;
+    if (!map || !mapReady || !window.maplibregl) return;
 
     const ve = () => {
       (map._timThay || []).forEach((m) => m.remove());
@@ -499,7 +585,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
     } else {
       map.once("load", ve);
     }
-  }, [timThay]);
+  }, [timThay, mapReady]);
 
   useEffect(() => {
     (mapRef.current?._chamTim || []).forEach((el, i) => {
@@ -559,7 +645,7 @@ export default function TripMap({ stops, focusDay, timThay, noiBat, onThem, onXe
             >
               <span
                 className="trip-map__filter-dot"
-                style={{ backgroundColor: MAU_NGAY }}
+                style={{ backgroundColor: getMauNgay(d) }}
               />
               Ngày {d}
             </button>

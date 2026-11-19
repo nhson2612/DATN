@@ -144,6 +144,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
           duration_days: trip.duration_days,
           destination: trip.destination || null,
           start_date: trip.start_date || null,
+          budget: Number(trip.budget) || 0,
           sections: moiSections,
           reservations: resList,
           stops: moiStops.map((s) => ({
@@ -151,12 +152,12 @@ export default function TripPlanner({ user, onNeedAuth }) {
             type: s.type,
             id: s.id,
             section: s.section ?? null,
-            role: s.role || "place",
+            role: s.role || (s.type === "expense" ? "expense" : "place"),
             name: s.name || null,
             time_range: s.time_range || null,
             note: s.note || null,
             visited: Boolean(s.visited),
-            cost: s.cost || null,
+            cost: Number(s.cost) || null,
             reaction: s.reaction || null,
             text: s.text || null,
             items: s.items || null,
@@ -191,7 +192,53 @@ export default function TripPlanner({ user, onNeedAuth }) {
     [stops, sections, luu]
   );
 
+  const capNhatBudget = useCallback(
+    (soTien) => {
+      const moiBudget = Number(soTien) || 0;
+      setTrip((prev) => ({ ...prev, budget: moiBudget }));
+      api
+        .updateItinerary(id, {
+          name: trip.name,
+          description: trip.description,
+          duration_days: trip.duration_days,
+          destination: trip.destination || null,
+          start_date: trip.start_date || null,
+          budget: moiBudget,
+          sections,
+          reservations,
+          stops: stops.map((s) => ({
+            day: s.day ?? null,
+            type: s.type,
+            id: s.id,
+            section: s.section ?? null,
+            role: s.role || (s.type === "expense" ? "expense" : "place"),
+            name: s.name || null,
+            time_range: s.time_range || null,
+            note: s.note || null,
+            visited: Boolean(s.visited),
+            cost: Number(s.cost) || null,
+            reaction: s.reaction || null,
+            text: s.text || null,
+            items: s.items || null,
+            title: s.title || null,
+          })),
+        })
+        .catch((e) => setLoi(e.message));
+    },
+    [id, trip, sections, reservations, stops]
+  );
+
   async function boSungChiTiet(p) {
+    if (!p) return null;
+    const isNonPoi =
+      p.type === "expense" ||
+      p.role === "expense" ||
+      p.type === "note" ||
+      p.role === "note" ||
+      p.type === "checklist" ||
+      p.role === "checklist";
+    if (isNonPoi) return p;
+
     const thieuDuLieu =
       !p?.name ||
       (typeof p.name === "string" && !p.name.trim()) ||
@@ -214,6 +261,24 @@ export default function TripPlanner({ user, onNeedAuth }) {
   }
 
   async function themVaoMuc(p, sectionKey) {
+    const isNonPoi =
+      p.type === "expense" ||
+      p.role === "expense" ||
+      p.type === "note" ||
+      p.role === "note" ||
+      p.type === "checklist" ||
+      p.role === "checklist";
+    if (isNonPoi) {
+      return capNhat([
+        ...stops,
+        {
+          ...p,
+          section: sectionKey,
+          role: p.role || (p.type === "expense" ? "expense" : "note"),
+        },
+      ]);
+    }
+
     const cu = stops.find((s) => cungDiem(s, p) && s.role !== "lodging");
     if (cu) {
       if (cu.section === sectionKey) return;
@@ -231,6 +296,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
         name: diem.name,
         lon: diem.lon,
         lat: diem.lat,
+        cost: diem.cost || null,
         category: diem.category,
         dia_chi: diem.dia_chi,
         mo_ta: diem.mo_ta,
@@ -448,6 +514,160 @@ export default function TripPlanner({ user, onNeedAuth }) {
     capNhat(moi, sections);
   }
 
+  function apDungLichTrinhAI(daysPlan = [], effectiveDest = null) {
+    if (!daysPlan.length) return;
+    let moiStops = [...stops];
+    const defaultSec = sections[0]?.key || MUC_MAC_DINH;
+
+    for (const dObj of daysPlan) {
+      const dayNum = Number(dObj.day) || 1;
+      for (const act of dObj.activities || []) {
+        const p = act.place;
+        if (!p?.id || !p?.type) continue;
+        if (act.role === "lodging" || p.type === "accommodation") {
+          moiStops = moiStops.filter((s) => !(s.day === dayNum && s.role === "lodging"));
+          moiStops.push({
+            type: p.type,
+            id: p.id,
+            name: p.name,
+            lon: p.lon,
+            lat: p.lat,
+            category: p.category,
+            dia_chi: p.dia_chi,
+            section: null,
+            day: dayNum,
+            role: "lodging",
+          });
+        } else {
+          const idxCu = moiStops.findIndex((s) => cungDiem(s, p) && s.role !== "lodging");
+          if (idxCu >= 0) {
+            moiStops[idxCu] = {
+              ...moiStops[idxCu],
+              day: dayNum,
+              note: act.description || moiStops[idxCu].note || null,
+            };
+          } else {
+            moiStops.push({
+              type: p.type,
+              id: p.id,
+              name: p.name,
+              lon: p.lon,
+              lat: p.lat,
+              category: p.category,
+              dia_chi: p.dia_chi,
+              section: defaultSec,
+              day: dayNum,
+              role: "place",
+              note: act.description || null,
+            });
+          }
+        }
+      }
+    }
+
+    const nextDest = !trip.destination && effectiveDest ? effectiveDest : trip.destination;
+    if (nextDest !== trip.destination) {
+      setTrip((prev) => ({ ...prev, destination: nextDest }));
+    }
+    setStops(moiStops);
+    setToiUu(null);
+    api
+      .updateItinerary(id, {
+        name: trip.name,
+        description: trip.description,
+        duration_days: trip.duration_days,
+        destination: nextDest || null,
+        start_date: trip.start_date || null,
+        budget: Number(trip.budget) || 0,
+        sections,
+        reservations,
+        stops: moiStops.map((s) => ({
+          day: s.day ?? null,
+          type: s.type,
+          id: s.id,
+          section: s.section ?? null,
+          role: s.role || (s.type === "expense" ? "expense" : "place"),
+          name: s.name || null,
+          time_range: s.time_range || null,
+          note: s.note || null,
+          visited: Boolean(s.visited),
+          cost: Number(s.cost) || null,
+          reaction: s.reaction || null,
+          text: s.text || null,
+          items: s.items || null,
+          title: s.title || null,
+        })),
+      })
+      .catch((e) => setLoi(e.message));
+  }
+
+  function thucThiCongCuAI(action) {
+    if (!action || !action.type) return;
+    if (action.type === "update_budget") {
+      capNhatBudget(action.budget);
+      return;
+    }
+    if (action.type === "update_destination" && action.destination) {
+      const nextDest = action.destination;
+      setTrip((prev) => ({ ...prev, destination: nextDest }));
+      api
+        .updateItinerary(id, {
+          name: trip.name,
+          description: trip.description,
+          duration_days: trip.duration_days,
+          destination: nextDest,
+          start_date: trip.start_date || null,
+          budget: Number(trip.budget) || 0,
+          sections,
+          reservations,
+          stops: stops.map((s) => ({
+            day: s.day ?? null,
+            type: s.type,
+            id: s.id,
+            section: s.section ?? null,
+            role: s.role || (s.type === "expense" ? "expense" : "place"),
+            name: s.name || null,
+            time_range: s.time_range || null,
+            note: s.note || null,
+            visited: Boolean(s.visited),
+            cost: Number(s.cost) || null,
+            reaction: s.reaction || null,
+            text: s.text || null,
+            items: s.items || null,
+            title: s.title || null,
+          })),
+        })
+        .catch((e) => setLoi(e.message));
+      return;
+    }
+    if (action.type === "add_checklists" && Array.isArray(action.items) && action.items.length > 0) {
+      const newStop = {
+        type: "checklist",
+        id: `chk_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+        role: "checklist",
+        day: action.day || 1,
+        title: action.label || "Checklist chuẩn bị",
+        items: action.items.map((txt, idx) => ({
+          id: `i_${Date.now()}_${idx}`,
+          text: String(txt),
+          checked: false,
+        })),
+      };
+      capNhat([...stops, newStop], sections);
+      return;
+    }
+    if (action.type === "add_note" && action.text) {
+      const newStop = {
+        type: "note",
+        id: `note_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+        role: "note",
+        day: action.day || 1,
+        text: String(action.text),
+      };
+      capNhat([...stops, newStop], sections);
+    }
+  }
+
   // =========================================================================
   // SCROLLSPY: Tự động cập nhật activeSection trên PlannerRail khi người dùng cuộn
   // =========================================================================
@@ -585,6 +805,7 @@ export default function TripPlanner({ user, onNeedAuth }) {
             onThemNote={themNoteVaoNgay}
             onThemChecklist={themChecklistVaoNgay}
             onAutoAssign={phanBoTuDong}
+            onCapNhatBudget={capNhatBudget}
             onXem={setDiemChon}
             onPick={setNoiBat}
             onResults={setTimThay}
@@ -618,11 +839,26 @@ export default function TripPlanner({ user, onNeedAuth }) {
             />
           </ErrorBoundary>
           <PlannerAssistant
+            trip={trip}
+            stops={stops}
+            sections={sections}
+            reservations={reservations}
+            cacNgay={cacNgay}
+            theoNgay={theoNgay}
+            choNguTheoNgay={choNguTheoNgay}
             destination={diemDen}
             location={viTri}
+            open={openAssistantModal}
+            onOpenChange={setOpenAssistantModal}
             onResults={setTimThay}
             onFocus={setDiemChon}
             onAdd={(place) => themVaoMuc(place, sections[0]?.key || MUC_MAC_DINH)}
+            onXep={xepVaoNgay}
+            onDatChoNgu={datChoNgu}
+            onToiUu={toiUuNgay}
+            onAutoAssign={phanBoTuDong}
+            onApplyPlan={apDungLichTrinhAI}
+            onExecuteToolAction={thucThiCongCuAI}
           />
         </section>
       </div>

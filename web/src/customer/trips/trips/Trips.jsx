@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../../shared/api";
 import Dropdown from "../../../shared/common/Dropdown";
@@ -60,6 +60,16 @@ const EXPERIENCES = [
   { id: "shopping", label: "Shopping & Crafts", icon: "shopping_bag", desc: "Handicrafts & local specialty gifts" },
   { id: "local", label: "Local Life", icon: "diversity_3", desc: "Homestays & village experiences" },
   { id: "photo", label: "Photography", icon: "photo_camera", desc: "Scenic viewpoints & golden hour" },
+];
+
+const SORT_OPTIONS = [
+  { value: "recent", label: "Mới tạo nhất", icon: "schedule" },
+  { value: "oldest", label: "Cũ nhất", icon: "history" },
+  { value: "upcoming", label: "Sắp khởi hành", icon: "flight_takeoff" },
+  { value: "name_asc", label: "Tên chuyến (A → Z)", icon: "arrow_downward" },
+  { value: "name_desc", label: "Tên chuyến (Z → A)", icon: "arrow_upward" },
+  { value: "duration_desc", label: "Thời lượng (Dài nhất)", icon: "calendar_month" },
+  { value: "duration_asc", label: "Thời lượng (Ngắn nhất)", icon: "calendar_today" },
 ];
 
 export default function Trips({ user, onNeedAuth, onLogout }) {
@@ -257,26 +267,62 @@ export default function Trips({ user, onNeedAuth, onLogout }) {
   );
 
   // Lọc và sắp xếp danh sách chuyến đi
-  const tripsHienThi = [...(ds || [])]
-    .filter((t) => {
-      if (!searchFilter.trim()) return true;
-      const term = searchFilter.toLowerCase();
-      return (
-        (t.name || "").toLowerCase().includes(term) ||
-        (t.destination || "").toLowerCase().includes(term)
-      );
-    })
-    .sort((a, b) => {
-      if (filterOption === "name") {
-        return (a.name || "").localeCompare(b.name || "");
-      }
-      if (filterOption === "upcoming") {
-        const dateA = a.start_date ? new Date(a.start_date).getTime() : 0;
-        const dateB = b.start_date ? new Date(b.start_date).getTime() : 0;
-        return dateA - dateB;
-      }
-      return (b.id || 0) - (a.id || 0);
-    });
+  const tripsHienThi = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayMs = today.getTime();
+
+    return [...(ds || [])]
+      .filter((t) => {
+        if (!searchFilter.trim()) return true;
+        const term = searchFilter.toLowerCase();
+        return (
+          (t.name || "").toLowerCase().includes(term) ||
+          (t.destination || "").toLowerCase().includes(term)
+        );
+      })
+      .sort((a, b) => {
+        if (filterOption === "oldest") {
+          return (a.id || 0) - (b.id || 0);
+        }
+        if (filterOption === "name" || filterOption === "name_asc") {
+          const cmp = (a.name || "").localeCompare(b.name || "", "vi", { sensitivity: "base" });
+          if (cmp !== 0) return cmp;
+          return (b.id || 0) - (a.id || 0);
+        }
+        if (filterOption === "name_desc") {
+          const cmp = (b.name || "").localeCompare(a.name || "", "vi", { sensitivity: "base" });
+          if (cmp !== 0) return cmp;
+          return (b.id || 0) - (a.id || 0);
+        }
+        if (filterOption === "upcoming") {
+          const getScore = (item) => {
+            if (!item.start_date) return Infinity; // Không có ngày -> xếp sau cùng
+            const t = new Date(item.start_date).getTime();
+            if (isNaN(t)) return Infinity;
+            const diff = t - todayMs;
+            if (diff >= 0) return diff; // Sắp tới trong tương lai: gần nhất lên đầu
+            return 1e14 + (todayMs - t); // Quá khứ: sau tương lai
+          };
+          const scoreA = getScore(a);
+          const scoreB = getScore(b);
+          if (scoreA !== scoreB) return scoreA - scoreB;
+          return (b.id || 0) - (a.id || 0);
+        }
+        if (filterOption === "duration_desc") {
+          const diff = (b.duration_days || 1) - (a.duration_days || 1);
+          if (diff !== 0) return diff;
+          return (b.id || 0) - (a.id || 0);
+        }
+        if (filterOption === "duration_asc") {
+          const diff = (a.duration_days || 1) - (b.duration_days || 1);
+          if (diff !== 0) return diff;
+          return (b.id || 0) - (a.id || 0);
+        }
+        // "recent" (Mới tạo nhất)
+        return (b.id || 0) - (a.id || 0);
+      });
+  }, [ds, searchFilter, filterOption]);
 
   // Hiệu ứng mờ dần từ dưới lên khi cuộn chuột
   const maskGradient =
@@ -717,12 +763,14 @@ export default function Trips({ user, onNeedAuth, onLogout }) {
             <div className="trips-bar-actions">
               <Dropdown
                 variant="minimal"
+                align="right"
+                prefixIcon={
+                  <span className="material-symbols-outlined text-[17px] text-slate-500">
+                    swap_vert
+                  </span>
+                }
                 value={filterOption}
-                options={[
-                  { value: "recent", label: "Mới cập nhật" },
-                  { value: "upcoming", label: "Sắp khởi hành" },
-                  { value: "name", label: "Tên chuyến (A – Z)" },
-                ]}
+                options={SORT_OPTIONS}
                 onChange={(val) => setFilterOption(val)}
               />
 

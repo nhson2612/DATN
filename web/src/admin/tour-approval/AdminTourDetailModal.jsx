@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../shared/api";
+import "./TourApproval.css";
 
 const dinhDangNgay = (v) => (v ? new Date(v).toLocaleDateString("vi-VN") : "—");
 
@@ -84,16 +85,16 @@ export default function AdminTourDetailModal({ tourId, onClose, onApprove, onRej
 
   return (
     <div
-      className="tour-approval-modal__div-1"
+      className="tour-approval-modal-backdrop tour-approval-modal__div-1"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="tour-approval-modal__div-2 tour-approval-modal__div-1">
+      <div className="tour-approval-modal-dialog tour-approval-modal__div-2">
         {/* Modal Header */}
         <div className="tour-approval-modal__div-3">
           <div className="tour-approval-modal__div-4">
-            <div className="tour-approval-modal__div-5 tour-approval-modal__div-2">
+            <div className="tour-approval-modal__div-5">
               <span className="material-symbols-outlined tour-approval-modal__span-6">travel_explore</span>
             </div>
             <div className="tour-approval-modal__div-7">

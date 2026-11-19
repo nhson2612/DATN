@@ -214,6 +214,9 @@ export default function Dropdown({
           aria-expanded={isOpen}
           disabled={disabled}
         >
+          {prefixIcon && (
+            <span className="custom-dropdown-minimal-prefix">{prefixIcon}</span>
+          )}
           <span className="custom-dropdown-minimal-label">{displayText}</span>
           <span
             className={`custom-dropdown-arrow ${
@@ -244,9 +247,22 @@ export default function Dropdown({
                     }`}
                     onClick={() => handleSelect(opt.value)}
                   >
-                    <span className="custom-dropdown-item-label">
-                      {opt.label}
-                    </span>
+                    <div className="custom-dropdown-item-content">
+                      {opt.icon && (
+                        <span className="custom-dropdown-item-icon">
+                          {typeof opt.icon === "string" ? (
+                            <span className="material-symbols-outlined text-[16px]">
+                              {opt.icon}
+                            </span>
+                          ) : (
+                            opt.icon
+                          )}
+                        </span>
+                      )}
+                      <span className="custom-dropdown-item-label">
+                        {opt.label}
+                      </span>
+                    </div>
                     {active && (
                       <span className="custom-dropdown-check">✓</span>
                     )}

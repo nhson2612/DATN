@@ -291,6 +291,7 @@ export const api = {
   downloadOperatorGuests: (id) => download(`/operator/departures/${id}/guests.csv`, `khach-dot-${id}.csv`),
   cancelOperatorDeparture: (id, reason) => request(`/operator/departures/${id}/cancel`, { method: "POST", body: JSON.stringify({ reason }) }),
   operatorRevenue: () => request("/operator/departures/revenue/summary"),
+  operatorCustomers: (params = {}) => request(`/operator/bookings/customers/list?${new URLSearchParams(params)}`),
   operatorSubmitTour: (id) => request(`/operator/tours/${id}/submit`, { method: "POST" }),
   adminToursChoDuyet: () => request("/admin/tours/pending"),
   adminDuyetTour: (id) => request(`/admin/tours/${id}/approve`, { method: "POST" }),

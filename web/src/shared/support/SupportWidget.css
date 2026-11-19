@@ -37,7 +37,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 14px 26px rgba(15, 23, 42, 0.45));
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), filter 0.28s ease;
 }
 
@@ -75,7 +74,6 @@
 .sp-fab:hover .sp-otter-rig,
 .sp-fab:focus-visible .sp-otter-rig {
   transform: translateY(-7px) scale(1.07);
-  filter: drop-shadow(0 18px 34px rgba(17, 157, 200, 0.52));
 }
 
 .sp-fab:hover .sp-duo__arm,
@@ -377,60 +375,79 @@
   }
 }
 
-/* Chấm xanh online báo hiệu trợ lý AI sẵn sàng */
-.sp-fab__badge-dot {
-  position: absolute;
-  top: 14px;
-  right: 6px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #10b981;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 8px #10b981;
-  animation: sp-pulse 2s infinite;
-  z-index: 5;
-}
 
-/* BUBBLE TOOLTIP KHI HOVER */
+/* BONG BÓNG CHAT HÌNH HỘP CHỮ NHẬT DUOLINGO / KHAN ACADEMY STYLE */
 .sp-fab__mascot-bubble {
   position: absolute;
   right: calc(100% + 10px);
-  bottom: 14px;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(12px);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 14px;
+  bottom: 22px;
+  background: #ffffff;
+  color: #1e293b;
+  padding: 10px 14px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  white-space: nowrap;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(8px) scale(0.94);
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sp-fab:hover .sp-fab__mascot-bubble,
-.sp-fab:focus-visible .sp-fab__mascot-bubble {
+  border: 2px solid #e5e7eb;
+  max-width: 190px;
+  width: max-content;
+  white-space: normal;
+  text-align: center;
+  box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08),
+              0 2px 6px -1px rgba(15, 23, 42, 0.04);
   opacity: 1;
-  transform: translateX(0) scale(1);
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  display: block;
+  z-index: 20;
+  cursor: pointer;
+  animation: sp-bubble-float 4s ease-in-out infinite;
 }
 
-.sp-fab__bubble-badge {
-  background: rgba(249, 115, 22, 0.25);
-  color: #fb923c;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.sp-fab__mascot-bubble:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: #cbd5e1;
+  box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.12),
+              0 4px 10px -2px rgba(15, 23, 42, 0.05);
+}
+
+.sp-fab__bubble-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #1e293b;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes sp-bubble-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Đuôi thoại nhọn (tam giác) bên cạnh phải trỏ thẳng sang tai/mặt linh vật chuẩn Khan Academy */
+.sp-fab__mascot-bubble::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -9px;
+  transform: translateY(-50%) rotate(45deg);
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border-top: 2px solid #e5e7eb;
+  border-right: 2px solid #e5e7eb;
+  border-top-right-radius: 2px;
+  z-index: 2;
+  transition: border-color 0.2s ease;
+}
+
+.sp-fab__mascot-bubble:hover::after {
+  border-top-color: #cbd5e1;
+  border-right-color: #cbd5e1;
 }
 
 /* ==========================================================================
@@ -488,16 +505,6 @@
   font-weight: 700;
   color: #0f172a;
   letter-spacing: -0.01em;
-}
-
-.sp-gpt-header__badge {
-  font-size: 11px;
-  background: #e0f2fe;
-  color: #0284c7;
-  border: 1px solid #bae6fd;
-  border-radius: 9999px;
-  padding: 2px 8px;
-  font-weight: 600;
 }
 
 .sp-gpt-header__actions {
@@ -1093,11 +1100,6 @@
 
 .sp-window--dark .sp-gpt-icon-btn {
   color: #94a3b8;
-}
-
-.sp-window--dark .sp-gpt-icon-btn:hover {
-  background: #1e1e1e;
-  color: #ffffff;
 }
 
 .sp-window--dark .sp-gpt-chat,

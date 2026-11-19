@@ -317,13 +317,13 @@ def search_places(question: str, lat: float | None = None,
             continue
         name = str(item.get("title") or "").strip()
         item_lat, item_lon = item.get("latitude"), item.get("longitude")
-        cid = str(item.get("cid") or item.get("placeId") or "").strip()
-        if not name or not cid or item_lat is None or item_lon is None:
+        if not name or item_lat is None or item_lon is None:
             continue
         try:
             item_lat, item_lon = float(item_lat), float(item_lon)
         except (TypeError, ValueError):
             continue
+        cid = str(item.get("cid") or item.get("placeId") or f"geo_{item_lat:.6f}_{item_lon:.6f}").strip()
         if not _is_in_vietnam(item_lat, item_lon, item.get("address")):
             continue
         if str(item.get("address") or "").strip().lower() in ("việt nam", "vietnam"):

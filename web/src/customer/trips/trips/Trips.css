@@ -458,7 +458,27 @@
 .trips-bar-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+}
+
+.trips-bar-actions .custom-dropdown--minimal {
+  padding: 6px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.trips-bar-actions .custom-dropdown--minimal:hover,
+.trips-bar-actions .custom-dropdown--minimal.custom-dropdown--open {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.trips-bar-actions .custom-dropdown-trigger--minimal {
+  gap: 8px;
 }
 
 .trips-plan-cta {

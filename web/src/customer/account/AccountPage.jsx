@@ -201,6 +201,24 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
   const [submittingCancel, setSubmittingCancel] = useState(false);
   const [payingBookingId, setPayingBookingId] = useState(null);
   const [modalPaymentMethod, setModalPaymentMethod] = useState("payos");
+  const [checkingPaymentId, setCheckingPaymentId] = useState(null);
+
+  const handleCheckPayment = async (bookingId) => {
+    setCheckingPaymentId(bookingId);
+    try {
+      const res = await api.tourBookingStatus(bookingId);
+      if (res.status === "PAID" || res.status === "CONFIRMED" || res.payment_status === "SUCCESS") {
+        showToast("Thanh toán thành công! Đơn hàng đã được xác nhận.");
+      } else {
+        showToast(res.message || "Đơn hàng vẫn đang chờ thanh toán.");
+      }
+      await fetchBookings();
+    } catch (err) {
+      showToast("Không thể kiểm tra trạng thái: " + (err.message || "Lỗi kết nối"));
+    } finally {
+      setCheckingPaymentId(null);
+    }
+  };
 
   // Dữ liệu lịch trình
   const [itineraries, setItineraries] = useState([]);
@@ -313,12 +331,19 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
     }
   }, [user, fetchBookings, fetchItineraries]);
 
-  // Kiểm tra callback thanh toán Stripe từ URL
+  // Kiểm tra callback thanh toán Stripe hoặc payOS từ URL
   useEffect(() => {
     const checkout = searchParams.get("checkout");
+    const bid = searchParams.get("booking_id");
     if (checkout === "success") {
-      showToast("Thanh toán đơn tour thành công! Dữ liệu đã được cập nhật.");
-      fetchBookings();
+      showToast("Đang kiểm tra kết quả thanh toán...");
+      if (bid) {
+        api.tourBookingStatus(bid)
+          .then(() => fetchBookings())
+          .catch(() => fetchBookings());
+      } else {
+        fetchBookings();
+      }
     } else if (checkout === "cancelled") {
       showToast("Giao dịch thanh toán đã bị hủy.");
     }
@@ -1085,6 +1110,15 @@ export default function AccountPage({ user, onLogout, onNeedAuth }) {
                                       disabled={payingBookingId === b.id}
                                     >
                                       Stripe (Thẻ) →
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="voyage-acc-btn-outline-sm"
+                                      onClick={() => handleCheckPayment(b.id)}
+                                      disabled={checkingPaymentId === b.id}
+                                      title="Kiểm tra trạng thái đối soát từ ngân hàng / payOS"
+                                    >
+                                      {checkingPaymentId === b.id ? "Đang kiểm tra..." : "Kiểm tra thanh toán ⟳"}
                                     </button>
                                     <button
                                       type="button"

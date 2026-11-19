@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getMauNgay } from "./plannerUtils";
 import "./PlannerRail.css";
 
 function nhanNgayRail(startDate, dayIndex) {
@@ -206,9 +207,15 @@ export default function PlannerRail({
                     }`}
                   >
                     <div className="planner-rail__day-info">
-                      <span className="planner-rail__day-title">
-                        {nhanNgayRail(startDate, ngay)}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="w-2 h-2 rounded-full inline-block flex-shrink-0"
+                          style={{ backgroundColor: getMauNgay(ngay) }}
+                        />
+                        <span className="planner-rail__day-title">
+                          {nhanNgayRail(startDate, ngay)}
+                        </span>
+                      </div>
                       {subtitle ? (
                         <span className="planner-rail__day-sub" title={subtitle}>
                           {subtitle}

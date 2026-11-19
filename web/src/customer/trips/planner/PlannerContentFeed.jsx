@@ -43,6 +43,7 @@ export default function PlannerContentFeed({
   onThemChecklist,
   onAutoAssign,
   onCapNhatReservations,
+  onCapNhatBudget,
   onXem,
   onPick: _onPick,
   onResults: _onResults,
@@ -66,9 +67,9 @@ export default function PlannerContentFeed({
   const [moModalExpense, setMoModalExpense] = useState(false);
   const [tenExpense, setTenExpense] = useState("");
   const [soTienExpense, setSoTienExpense] = useState("");
-  const [_nganSachMucTieu, setNganSachMucTieu] = useState(trip?.budget || 0);
   const [moModalBudget, setMoModalBudget] = useState(false);
   const [nganSachNhap, setNganSachNhap] = useState(trip?.budget || "");
+  const nganSachMucTieu = Number(trip?.budget) || 0;
 
   // Trạng thái ngày đang mở trong Itinerary
   const [expandedDays, setExpandedDays] = useState(() => {
@@ -115,7 +116,7 @@ export default function PlannerContentFeed({
     const newStop = {
       type: "expense",
       id: `exp_${Date.now()}`,
-      role: "note",
+      role: "expense",
       name: tenExpense.trim(),
       cost: costNum,
       day: null,
@@ -129,7 +130,10 @@ export default function PlannerContentFeed({
 
   const handleLuuBudget = (e) => {
     e?.preventDefault();
-    setNganSachMucTieu(Number(nganSachNhap) || 0);
+    const val = Number(nganSachNhap) || 0;
+    if (onCapNhatBudget) {
+      onCapNhatBudget(val);
+    }
     setMoModalBudget(false);
   };
 
@@ -703,35 +707,51 @@ export default function PlannerContentFeed({
 
         {/* Danh sách các ngày tuần tự Day 1..N */}
         <div className="planner-feed__days-container">
-          {cacNgay.map((ngay) => (
-            <div key={ngay} id={`day-${ngay}`} className="planner-feed__day-block">
-              <PlannerDay
-                ngay={ngay}
-                startDate={trip?.start_date}
-                diemDen={diemDen}
-                ds={theoNgay[ngay] || []}
-                choNgu={choNguTheoNgay[ngay]}
-                chuaXep={chuaXep}
-                isExpanded={Boolean(expandedDays[ngay])}
-                onToggleExpand={() => toggleDay(ngay)}
-                onHover={() => {}}
-                onXep={onXep}
-                onBoNgay={onBoNgay}
-                onSapXepLai={onSapXepLai}
-                onXem={onXem}
-                onDatChoNgu={onDatChoNgu}
-                onBoChoNgu={onBoChoNgu}
-                onToiUu={() => onToiUu(ngay)}
-                dangLuu={dangLuu}
-                toiUu={toiUu?.day === ngay ? toiUu : null}
-                duong={duongTheoNgay?.[ngay] || null}
-                onCapNhatStop={onCapNhatStop}
-                onThemNote={onThemNote}
-                onThemChecklist={onThemChecklist}
-                nav={nav}
-              />
-            </div>
-          ))}
+          {cacNgay.map((ngay, idx) => {
+            let offset = 0;
+            for (let j = 0; j < idx; j++) {
+              const prevDay = cacNgay[j];
+              const prevStops = (theoNgay[prevDay] || []).filter(
+                (s) =>
+                  s.role !== "note" &&
+                  s.role !== "checklist" &&
+                  s.role !== "expense" &&
+                  s.type !== "expense"
+              );
+              offset += prevStops.length;
+            }
+
+            return (
+              <div key={ngay} id={`day-${ngay}`} className="planner-feed__day-block">
+                <PlannerDay
+                  ngay={ngay}
+                  soThuTuBatDau={offset}
+                  startDate={trip?.start_date}
+                  diemDen={diemDen}
+                  ds={theoNgay[ngay] || []}
+                  choNgu={choNguTheoNgay[ngay]}
+                  chuaXep={chuaXep}
+                  isExpanded={Boolean(expandedDays[ngay])}
+                  onToggleExpand={() => toggleDay(ngay)}
+                  onHover={() => {}}
+                  onXep={onXep}
+                  onBoNgay={onBoNgay}
+                  onSapXepLai={onSapXepLai}
+                  onXem={onXem}
+                  onDatChoNgu={onDatChoNgu}
+                  onBoChoNgu={onBoChoNgu}
+                  onToiUu={() => onToiUu(ngay)}
+                  dangLuu={dangLuu}
+                  toiUu={toiUu?.day === ngay ? toiUu : null}
+                  duong={duongTheoNgay?.[ngay] || null}
+                  onCapNhatStop={onCapNhatStop}
+                  onThemNote={onThemNote}
+                  onThemChecklist={onThemChecklist}
+                  nav={nav}
+                />
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -756,17 +776,43 @@ export default function PlannerContentFeed({
         {/* Khối card xám lớn tóm tắt ngân sách (ảnh w5.png) */}
         <div className="planner-feed__budget-summary-box">
           <div className="planner-feed__budget-sum-left">
-            <span className="planner-feed__budget-sum-amount">
-              {formatMoney(tongChiPhi)}
-            </span>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                Tổng chi tiêu
+              </span>
+              <span className="planner-feed__budget-sum-amount">
+                {formatMoney(tongChiPhi)}
+              </span>
+              {nganSachMucTieu > 0 && (
+                <div className="mt-2 flex items-center gap-2 text-xs">
+                  <span className="text-slate-500 font-medium">
+                    Ngân sách: <b className="text-slate-800">{formatMoney(nganSachMucTieu)}</b>
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      tongChiPhi > nganSachMucTieu
+                        ? "text-rose-600"
+                        : "text-emerald-600"
+                    }`}
+                  >
+                    {tongChiPhi > nganSachMucTieu
+                      ? `(Vượt ${formatMoney(tongChiPhi - nganSachMucTieu)})`
+                      : `(Còn lại ${formatMoney(nganSachMucTieu - tongChiPhi)})`}
+                  </span>
+                </div>
+              )}
+            </div>
             <div className="planner-feed__budget-sum-actions">
               <button
                 type="button"
-                onClick={() => setMoModalBudget(true)}
+                onClick={() => {
+                  setNganSachNhap(nganSachMucTieu || "");
+                  setMoModalBudget(true);
+                }}
                 className="planner-feed__budget-pill-action"
               >
                 <span className="material-symbols-outlined text-[15px]">edit</span>
-                <span>Set budget</span>
+                <span>{nganSachMucTieu > 0 ? "Sửa ngân sách" : "Set budget"}</span>
               </button>
               <button
                 type="button"
@@ -886,6 +932,16 @@ export default function PlannerContentFeed({
                         <span className="font-bold text-slate-900 text-sm">
                           {formatMoney(s.cost)}
                         </span>
+                        {s.type === "expense" && (
+                          <button
+                            type="button"
+                            title="Xoá khoản chi này"
+                            onClick={() => onXoaDiem && onXoaDiem(s)}
+                            className="text-slate-400 hover:text-rose-600 p-1 ml-2 transition-colors flex items-center"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                          </button>
+                        )}
                       </div>
                     ))}
                 </div>

@@ -68,11 +68,12 @@ export default function StatusTag({ value }) {
         alignItems: "center",
         gap: "6px",
         fontSize: "13px",
-        fontWeight: "500",
+        fontWeight: "600",
         color: textColors[tone],
         background: "transparent",
         border: "none",
         padding: 0,
+        whiteSpace: "nowrap",
       }}
     >
       <span

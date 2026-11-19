@@ -43,46 +43,112 @@ class NoUsableItineraryError(Exception):
 def get_candidates(destination: str, lon: float, lat: float, limit: int = 60):
     """Chọn ứng viên QUANH ĐIỂM ĐẾN, phủ đủ các nhóm nhu cầu du lịch.
 
-    Bản cũ chọn bằng `ORDER BY rating DESC, review_count DESC` và lọc theo
-    `price_level` — cả ba cột đó trong CSDL đều chỉ chứa giá trị mặc định (4.0,
-    10, "Trung bình"), nên thứ tự thực chất là ngẫu nhiên và bộ lọc ngân sách
-    không lọc gì. Tệ hơn, nó không hề dùng vị trí: lịch trình 2 ngày có thể gồm
-    khách sạn Cà Mau và điểm tham quan Hà Giang.
-
-    Nay neo theo điểm đến và lấy theo khoảng cách. Mỗi nhóm lấy riêng một phần
-    để lịch trình có đủ chỗ ở, chỗ ăn và chỗ tham quan — chứ không phải 60 quán
-    cà phê.
+    Kết hợp:
+    1. Điểm tham quan & quán ăn từ Serper Places (và serper_places_store trong DB)
+    2. Chỗ lưu trú từ bảng accommodation quanh toạ độ thực của điểm đến
     """
     if lon is None:
         lon = settings.default_lon
     if lat is None:
         lat = settings.default_lat
+
+    dest_clean = (destination or "").strip()
+    pois = []
+    seen_ids = set()
+
+    queries = (
+        [
+            f"địa điểm tham quan du lịch nổi tiếng tại {dest_clean}",
+            f"quán ăn nhà hàng đặc sản tại {dest_clean}",
+        ]
+        if dest_clean
+        else [
+            "địa điểm tham quan du lịch nổi tiếng",
+            "quán ăn nhà hàng đặc sản",
+        ]
+    )
+
+    for q in queries:
+        try:
+            rows = serper_service.search_places(q, lat, lon, max(limit // 2, 10))
+            for r in rows:
+                rid = r.get("id")
+                if rid and rid not in seen_ids:
+                    seen_ids.add(rid)
+                    pois.append(r)
+        except (serper_service.SerperConfigurationError,
+                serper_service.SerperTransientError) as exc:
+            logger.warning("Không lấy được POI từ Serper (%r): %s", q, exc)
+
+    # Bổ sung từ bảng serper_places_store trong PostgreSQL nếu còn thiếu
+    if len(pois) < 10:
+        try:
+            if dest_clean:
+                store_rows = execute_query(
+                    """
+                    SELECT id, name, category, lat, lon, address AS dia_chi, rating
+                    FROM serper_places_store
+                    WHERE name ILIKE %s OR address ILIKE %s
+                    ORDER BY rating DESC NULLS LAST, review_count DESC NULLS LAST
+                    LIMIT %s
+                    """,
+                    (f"%{dest_clean}%", f"%{dest_clean}%", limit),
+                ) or []
+            else:
+                store_rows = execute_query(
+                    """
+                    SELECT id, name, category, lat, lon, address AS dia_chi, rating
+                    FROM serper_places_store
+                    ORDER BY updated_at DESC
+                    LIMIT %s
+                    """,
+                    (limit,),
+                ) or []
+            for r in store_rows:
+                rid = r.get("id")
+                if rid and rid not in seen_ids:
+                    seen_ids.add(rid)
+                    pois.append({
+                        "id": rid,
+                        "type": "serper",
+                        "name": r.get("name"),
+                        "category": r.get("category"),
+                        "lat": float(r["lat"]),
+                        "lon": float(r["lon"]),
+                        "dia_chi": r.get("dia_chi"),
+                    })
+        except Exception as exc:
+            logger.debug("Không đọc được serper_places_store: %s", exc)
+
+    # Nếu tìm được POI ở điểm đến, cập nhật lại tâm (lon, lat) theo POI thực tế
+    # để tra bảng accommodation đúng tỉnh/thành đó thay vì vị trí mặc định.
+    valid_coords = [
+        (float(p["lon"]), float(p["lat"]))
+        for p in pois
+        if p.get("lon") is not None and p.get("lat") is not None
+    ]
+    if valid_coords:
+        lon = sum(c[0] for c in valid_coords) / len(valid_coords)
+        lat = sum(c[1] for c in valid_coords) / len(valid_coords)
+
     ref = _diem_den_geom(destination, lon, lat)
 
     accs = execute_query(
         f"""
         SELECT id, name, tourism AS category, 'accommodation' AS type,
                ST_X(geom) AS lon, ST_Y(geom) AS lat,
+               COALESCE(NULLIF(address, ''), NULLIF(tags->>'addr:street', '')) AS dia_chi,
                round(ST_Distance(geom::geography, %s::geography)) AS met
         FROM accommodation
         WHERE ST_DWithin(geom::geography, %s::geography, %s) AND {_REAL_NAME}
         ORDER BY geom <-> %s
         LIMIT %s
         """,
-        (ref, ref, ITINERARY_RADIUS_M, ref, limit // 4),
+        (ref, ref, ITINERARY_RADIUS_M, ref, max(limit // 4, 8)),
     ) or []
 
-    # POI lấy từ Serper (Google). Lưu provider id và toạ độ trong stop để tối ưu
-    # tuyến không cần tra lại một bảng GIS nội bộ.
-    try:
-        pois = serper_service.search_places(
-            destination or "địa điểm du lịch", lat, lon, limit)
-    except (serper_service.SerperConfigurationError,
-            serper_service.SerperTransientError) as exc:
-        logger.warning("Không lấy được POI từ Serper: %s", exc)
-        pois = []
     candidates = []
-    for row in accs + pois:
+    for row in pois + accs:
         candidate = dict(row)
         candidate["place_id"] = candidate.get("id")
         candidate["place_type"] = candidate.get("type")
@@ -142,17 +208,23 @@ def chuan_hoa_stop(st):
     section = st.get("section")
     role = st.get("role")
 
+    st_type = st.get("type")
     if role is None and section is None:          # bản ghi kiểu cũ
         if day == -1:
             role, section, day = "lodging", "luu-tru", None
+        elif st_type in ("note", "checklist", "expense"):
+            role = st_type
         else:
             role, section = "place", SECTION_MAC_DINH
+    elif not role and st_type in ("note", "checklist", "expense"):
+        role = st_type
 
+    default_role = st_type if st_type in ("note", "checklist", "expense") else "place"
     return {
         **st,
         "day": day if isinstance(day, int) and day >= 1 else None,
         "section": section,
-        "role": role or "place",
+        "role": role or default_role,
     }
 
 
@@ -171,7 +243,7 @@ def _stop_day_du(st, chi_tiet):
     res.update({
         "day": st.get("day"),
         "section": st.get("section"),
-        "role": st.get("role", "place"),
+        "role": st.get("role") or (st.get("type") if st.get("type") in ("note", "checklist") else "place"),
         "id": st.get("id"),
         "type": st.get("type"),
         "name": chi_tiet.get("name") or st.get("name"),
@@ -193,21 +265,17 @@ def _stop_day_du(st, chi_tiet):
 
 
 def _stop_tham_chieu(st):
-    """Không tra được chi tiết -> GIỮ LẠI tham chiếu, đánh dấu `unresolved`.
-
-    Bỏ im lặng ở đây từng làm mất dữ liệu thật của người dùng: /optimize ghi đè
-    `stops` bằng chính kết quả hydrate, nên stop nào bị bỏ là bị xoá khỏi CSDL.
-    Chỗ gọi tự quyết định làm gì với stop `unresolved` (hiện vẫn hiển thị và
-    vẫn được ghi lại nguyên vẹn).
-    """
+    """Không tra được chi tiết -> GIỮ LẠI tham chiếu, đánh dấu `unresolved` nếu là POI thật."""
+    is_meta = st.get("type") in ("note", "checklist", "expense") or st.get("role") in ("note", "checklist", "expense")
     res = dict(st)
     res.update({
         "day": st.get("day"),
         "section": st.get("section"),
-        "role": st.get("role", "place"),
+        "role": st.get("role") or (st.get("type") if is_meta else "place"),
         "id": st.get("id"),
         "type": st.get("type"),
         "name": st.get("name"),
+        "cost": st.get("cost"),
         "lon": st.get("lon"),
         "lat": st.get("lat"),
         "mo_ta": st.get("mo_ta"),
@@ -217,7 +285,7 @@ def _stop_tham_chieu(st):
         "phone": st.get("phone"),
         "social": st.get("social"),
         "details": st.get("details") or {},
-        "unresolved": True,
+        "unresolved": False if is_meta else True,
     })
     return res
 
@@ -257,6 +325,10 @@ def hydrate_stops(stops):
     ket_qua = []
     for st in stops:
         ptype, pid = st.get("type"), st.get("id")
+        if ptype in ("note", "checklist", "expense") or st.get("role") in ("note", "checklist", "expense"):
+            ket_qua.append(_stop_tham_chieu(st))
+            continue
+
         if ptype == "serper":
             chi_tiet = _chi_tiet_serper(pid)
         else:

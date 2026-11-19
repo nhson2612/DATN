@@ -2346,13 +2346,16 @@ def list_departure_guests_bookings(departure_id: int, tx=None) -> list[dict]:
 
 
 def operator_revenue(operator_id: int, tx=None) -> dict:
-    """Tổng hợp doanh thu đã thu của một nhà điều hành từ payment SUCCESS."""
+    """Tổng hợp doanh thu đã thu và các chỉ số vận hành của một nhà điều hành."""
     refund_filter = "AND p.refunded_at IS NULL" if _has_col("payments", "refunded_at") else ""
     rows = _exec(
         f"""
         SELECT COALESCE(SUM(p.amount), 0) AS gross_revenue,
                COUNT(DISTINCT p.booking_id) AS paid_bookings,
-               COUNT(DISTINCT b.id) FILTER (WHERE b.status = 'CONFIRMED') AS confirmed_bookings
+               COUNT(DISTINCT b.id) FILTER (WHERE b.status = 'CONFIRMED') AS confirmed_bookings,
+               COUNT(DISTINCT b.id) FILTER (WHERE b.status = 'COMPLETED') AS completed_bookings,
+               COALESCE(SUM(b.guests), 0) AS total_guests,
+               COUNT(DISTINCT COALESCE(NULLIF(LOWER(TRIM(b.email)), ''), NULLIF(TRIM(b.phone), ''), LOWER(TRIM(b.full_name)))) AS total_customers
         FROM payments p
         JOIN tour_bookings b ON b.id = p.booking_id
         JOIN tours t ON t.id = b.tour_id
@@ -2362,7 +2365,41 @@ def operator_revenue(operator_id: int, tx=None) -> dict:
         """,
         (operator_id,), tx=tx,
     )
-    return rows[0] if rows else {"gross_revenue": 0, "paid_bookings": 0, "confirmed_bookings": 0}
+    base = dict(rows[0]) if rows else {
+        "gross_revenue": 0,
+        "paid_bookings": 0,
+        "confirmed_bookings": 0,
+        "completed_bookings": 0,
+        "total_guests": 0,
+        "total_customers": 0,
+    }
+
+    booking_stats = _exec(
+        """
+        SELECT COALESCE(SUM(b.total_price) FILTER (WHERE b.status = 'PENDING_PAYMENT'), 0) AS pending_revenue,
+               COUNT(b.id) FILTER (WHERE b.status = 'PENDING_PAYMENT') AS pending_bookings,
+               COUNT(b.id) FILTER (WHERE b.status LIKE 'CANCEL%%' OR b.status = 'EXPIRED') AS cancelled_bookings,
+               COUNT(b.id) AS total_bookings
+        FROM tour_bookings b
+        JOIN tours t ON t.id = b.tour_id
+        WHERE t.operator_id = %s
+        """,
+        (operator_id,), tx=tx,
+    )
+    if booking_stats:
+        base.update(booking_stats[0])
+    else:
+        base.update({
+            "pending_revenue": 0,
+            "pending_bookings": 0,
+            "cancelled_bookings": 0,
+            "total_bookings": 0,
+        })
+
+    paid_cnt = int(base.get("paid_bookings") or 0)
+    gross = int(base.get("gross_revenue") or 0)
+    base["avg_order_value"] = round(gross / paid_cnt) if paid_cnt > 0 else 0
+    return base
 
 
 def operator_revenue_by_month(operator_id: int, tx=None) -> list[dict]:
@@ -2371,7 +2408,10 @@ def operator_revenue_by_month(operator_id: int, tx=None) -> list[dict]:
         f"""
         SELECT to_char(date_trunc('month', COALESCE(p.confirmed_at, p.created_at)), 'YYYY-MM') AS month,
                COALESCE(SUM(p.amount), 0) AS revenue,
-               COUNT(DISTINCT p.booking_id) AS bookings
+               COUNT(DISTINCT p.booking_id) AS bookings,
+               COALESCE(SUM(b.guests), 0) AS guests,
+               COUNT(DISTINCT b.tour_id) AS tours_count,
+               COALESCE(ROUND(SUM(p.amount)::numeric / NULLIF(COUNT(DISTINCT p.booking_id), 0)), 0)::bigint AS avg_order_value
         FROM payments p
         JOIN tour_bookings b ON b.id = p.booking_id
         JOIN tours t ON t.id = b.tour_id
@@ -2382,3 +2422,279 @@ def operator_revenue_by_month(operator_id: int, tx=None) -> list[dict]:
         """,
         (operator_id,), tx=tx,
     ) or []
+
+
+def operator_revenue_by_tour(operator_id: int, tx=None) -> list[dict]:
+    """Thống kê doanh thu, số đơn, số khách và số đợt khởi hành theo từng Tour của nhà điều hành."""
+    refund_filter = "AND p.refunded_at IS NULL" if _has_col("payments", "refunded_at") else ""
+    return _exec(
+        f"""
+        WITH tour_deps AS (
+            SELECT tour_id, COUNT(*) AS departures_count
+            FROM tour_departures
+            GROUP BY tour_id
+        ),
+        tour_paid AS (
+            SELECT b.tour_id,
+                   COALESCE(SUM(p.amount), 0) AS revenue,
+                   COUNT(DISTINCT p.booking_id) AS paid_bookings,
+                   COALESCE(SUM(b.guests), 0) AS paid_guests
+            FROM payments p
+            JOIN tour_bookings b ON b.id = p.booking_id
+            JOIN tours t ON t.id = b.tour_id
+            WHERE t.operator_id = %s AND p.status = 'SUCCESS'
+              AND b.status IN ('PAID', 'CONFIRMED', 'COMPLETED', 'NO_SHOW')
+              {refund_filter}
+            GROUP BY b.tour_id
+        ),
+        tour_all_bookings AS (
+            SELECT b.tour_id,
+                   COUNT(b.id) AS total_bookings,
+                   COALESCE(SUM(b.total_price) FILTER (WHERE b.status = 'PENDING_PAYMENT'), 0) AS pending_revenue,
+                   COUNT(b.id) FILTER (WHERE b.status = 'PENDING_PAYMENT') AS pending_bookings
+            FROM tour_bookings b
+            JOIN tours t ON t.id = b.tour_id
+            WHERE t.operator_id = %s
+            GROUP BY b.tour_id
+        )
+        SELECT t.id AS tour_id,
+               t.name AS tour_name,
+               t.slug AS tour_slug,
+               t.price_from,
+               t.duration_days,
+               t.status AS tour_status,
+               COALESCE(td.departures_count, 0) AS departures_count,
+               COALESCE(tp.revenue, 0) AS revenue,
+               COALESCE(tp.paid_bookings, 0) AS bookings,
+               COALESCE(tp.paid_guests, 0) AS guests,
+               COALESCE(tab.total_bookings, 0) AS total_bookings,
+               COALESCE(tab.pending_revenue, 0) AS pending_revenue,
+               COALESCE(tab.pending_bookings, 0) AS pending_bookings
+        FROM tours t
+        LEFT JOIN tour_deps td ON td.tour_id = t.id
+        LEFT JOIN tour_paid tp ON tp.tour_id = t.id
+        LEFT JOIN tour_all_bookings tab ON tab.tour_id = t.id
+        WHERE t.operator_id = %s
+        ORDER BY COALESCE(tp.revenue, 0) DESC, COALESCE(tab.total_bookings, 0) DESC, t.id DESC
+        """,
+        (operator_id, operator_id, operator_id), tx=tx,
+    ) or []
+
+
+def operator_revenue_by_customer(operator_id: int, tx=None) -> list[dict]:
+    """Thống kê doanh thu theo khách hàng (Top khách hàng chi tiêu cho nhà điều hành)."""
+    refund_filter = "AND p.refunded_at IS NULL" if _has_col("payments", "refunded_at") else ""
+    return _exec(
+        f"""
+        SELECT COALESCE(NULLIF(LOWER(TRIM(b.email)), ''), NULLIF(TRIM(b.phone), ''), LOWER(TRIM(b.full_name))) AS customer_key,
+               MAX(b.user_id) AS user_id,
+               MAX(b.full_name) AS customer_name,
+               MAX(b.email) AS email,
+               MAX(b.phone) AS phone,
+               COALESCE(SUM(p.amount), 0) AS revenue,
+               COUNT(DISTINCT p.booking_id) AS bookings,
+               COALESCE(SUM(b.guests), 0) AS guests,
+               MAX(COALESCE(p.confirmed_at, p.created_at)) AS last_paid_at
+        FROM payments p
+        JOIN tour_bookings b ON b.id = p.booking_id
+        JOIN tours t ON t.id = b.tour_id
+        WHERE t.operator_id = %s AND p.status = 'SUCCESS'
+          AND b.status IN ('PAID', 'CONFIRMED', 'COMPLETED', 'NO_SHOW')
+          {refund_filter}
+        GROUP BY 1
+        ORDER BY revenue DESC, bookings DESC
+        LIMIT 50
+        """,
+        (operator_id,), tx=tx,
+    ) or []
+
+
+def operator_revenue_by_method(operator_id: int, tx=None) -> list[dict]:
+    """Thống kê doanh thu theo phương thức thanh toán (PAYOS, STRIPE, CHUYEN_KHOAN...)."""
+    refund_filter = "AND p.refunded_at IS NULL" if _has_col("payments", "refunded_at") else ""
+    return _exec(
+        f"""
+        SELECT COALESCE(UPPER(p.method), 'KHAC') AS method,
+               COALESCE(LOWER(p.provider), 'manual') AS provider,
+               COALESCE(SUM(p.amount), 0) AS revenue,
+               COUNT(DISTINCT p.booking_id) AS bookings
+        FROM payments p
+        JOIN tour_bookings b ON b.id = p.booking_id
+        JOIN tours t ON t.id = b.tour_id
+        WHERE t.operator_id = %s AND p.status = 'SUCCESS'
+          AND b.status IN ('PAID', 'CONFIRMED', 'COMPLETED', 'NO_SHOW')
+          {refund_filter}
+        GROUP BY 1, 2
+        ORDER BY revenue DESC
+        """,
+        (operator_id,), tx=tx,
+    ) or []
+
+
+def operator_recent_transactions(operator_id: int, limit: int = 30, tx=None) -> list[dict]:
+    """Danh sách các giao dịch thanh toán thành công gần nhất của nhà điều hành."""
+    refund_filter = "AND p.refunded_at IS NULL" if _has_col("payments", "refunded_at") else ""
+    return _exec(
+        f"""
+        SELECT p.id AS payment_id,
+               p.booking_id,
+               p.amount,
+               p.method,
+               p.provider,
+               COALESCE(p.confirmed_at, p.created_at) AS confirmed_at,
+               b.code AS booking_code,
+               b.status AS booking_status,
+               b.full_name AS customer_name,
+               b.phone AS customer_phone,
+               b.email AS customer_email,
+               b.guests,
+               t.id AS tour_id,
+               t.name AS tour_name,
+               d.depart_date
+        FROM payments p
+        JOIN tour_bookings b ON b.id = p.booking_id
+        JOIN tours t ON t.id = b.tour_id
+        LEFT JOIN tour_departures d ON d.id = b.departure_id
+        WHERE t.operator_id = %s AND p.status = 'SUCCESS'
+          AND b.status IN ('PAID', 'CONFIRMED', 'COMPLETED', 'NO_SHOW')
+          {refund_filter}
+        ORDER BY COALESCE(p.confirmed_at, p.created_at) DESC, p.id DESC
+        LIMIT %s
+        """,
+        (operator_id, limit), tx=tx,
+    ) or []
+
+
+def list_operator_customers(operator_id: Optional[int] = None, tx=None) -> list[dict]:
+    """Tổng hợp danh sách khách hàng đã đặt tour của nhà điều hành kèm lịch sử đơn đặt."""
+    where_sql = "WHERE t.operator_id = %s" if operator_id is not None else ""
+    params = (operator_id,) if operator_id is not None else ()
+    rows = _exec(
+        f"""
+        SELECT b.id AS booking_id,
+               b.code AS booking_code,
+               b.user_id,
+               b.full_name,
+               b.email,
+               b.phone,
+               b.guests,
+               b.total_price,
+               b.status,
+               b.created_at,
+               t.id AS tour_id,
+               t.name AS tour_name,
+               t.slug AS tour_slug,
+               d.depart_date,
+               COALESCE((
+                   SELECT SUM(p.amount)
+                   FROM payments p
+                   WHERE p.booking_id = b.id AND p.status = 'SUCCESS'
+               ), 0) AS paid_amount
+        FROM tour_bookings b
+        JOIN tours t ON t.id = b.tour_id
+        LEFT JOIN tour_departures d ON d.id = b.departure_id
+        {where_sql}
+        ORDER BY b.created_at DESC, b.id DESC
+        """,
+        params, tx=tx,
+    ) or []
+
+    customers_map: dict[str, dict] = {}
+    for r in rows:
+        email_clean = (r.get("email") or "").strip().lower()
+        phone_clean = (r.get("phone") or "").strip()
+        name_clean = (r.get("full_name") or "Khách vãng lai").strip()
+        key = email_clean or phone_clean or name_clean.lower() or f"booking-{r['booking_id']}"
+
+        if key not in customers_map:
+            customers_map[key] = {
+                "customer_key": key,
+                "user_id": r.get("user_id"),
+                "full_name": name_clean,
+                "email": (r.get("email") or "").strip(),
+                "phone": phone_clean,
+                "total_bookings": 0,
+                "paid_bookings": 0,
+                "pending_bookings": 0,
+                "cancelled_bookings": 0,
+                "total_guests": 0,
+                "paid_guests": 0,
+                "total_spent": 0,
+                "pending_amount": 0,
+                "first_booking_at": r.get("created_at"),
+                "last_booking_at": r.get("created_at"),
+                "tours_set": [],
+                "bookings": [],
+            }
+
+        c = customers_map[key]
+        if not c["user_id"] and r.get("user_id"):
+            c["user_id"] = r.get("user_id")
+        if not c["email"] and r.get("email"):
+            c["email"] = r.get("email").strip()
+        if not c["phone"] and phone_clean:
+            c["phone"] = phone_clean
+
+        c["total_bookings"] += 1
+        guests = int(r.get("guests") or 1)
+        c["total_guests"] += guests
+        status = r.get("status") or ""
+        total_price = int(r.get("total_price") or 0)
+        paid_amount = int(r.get("paid_amount") or 0)
+
+        if status in ("PAID", "CONFIRMED", "COMPLETED"):
+            c["paid_bookings"] += 1
+            c["paid_guests"] += guests
+            c["total_spent"] += (paid_amount if paid_amount > 0 else total_price)
+        elif status == "PENDING_PAYMENT":
+            c["pending_bookings"] += 1
+            c["pending_amount"] += total_price
+        else:
+            c["cancelled_bookings"] += 1
+
+        created_at = r.get("created_at")
+        if created_at:
+            if not c["first_booking_at"] or created_at < c["first_booking_at"]:
+                c["first_booking_at"] = created_at
+            if not c["last_booking_at"] or created_at > c["last_booking_at"]:
+                c["last_booking_at"] = created_at
+
+        t_name = r.get("tour_name")
+        if t_name and t_name not in c["tours_set"]:
+            c["tours_set"].append(t_name)
+
+        c["bookings"].append({
+            "id": r.get("booking_id"),
+            "code": r.get("booking_code"),
+            "tour_id": r.get("tour_id"),
+            "tour_name": t_name,
+            "tour_slug": r.get("tour_slug"),
+            "depart_date": r.get("depart_date").isoformat() if hasattr(r.get("depart_date"), "isoformat") else r.get("depart_date"),
+            "guests": guests,
+            "total_price": total_price,
+            "status": status,
+            "created_at": created_at.isoformat() if hasattr(created_at, "isoformat") else created_at,
+        })
+
+    result = []
+    for c in customers_map.values():
+        c["tours_booked"] = c.pop("tours_set")
+        if hasattr(c["first_booking_at"], "isoformat"):
+            c["first_booking_at"] = c["first_booking_at"].isoformat()
+        if hasattr(c["last_booking_at"], "isoformat"):
+            c["last_booking_at"] = c["last_booking_at"].isoformat()
+
+        # Phân hạng khách hàng
+        if c["paid_bookings"] >= 2 or c["total_spent"] >= 5000000:
+            c["tier"] = "VIP"
+        elif c["paid_bookings"] == 1:
+            c["tier"] = "PAID"
+        elif c["pending_bookings"] > 0:
+            c["tier"] = "PENDING"
+        else:
+            c["tier"] = "LEAD"
+
+        result.append(c)
+
+    result.sort(key=lambda x: (x["total_spent"], x["paid_bookings"], x["total_bookings"]), reverse=True)
+    return result

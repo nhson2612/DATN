@@ -67,6 +67,8 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
   const isTrips = location.pathname === "/trips" || location.pathname === "/chuyen-di";
   const isLogin = location.pathname === "/login" || location.pathname === "/dang-nhap" || location.pathname === "/dang-ky";
   const isAccount = location.pathname === "/account" || location.pathname === "/tai-khoan";
+  const isPlaceDetail = location.pathname.startsWith("/dia-diem/") || location.pathname.startsWith("/places/");
+  const isDestination = location.pathname.startsWith("/diem-den/") || location.pathname.startsWith("/destinations/");
   const isAdmin = location.pathname.startsWith("/admin") || location.pathname.startsWith("/quan-tri");
   const isOperator = location.pathname.startsWith("/operator") || location.pathname.startsWith("/nha-dieu-hanh");
 
@@ -108,12 +110,12 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
           <Routes>
             <Route path="/" element={<HomePage user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
             {/* Điểm đến */}
-            <Route path="/destinations/:slug" element={<Destination />} />
-            <Route path="/diem-den/:slug" element={<Destination />} />
+            <Route path="/destinations/:slug" element={<Destination user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
+            <Route path="/diem-den/:slug" element={<Destination user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
 
             {/* Địa điểm */}
-            <Route path="/places/:type/:id" element={<PlaceDetail user={user} onNeedAuth={handleNeedAuth} />} />
-            <Route path="/dia-diem/:type/:id" element={<PlaceDetail user={user} onNeedAuth={handleNeedAuth} />} />
+            <Route path="/places/:type/:id" element={<PlaceDetail user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
+            <Route path="/dia-diem/:type/:id" element={<PlaceDetail user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
 
             {/* Tours */}
             <Route path="/tours" element={<Tours user={user} onNeedAuth={handleNeedAuth} onLogout={dangXuat} />} />
@@ -156,7 +158,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
           </Routes>
         </div>
 
-        {!isHome && !isPlanner && !isTours && !isTourDetail && !isMyBookings && !isTrips && !isLogin && !isAccount && (
+        {!isHome && !isPlanner && !isTours && !isTourDetail && !isMyBookings && !isTrips && !isLogin && !isAccount && !isPlaceDetail && !isDestination && (
           <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-16">
             <div className="max-w-6xl mx-auto px-4 py-8 text-sm text-zinc-500">
               <p className="font-semibold text-zinc-700 mb-1">Aura Voyage · Khoá luận tốt nghiệp</p>
@@ -166,7 +168,7 @@ function AppContent({ user, setUser, moAuth, setMoAuth, dangXuat, canDangNhap })
         )}
 
         <AuthModal open={moAuth} onClose={() => setMoAuth(false)} onSuccess={sauKhiDangNhap} />
-        {!isLogin && <SupportWidget user={user} onNeedAuth={handleNeedAuth} />}
+        {!isLogin && !isPlanner && <SupportWidget user={user} onNeedAuth={handleNeedAuth} />}
       </div>
     </div>
   );

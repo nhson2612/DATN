@@ -62,7 +62,7 @@ function SaoXep(rating) {
     : "điểm";
   return (
     <div className="place-field-guide__fact">
-      <i className="fa-solid fa-star place-field-guide__fact-icon" aria-hidden="true" />
+      <span className="material-symbols-outlined text-amber-500 text-[18px]">star</span>
       <span className="place-field-guide__fact-value">
         {Number(rating.value).toFixed(1)}
       </span>
@@ -75,7 +75,7 @@ function GioFact(hours) {
   if (!hours?.display) return null;
   return (
     <div className="place-field-guide__fact place-field-guide__fact--gio">
-      <i className="fa-solid fa-clock place-field-guide__fact-icon" aria-hidden="true" />
+      <span className="material-symbols-outlined text-[18px]">schedule</span>
       <span className="place-field-guide__fact-value">{hours.display}</span>
     </div>
   );
@@ -140,7 +140,7 @@ function ChiTiet({ enrichment }) {
           <ul className="place-field-guide__nhan-xet">
             {highlights.map((h, i) => (
               <li key={`${h.text}-${i}`} className="place-field-guide__nhan-xet-item">
-                <i className="fa-solid fa-quote-left" aria-hidden="true" />
+                <span className="material-symbols-outlined text-slate-400 text-[18px]">format_quote</span>
                 <blockquote className="place-field-guide__nhan-xet-text">
                   {h.text}
                 </blockquote>
@@ -158,10 +158,11 @@ function ChiTiet({ enrichment }) {
         {sources?.length > 0 ? (
           <ul className="place-field-guide__nguon">
             {sources.map((s, i) => (
-              <li key={`${s.url}-${i}`}>
-                <LinkNguon url={s.url}>
+              <li key={`${s.url}-${i}`} className="place-field-guide__nguon-item">
+                <LinkNguon url={s.url} className="place-field-guide__nguon-link">
                   <span className="place-field-guide__nguon-mien">{tenMien(s.url)}</span>
                   {s.title && <span className="place-field-guide__nguon-tua"> — {s.title}</span>}
+                  <span className="material-symbols-outlined place-field-guide__nguon-icon">north_east</span>
                 </LinkNguon>
               </li>
             ))}
@@ -188,7 +189,7 @@ export default function EnrichmentContent({ enrichment, state, error, mode = "de
       aria-label="Thông tin cập nhật từ web"
     >
       <h2 className="place-field-guide__tieu-de">
-        <i className="fa-solid fa-globe" aria-hidden="true" />
+        <span className="material-symbols-outlined text-[20px] text-teal-600">public</span>
         Thông tin cập nhật từ web
       </h2>
 

@@ -463,7 +463,7 @@ export default function SupportWidget({ user, onNeedAuth }) {
   }, [user?.role, load, loadMessages]);
 
   useEffect(() => {
-    if (active?.id) {
+    if (active?.id && !isSubmittingRef.current) {
       loadMessages(active.id);
       setTimeout(() => {
         inputRef.current?.focus();
@@ -479,6 +479,7 @@ export default function SupportWidget({ user, onNeedAuth }) {
     if (!overrideText) {
       setText("");
     }
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     setError("");
 
@@ -531,6 +532,7 @@ export default function SupportWidget({ user, onNeedAuth }) {
               }
             },
             onChunk: (chunk) => {
+              const firstTokenElapsed = Math.max(1, Math.round((Date.now() - startTime) / 1000));
               setMessages((prev) => {
                 const found = prev.some((m) => m.id === streamingAssistantId);
                 if (!found) {
@@ -541,13 +543,19 @@ export default function SupportWidget({ user, onNeedAuth }) {
                       sender_role: "assistant",
                       body: chunk,
                       isStreaming: true,
-                      thoughtDuration: 0,
+                      thoughtDuration: firstTokenElapsed,
                       created_at: new Date().toISOString(),
                     },
                   ];
                 }
                 return prev.map((m) =>
-                  m.id === streamingAssistantId ? { ...m, body: (m.body || "") + chunk } : m
+                  m.id === streamingAssistantId
+                    ? {
+                        ...m,
+                        body: (m.body || "") + chunk,
+                        thoughtDuration: m.thoughtDuration || firstTokenElapsed,
+                      }
+                    : m
                 );
               });
               endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -558,7 +566,11 @@ export default function SupportWidget({ user, onNeedAuth }) {
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === streamingAssistantId
-                      ? { ...evt.assistant_message, thoughtDuration: duration }
+                      ? {
+                          ...evt.assistant_message,
+                          isStreaming: false,
+                          thoughtDuration: m.thoughtDuration || duration,
+                        }
                       : m
                   )
                 );
@@ -566,11 +578,12 @@ export default function SupportWidget({ user, onNeedAuth }) {
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === streamingAssistantId
-                      ? { ...m, isStreaming: false, thoughtDuration: duration }
+                      ? { ...m, isStreaming: false, thoughtDuration: m.thoughtDuration || duration }
                       : m
                   )
                 );
               }
+              isSubmittingRef.current = false;
               setIsSubmitting(false);
             },
           }
@@ -589,6 +602,7 @@ export default function SupportWidget({ user, onNeedAuth }) {
               }
             },
             onChunk: (chunk) => {
+              const firstTokenElapsed = Math.max(1, Math.round((Date.now() - startTime) / 1000));
               setMessages((prev) => {
                 const found = prev.some((m) => m.id === streamingAssistantId);
                 if (!found) {
@@ -599,13 +613,19 @@ export default function SupportWidget({ user, onNeedAuth }) {
                       sender_role: "assistant",
                       body: chunk,
                       isStreaming: true,
-                      thoughtDuration: 0,
+                      thoughtDuration: firstTokenElapsed,
                       created_at: new Date().toISOString(),
                     },
                   ];
                 }
                 return prev.map((m) =>
-                  m.id === streamingAssistantId ? { ...m, body: (m.body || "") + chunk } : m
+                  m.id === streamingAssistantId
+                    ? {
+                        ...m,
+                        body: (m.body || "") + chunk,
+                        thoughtDuration: m.thoughtDuration || firstTokenElapsed,
+                      }
+                    : m
                 );
               });
               endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -616,7 +636,11 @@ export default function SupportWidget({ user, onNeedAuth }) {
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === streamingAssistantId
-                      ? { ...evt.assistant_message, thoughtDuration: duration }
+                      ? {
+                          ...evt.assistant_message,
+                          isStreaming: false,
+                          thoughtDuration: m.thoughtDuration || duration,
+                        }
                       : m
                   )
                 );
@@ -624,11 +648,12 @@ export default function SupportWidget({ user, onNeedAuth }) {
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === streamingAssistantId
-                      ? { ...m, isStreaming: false, thoughtDuration: duration }
+                      ? { ...m, isStreaming: false, thoughtDuration: m.thoughtDuration || duration }
                       : m
                   )
                 );
               }
+              isSubmittingRef.current = false;
               setIsSubmitting(false);
             },
           }
@@ -641,6 +666,7 @@ export default function SupportWidget({ user, onNeedAuth }) {
       if (!overrideText) {
         setText(messageContent);
       }
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -687,10 +713,16 @@ export default function SupportWidget({ user, onNeedAuth }) {
           <div className="sp-fab__icon-wrap">
             <AuraOtterRiggedMascot size={82} />
           </div>
-          <span className="sp-fab__badge-dot" />
-          <div className="sp-fab__mascot-bubble">
-            <span className="sp-fab__bubble-badge">Aura AI</span>
-            <span>Em có thể giúp gì cho chuyến đi của bạn? 👋</span>
+          <div
+            className="sp-fab__mascot-bubble"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (user) setOpen(true);
+              else onNeedAuth();
+            }}
+            role="status"
+          >
+            <div className="sp-fab__bubble-text">Em có thể giúp gì cho chuyến đi của bạn? 👋</div>
           </div>
         </button>
       )}
@@ -702,7 +734,6 @@ export default function SupportWidget({ user, onNeedAuth }) {
           <header className="sp-gpt-header">
             <div className="sp-gpt-header__left">
               <span className="sp-gpt-header__title">Aura AI</span>
-              <span className="sp-gpt-header__badge">Du lịch thông minh</span>
             </div>
 
             <div className="sp-gpt-header__actions">
@@ -898,9 +929,9 @@ export default function SupportWidget({ user, onNeedAuth }) {
                           title="Xem chi tiết quá trình suy nghĩ & tìm kiếm"
                         >
                           <span className="sp-gpt-thought__label">
-                            {message.isStreaming
+                            {message.isStreaming && !message.body
                               ? "Working..."
-                              : `Worked for ${message.thoughtDuration || 11}s`}
+                              : `Worked for ${message.thoughtDuration || 2}s`}
                           </span>
                           <svg
                             className={`sp-gpt-thought__chevron ${expandedThoughts[message.id] ? "sp-gpt-thought__chevron--open" : ""}`}
@@ -936,26 +967,19 @@ export default function SupportWidget({ user, onNeedAuth }) {
                         )}
                       </div>
 
-                      {/* Nội dung tin nhắn trực tiếp không bong bóng kèm con trỏ streaming */}
-                      <div className="sp-gpt-ai-content">
-                        {message.body ? (
-                          <>
-                            {renderFormattedMessage(
-                              message.body,
-                              navigate,
-                              checkedItems,
-                              toggleCheckItem,
-                              String(message.id)
-                            )}
-                            {message.isStreaming && <span className="sp-gpt-cursor" />}
-                          </>
-                        ) : (
-                          <div className="sp-gpt-thinking">
-                            <span className="sp-gpt-thinking__dot" />
-                            <span className="sp-gpt-thinking__text">Aura đang suy nghĩ...</span>
-                          </div>
-                        )}
-                      </div>
+                      {/* Nội dung tin nhắn trực tiếp không bong bóng kèm con trỏ streaming (chỉ hiển thị sau khi Work xong) */}
+                      {Boolean(message.body) && (
+                        <div className="sp-gpt-ai-content">
+                          {renderFormattedMessage(
+                            message.body,
+                            navigate,
+                            checkedItems,
+                            toggleCheckItem,
+                            String(message.id)
+                          )}
+                          {message.isStreaming && <span className="sp-gpt-cursor" />}
+                        </div>
+                      )}
 
                       {/* Thanh công cụ hành động chuẩn ChatGPT: Copy, Thumbs Down, Speaker, Share, More */}
                       {!message.isStreaming && Boolean(message.body) && (
@@ -1046,14 +1070,6 @@ export default function SupportWidget({ user, onNeedAuth }) {
                     </div>
                   );
                 })}
-
-                {/* Trạng thái suy nghĩ khi đang chờ câu trả lời */}
-                {isSubmitting && (
-                  <div className="sp-gpt-thinking">
-                    <span className="sp-gpt-thinking__dot" />
-                    <span className="sp-gpt-thinking__text">Aura đang suy nghĩ...</span>
-                  </div>
-                )}
 
                 <div ref={endRef} />
               </div>

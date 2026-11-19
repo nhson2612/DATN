@@ -615,6 +615,22 @@ def list_operator_bookings(
     return {"success": True, **kq}
 
 
+@bookings_router.get("/customers/list")
+def list_operator_customers_endpoint(
+    operator_id: Optional[int] = Query(None, description="Admin lọc theo ID operator"),
+    current_user: dict = Depends(get_current_operator_or_admin),
+):
+    """Danh sách khách hàng (CRM) kèm thống kê tổng chi tiêu và lịch sử đặt tour của nhà điều hành."""
+    try:
+        kq = tour_service.danh_sach_khach_hang_operator(
+            current_user=current_user,
+            query_operator_id=operator_id,
+        )
+    except tour_service.TourPermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    return {"success": True, **kq}
+
+
 @bookings_router.get("/{booking_id}")
 def get_operator_booking_detail(
     booking_id: int,

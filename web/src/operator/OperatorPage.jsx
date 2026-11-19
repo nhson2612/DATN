@@ -2,6 +2,7 @@ import { Link, NavLink, useLocation, useSearchParams } from "react-router-dom";
 
 import BookingsScreen from "./bookings";
 import CancellationsScreen from "./cancellations";
+import CustomersScreen from "./customers";
 import DeparturesScreen from "./departures";
 import RevenueScreen from "./revenue";
 import ToursScreen from "./tours";
@@ -29,7 +30,13 @@ const NHOM_MENU = [
       { path: "cancellations", icon: "event_busy", label: "Huỷ đợt", Screen: CancellationsScreen },
     ],
   },
-  { tieuDe: "Khách hàng", muc: [{ path: "support", icon: "support_agent", label: "Hộp thư hỗ trợ", Screen: SupportScreen }] },
+  {
+    tieuDe: "Khách hàng",
+    muc: [
+      { path: "customers", icon: "group", label: "Quản lý khách hàng", Screen: CustomersScreen },
+      { path: "support", icon: "support_agent", label: "Hộp thư hỗ trợ", Screen: SupportScreen },
+    ],
+  },
   {
     tieuDe: "Tài chính",
     muc: [{ path: "revenue", icon: "monitoring", label: "Doanh thu", Screen: RevenueScreen }],

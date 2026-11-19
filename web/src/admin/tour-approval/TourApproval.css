@@ -145,3 +145,48 @@
   font-size: 12px;
   font-weight: 600;
 }
+
+/* ==========================================================================
+   MODAL CHI TIẾT DUYỆT TOUR (Căn giữa màn hình chuẩn mực)
+   ========================================================================== */
+.tour-approval-modal-backdrop,
+.tour-approval-modal__div-1 {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  padding: 1.5rem !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+.tour-approval-modal-dialog {
+  position: relative !important;
+  inset: auto !important;
+  margin: auto !important;
+  display: flex !important;
+  max-height: 90vh !important;
+  width: 100% !important;
+  max-width: 64rem !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border-radius: 1.25rem !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.25) !important;
+  animation: tourApprovalModalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes tourApprovalModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

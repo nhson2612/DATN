@@ -13,6 +13,9 @@ class ChatRequest(BaseModel):
     # Tên đơn vị hành chính người dùng đã chọn từ `candidates` của lượt trước,
     # khi câu hỏi bị nhập nhằng. Gửi lại nguyên câu hỏi cũ kèm trường này.
     resolved_admin: Optional[str] = None
+    itinerary_id: Optional[int] = None
+    trip_context: Optional[dict] = None
+    history: Optional[List[dict]] = None
 
 
 class RouteRequest(BaseModel):
@@ -67,6 +70,7 @@ class ItineraryCreateUpdate(BaseModel):
     destination: Optional[str] = None
     sections: List[dict] = []
     reservations: Optional[List[dict]] = []
+    budget: Optional[float] = 0.0
 
 
 class RecommendRequest(BaseModel):

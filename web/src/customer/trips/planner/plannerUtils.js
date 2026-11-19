@@ -1,11 +1,30 @@
 /**
- * Accent đỏ dùng chung cho MỌI ngày trong hành trình.
- *
- * Trước đây chỗ này là một "bảng màu theo ngày" gồm 7 phần tử giống hệt nhau,
- * còn TripMap giữ thêm một bản sao của cùng mảng đó — hai nguồn sự thật cho một
- * màu duy nhất. Nay chỉ còn hằng số này, mọi nơi import từ đây.
+ * Bảng màu riêng biệt cho từng ngày để phân biệt trên bản đồ và hành trình:
+ * Ngày 1: Xanh dương, Ngày 2: Xanh ngọc lục bảo, Ngày 3: Hổ phách/cam vàng,
+ * Ngày 4: Tím, Ngày 5: Hồng dâu, v.v.
  */
-export const MAU_NGAY = "#f15b4a";
+export const BANG_MAU_NGAY = [
+  "#2563eb", // Ngày 1: Royal Blue
+  "#059669", // Ngày 2: Emerald Green
+  "#d97706", // Ngày 3: Amber / Cam vàng
+  "#7c3aed", // Ngày 4: Violet / Tím
+  "#db2777", // Ngày 5: Pink / Hồng
+  "#0891b2", // Ngày 6: Cyan / Xanh dương sáng
+  "#ea580c", // Ngày 7: Rust Orange / Cam đậm
+  "#4f46e5", // Ngày 8: Indigo
+  "#0d9488", // Ngày 9: Teal
+  "#e11d48", // Ngày 10: Rose
+];
+
+export const MAU_MAC_DINH = "#64748b"; // Wishlist / Chưa xếp ngày: Slate
+
+export function getMauNgay(ngay) {
+  const d = Number(ngay);
+  if (!d || d < 1) return MAU_MAC_DINH;
+  return BANG_MAU_NGAY[(d - 1) % BANG_MAU_NGAY.length];
+}
+
+export const MAU_NGAY = BANG_MAU_NGAY[0];
 
 /**
  * Ghép chuỗi thông tin phụ của địa điểm (loại hình, địa chỉ, mô tả tóm tắt)

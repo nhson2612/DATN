@@ -816,9 +816,20 @@ def list_my_bookings(user_id: int, limit: int = 100) -> list:
     """Danh sách đơn đặt tour của khách hàng đang đăng nhập (Phase 2.7).
 
     Bổ sung thông tin tính toán: tiền tiết kiệm (savings), cờ khuyến mãi (is_sale).
+    Tự động đối soát đơn PENDING_PAYMENT nếu khách đã chuyển tiền.
     """
     rows = tour_repo.list_user_bookings(user_id=user_id, limit=limit)
     for r in rows:
+        # Nếu đang PENDING_PAYMENT, chủ động kiểm tra đối soát
+        if r.get("status") == "PENDING_PAYMENT":
+            try:
+                if dong_bo_thanh_toan_payos(r["id"]):
+                    updated_b = tour_repo.get_booking(r["id"])
+                    if updated_b:
+                        r["status"] = updated_b.get("status")
+            except Exception as e:
+                logger.debug("Không thể đối soát tự động đơn #%s: %s", r.get("id"), e)
+
         ulp = r.get("unit_list_price")
         usp = r.get("unit_sale_price")
         guests = int(r.get("guests") or 1)
@@ -1582,8 +1593,108 @@ def tao_checkout_payos(
     }
 
 
+def dong_bo_thanh_toan_payos(booking_id: int) -> bool:
+    """Chủ động đối soát trạng thái thanh toán từ payOS API.
+    
+    Hỗ trợ môi trường localhost/dev không nhận được webhook công khai từ Internet,
+    hoặc dự phòng khi mạng chập chờn / webhook bị trễ.
+    """
+    booking = tour_repo.get_booking(booking_id)
+    if not booking or booking.get("status") != "PENDING_PAYMENT":
+        return False
+
+    payments = tour_repo.get_booking_payments(booking_id)
+    if not payments:
+        return False
+    latest_payment = payments[0]
+    if latest_payment.get("provider") != "payos" or latest_payment.get("status") != "PENDING":
+        return False
+
+    order_code_raw = latest_payment.get("provider_order_id")
+    if not order_code_raw:
+        return False
+
+    try:
+        from payos import PayOS
+    except ImportError:
+        return False
+
+    if not settings.payos_checksum_key:
+        return False
+
+    try:
+        payos_client = PayOS(
+            client_id=settings.payos_client_id or "",
+            api_key=settings.payos_api_key or "",
+            checksum_key=settings.payos_checksum_key or "",
+        )
+        order_info = payos_client.payment_requests.get(int(order_code_raw))
+    except Exception as e:
+        logger.warning("Không thể truy vấn trạng thái payOS order %s: %s", order_code_raw, e)
+        return False
+
+    if not order_info:
+        return False
+
+    status_str = getattr(order_info, "status", None)
+    if status_str == "PAID":
+        now_vn = datetime.now(TZ_VN)
+        transactions = getattr(order_info, "transactions", []) or []
+        ref = transactions[0].reference if transactions else ""
+        payload_dict = order_info.model_dump() if hasattr(order_info, "model_dump") else {}
+
+        with transaction() as tx:
+            payment_locked = tour_repo.get_payment(latest_payment["id"], tx=tx, for_update=True)
+            if not payment_locked or payment_locked.get("status") == "SUCCESS":
+                return True
+            booking_locked = tour_repo.get_booking(booking_id, tx=tx, for_update=True)
+            if not booking_locked or booking_locked.get("status") != "PENDING_PAYMENT":
+                return False
+
+            tour_repo.update_payment_status(
+                payment_id=latest_payment["id"],
+                status="SUCCESS",
+                confirmed_at=now_vn,
+                note=f"Thanh toán VietQR payOS thành công (đối soát tự động); ref={ref}; order_code={order_code_raw}",
+                gateway_payload=payload_dict,
+                needs_refund=False,
+                expected_status="PENDING",
+                tx=tx,
+            )
+            chuyen_trang_thai(
+                booking_id=booking_id,
+                tu="PENDING_PAYMENT",
+                sang="PAID",
+                ly_do=f"Thanh toán thành công qua VietQR payOS (đối soát tự động, orderCode={order_code_raw})",
+                actor_id=None,
+                tx=tx,
+            )
+            logger.info("Chủ động đồng bộ thành công đơn #%s qua payOS API sang PAID", booking_id)
+            return True
+    elif status_str == "CANCELLED":
+        now_vn = datetime.now(TZ_VN)
+        with transaction() as tx:
+            payment_locked = tour_repo.get_payment(latest_payment["id"], tx=tx, for_update=True)
+            if payment_locked and payment_locked.get("status") == "PENDING":
+                tour_repo.update_payment_status(
+                    payment_id=latest_payment["id"],
+                    status="FAILED",
+                    confirmed_at=now_vn,
+                    note=f"Khách hàng hủy thanh toán payOS (orderCode={order_code_raw})",
+                    expected_status="PENDING",
+                    tx=tx,
+                )
+    return False
+
+
 def lay_trang_thai_thanh_toan(booking_id: int) -> dict:
     """Lấy trạng thái thanh toán và thông tin giữ chỗ an toàn của đơn đặt tour (không lộ secret)."""
+    # Chủ động đối soát payOS nếu đơn đang ở trạng thái PENDING_PAYMENT
+    try:
+        dong_bo_thanh_toan_payos(booking_id)
+    except Exception as e:
+        logger.warning("Lỗi chủ động đối soát payOS cho đơn #%s: %s", booking_id, e)
+
     booking = tour_repo.get_booking(booking_id)
     if not booking:
         raise BookingNotFoundError(f"Không tìm thấy đơn đặt tour #{booking_id}")
@@ -2916,7 +3027,118 @@ def doanh_thu_operator(current_user: dict) -> dict:
     operator_id = current_user.get("operator_id")
     if not operator_id:
         raise TourPermissionDeniedError("Tài khoản không có thông tin operator hợp lệ.")
-    return {"summary": tour_repo.operator_revenue(operator_id), "months": tour_repo.operator_revenue_by_month(operator_id)}
+
+    summary = tour_repo.operator_revenue(operator_id)
+    months = tour_repo.operator_revenue_by_month(operator_id)
+    by_tour = tour_repo.operator_revenue_by_tour(operator_id)
+    by_customer = tour_repo.operator_revenue_by_customer(operator_id)
+    by_method = tour_repo.operator_revenue_by_method(operator_id)
+    recent_transactions = tour_repo.operator_recent_transactions(operator_id, limit=30)
+
+    gross = int(summary.get("gross_revenue") or 0)
+
+    # Tính tỷ trọng % đóng góp theo tháng và tăng trưởng tháng gần nhất
+    for m in months:
+        m_rev = int(m.get("revenue") or 0)
+        m["revenue"] = m_rev
+        m["bookings"] = int(m.get("bookings") or 0)
+        m["guests"] = int(m.get("guests") or 0)
+        m["tours_count"] = int(m.get("tours_count") or 0)
+        m["avg_order_value"] = int(m.get("avg_order_value") or 0)
+        m["share_pct"] = round(m_rev * 100.0 / gross, 1) if gross > 0 else 0.0
+
+    current_month_rev = int(months[0]["revenue"]) if len(months) >= 1 else 0
+    prev_month_rev = int(months[1]["revenue"]) if len(months) >= 2 else 0
+    if prev_month_rev > 0:
+        growth_pct = round((current_month_rev - prev_month_rev) * 100.0 / prev_month_rev, 1)
+    elif current_month_rev > 0:
+        growth_pct = 100.0
+    else:
+        growth_pct = 0.0
+
+    summary["current_month_revenue"] = current_month_rev
+    summary["prev_month_revenue"] = prev_month_rev
+    summary["growth_pct"] = growth_pct
+
+    # Tính tỷ trọng % theo Tour
+    for t in by_tour:
+        t_rev = int(t.get("revenue") or 0)
+        t["revenue"] = t_rev
+        t["bookings"] = int(t.get("bookings") or 0)
+        t["guests"] = int(t.get("guests") or 0)
+        t["departures_count"] = int(t.get("departures_count") or 0)
+        t["total_bookings"] = int(t.get("total_bookings") or 0)
+        t["pending_revenue"] = int(t.get("pending_revenue") or 0)
+        t["pending_bookings"] = int(t.get("pending_bookings") or 0)
+        t["share_pct"] = round(t_rev * 100.0 / gross, 1) if gross > 0 else 0.0
+
+    # Tính tỷ trọng % theo Khách hàng
+    for c in by_customer:
+        c_rev = int(c.get("revenue") or 0)
+        c["revenue"] = c_rev
+        c["bookings"] = int(c.get("bookings") or 0)
+        c["guests"] = int(c.get("guests") or 0)
+        c["share_pct"] = round(c_rev * 100.0 / gross, 1) if gross > 0 else 0.0
+        if hasattr(c.get("last_paid_at"), "isoformat"):
+            c["last_paid_at"] = c["last_paid_at"].isoformat()
+
+    # Tính tỷ trọng % theo Phương thức thanh toán
+    for pm in by_method:
+        pm_rev = int(pm.get("revenue") or 0)
+        pm["revenue"] = pm_rev
+        pm["bookings"] = int(pm.get("bookings") or 0)
+        pm["share_pct"] = round(pm_rev * 100.0 / gross, 1) if gross > 0 else 0.0
+
+    # Chuẩn hóa thời gian trong giao dịch gần nhất
+    for tx_item in recent_transactions:
+        tx_item["amount"] = int(tx_item.get("amount") or 0)
+        tx_item["guests"] = int(tx_item.get("guests") or 1)
+        if hasattr(tx_item.get("confirmed_at"), "isoformat"):
+            tx_item["confirmed_at"] = tx_item["confirmed_at"].isoformat()
+        if hasattr(tx_item.get("depart_date"), "isoformat"):
+            tx_item["depart_date"] = tx_item["depart_date"].isoformat()
+
+    return {
+        "summary": summary,
+        "months": months,
+        "by_tour": by_tour,
+        "by_customer": by_customer,
+        "by_method": by_method,
+        "recent_transactions": recent_transactions,
+    }
+
+
+def danh_sach_khach_hang_operator(
+    current_user: dict,
+    query_operator_id: Optional[int] = None,
+) -> dict:
+    """Lấy danh sách khách hàng và thống kê CRM dành cho Nhà điều hành."""
+    is_admin = bool(current_user.get("is_admin") or current_user.get("role") == "admin")
+    if is_admin:
+        effective_op_id = query_operator_id
+    else:
+        effective_op_id = current_user.get("operator_id")
+        if not effective_op_id:
+            raise TourPermissionDeniedError("Tài khoản không có thông tin operator hợp lệ.")
+
+    customers = tour_repo.list_operator_customers(operator_id=effective_op_id)
+    total_customers = len(customers)
+    paid_customers = sum(1 for c in customers if c["paid_bookings"] > 0)
+    vip_customers = sum(1 for c in customers if c["tier"] == "VIP")
+    total_revenue = sum(c["total_spent"] for c in customers)
+    total_paid_guests = sum(c["paid_guests"] for c in customers)
+
+    return {
+        "summary": {
+            "total_customers": total_customers,
+            "paid_customers": paid_customers,
+            "vip_customers": vip_customers,
+            "total_revenue": total_revenue,
+            "total_paid_guests": total_paid_guests,
+            "avg_customer_value": round(total_revenue / paid_customers) if paid_customers > 0 else 0,
+        },
+        "customers": customers,
+    }
 
 
 def dat_gia_sale_departure(

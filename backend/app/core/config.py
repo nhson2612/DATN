@@ -33,12 +33,12 @@ class Settings(BaseSettings):
     db_pool_max: int = 10
 
     # ---- LLM ----
-    llm_provider: Literal["ollama", "deepseek"] = "ollama"
+    llm_provider: Literal["ollama", "deepseek"] = "deepseek"
     llm_timeout: int = Field(default=300, ge=1)
     ollama_url: str = "http://localhost:11434/api/generate"
     ollama_model: str = "qwen2.5:7b"
     deepseek_url: str = "https://api.deepseek.com/chat/completions"
-    deepseek_model: str = "deepseek-v4-pro"
+    deepseek_model: str = "deepseek-v4-flash"
     deepseek_api_key: str | None = None
 
     # ---- Serper (tìm mô tả và ảnh cho trang chi tiết địa điểm) ----

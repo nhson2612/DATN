@@ -21,7 +21,7 @@ export default function PlaceGallery({
   const [hong, setHong] = useState(() => new Set());
   const [chon, setChon] = useState(0);
 
-  // Danh sách {url, host} đã dedupe — baseImage trước, ảnh web sau.
+  // Danh sách {url, host} đã dedupe — ưu tiên ảnh thực tế nếu baseImage là huy hiệu/vector
   const items = useMemo(() => {
     const list = [];
     const daThay = new Set();
@@ -30,8 +30,30 @@ export default function PlaceGallery({
       daThay.add(url);
       list.push({ url, host, credit: creditNguon || null });
     };
-    them(baseImage, null, credit);
+
+    const laHuyHieuHoacLogo = (url) => {
+      if (!url) return false;
+      const lower = url.toLowerCase();
+      return (
+        lower.includes("insignia") ||
+        lower.includes("emblem") ||
+        lower.includes("coat_of_arms") ||
+        lower.includes("logo") ||
+        lower.includes(".svg")
+      );
+    };
+
+    const coAnhChupThucTe = (images || []).some(
+      (img) => img?.url && !laHuyHieuHoacLogo(img.url)
+    );
+
+    if (baseImage && (!laHuyHieuHoacLogo(baseImage) || !coAnhChupThucTe)) {
+      them(baseImage, null, credit);
+    }
     (images || []).forEach((img) => them(img?.url, img?.host || null));
+    if (baseImage && laHuyHieuHoacLogo(baseImage) && coAnhChupThucTe) {
+      them(baseImage, null, credit);
+    }
     return list;
   }, [baseImage, credit, images]);
 
@@ -74,7 +96,7 @@ export default function PlaceGallery({
             role="img"
             aria-label={name}
           >
-            <i className="fa-solid fa-image" aria-hidden="true" />
+            <span className="material-symbols-outlined text-4xl">image</span>
           </div>
         )}
       </figure>
@@ -100,12 +122,12 @@ export default function PlaceGallery({
         />
         {hero.host ? (
           <p className="place-field-guide__gallery-caption">
-            <i className="fa-solid fa-camera" aria-hidden="true" /> Nguồn: {hero.host}
+            <span className="material-symbols-outlined text-[14px] leading-none">photo_camera</span> Nguồn: {hero.host}
           </p>
         ) : (
           hero.credit && (
             <p className="place-field-guide__gallery-caption">
-              <i className="fa-solid fa-camera" aria-hidden="true" /> Nguồn ảnh: {hero.credit}
+              <span className="material-symbols-outlined text-[14px] leading-none">photo_camera</span> Nguồn ảnh: {hero.credit}
             </p>
           )
         )}

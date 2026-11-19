@@ -8,6 +8,7 @@ import {
   nhanNgay,
   tinhKhoangCachKm,
   uocTinhThoiGian,
+  getMauNgay,
 } from "./plannerUtils";
 import "./PlannerDay.css";
 
@@ -16,6 +17,7 @@ import "./PlannerDay.css";
  */
 export default function PlannerDay({
   ngay,
+  soThuTuBatDau = 0,
   startDate,
   diemDen,
   ds = [],
@@ -45,9 +47,16 @@ export default function PlannerDay({
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [newChecklistText, setNewChecklistText] = useState({});
 
-  // Đếm các điểm tham quan thực tế (không tính note hay checklist)
+  // Đếm các điểm tham quan thực tế (không tính note, checklist, expense)
   const placesOnly = useMemo(
-    () => ds.filter((s) => s.role !== "note" && s.role !== "checklist"),
+    () =>
+      ds.filter(
+        (s) =>
+          s.role !== "note" &&
+          s.role !== "checklist" &&
+          s.role !== "expense" &&
+          s.type !== "expense"
+      ),
     [ds]
   );
 
@@ -178,15 +187,20 @@ export default function PlannerDay({
 
   const placeIndexMap = useMemo(() => {
     const map = new Map();
-    let count = 0;
+    let count = soThuTuBatDau;
     (ds || []).forEach((s) => {
-      if (s.role !== "note" && s.role !== "checklist") {
+      if (
+        s.role !== "note" &&
+        s.role !== "checklist" &&
+        s.role !== "expense" &&
+        s.type !== "expense"
+      ) {
         count += 1;
         map.set(`${s.type}-${s.id}`, count);
       }
     });
     return map;
-  }, [ds]);
+  }, [ds, soThuTuBatDau]);
 
   return (
     <section
@@ -233,9 +247,15 @@ export default function PlannerDay({
           )}
 
           <div className="planner-day__header-titles">
-            <h3 className="planner-day__title">
-              {nhanNgay(startDate, ngay)}
-            </h3>
+            <div className="flex items-center gap-2">
+              <span
+                className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
+                style={{ backgroundColor: getMauNgay(ngay) }}
+              />
+              <h3 className="planner-day__title">
+                {nhanNgay(startDate, ngay)}
+              </h3>
+            </div>
             <p className="planner-day__subtitle">
               {placesOnly.length} địa điểm
               {nhanQuangDuong && ` · ${nhanQuangDuong}`}
@@ -457,7 +477,13 @@ export default function PlannerDay({
                 // Tìm điểm địa điểm tiếp theo để tính khoảng cách
                 const nextPlace = ds
                   .slice(i + 1)
-                  .find((item) => item.role !== "note" && item.role !== "checklist");
+                  .find(
+                    (item) =>
+                      item.role !== "note" &&
+                      item.role !== "checklist" &&
+                      item.role !== "expense" &&
+                      item.type !== "expense"
+                  );
                 const kmChặng = nextPlace ? tinhKhoangCachKm(s, nextPlace) : null;
                 const tgChặng = kmChặng ? uocTinhThoiGian(kmChặng) : null;
                 const canNavigate = Boolean(
@@ -475,7 +501,13 @@ export default function PlannerDay({
                     >
                       {/* Cột marker giọt nước (Teardrop Marker) chuẩn ảnh nuo.png */}
                     <div className="planner-day__marker-col">
-                      <div className="planner-day__teardrop">
+                      <div
+                        className="planner-day__teardrop"
+                        style={{
+                          background: getMauNgay(ngay),
+                          boxShadow: `0 2px 6px ${getMauNgay(ngay)}55`,
+                        }}
+                      >
                         <span className="planner-day__teardrop-number">
                           {currentPlaceNum}
                         </span>

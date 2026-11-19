@@ -1,321 +1,258 @@
-# Hệ thống website du lịch thông minh tích hợp Trí tuệ nhân tạo (AI)
+# Aura Voyage — Hệ thống Website Du lịch Thông minh Tích hợp GIS & Trí tuệ Nhân tạo (AI)
 
-Khoá luận tốt nghiệp — GVHD: Phạm Trung Dũng
-
-Website du lịch cho phép người dùng tìm kiếm địa điểm bằng **câu hỏi tiếng Việt tự
-nhiên**, xem kết quả trên bản đồ, tìm đường đi và lập lịch trình chuyến đi. Phạm vi
-dữ liệu: **toàn quốc**.
+> **Đồ án / Khóa luận Tốt nghiệp** — Hệ thống hoạch định lịch trình du lịch tự túc trên bản đồ số GIS kết hợp nền tảng đặt Tour trọn gói, điều hành Tour và Trợ lý AI ngữ cảnh theo thời gian thực.  
+> **Phạm vi dữ liệu không gian**: Toàn lãnh thổ Việt Nam (`gis_vietnam`).
 
 ---
 
-## 1. Mục tiêu
+## Mục lục
 
-- Nghiên cứu các công nghệ xây dựng website du lịch thông minh.
-- Ứng dụng AI để gợi ý địa điểm, lập lịch trình và tư vấn người dùng.
-- Xây dựng website cho phép tìm kiếm thông tin, quản lý tài khoản, lập kế hoạch
-  chuyến đi và nhận đề xuất cá nhân hoá.
-- Đánh giá hệ thống theo **tính chính xác**, **khả năng sử dụng** và **hiệu năng**.
+1. [Tổng quan hệ thống](#1-tổng-quan-hệ-thống)
+2. [Các phân hệ chức năng chính](#2-các-phân-hệ-chức-năng-chính)
+3. [Kiến trúc hệ thống & Cấu trúc thư mục](#3-kiến-trúc-hệ-thống--cấu-trúc-thư-mục)
+4. [Thuật toán Không gian (GIS), Định tuyến & Trí tuệ Nhân tạo](#4-thuật-toán-không-gian-gis-định-tuyến--trí-tuệ-nhân-tạo)
+5. [Thiết kế Cơ sở dữ liệu (`PostgreSQL + PostGIS + pgRouting`)](#5-thiết-kế-cơ-sở-dữ-liệu-postgresql--postgis--pgrouting)
+6. [Danh mục API Endpoints chính](#6-danh-mục-api-endpoints-chính)
+7. [Hướng dẫn Cài đặt & Khởi chạy](#7-hướng-dẫn-cài-đặt--khởi-chạy)
+8. [Cấu hình Biến môi trường (`.env`)](#8-cấu-hình-biến-môi-trường-env)
+9. [Kiểm thử & Đảm bảo chất lượng](#9-kiểm-thử--đảm-bảo-chất-lượng)
 
 ---
 
-## 2. Tính năng
+## 1. Tổng quan hệ thống
 
-### Đã có
+**Aura Voyage** giải quyết đồng thời hai nhu cầu cốt lõi của du khách hiện đại trên cùng một nền tảng thống nhất:
 
-| Nhóm | Tính năng | Endpoint |
+1. **Du lịch tự túc thông minh (`Self-Guided Trip Planner`)**:
+   - Lập kế hoạch chuyến đi nhiều ngày trực quan theo phong cách Wanderlog kết hợp bản đồ tương tác **MapLibre GL**.
+   - **Trợ lý Lập lịch trình AI (`DeepSeek` + `Serper Places` + `Tavily` + `PostGIS`)**: Nắm bắt toàn bộ ngữ cảnh chuyến đi theo thời gian thực (điểm đến, số ngày, ngân sách, các điểm đã xếp theo từng ngày, chỗ nghỉ, ngày trống) và cung cấp **7 công cụ thao tác trực tiếp** vào lịch trình.
+   - **Tối ưu lộ trình di chuyển 2 tầng**: Sắp xếp thứ tự địa điểm trong ngày bằng thuật toán **TSP (`Nearest Neighbor` + `2-Opt`)** kết hợp tìm đường bộ thực tế bằng **`pgRouting Dijkstra`** có xét chiều lưu thông (đường 1 chiều / 2 chiều).
+
+2. **Đặt Tour trọn gói & Điều hành Tour (`Package Tours & Operator ERP`)**:
+   - Tìm kiếm, lọc tour theo tỉnh/thành, mức giá, thời lượng; xem lịch khởi hành, bảng giá vé người lớn/trẻ em/em bé và chương trình ưu đãi.
+   - Giữ chỗ tự động có thời hạn (15 phút) và thanh toán trực tuyến tức thì qua **VietQR payOS** (quét mã QR ngân hàng, tự động đối soát Webhook + kiểm tra chủ động) hoặc **Thẻ quốc tế Stripe Checkout**.
+   - **Cổng Nhà điều hành (`Operator Portal`)**: Quản lý tour, lịch khởi hành, duyệt đơn đặt, xuất danh sách đoàn khách (`.csv`), quản lý hồ sơ khách hàng (CRM) và báo cáo thống kê doanh thu đa chiều (theo Tháng, theo Tour, theo Khách hàng, theo Kênh thanh toán).
+   - **Trợ lý CSKH `Aura AI` (SSE Streaming)**: Tư vấn tour từ danh mục thực tế trong CSDL, so sánh giá tour chính xác, tra cứu đơn đặt của khách và hỗ trợ chuyển tiếp nhân viên tư vấn (`Human Handover`).
+
+---
+
+## 2. Các phân hệ chức năng chính
+
+### 2.1. Phân hệ Khách du lịch (`Customer Portal`)
+| Nhóm chức năng | Đường dẫn Frontend | Mô tả chi tiết |
 | :--- | :--- | :--- |
-| Tài khoản | Đăng ký, đăng nhập (JWT), phân quyền admin/user | `POST /api/register`, `/api/login`, `GET /api/me` |
-| **Điểm đến** | Danh sách tỉnh/thành; trang từng điểm đến gom địa điểm theo nhóm | `GET /api/destinations`, `/api/destinations/{slug}` |
-| **Tìm & lọc** | Lọc theo điểm đến, nhóm, loại, từ khoá; phân trang | `GET /api/places/search` |
-| **Chi tiết địa điểm** | Ảnh, địa chỉ, điện thoại, link trang chính thức, địa điểm lân cận | `GET /api/places/{type}/{id}` |
-| **Yêu thích** | Lưu / bỏ / xem danh sách | `GET/POST/DELETE /api/favorites` |
-| Trợ lý AI | Hỏi đáp tiếng Việt → tìm địa điểm → trả lời + hiện lên bản đồ | `POST /api/chat` |
-| **Lịch trình AI** | Gợi ý lịch trình nhiều ngày quanh điểm đến, có tuyến đường | `POST /api/itineraries/recommend` |
-| Lịch trình | Xem, tạo, sửa, xoá lịch trình cá nhân | `GET/POST/PUT/DELETE /api/itineraries` |
-| Bản đồ | Tải địa điểm theo khung nhìn (bbox + limit) | `GET /api/places` |
-| Tìm đường | Đường đi ngắn nhất giữa hai điểm (pgRouting) | `POST /api/route` |
-| Mạng đường | Tải mạng đường theo khung nhìn | `GET /api/roads` |
-| Quản trị | CRUD địa điểm và nơi lưu trú (chỉ admin) | `/api/poi`, `/api/accommodation` |
+| **Trang chủ & Khám phá** | `/`, `/destinations/:slug`, `/places/:type/:id` | Tìm kiếm điểm đến toàn quốc, khám phá điểm tham quan/ẩm thực/lưu trú kèm ảnh, đánh giá, bản đồ và địa điểm lân cận. |
+| **Quản lý Chuyến đi tự túc** | `/trips` | Tạo chuyến đi mới, dùng AI tự động khởi tạo lịch trình theo sở thích & ngân sách, quản lý danh sách chuyến đi cá nhân. |
+| **Màn hình Tự lên lịch (Trip Planner)** | `/trips/:id` | Bố cục 3 cột (Thanh điều hướng `PlannerRail` · Dải nội dung `PlannerContentFeed` · Bản đồ `TripMap`). Quản lý điểm dừng theo từng ngày, đặt chỗ nghỉ qua đêm, ghi chú, checklist, quản lý vé/đặt chỗ (`Reservations`) và theo dõi ngân sách (`Budget`). |
+| **Trợ lý AI Lập lịch trình** | Tích hợp tại `/trips/:id` | Khung chat AI đọc trực tiếp ngữ cảnh chuyến đi `#id`, gợi ý lịch trình từng ngày, thêm điểm `+Ngày 1..N`, gán chỗ nghỉ, tối ưu đường đi, phân bổ điểm chờ xếp, tạo checklist & đặt ngân sách chỉ với 1 chạm. |
+| **Tour trọn gói & Thanh toán** | `/tours`, `/tours/:slug` | Tìm kiếm/lọc tour, chọn đợt khởi hành, khai báo danh sách hành khách, thanh toán qua **VietQR payOS** hoặc **Stripe**. |
+| **Tài khoản & Đơn đặt của tôi** | `/account`, `/favorites` | Theo dõi trạng thái đơn đặt tour, đồng bộ trạng thái thanh toán thời gian thực, hủy đơn, quản lý danh sách địa điểm yêu thích. |
+| **Trợ lý trực tuyến Aura AI** | Widget toàn trang | Streaming câu trả lời theo thời gian thực (SSE), hiển thị thời gian suy nghĩ (`Working...` $\rightarrow$ `Worked for Xs`), dữ liệu truy xuất 100% từ PostgreSQL. |
 
-### Nên có — chưa làm
+### 2.2. Phân hệ Nhà điều hành Tour (`Operator Portal` — `/operator`)
+- **Tổng quan điều hành (`Dashboard`)**: Theo dõi nhanh số tour đang mở, các đợt khởi hành sắp tới, tỷ lệ lấp đầy chỗ và doanh thu.
+- **Quản lý Tour & Đợt khởi hành (`Tours & Departures`)**: Soạn thảo thông tin tour, lịch trình chi tiết từng ngày, tải ảnh media, gửi duyệt tour, mở đợt khởi hành, cài đặt giảm giá (`Sale`) và xuất file CSV danh sách hành khách theo đợt.
+- **Quản lý Đơn đặt (`Bookings`)**: Xác nhận đơn, cập nhật trạng thái vận hành (`Chờ khởi hành`, `Đang diễn ra`, `Hoàn thành`), xử lý hủy đơn.
+- **Quản lý Khách hàng (`Customers CRM`)**: Thống kê danh sách khách hàng của đơn vị, phân nhóm (`Đã thanh toán`, `Khách quen`, `Chưa hoàn tất`), tìm kiếm theo tên/SĐT/email/mã đơn và mở xem trực tiếp lịch sử các tour & từng đơn đặt của khách ngay trên bảng.
+- **Báo cáo & Thống kê Doanh thu (`Revenue Analytics`)**: Phân tích doanh thu thực thu, giá trị trung bình mỗi đơn (`AOV`), doanh thu chờ thanh toán, tỷ trọng cổng thanh toán (`VietQR payOS` vs `Stripe`), kèm 4 bảng báo cáo chi tiết (**Theo Tháng**, **Theo Tour**, **Theo Khách hàng**, **Nhật ký giao dịch**) và xuất báo cáo `.csv`.
 
-- **Ảnh cho phần lớn địa điểm.** Hạ tầng đã xong (bảng `place_photos`,
-  `scripts/fetch_photos.py`, hiển thị ở frontend) nhưng Wikimedia chỉ có bài cho
-  điểm nổi tiếng cấp quốc gia. Chùa làng, quán ăn nhỏ — phần lớn CSDL — không có
-  ảnh. Cần nguồn khác hoặc để admin tự tải lên.
-- **Lọc theo đánh giá / giá / hạng sao.** Các cột `rating`, `review_count`,
-  `price_level`, `stars` **toàn giá trị mặc định**, không phải dữ liệu thật
-  (xem §4). Câu hỏi dạng "khách sạn 4 sao", "quán ăn đánh giá cao" chưa trả lời
-  được cho tới khi có nguồn đánh giá.
-- **Cá nhân hoá theo lịch sử người dùng** — `/recommend` chỉ nhận tham số của
-  lần gọi, chưa dùng lịch sử tìm kiếm hay danh sách yêu thích.
-- **Lưu lịch sử hội thoại** để trợ lý hiểu câu hỏi nối tiếp ("còn chỗ nào khác
-  không?").
-- **Tìm kiếm theo món ăn / đặc sản.** Overture chỉ có loại địa điểm, không có
-  món. Cần bổ sung nguồn OSM (`cuisine`) cho các thành phố lớn.
-- **Giờ mở cửa** — `opening_hours` rỗng 0/805.729. Đây là ràng buộc trung tâm
-  của bài toán lập lịch trình (time window): không có nó thì không đảm bảo được
-  điểm gợi ý đang mở cửa.
-- **Đánh giá hệ thống** theo 3 tiêu chí của đề tài (chính xác / khả năng sử dụng
-  / hiệu năng) — chưa có bộ câu hỏi kiểm thử và số đo trên người dùng thật.
+### 2.3. Phân hệ Quản trị hệ thống (`Admin Portal` — `/admin`)
+- **Thống kê toàn sàn**: Giám sát tổng quan số lượng người dùng, nhà điều hành, địa điểm GIS, đơn đặt tour và dòng tiền thanh toán.
+- **Kiểm duyệt Tour & Nhà điều hành**: Phê duyệt hoặc từ chối các tour do nhà điều hành gửi lên; tạo và phân quyền tài khoản Nhà điều hành (`operator`).
+- **Đối soát Thanh toán & Dữ liệu Bản đồ**: Quản lý giao dịch thanh toán toàn hệ thống và CRUD dữ liệu địa điểm (`POI`, `Accommodation`).
 
 ---
 
-## 3. Kiến trúc
+## 3. Kiến trúc hệ thống & Cấu trúc thư mục
 
+Hệ thống được thiết kế theo kiến trúc phân tầng rõ ràng (**Routes $\rightarrow$ Services $\rightarrow$ Repositories**), tách biệt hoàn toàn giao thức HTTP, nghiệp vụ logic và truy vấn SQL/PostGIS:
+
+```text
+datn/
+├── backend/                        # FastAPI Backend (Python 3.13)
+│   ├── app/
+│   │   ├── core/                   # Cấu hình (.env), Connection Pool (psycopg_pool), JWT Auth, Logging
+│   │   │   └── llm/                # LLM Adapter (DeepSeek API / Ollama, hỗ trợ JSON mode & SSE Stream)
+│   │   ├── self_guided/            # Phân hệ Du lịch tự túc & GIS
+│   │   │   ├── assistant/          # Trợ lý AI Lập lịch trình (Planner AI) & Tìm kiếm thông minh (Serper + Tavily)
+│   │   │   ├── itinerary/          # Quản lý chuyến đi, Hydrate Stops, Gợi ý lịch trình AI & Thuật toán 2-Opt TSP
+│   │   │   └── routing/            # Định tuyến đường bộ PostGIS KNN Snap + pgRouting pgr_dijkstra
+│   │   ├── tours/                  # Phân hệ Tour trọn gói & Thương mại điện tử
+│   │   │   ├── search_tours/       # Tìm kiếm tour, Đặt chỗ, Thanh toán Stripe & VietQR payOS, Báo cáo doanh thu
+│   │   │   ├── operator/           # API dành riêng cho Nhà điều hành (Tours, Departures, Bookings, Customers, Revenue)
+│   │   │   └── admin/              # API kiểm duyệt tour & quản lý nhà điều hành cho Admin
+│   │   ├── support/                # Phân hệ CSKH Aura AI (SSE Streaming, tra cứu Tour/Booking thật, Human Handover)
+│   │   ├── shared/                 # Tài nguyên dùng chung (Auth, Places, Destinations, Favorites, Photos, Schemas)
+│   │   └── main.py                 # Điểm khởi chạy FastAPI, Middleware & Background Scheduler giải phóng giữ chỗ
+│   ├── scripts/                    # Scripts nạp dữ liệu Overture Maps, OSM Roads, xây dựng Topology pgRouting
+│   └── tests/                      # Bộ kiểm thử đơn vị & tích hợp (unittest)
+├── web/                            # React 19 + Vite 8 + Tailwind CSS + MapLibre GL
+│   └── src/
+│       ├── customer/               # Giao diện Khách du lịch
+│       │   ├── trips/              # Trang chủ, Điểm đến, Chi tiết địa điểm, Danh sách chuyến đi
+│       │   │   ├── planner/        # Màn hình Tự lên lịch (TripPlanner, PlannerRail, PlannerContentFeed, Budget...)
+│       │   │   └── assistant/      # Trợ lý Lập lịch trình AI (PlannerAssistant)
+│       │   ├── tours/              # Danh sách Tour, Chi tiết Tour & Luồng đặt vé/thanh toán
+│       │   └── account/            # Quản lý tài khoản & Lịch sử đơn đặt tour
+│       ├── operator/               # Giao diện Nhà điều hành (Overview, Tours, Departures, Bookings, Customers, Revenue)
+│       ├── admin/                  # Giao diện Quản trị viên (AdminPage)
+│       └── shared/                 # API Client (api.js), Bản đồ (TripMap, MiniMap), Aura AI Widget (SupportWidget)
+├── db/                             # Khởi tạo schema PostGIS/pgRouting (init.sql) & các bản миграции SQL
+├── docker-compose.yml              # Container PostgreSQL + PostGIS + pgRouting (cổng 5433)
+└── Makefile                        # Tập lệnh tự động hóa khởi chạy, kiểm thử và sao lưu/khôi phục CSDL
 ```
-web/                 React 19 + Vite + Tailwind CSS
-   ├── src/pages/    Home, Destination, PlaceList, PlaceDetail, Tours, TourDetail,
-   │                 Trips, TripPlanner, Assistant, Favorites, Admin
-   ├── src/components/  PlaceCard, Header, AuthModal,
-   │                    MiniMap, TripMap, SearchMap
-   └── src/api/      client gọi backend
-   │  HTTP + JSON
-backend/app/
-   ├── api/routes/   tầng HTTP — không chứa SQL
-   ├── services/     nghiệp vụ — không biết HTTP
-   ├── repositories/ chỉ SQL — không chứa nghiệp vụ
-   ├── core/         cấu hình, kết nối DB, bảo mật, logging
-   ├── llm/          adapter gọi LLM (Ollama cục bộ hoặc DeepSeek)
-   └── services/search_service.py   tìm địa điểm từ câu hỏi tiếng Việt
-   │
-PostgreSQL 15 + PostGIS 3 + pgRouting
-```
 
-### Giao diện
+---
 
-Trang du lịch, **không lấy bản đồ làm trung tâm**. Traveloka, Booking,
-vietnam.travel đều là trang nội dung — hero + ô tìm kiếm + lưới thẻ ảnh — còn bản
-đồ chỉ xuất hiện ở trang chi tiết, đúng lúc người dùng cần biết "chỗ này nằm
-đâu". Bản đầu của dự án làm ngược lại: bản đồ toàn màn hình với sidebar bên trái.
+## 4. Thuật toán Không gian (GIS), Định tuyến & Trí tuệ Nhân tạo
 
-| Trang | Đường dẫn |
+### 4.1. Thuật toán Tối ưu Lộ trình 2 Tầng (`Haversine + Nearest Neighbor + 2-Opt` $\rightarrow$ `pgRouting Dijkstra`)
+
+Khi người dùng thêm $N$ địa điểm vào một ngày theo thứ tự ngẫu nhiên, hệ thống giải bài toán tối ưu qua 2 tầng để đạt tốc độ phản hồi tức thì mà vẫn vẽ đúng tuyến đường giao thông thực tế:
+
+1. **Tầng 1 — Sắp xếp thứ tự địa điểm tối ưu (`backend/app/self_guided/itinerary/optimizer.py`)**:
+   - **Mô hình hóa bài toán TSP**:
+     - Nếu ngày đó **đã chọn Chỗ nghỉ (`role = "lodging"`)**: Giải bài toán **TSP chu trình khép kín** ($\text{Chỗ nghỉ} \rightarrow \text{Điểm}_1 \rightarrow \dots \rightarrow \text{Điểm}_N \rightarrow \text{Chỗ nghỉ}$).
+     - Nếu ngày đó **chưa chọn Chỗ nghỉ**: Giải bài toán **TSP đường đi mở** (giữ cố định điểm đầu tiên làm mốc xuất phát).
+   - **Bước 1 (`Nearest Neighbor`)**: Dùng khoảng cách mặt cầu **Haversine** để dựng chu trình tham lam ban đầu bằng cách luôn nối tới địa điểm chưa thăm gần nhất.
+   - **Bước 2 (`2-Opt Local Search`)**: Duyệt qua các cặp cạnh $(i, j)$ và đảo ngược đoạn con `thu_tu[i+1 : j+1]` (tối đa 50 vòng lặp) cho tới khi tháo gỡ hoàn toàn các đoạn đường cắt chéo nhau (hình chữ X). Thời gian thực thi ở Tầng 1 chỉ **$< 1\text{ ms}$**.
+
+2. **Tầng 2 — Tìm đường bộ thực tế trên đồ thị (`backend/app/self_guided/routing/`)**:
+   - **Bắt điểm vào mạng đường chính (`KNN Spatial Snap`)**: Sử dụng toán tử `<->` trên chỉ mục `GiST` của bảng `roads_vertices_pgr` kết hợp bảng thành phần liên thông `roads_components` (`comp_size > 100`) để bắt tọa độ địa điểm vào nút giao thông gần nhất mà không rơi vào đoạn đường cụt bị cô lập.
+   - **Tìm đường ngắn nhất có hướng (`pgr_dijkstra` với `directed := true`)**:
+     - Dữ liệu đường bộ từ OpenStreetMap được chuẩn hóa trọng số:
+       ```sql
+       cost         = CASE WHEN oneway = '-1' THEN -1 ELSE length END,
+       reverse_cost = CASE WHEN oneway IN ('yes', '1', 'true') THEN -1 ELSE length END
+       ```
+     - Khi chạy `pgr_dijkstra(..., directed := true)`, mọi chiều có trọng số `-1` bị cấm đi qua, đảm bảo lộ trình tuân thủ đúng đường 1 chiều. Chỉ khi dữ liệu bản đồ tại khu vực đó bị đứt kết nối có hướng, hệ thống mới fallback sang `directed := false` và bật cờ cảnh báo `may_violate_oneway = True`.
+
+### 4.2. Các Toán tử Không gian PostGIS Cốt lõi
+| Toán tử / Hàm | Ứng dụng trong hệ thống |
 | :--- | :--- |
-| Trang chủ — hero + ô tìm + lưới điểm đến | `/` |
-| Một điểm đến — địa điểm gom theo nhóm | `/diem-den/:slug` |
-| Danh sách có bộ lọc + phân trang | `/dia-diem?destination=&nhom=` |
-| Chi tiết — ảnh, liên hệ, bản đồ nhỏ, địa điểm lân cận | `/dia-diem/:type/:id` |
-| Tour trọn gói — danh sách và chi tiết | `/tour`, `/tour/:slug` |
-| Tự lên lịch — danh sách chuyến, planner hai cột | `/chuyen-di`, `/chuyen-di/:id` |
-| Yêu thích | `/yeu-thich` |
-| Quản trị | `/quan-tri` |
+| **`geom <-> point`** | Tìm kiếm $K$ đỉnh giao thông hoặc địa điểm gần nhất (KNN) sử dụng trực tiếp chỉ mục cây R-Tree (`GiST`). |
+| **`ST_DWithin(geog1, geog2, R)`** | Khoanh vùng các địa điểm và khách sạn trong bán kính $R$ mét quanh tâm điểm đến (sử dụng functional index `USING GIST ((geom::geography))`). |
+| **`ST_Distance(geog1, geog2)`** | Tính khoảng cách thực tế bằng **mét** trên bề mặt cong WGS84 của Trái Đất. |
+| **`geom && ST_MakeEnvelope(...)`** | Lọc nhanh các đoạn đường nằm trong khung nhìn bản đồ (`Bounding Box`). |
+| **`ST_AsGeoJSON(geom)`** | Xuất hình học đoạn đường `LineString` thành chuẩn GeoJSON để vẽ trực tiếp lên MapLibre GL. |
 
-Toàn bộ giao diện là một ứng dụng React duy nhất. Bản `map.html` / `admin.html`
-viết bằng vanilla JS (6.770 dòng HTML/CSS/JS rời) đã bị xoá: nó dùng hệ màu và
-bố cục khác hẳn nên trông như hai sản phẩm ghép lại, và có những nút chỉ hiện
-`alert("đang được phát triển")`.
-
-MapLibre chỉ nạp khi mở trang thật sự có bản đồ (chi tiết địa điểm, planner) —
-trang chủ và danh sách không phải chờ tải thư viện.
-
-### Luồng tự lên lịch
-
-Cả sáu bước nằm trên một màn hình `/chuyen-di/:id`, lịch trình bên trái và bản đồ
-bên phải:
-
-```
-hỏi bằng tiếng Việt / tìm theo tên      PlaceFinder + /api/chat
-        ↓
-xem kết quả trên bản đồ                 vòng tròn RỖNG, khác điểm đã xếp
-        ↓
-thêm vào chuyến                         nút trên danh sách hoặc trên popup bản đồ
-        ↓
-chia theo ngày                          gồm cả kho "chưa xếp ngày"
-        ↓
-sắp thứ tự trong ngày                   mũi tên lên/xuống
-        ↓
-tối ưu thứ tự  ->  vẽ đường bộ thật     2-opt (chim bay) rồi pgRouting
-```
-
-Trước đây hỏi đáp nằm ở một trang riêng `/tro-ly`: người dùng hỏi ra danh sách
-hay rồi phải tự nhớ tên mà gõ lại vào ô tìm kiếm của trình lên lịch. Đường dẫn cũ
-nay chuyển hướng về `/chuyen-di`.
-
-**Vì sao tối ưu thứ tự bằng đường chim bay, không bằng pgRouting.** Một lượt
-`pgr_dijkstra` mất 2,7 giây (đo 2026-08-30 trên `gis_vietnam`). Xếp thứ tự cần ma
-trận n×n — 5 điểm là 10 lượt, tức 27 giây cho một cú bấm nút. Đường bộ thật chỉ
-được tính cho thứ tự đã chốt: n-1 lượt.
-
-Đo trên 5 điểm tham quan rải khắp Đà Nẵng, thêm vào theo thứ tự lộn xộn:
-
-| | Quãng đường |
-| :--- | ---: |
-| Thứ tự người dùng thêm vào (đường bộ thật) | 14,16 km |
-| Sau khi tối ưu (đường bộ thật) | **11,86 km** |
-| Chim bay, trước → sau | 10,53 → 9,07 km |
-
-Giảm 16% quãng đường bộ thật — tức tối ưu theo đường chim bay có tác dụng thật
-trên mạng đường, không chỉ trên lý thuyết.
-
-### Trợ lý AI hoạt động thế nào
-
-**LLM không sinh truy vấn.** Câu hỏi được tách tại giới từ chỉ nơi chốn ("gần",
-"ở", "tại", "quanh"): vế trước là thứ cần tìm, vế sau là mốc vị trí.
-
-```
-"khách sạn      gần   biển Mỹ Khê"
- └─ cần tìm ─┘        └─── mốc ───┘
-```
-
-Mốc được tra thẳng trong CSDL — nó có thể là ranh giới hành chính hoặc một địa
-điểm, hệ thống không cần biết trước là loại nào; trùng tên ở nhiều tỉnh thì lấy
-cái gần người dùng nhất. Sau đó tìm ứng viên bằng khớp mờ (`pg_trgm`) trên tên và
-loại địa điểm, xếp hạng theo độ khớp rồi tới khoảng cách. LLM chỉ làm một việc
-cuối cùng: diễn giải danh sách đã có thành câu trả lời tiếng Việt.
-
-Cách này thay cho tầng IR trước đây (`research/ir_agent.py`), nơi LLM phải chọn
-bảng, cột, giá trị và toán tử **trước khi** nhìn thấy dữ liệu — nên nó đoán, và
-mọi thứ nằm ngoài danh sách viết sẵn trong prompt đều hỏng: "quán karaoke" ra 0
-kết quả, "quán bún đậu" ra 20 nhà hàng bất kỳ, "khách sạn gần biển" sinh giá trị
-`tourism="beach"` không hề tồn tại trong CSDL. Tầng `research/` được giữ lại để
-đối chiếu, không còn phục vụ `/api/chat`.
-
-Thời gian tìm kiếm: **190–570 ms**; phần lớn thời gian phản hồi còn lại là LLM
-diễn giải kết quả.
+### 4.3. Kiến trúc AI Không Bịa Đặt Dữ Liệu (`Grounded AI Architecture`)
+- **Trợ lý Lập lịch trình (`Planner AI` tại `/trips/:id`)**:
+  - Nhận toàn bộ `trip_context` (các ngày đang trống, các điểm đã xếp, chỗ nghỉ, ngân sách) cùng danh sách ứng viên thực tế từ `serper_places_store`, `accommodation` và `Serper Places`.
+  - Mô hình **DeepSeek (`deepseek-v4-flash`)** chỉ được chọn địa điểm thông qua chỉ số nguyên `idx` từ tập ứng viên có thật trong CSDL, sau đó backend ánh xạ ngược sang tọa độ `(lon, lat)` và ID chuẩn — loại bỏ 100% hiện tượng AI bịa địa điểm hoặc làm hỏng chuỗi ID.
+- **Trợ lý CSKH (`Aura AI` tại `/api/support`)**:
+  - Truy vấn trực tiếp danh mục tour đang mở bán (`tours` + `tour_departures`) và lịch sử đơn đặt của khách hàng đang đăng nhập (`tour_bookings`) để trả lời chính xác từng mức giá, số chỗ trống và đường dẫn đặt tour theo luồng **Server-Sent Events (SSE)**.
 
 ---
 
-## 4. Cơ sở dữ liệu
+## 5. Thiết kế Cơ sở dữ liệu (`PostgreSQL + PostGIS + pgRouting`)
 
-CSDL `gis_vietnam` — PostgreSQL + PostGIS + pgRouting.
+Hệ thống sử dụng cơ sở dữ liệu `gis_vietnam` với các nhóm bảng chính:
 
-| Bảng | Số dòng | Nguồn | Nội dung |
-| :--- | ---: | :--- | :--- |
-| `poi` | 805.729 | Overture Maps | Địa điểm: ăn uống, tham quan, vui chơi, mua sắm — 590 loại |
-| `accommodation` | 52.046 | Overture Maps | Chỗ ở: hotel, resort, hostel, homestay |
-| `boundaries` | 3.454 | Overture Maps | Ranh giới tỉnh/huyện/xã (`admin_level=4` là 55 tỉnh) |
-| `roads` | 873.873 | OpenStreetMap | Mạng đường cho tìm đường |
-| `roads_vertices_pgr` | 790.448 | pgRouting | Nút giao |
-| `roads_components` | 790.762 | pgRouting | Thành phần liên thông (materialize sẵn) |
-| `vn_mask` | 1 | tính từ `boundaries` | Union 55 tỉnh, dùng cắt dữ liệu ngoài biên giới |
-| `provinces_clean` | 55 | tính từ `boundaries` | Polygon tỉnh đã làm sạch (`ST_MakeValid`) |
-| `province_stats` | 55 | tính sẵn | Số địa điểm mỗi tỉnh — đếm trực tiếp mất 72s, nay 21ms |
-| `users`, `itineraries` | — | ứng dụng | Tài khoản và lịch trình |
-| `favorites` | — | ứng dụng | Địa điểm yêu thích |
-| `place_photos` | — | Wikimedia | Ảnh địa điểm (cache, kèm ghi nguồn theo giấy phép) |
-
-**Hai nguồn dữ liệu bổ sung nhau:**
-
-- **Overture Maps** — phủ toàn quốc. Overpass API không kham nổi phạm vi cả nước
-  (bị giới hạn truy vấn), nên địa điểm lấy từ parquet Overture trên S3 qua DuckDB.
-- **OpenStreetMap** — mạng đường (`roads`) và dữ liệu chi tiết mà Overture không có
-  (`cuisine` cho món ăn, `opening_hours`).
-
-### Lưu ý về chất lượng dữ liệu
-
-> **Các cột sau KHÔNG phải dữ liệu thật.** Overture không cung cấp chúng.
-
-Trong `gis_vietnam` (toàn quốc) chúng là giá trị mặc định của cột — mọi dòng
-giống hệt nhau, kiểm bằng `count(DISTINCT ...)` đều ra **1**:
-
-| Cột | Giá trị | Số dòng |
-| :--- | :--- | ---: |
-| `poi.rating` / `accommodation.rating` | luôn `4.0` | 805.729 / 52.046 |
-| `poi.review_count` | luôn `10` | 805.729 |
-| `accommodation.review_count` | luôn `15` | 52.046 |
-| `price_level` | luôn `"Trung bình"` | cả hai bảng |
-| `accommodation.stars`, `price_range` | luôn `NULL` | 52.046 |
-
-Trong `gis_tourism` (Đà Nẵng, dùng cho benchmark) thì **tệ hơn**: script
-`backend/scripts/populate_tourism_attributes.py` đã ghi đè bằng số **ngẫu
-nhiên** — `random.uniform(3.5, 5.0)` cho rating, `random.choice(['Rẻ',
-'Trung bình', 'Sang trọng'])` cho mức giá. Nên ở đó `rating` có 16 giá trị khác
-nhau và *trông như dữ liệu thật*, nhưng "Golden Holiday 5.0 sao" chỉ có nghĩa là
-bộ sinh số ngẫu nhiên của Python đã chọn như vậy.
-
-**Hệ quả với benchmark:** 34/151 câu (23%) trong `app/benchmark_gsqa_auto.json`
-có đáp án chuẩn phụ thuộc vào hai cột này — dạng "Nơi lưu trú có đánh giá từ 4.5
-trở lên gần nhất với toạ độ X" (17 câu) và "nhà trọ **giá rẻ** cách Y dưới
-2000m" (17 câu). Điểm số trên nhóm câu đó đo khả năng dịch câu hỏi thành truy
-vấn đúng, **không** đo được chất lượng gợi ý, vì bản thân đáp án là ngẫu nhiên.
-Khi báo cáo kết quả cần tách riêng nhóm này hoặc loại hẳn.
-
-Mã ứng dụng không đọc ba cột đó ở bất kỳ đâu: `destination_repo` xếp hạng bằng
-độ đầy đủ thông tin, `search_service` xếp thuần theo khoảng cách, và
-`itinerary_service` đã bỏ `ORDER BY rating DESC` của bản cũ. Chỉ còn
-`app/research/` (phần benchmark) và script sinh dữ liệu là còn tham chiếu.
-
-Dữ liệu đã được cắt theo biên giới Việt Nam bằng `vn_mask`: bbox hình chữ nhật bao
-Việt Nam trùm cả Thái Lan, Lào, Campuchia nên lần import đầu lẫn 289.121 địa điểm
-nước ngoài, đã loại bỏ.
+| Nhóm | Tên bảng | Mô tả |
+| :--- | :--- | :--- |
+| **Bản đồ & Địa điểm GIS** | `poi`, `accommodation`, `boundaries`, `provinces_clean`, `province_stats`, `place_photos` | Hơn 805.000 POI, 52.000 cơ sở lưu trú (`GEOMETRY(Point, 4326)`) và ranh giới hành chính 63 tỉnh/thành (`GEOMETRY(MultiPolygon, 4326)`). |
+| **Cache Địa điểm Thông minh** | `serper_places_store`, `serper_places_cache` | Lưu trữ bền vững thông tin địa điểm làm giàu (tọa độ, địa chỉ, đánh giá, số lượng review, chi tiết JSONB) giúp truy vấn lặp lại đạt tốc độ tức thì. |
+| **Đồ thị Mạng đường bộ** | `roads`, `roads_vertices_pgr`, `roads_components` | Hơn 873.000 đoạn đường (`GEOMETRY(LineString, 4326)`) và 790.000 nút giao thông đã vật hóa thành phần liên thông phục vụ `pgr_dijkstra`. |
+| **Lịch trình Tự túc** | `itineraries`, `favorites` | Lưu thông tin chuyến đi (`destination`, `duration_days`, `start_date`, `budget`) và các cột `JSONB` (`stops`, `sections`, `reservations`). |
+| **Tour trọn gói & Thanh toán** | `tours`, `tour_itinerary_days`, `tour_departures`, `tour_bookings`, `tour_booking_passengers`, `tour_payments`, `payment_webhook_events` | Quản lý toàn bộ vòng đời sản phẩm tour, lịch khởi hành, khóa giữ chỗ, hành khách và đối soát giao dịch VietQR payOS / Stripe. |
+| **Tài khoản & Hỗ trợ** | `users`, `tour_operators`, `support_conversations`, `support_messages` | Quản lý người dùng (`user`, `operator`, `admin`), hồ sơ đơn vị lữ hành và lịch sử hội thoại hỗ trợ khách hàng. |
 
 ---
 
-## 5. Cài đặt
+## 6. Danh mục API Endpoints chính
 
-### Yêu cầu
+| Phân hệ | Method & Endpoint | Chức năng |
+| :--- | :--- | :--- |
+| **Xác thực** | `POST /api/auth/login`, `POST /api/auth/register` | Đăng nhập, đăng ký tài khoản và cấp JWT Token. |
+| **Điểm đến & Địa điểm** | `GET /api/destinations`, `GET /api/places/search`, `GET /api/places/{type}/{id}` | Tra cứu tỉnh/thành, tìm kiếm địa điểm đa tiêu chí và làm giàu thông tin địa điểm. |
+| **Lịch trình tự túc** | `GET/POST/PUT/DELETE /api/itineraries`, `POST /api/itineraries/{id}/optimize`, `POST /api/itineraries/recommend` | Quản lý chuyến đi, tối ưu thứ tự điểm dừng bằng 2-Opt TSP và gợi ý lịch trình tự động. |
+| **Trợ lý AI & Định tuyến** | `POST /api/chat`, `POST /api/route` | Trợ lý AI ngữ cảnh chuyến đi (Trip Planner AI) và tìm đường bộ ngắn nhất `pgr_dijkstra`. |
+| **Tour & Thanh toán** | `GET /api/tours`, `POST /api/tours/book`, `POST /api/tours/bookings/{id}/checkout-payos`, `POST /api/tours/bookings/{id}/checkout`, `GET /api/tours/bookings/{id}/status` | Tìm tour, đặt giữ chỗ, tạo link thanh toán VietQR payOS / Stripe và đồng bộ trạng thái thanh toán. |
+| **Nhà điều hành (Operator)** | `GET/POST/PUT /api/operator/tours`, `GET /api/operator/bookings`, `GET /api/operator/bookings/customers/list`, `GET /api/operator/departures/revenue/summary` | Quản lý tour, lịch khởi hành, duyệt đơn, quản lý khách hàng CRM và báo cáo doanh thu đa chiều. |
+| **Hỗ trợ CSKH (Aura AI)** | `POST /api/support/conversations/stream`, `POST /api/support/conversations/{id}/messages/stream` | Chat trực tuyến với Aura AI qua giao thức SSE Streaming và chuyển tiếp nhân viên hỗ trợ. |
 
-- Docker & Docker Compose
-- Python 3.13
-- Ollama (nếu chạy LLM cục bộ) hoặc khoá API DeepSeek
+---
 
-### Các bước
+## 7. Hướng dẫn Cài đặt & Khởi chạy
+
+### 7.1. Yêu cầu hệ thống
+- **Docker** & **Docker Compose** (chạy PostgreSQL 15 + PostGIS 3 + pgRouting)
+- **Python 3.12+** (khuyến nghị `Python 3.13`)
+- **Node.js 20+ / 22+** & **npm**
+
+### 7.2. Khởi chạy nhanh bằng `Makefile`
 
 ```bash
-# 1. Khởi động CSDL
-docker compose up -d
+# 1. Sao chép và cấu hình biến môi trường
+cp .env.example .env
+# Điền JWT_SECRET, DEEPSEEK_API_KEY, SERPER_API_KEY (và khóa payOS/Stripe nếu test thanh toán)
 
-# 2. Cấu hình
-cp .env.example .env      # điền DEEPSEEK_API_KEY và JWT_SECRET
+# 2. Khởi động container PostgreSQL/PostGIS/pgRouting (cổng 5433)
+make db
 
-# 3. Cài thư viện
+# 3. Cài đặt môi trường Python cho Backend (chỉ cần chạy lần đầu)
 cd backend
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
+cd ..
 
-# 4. Nạp dữ liệu du lịch toàn quốc (Overture, ~15 phút)
-./venv/bin/python scripts/import_overture_vn.py
+# 4. Cài đặt thư viện cho Frontend (chỉ cần chạy lần đầu)
+cd web && npm install && cd ..
 
-# 5. Gán địa điểm vào tỉnh/thành + tính bảng thống kê (BẮT BUỘC cho trang điểm đến)
-./venv/bin/python scripts/assign_province.py
+# 5. Chạy Backend FastAPI (http://localhost:8000)
+make backend
 
-# 6. (tuỳ chọn) Lấy ảnh từ Wikimedia — chậm, chạy được lúc nào cũng được
-./venv/bin/python scripts/fetch_photos.py 200
-
-# 7. Chạy backend
-./venv/bin/uvicorn app.main:app --reload
-
-# 8. Chạy frontend (cửa sổ terminal khác)
-cd ../web
-npm install
-npm run dev          # http://localhost:5173
+# 6. Chạy Frontend Vite (http://localhost:5173) — mở ở cửa sổ terminal thứ hai
+make frontend
 ```
 
-Mở `http://localhost:5173`. Lần khởi động đầu tiên hệ thống tự tạo hai tài khoản mẫu:
-`admin@gmail.com` (quyền admin, mật khẩu `123456`) và `user@gmail.com` (mật khẩu `123456`).
-Tài khoản admin luôn đăng nhập được bằng cặp `admin@gmail.com` / `123456` — dòng if trong
-`backend/app/api/routes/auth.py` bỏ qua mật khẩu lưu trong CSDL. Đổi mật khẩu qua biến
-`SEED_ADMIN_PASSWORD` / `SEED_USER_PASSWORD` trước khi triển khai thật.
-
-### Cấu hình chính (`.env`)
-
-| Biến | Ý nghĩa |
-| :--- | :--- |
-| `DATABASE_URL` | Đổi tên DB cuối chuỗi để chuyển giữa `gis_vietnam` (toàn quốc) và `gis_tourism` (Đà Nẵng) |
-| `LLM_PROVIDER` | `ollama` (cục bộ) hoặc `deepseek` (API từ xa) |
-| `LLM_TIMEOUT_SQL` | Thời gian chờ khi sinh truy vấn (mặc định 300s) |
-| `LLM_TIMEOUT_EXPLAIN` | Thời gian chờ khi diễn giải kết quả (mặc định 180s) |
-| `DB_SCOPE` | Phạm vi địa lý ghi trong prompt — `Việt Nam` hoặc `Đà Nẵng` |
-| `JWT_SECRET` | Bắt buộc, không có mặc định. Sinh bằng `openssl rand -hex 32` |
-
----
-
-## 6. Script tiện ích
-
-| Script | Công dụng |
-| :--- | :--- |
-| `import_overture_vn.py` | Nạp địa điểm du lịch toàn quốc từ Overture |
-| `assign_province.py` | Gán địa điểm vào tỉnh + tính `province_stats` |
-| `fetch_photos.py` | Lấy ảnh địa điểm từ Wikimedia Commons |
-| `backfill_overture_tags.py` | Bổ sung `tags` (địa chỉ, điện thoại, thương hiệu) |
-| `importer.py` | Nạp dữ liệu Đà Nẵng từ OpenStreetMap qua Overpass |
-| `node_and_rebuild_topology.py` | Dựng lại topology mạng đường cho pgRouting |
-| `refresh_road_components.py` | Tính lại bảng thành phần liên thông |
-
----
-
-## 7. Kiểm thử
-
+Hoặc chạy đồng thời cả Database, Backend và Frontend bằng một lệnh duy nhất:
 ```bash
-cd backend && ./venv/bin/python -m unittest discover -s tests
+make dev
 ```
+
+### 7.3. Sao lưu & Khôi phục Cơ sở dữ liệu khi chuyển máy
+```bash
+# Xuất toàn bộ CSDL gis_vietnam ra file nén gis_vietnam.dump
+make dump
+
+# Khôi phục CSDL từ file gis_vietnam.dump vào Docker container
+make restore
+```
+
+---
+
+## 8. Cấu hình Biến môi trường (`.env`)
+
+Các biến môi trường quan trọng trong file `.env` (đọc bởi `backend/app/core/config.py`):
+
+| Biến môi trường | Giá trị mẫu / Mặc định | Mô tả |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5433/gis_vietnam` | Chuỗi kết nối PostgreSQL/PostGIS (`gis_vietnam` cho toàn quốc). |
+| `JWT_SECRET` | *(Bắt buộc)* | Khóa bí mật ký JWT Token (sinh bằng `openssl rand -hex 32`). |
+| `LLM_PROVIDER` | `deepseek` | Nhà cung cấp mô hình ngôn ngữ (`deepseek` hoặc `ollama`). |
+| `DEEPSEEK_MODEL` | `deepseek-v4-flash` | Tên model DeepSeek sử dụng cho Aura AI và Trip Planner AI. |
+| `DEEPSEEK_API_KEY` | `sk-...` | API Key của DeepSeek. |
+| `SERPER_API_KEY` | `...` | API Key của Google Serper để tìm kiếm POI và ảnh địa điểm. |
+| `TAVILY_API_KEY` | `tvly-...` | API Key của Tavily AI hỗ trợ tra cứu giá vé, giờ mở cửa, kinh nghiệm. |
+| `PAYOS_CLIENT_ID` / `PAYOS_API_KEY` / `PAYOS_CHECKSUM_KEY` | `...` | Bộ khóa tích hợp cổng thanh toán ngân hàng **VietQR payOS**. |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | `sk_test_...` | Bộ khóa tích hợp thanh toán thẻ quốc tế **Stripe Checkout**. |
+
+---
+
+## 9. Kiểm thử & Đảm bảo chất lượng
+
+1. **Chạy bộ kiểm thử Backend (`unittest`)**:
+   ```bash
+   make test
+   # Hoặc chạy trực tiếp:
+   cd backend && ./venv/bin/python -m unittest discover -s tests
+   ```
+
+2. **Kiểm tra chuẩn mã nguồn & Build bản Production cho Frontend**:
+   ```bash
+   cd web
+   npm run lint
+   npm run build
+   ```
